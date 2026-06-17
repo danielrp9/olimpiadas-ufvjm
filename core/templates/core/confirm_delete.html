@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Exclusão - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="bg-white shadow-sm border border-slate-200 rounded-xl p-8 text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-100 text-red-600 mb-6">
+            <i class="fas fa-exclamation-triangle fa-2x"></i>
+        </div>
+        <h1 class="text-2xl font-bold text-slate-900 mb-2">Confirmar Exclusão</h1>
+        <p class="text-slate-600 mb-8">
+            Tem certeza que deseja excluir <strong>{{ object }}</strong>? Esta ação não pode ser desfeita.
+        </p>
+        
+        <form method="post">
+            {% csrf_token %}
+            <div class="flex flex-col space-y-3">
+                <button type="submit" class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-red-600 hover:bg-red-700 transition shadow-sm">
+                    Sim, Excluir permanentemente
+                </button>
+                <a href="{{ request.META.HTTP_REFERER|default:'dashboard' }}" class="w-full inline-flex items-center justify-center px-6 py-3 border border-slate-300 text-base font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50 transition shadow-sm">
+                    Cancelar e Voltar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

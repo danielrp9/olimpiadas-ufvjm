@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Cadastro em Lote de Atletas - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="mb-8">
+    <a href="{% url 'atleta_list' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500 mb-2 inline-block">
+        <i class="fas fa-arrow-left mr-1"></i> Voltar para a lista
+    </a>
+    <h1 class="text-3xl font-bold text-slate-900">Cadastro em Lote</h1>
+    <p class="text-slate-600">Adicione vários atletas de uma vez preenchendo as linhas abaixo.</p>
+</div>
+
+<form method="post" id="bulk-form">
+    {% csrf_token %}
+    <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-6">
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-slate-200" id="athletes-table">
+                <thead class="bg-slate-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Nome Completo</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">CPF</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Email</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Matrícula</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Curso/Campus</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Egresso?</th>
+                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase w-48">Doc. Egresso</th>
+                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase w-10"></th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-slate-200" id="athletes-body">
+                    <tr class="athlete-row">
+                        <td class="px-2 py-3"><input type="text" name="nome[]" required class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"></td>
+                        <td class="px-2 py-3"><input type="text" name="cpf[]" class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="000.000.000-00"></td>
+                        <td class="px-2 py-3"><input type="email" name="email[]" required class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"></td>
+                        <td class="px-2 py-3"><input type="text" name="matricula[]" required class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"></td>
+                        <td class="px-2 py-3">
+                            <div class="flex flex-col space-y-1">
+                                <input type="text" name="curso[]" required placeholder="Curso" class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                                <input type="text" name="campus[]" required placeholder="Campus" class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                            </div>
+                        </td>
+                        <td class="px-2 py-3 text-center">
+                            <input type="checkbox" name="is_egresso[]" value="0" class="egresso-checkbox h-4 w-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                        </td>
+                        <td class="px-2 py-3">
+                            <input type="url" name="link_egresso[]" placeholder="Link obrigatório (Drive)" class="doc-egresso-input hidden w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                        </td>
+                        <td class="px-2 py-3 text-center"><button type="button" class="text-slate-400 hover:text-red-600 transition remove-row"><i class="fas fa-times"></i></button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="p-4 bg-slate-50 border-t border-slate-200">
+            <button type="button" id="add-row" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
+                <i class="fas fa-plus-circle mr-2"></i> Adicionar Nova Linha
+            </button>
+        </div>
+    </div>
+
+    <div class="flex justify-end space-x-4">
+        <a href="{% url 'atleta_list' %}" class="px-6 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition">Cancelar</a>
+        <button type="submit" class="px-8 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md">
+            Salvar Todos os Atletas
+        </button>
+    </div>
+</form>
+
+<script>
+    function setupEgressoToggle(row) {
+        const checkbox = row.querySelector('.egresso-checkbox');
+        const docInput = row.querySelector('.doc-egresso-input');
+        
+        // Setup hidden input
+        let hiddenInput = row.querySelector('input[type="hidden"][name="is_egresso[]"]');
+        if (!hiddenInput) {
+            hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'is_egresso[]';
+            hiddenInput.value = '0';
+            row.appendChild(hiddenInput);
+        }
+
+        checkbox.addEventListener('change', function() {
+            hiddenInput.value = this.checked ? '1' : '0';
+            if(this.checked) {
+                docInput.classList.remove('hidden');
+                docInput.required = true;
+            } else {
+                docInput.classList.add('hidden');
+                docInput.required = false;
+                docInput.value = "";
+            }
+        });
+    }
+
+    document.getElementById('add-row').addEventListener('click', function() {
+        const body = document.getElementById('athletes-body');
+        const firstRow = body.querySelector('.athlete-row');
+        const newRow = firstRow.cloneNode(true);
+        
+        newRow.querySelectorAll('input').forEach(input => {
+            if(input.type === 'checkbox') input.checked = false;
+            else if(input.type !== 'hidden') input.value = '';
+        });
+        
+        const docInput = newRow.querySelector('.doc-egresso-input');
+        docInput.classList.add('hidden');
+        docInput.required = false;
+        
+        setupEgressoToggle(newRow);
+        
+        body.appendChild(newRow);
+        
+        newRow.querySelector('.remove-row').addEventListener('click', function() {
+            if (body.querySelectorAll('.athlete-row').length > 1) {
+                newRow.remove();
+            }
+        });
+    });
+
+    // Setup initial row
+    document.querySelectorAll('.athlete-row').forEach(row => {
+        setupEgressoToggle(row);
+        row.querySelector('.remove-row').addEventListener('click', function() {
+            const body = document.getElementById('athletes-body');
+            if (body.querySelectorAll('.athlete-row').length > 1) {
+                this.closest('.athlete-row').remove();
+            }
+        });
+    });
+</script>
+{% endblock %}

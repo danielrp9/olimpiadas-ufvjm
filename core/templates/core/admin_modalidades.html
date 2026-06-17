@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerenciar Modalidades - Comissão{% endblock %}
+
+{% block content %}
+<div class="mb-8 flex justify-between items-end">
+    <div>
+        <a href="{% url 'dashboard' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500 mb-2 inline-block">
+            <i class="fas fa-arrow-left mr-1"></i> Voltar ao Dashboard
+        </a>
+        <h1 class="text-3xl font-bold text-slate-900">Gerenciar Modalidades</h1>
+        <p class="text-slate-600">Configure e controle as modalidades esportivas das Olimpíadas.</p>
+    </div>
+    <a href="{% url 'modalidade_create' %}" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md">
+        <i class="fas fa-plus mr-1"></i> Nova Modalidade
+    </a>
+</div>
+
+<div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Modalidade</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Limites (Min/Max)</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status Atual</th>
+                <th class="px-6 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">Ações</th>
+            </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-slate-200">
+            {% for modalidade in modalidades %}
+            <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ modalidade.nome }}</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500">{{ modalidade.limite_minimo_jogadores }} / {{ modalidade.limite_maximo_jogadores }}</td>
+                <td class="px-6 py-4 whitespace-nowrap">
+                    {% if modalidade.inscricoes_abertas %}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Abertas</span>
+                    {% else %}
+                        <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Fechadas</span>
+                    {% endif %}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end space-x-3">
+                    <form action="{% url 'toggle_modalidade' modalidade.pk %}" method="post" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="{% if modalidade.inscricoes_abertas %}text-amber-600 hover:text-amber-900{% else %}text-green-600 hover:text-green-900{% endif %} font-semibold transition">
+                            {% if modalidade.inscricoes_abertas %}Encerrar{% else %}Abrir{% endif %}
+                        </button>
+                    </form>
+                    <a href="{% url 'modalidade_update' modalidade.pk %}" class="text-blue-600 hover:text-blue-900 font-semibold">Editar</a>
+                    <a href="{% url 'modalidade_delete' modalidade.pk %}" class="text-red-600 hover:text-red-900 font-semibold">Remover</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
