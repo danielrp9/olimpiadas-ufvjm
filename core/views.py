@@ -38,29 +38,11 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
-        if user.is_staff:
+        if user.is_comissao:
             context['is_admin'] = True
             context['total_atletas_global'] = Atleta.objects.count()
             context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE').count()
             context['total_presumulas_global'] = PreSumula.objects.count()
-            context['ultimas_presumulas'] = PreSumula.objects.all().order_by('-data_criacao')[:10]
-            
-            # Estatísticas por Modalidade baseadas em Pré-Súmulas
-            context['stats_modalidade'] = Modalidade.objects.annotate(
-                num_presumulas=Count('jogos__presumulas')
-            ).order_by('-num_presumulas')
-            
-            # Estatísticas por Campus (Baseado nos Atletas)
-            context['stats_campus'] = Atleta.objects.values('campus').annotate(
-                total=Count('id')
-            ).order_by('-total')
-            
-            # Estatísticas por Atlética/Delegação
-            context['stats_atletica'] = User.objects.filter(role='REPRESENTANTE').annotate(
-                num_atletas=Count('atletas'),
-                num_presumulas=Count('presumulas')
-            ).order_by('-num_atletas')
-            
             return context
         
         context['is_admin'] = False

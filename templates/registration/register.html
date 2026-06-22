@@ -3,15 +3,21 @@
 {% block title %}Criar Conta - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
+<style>
+    body {
+        background-color: #f0f4f8 !important; /* Tom azulado sutil e limpo para destacar o card */
+    }
+</style>
+
 <div class="max-w-md mx-auto mt-10">
     <div class="bg-white shadow-2xl border border-slate-200 rounded-3xl p-8 sm:p-10 transition-all duration-300 hover:shadow-blue-100/50">
         <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 mb-4">
+            <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-50 text-blue-600 mb-4 animate-pulse">
                 <i class="fas fa-user-plus text-2xl"></i>
             </div>
-            <h1 class="text-3xl font-extrabold text-slate-950 tracking-tight">Criar Conta</h1>
+            <h1 class="text-3xl font-extrabold text-slate-955 tracking-tight">Criar Conta</h1>
             <p class="text-slate-500 mt-2 text-sm">
-                Cadastre sua Atlética ou Delegação usando sua conta Google
+                Cadastre sua Delegação (Atlética, Servidores ou Técnicos) or Inscrição Individual usando sua conta Google
             </p>
         </div>
 
@@ -19,7 +25,7 @@
             <!-- Botão de Cadastro Social do Google -->
             <a href="{% url 'google_login' %}" 
                class="w-full inline-flex items-center justify-center px-6 py-3.5 border border-slate-200 rounded-2xl bg-white hover:bg-slate-50 text-slate-700 font-semibold shadow-sm hover:shadow transition-all duration-200 active:scale-[0.98] group">
-                <svg class="w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                <svg class="flex-shrink-0 w-5 h-5 mr-3 group-hover:scale-110 transition-transform duration-200" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
                     <g transform="matrix(1, 0, 0, 1, 0, 0)">
                         <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.58h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.48c0,-0.61 -0.05,-1.2 -0.15,-1.72z" fill="#4285F4" />
                         <path d="M12,20.7c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.58c-0.91,0.61 -2.08,0.98 -3.3,0.98c-2.34,0 -4.32,-1.58 -5.03,-3.7H2.94v2.66c1.48,2.94 4.52,4.84 8.02,4.84z" fill="#34A853" />
@@ -31,12 +37,12 @@
             </a>
 
             <!-- Informações adicionais -->
-            <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl text-xs text-slate-500 leading-relaxed">
-                <p class="font-semibold text-slate-700 mb-1 flex items-center">
-                    <i class="fas fa-info-circle mr-1.5 text-blue-600"></i> Como funciona:
+            <div class="p-4 bg-blue-50/40 border border-blue-100/60 rounded-2xl text-[11px] text-slate-600 leading-relaxed space-y-2 shadow-sm">
+                <p class="font-semibold text-blue-700 flex items-center">
+                    <i class="fas fa-info-circle mr-1.5 text-blue-500"></i> Importante:
                 </p>
                 <p>
-                    O cadastro é realizado automaticamente no seu primeiro login social. O sistema importará seu nome, e-mail e foto do Google. Logo após, você será direcionado para informar o seu CPF e liberar as inscrições da sua Atlética.
+                    O cadastro no sistema é realizado <strong>exclusivamente</strong> no seu primeiro acesso através do Login Social do Google.
                 </p>
             </div>
         </div>
@@ -49,4 +55,3 @@
     </div>
 </div>
 {% endblock %}
-

@@ -138,6 +138,8 @@ class User(AbstractUser):
             self.perfil_completo = True
             self.is_staff = True  # Comissão pode acessar o painel admin
         else:
+            if not self.is_superuser:
+                self.is_staff = False
             # Para representante, o perfil está completo se CPF E Nome da Delegação estiverem informados
             if self.cpf and self.nome_delegacao:
                 self.perfil_completo = True

@@ -3,76 +3,126 @@
 {% block title %}Cadastro em Lote de Atletas - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
-<div class="mb-8">
-    <a href="{% url 'atleta_list' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500 mb-2 inline-block">
-        <i class="fas fa-arrow-left mr-1"></i> Voltar para a lista
-    </a>
-    <h1 class="text-3xl font-bold text-slate-900">Cadastro em Lote</h1>
-    <p class="text-slate-600">Adicione vários atletas de uma vez preenchendo as linhas abaixo.</p>
-</div>
+<div class="space-y-6">
+    
+    <!-- Botão de Voltar -->
+    <div class="flex items-center justify-between mb-4">
+        <a href="{% url 'atleta_list' %}" class="inline-flex items-center text-slate-500 hover:text-slate-700 text-xs font-bold transition gap-1.5">
+            <i class="fas fa-arrow-left"></i> Voltar para a Lista
+        </a>
+    </div>
 
-<form method="post" id="bulk-form">
-    {% csrf_token %}
-    <div class="bg-white shadow-sm border border-slate-200 rounded-xl overflow-hidden mb-6">
-        <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-slate-200" id="athletes-table">
-                <thead class="bg-slate-50">
-                    <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Nome Completo</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">CPF</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Email</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Sexo/Gênero</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Matrícula</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Curso/Campus</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Egresso?</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase w-48">Doc. Egresso</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase w-10"></th>
-                    </tr>
-                </thead>
-                <tbody class="bg-white divide-y divide-slate-200" id="athletes-body">
-                    <tr class="athlete-row">
-                        <td class="px-2 py-3"><input type="text" name="nome[]" required class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"></td>
-                        <td class="px-2 py-3"><input type="text" name="cpf[]" class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none" placeholder="000.000.000-00"></td>
-                        <td class="px-2 py-3"><input type="email" name="email[]" required class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"></td>
-                        <td class="px-2 py-3">
-                            <select name="genero[]" required class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                                <option value="M">Masculino</option>
-                                <option value="F">Feminino</option>
-                                <option value="N">Não-binário</option>
-                            </select>
-                        </td>
-                        <td class="px-2 py-3"><input type="text" name="matricula[]" required class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"></td>
-                        <td class="px-2 py-3">
-                            <div class="flex flex-col space-y-1">
-                                <input type="text" name="curso[]" required placeholder="Curso" class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                                <input type="text" name="campus[]" required placeholder="Campus" class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                        </td>
-                        <td class="px-2 py-3 text-center">
-                            <input type="checkbox" name="is_egresso[]" value="0" class="egresso-checkbox h-4 w-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                        </td>
-                        <td class="px-2 py-3">
-                            <input type="url" name="link_egresso[]" placeholder="Link obrigatório (Drive)" class="doc-egresso-input hidden w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 outline-none">
-                        </td>
-                        <td class="px-2 py-3 text-center"><button type="button" class="text-slate-400 hover:text-red-600 transition remove-row"><i class="fas fa-times"></i></button></td>
-                    </tr>
-                </tbody>
-            </table>
+    <!-- Header do Cadastro -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-start gap-3">
+        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 mt-0.5">
+            <i class="fas fa-user-plus text-base"></i>
+        </span>
+        <div>
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">Cadastro em Lote</h1>
+            <p class="text-slate-400 mt-1 text-xs">Adicione múltiplos atletas simultaneamente preenchendo as linhas abaixo.</p>
         </div>
-        <div class="p-4 bg-slate-50 border-t border-slate-200">
-            <button type="button" id="add-row" class="inline-flex items-center text-sm font-semibold text-blue-600 hover:text-blue-800 transition">
-                <i class="fas fa-plus-circle mr-2"></i> Adicionar Nova Linha
+    </div>
+
+    <!-- Banner Informativo -->
+    <div class="bg-blue-50 border border-blue-100/50 rounded-2xl p-4 flex gap-3 text-xs text-blue-800">
+        <i class="fas fa-info-circle text-blue-600 text-sm mt-0.5"></i>
+        <div>
+            <span class="font-bold">Dica sobre Documentação:</span>
+            <p class="text-blue-700 mt-0.5 leading-relaxed">Para atletas egressos, insira um link direto público (Google Drive, Dropbox, Gov.br, etc.) contendo o comprovante de colação de grau oficial ou diploma.</p>
+        </div>
+    </div>
+
+    <form method="post" id="bulk-form" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="athletes-table">
+                    <thead>
+                        <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                            <th class="px-4 py-3.5 min-w-[200px]">Nome Completo</th>
+                            <th class="px-4 py-3.5 min-w-[130px]">CPF</th>
+                            <th class="px-4 py-3.5 min-w-[180px]">Email</th>
+                            <th class="px-4 py-3.5 min-w-[130px]">Gênero</th>
+                            <th class="px-4 py-3.5 min-w-[110px]">Matrícula</th>
+                            <th class="px-4 py-3.5 min-w-[220px]">Curso & Campus</th>
+                            <th class="px-4 py-3.5 text-center min-w-[80px]">Egresso?</th>
+                            <th class="px-4 py-3.5 min-w-[200px]">Doc. Egresso</th>
+                            <th class="px-4 py-3.5 text-center w-12"></th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-650 text-xs" id="athletes-body">
+                        <tr class="athlete-row hover:bg-slate-50/10 transition">
+                            <td class="px-3 py-3">
+                                <input type="text" name="nome[]" required 
+                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
+                                       placeholder="Nome do atleta">
+                            </td>
+                            <td class="px-3 py-3">
+                                <input type="text" name="cpf[]" 
+                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white" 
+                                       placeholder="000.000.000-00">
+                            </td>
+                            <td class="px-3 py-3">
+                                <input type="email" name="email[]" required 
+                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
+                                       placeholder="email@dominio.com">
+                            </td>
+                            <td class="px-3 py-3">
+                                <select name="genero[]" required 
+                                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
+                                    <option value="M">Masculino</option>
+                                    <option value="F">Feminino</option>
+                                    <option value="N">Não-binário</option>
+                                </select>
+                            </td>
+                            <td class="px-3 py-3">
+                                <input type="text" name="matricula[]" required 
+                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
+                                       placeholder="Matrícula">
+                            </td>
+                            <td class="px-3 py-3 space-y-1">
+                                <input type="text" name="curso[]" required placeholder="Curso acadêmico" 
+                                       class="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
+                                <input type="text" name="campus[]" required placeholder="Campus" 
+                                       class="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
+                            </td>
+                            <td class="px-3 py-3 text-center">
+                                <input type="checkbox" name="is_egresso[]" value="0" 
+                                       class="egresso-checkbox h-4 w-4 text-blue-600 rounded border-slate-200 focus:ring-blue-500/20 focus:outline-none accent-blue-600">
+                            </td>
+                            <td class="px-3 py-3">
+                                <input type="url" name="link_egresso[]" placeholder="Link do documento no Drive/Dropbox" 
+                                       class="doc-egresso-input hidden w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
+                            </td>
+                            <td class="px-3 py-3 text-center">
+                                <button type="button" class="text-slate-400 hover:text-red-500 transition remove-row p-1.5">
+                                    <i class="fas fa-times text-sm"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
+                <button type="button" id="add-row" 
+                        class="inline-flex items-center px-3 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-600 transition shadow-sm gap-1.5 active:scale-95 bg-white">
+                    <i class="fas fa-plus text-slate-400"></i> Adicionar Nova Linha
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-3 text-xs">
+            <a href="{% url 'atleta_list' %}" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
+                Cancelar
+            </a>
+            <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98]">
+                Salvar Todos os Atletas
             </button>
         </div>
-    </div>
-
-    <div class="flex justify-end space-x-4">
-        <a href="{% url 'atleta_list' %}" class="px-6 py-2 text-sm font-medium text-slate-600 hover:text-slate-800 transition">Cancelar</a>
-        <button type="submit" class="px-8 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold hover:bg-blue-700 transition shadow-md">
-            Salvar Todos os Atletas
-        </button>
-    </div>
-</form>
+    </form>
+</div>
 
 <script>
     function setupEgressoToggle(row) {

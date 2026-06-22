@@ -71,11 +71,16 @@ class GoogleCallbackView(View):
                 if not user.google_id:
                     user.google_id = google_user['google_id']
                 
-                # Se um usuário existente foi adicionado à whitelist posteriormente, atualiza seu papel
-                if is_in_whitelist and user.role != 'COMISSAO':
-                    user.role = 'COMISSAO'
-                    user.is_staff = True
-                    messages.info(request, "Seu acesso foi atualizado para a Comissão Organizadora.")
+                # Sincroniza o papel do usuário com o estado atual da whitelist
+                if is_in_whitelist:
+                    if user.role != 'COMISSAO':
+                        user.role = 'COMISSAO'
+                        user.is_staff = True
+                        messages.info(request, "Seu acesso foi atualizado para a Comissão Organizadora.")
+                else:
+                    if user.role == 'COMISSAO' and not user.is_superuser:
+                        user.role = 'REPRESENTANTE'
+                        messages.warning(request, "Seu acesso de comissão expirou. Agora você é um Representante.")
                 
                 user.save()
                 

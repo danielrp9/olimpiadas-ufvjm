@@ -3,39 +3,60 @@
 {% block title %}{% if object %}Editar{% else %}Novo{% endif %} Atleta - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
-<div class="max-w-2xl mx-auto">
-    <div class="mb-8">
-        <a href="{% url 'atleta_list' %}" class="text-sm font-medium text-blue-600 hover:text-blue-500 mb-2 inline-block">
-            <i class="fas fa-arrow-left mr-1"></i> Voltar para a lista
+<div class="max-w-xl mx-auto space-y-6">
+    
+    <!-- Botão de Voltar -->
+    <div class="flex items-center justify-between mb-4">
+        <a href="{% url 'atleta_list' %}" class="inline-flex items-center text-slate-500 hover:text-slate-700 text-xs font-bold transition gap-1.5">
+            <i class="fas fa-arrow-left"></i> Voltar para a Lista
         </a>
-        <h1 class="text-3xl font-bold text-slate-900">{% if object %}Editar{% else %}Cadastrar Novo{% endif %} Atleta</h1>
-        <p class="text-slate-600">Insira as informações básicas do atleta para poder inscrevê-lo em modalidades.</p>
     </div>
 
-    <div class="bg-white shadow-sm border border-slate-200 rounded-xl p-6 sm:p-8">
-        <form method="post" class="space-y-6">
+    <!-- Header do Cadastro -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-start gap-3">
+        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 mt-0.5">
+            <i class="fas fa-user-plus text-base"></i>
+        </span>
+        <div>
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">{% if object %}Editar{% else %}Cadastrar Novo{% endif %} Atleta</h1>
+            <p class="text-slate-400 mt-1 text-xs">Insira as informações acadêmicas e de contato para conformidade documental.</p>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm">
+        <form method="post" class="space-y-4">
             {% csrf_token %}
             
             {% for field in form %}
-            <div>
-                <label for="{{ field.id_for_label }}" class="block text-sm font-semibold text-slate-700 mb-1">
+            <div class="space-y-1">
+                <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                     {{ field.label }}
                 </label>
-                {{ field }}
+                
+                <div>
+                    {{ field }}
+                </div>
+                
                 {% if field.errors %}
                     {% for error in field.errors %}
-                        <p class="mt-1 text-sm text-red-600">{{ error }}</p>
+                        <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                            <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
+                        </p>
                     {% endfor %}
                 {% endif %}
+                
                 {% if field.help_text %}
-                    <p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>
+                    <p class="text-[9px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
                 {% endif %}
             </div>
             {% endfor %}
 
-            <div class="pt-4 flex items-center justify-end space-x-4">
-                <a href="{% url 'atleta_list' %}" class="text-sm font-medium text-slate-600 hover:text-slate-500">Cancelar</a>
-                <button type="submit" class="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+            <div class="pt-4 flex items-center justify-end gap-3 text-xs">
+                <a href="{% url 'atleta_list' %}" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98]">
                     {% if object %}Salvar Alterações{% else %}Cadastrar Atleta{% endif %}
                 </button>
             </div>

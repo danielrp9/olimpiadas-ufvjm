@@ -3,23 +3,27 @@
 {% block title %}Meus Atletas - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
-<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+<!-- Cabeçalho Principal -->
+<div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
     <div>
-        <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <i class="fas fa-users text-blue-600"></i> Meus Atletas
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+            <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl">
+                <i class="fas fa-users"></i>
+            </span>
+            Meus Atletas
         </h1>
-        <p class="text-slate-500 mt-1">Gerencie os atletas da sua delegação, visualize as conformidades e envie correções.</p>
+        <p class="text-slate-400 mt-1.5 text-xs">Gerencie os atletas da sua delegação, envie correções e visualize a conformidade documental.</p>
     </div>
-    <a href="{% url 'atleta_bulk_create' %}" class="inline-flex items-center px-5 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition shadow-lg hover:shadow-blue-500/20 active:scale-[0.98]">
-        <i class="fas fa-user-plus mr-2"></i> Adicionar Atletas (Lote)
+    <a href="{% url 'atleta_bulk_create' %}" class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition active:scale-[0.98] shadow-sm gap-1.5 self-stretch sm:self-auto justify-center shrink-0">
+        <i class="fas fa-user-plus"></i> Adicionar Atletas (Lote)
     </a>
 </div>
 
-<div class="bg-white shadow-xl border border-slate-200 rounded-3xl overflow-hidden">
+<div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
     <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
             <thead>
-                <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm font-semibold uppercase">
+                <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                     <th class="px-6 py-4">Nome / Gênero</th>
                     <th class="px-6 py-4">Matrícula / Curso</th>
                     <th class="px-6 py-4">Campus / Vínculo</th>
@@ -28,40 +32,40 @@
                     <th class="px-6 py-4 text-right">Ações</th>
                 </tr>
             </thead>
-            <tbody class="divide-y divide-slate-100 text-slate-700">
+            <tbody class="divide-y divide-slate-100 text-slate-650 text-xs">
                 {% for atleta in atletas %}
-                <tr class="hover:bg-slate-50/50 transition">
+                <tr class="hover:bg-slate-50/30 transition">
                     <!-- Nome / Gênero -->
                     <td class="px-6 py-4">
-                        <div class="text-base font-bold text-slate-900 leading-tight">{{ atleta.nome_completo }}</div>
-                        <div class="text-xs text-slate-500 mt-0.5">{{ atleta.email }}</div>
-                        <div class="text-xs text-slate-400 mt-1">CPF: {{ atleta.cpf|default:"-" }} &bull; Gênero: {{ atleta.get_genero_display }}</div>
+                        <div class="font-bold text-slate-800 leading-tight">{{ atleta.nome_completo }}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">{{ atleta.email }}</div>
+                        <div class="text-[10px] text-slate-400 mt-1">CPF: {{ atleta.cpf|default:"-" }} &bull; Gênero: {{ atleta.get_genero_display }}</div>
                     </td>
                     
                     <!-- Matrícula / Curso -->
-                    <td class="px-6 py-4 text-sm">
-                        <div class="font-semibold text-slate-800">Matrícula: {{ atleta.matricula }}</div>
-                        <div class="text-xs text-slate-500 mt-0.5">{{ atleta.curso }}</div>
+                    <td class="px-6 py-4">
+                        <div class="font-semibold text-slate-700">Matrícula: {{ atleta.matricula }}</div>
+                        <div class="text-[10px] text-slate-400 mt-0.5">{{ atleta.curso }}</div>
                     </td>
-
+ 
                     <!-- Campus / Vínculo -->
                     <td class="px-6 py-4">
-                        <div class="text-sm font-medium text-slate-800">{{ atleta.campus }}</div>
+                        <div class="font-medium text-slate-700">{{ atleta.campus }}</div>
                         <div class="mt-1">
                             {% if atleta.is_egresso %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-100">
                                     Egresso
                                 </span>
                             {% else %}
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-teal-50 text-teal-700 border border-teal-200">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-100">
                                     Regular
                                 </span>
                             {% endif %}
                         </div>
                     </td>
-
+ 
                     <!-- Documentos -->
-                    <td class="px-6 py-4 text-xs space-y-1">
+                    <td class="px-6 py-4 space-y-1">
                         {% if atleta.link_documento %}
                             <a href="{{ atleta.link_documento }}" target="_blank" class="inline-flex items-center text-blue-600 hover:underline gap-1">
                                 <i class="fas fa-file-alt"></i> Doc. Identidade
@@ -75,41 +79,41 @@
                         {% endif %}
                         {% if atleta.link_correcao %}
                             <div class="mt-1">
-                                <a href="{{ atleta.link_correcao }}" target="_blank" class="inline-flex items-center text-amber-600 hover:underline gap-1 font-bold">
+                                <a href="{{ atleta.link_correcao }}" target="_blank" class="inline-flex items-center text-amber-650 hover:underline gap-1 font-bold">
                                     <i class="fas fa-history"></i> Doc. Correção
                                 </a>
-                                <span class="block text-[10px] text-amber-500 font-bold uppercase tracking-wider">Aguardando Avaliação</span>
+                                <span class="block text-[9px] text-amber-500 font-bold uppercase tracking-wider">Aguardando Avaliação</span>
                             </div>
                         {% endif %}
                     </td>
-
+ 
                     <!-- Conformidade (Status) -->
                     <td class="px-6 py-4">
                         {% if atleta.em_conformidade %}
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
-                                <i class="fas fa-check-circle mr-1.5 text-green-600"></i> Regular (Aprovado)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100 uppercase tracking-wide">
+                                <i class="fas fa-check-circle mr-1 text-green-600"></i> Regular
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
-                                <i class="fas fa-times-circle mr-1.5 text-red-600"></i> Irregular (Rejeitado)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 uppercase tracking-wide">
+                                <i class="fas fa-times-circle mr-1 text-red-650"></i> Irregular
                             </span>
                             
                             {% if atleta.justificativa_inconformidade %}
-                                <div class="mt-2 p-2 bg-red-50/50 border border-red-100 rounded-lg text-xs text-red-700 max-w-xs font-medium">
+                                <div class="mt-2 p-2 bg-red-50/50 border border-red-100/50 rounded-xl text-[10px] text-red-700 max-w-xs font-medium leading-relaxed">
                                     <strong>Motivo:</strong> {{ atleta.justificativa_inconformidade }}
                                 </div>
                             {% endif %}
-
+ 
                             {% if atleta.permite_correcao %}
-                                <div class="mt-2.5">
-                                    <span class="text-[10px] text-amber-600 font-bold uppercase tracking-wider block mb-1">
-                                        <i class="fas fa-exclamation-triangle"></i> Correção Habilitada pela Comissão:
+                                <div class="mt-3">
+                                    <span class="text-[9px] text-amber-600 font-bold uppercase tracking-wider block mb-1">
+                                        <i class="fas fa-exclamation-triangle"></i> Enviar Correção:
                                     </span>
-                                    <form method="post" action="{% url 'enviar_correcao_atleta' atleta.id %}" class="flex gap-1.5">
+                                    <form method="post" action="{% url 'enviar_correcao_atleta' atleta.id %}" class="flex gap-1">
                                         {% csrf_token %}
-                                        <input type="url" name="link_correcao" required placeholder="Link Drive com novo doc..." 
-                                               class="w-full px-2.5 py-1 text-xs border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 outline-none">
-                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] px-2.5 py-1 rounded-lg transition active:scale-95 shadow">
+                                        <input type="url" name="link_correcao" required placeholder="Link Drive..." 
+                                               class="w-full px-2 py-1 text-[10px] border border-slate-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-blue-500 outline-none">
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-[9px] px-2.5 py-1 rounded-lg transition active:scale-95 shadow-sm">
                                             Enviar
                                         </button>
                                     </form>
@@ -117,23 +121,25 @@
                             {% endif %}
                         {% endif %}
                     </td>
-
+ 
                     <!-- Ações -->
-                    <td class="px-6 py-4 text-right whitespace-nowrap text-sm font-semibold space-x-2">
-                        <a href="{% url 'atleta_update' atleta.pk %}" class="inline-flex items-center px-2.5 py-1.5 border border-slate-200 hover:border-blue-500 hover:text-blue-600 rounded-lg transition text-slate-650 bg-white shadow-sm gap-1 text-xs">
+                    <td class="px-6 py-4 text-right whitespace-nowrap font-semibold space-x-1.5">
+                        <a href="{% url 'atleta_update' atleta.pk %}" class="inline-flex items-center px-2 py-1 border border-slate-200 hover:border-blue-500 hover:text-blue-600 rounded-lg transition text-slate-500 bg-white shadow-sm gap-1">
                             <i class="far fa-edit"></i> Editar
                         </a>
-                        <a href="{% url 'atleta_delete' atleta.pk %}" class="inline-flex items-center px-2.5 py-1.5 border border-red-100 hover:bg-red-50 text-red-600 rounded-lg transition gap-1 text-xs">
+                        <a href="{% url 'atleta_delete' atleta.pk %}" class="inline-flex items-center px-2 py-1 border border-red-100 hover:bg-red-50 text-red-650 rounded-lg transition gap-1">
                             <i class="far fa-trash-alt"></i> Remover
                         </a>
                     </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="6" class="px-6 py-12 text-center text-slate-400">
-                        <i class="fas fa-users text-4xl mb-3 text-slate-300"></i>
-                        <p>Nenhum atleta cadastrado na delegação ainda.</p>
-                        <a href="{% url 'atleta_bulk_create' %}" class="text-blue-600 font-bold hover:underline text-xs mt-2 inline-block">Cadastrar atletas</a>
+                    <td colspan="6" class="px-6 py-16 text-center text-slate-400">
+                        <div class="w-12 h-12 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 border border-dashed border-slate-200">
+                            <i class="fas fa-users text-lg"></i>
+                        </div>
+                        <p class="font-bold text-slate-700 text-sm">Nenhum atleta cadastrado</p>
+                        <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">Sua delegação ainda não possui atletas. Clique em "Adicionar Atletas (Lote)" acima.</p>
                     </td>
                 </tr>
                 {% endfor %}

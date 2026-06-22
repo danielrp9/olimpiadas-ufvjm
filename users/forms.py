@@ -22,9 +22,9 @@ class CompleteProfileForm(forms.ModelForm):
     nome_delegacao = forms.CharField(
         max_length=255,
         required=True,
-        label="Nome da Delegação / Atlética",
+        label="Nome da Delegação, Atlética ou Competidor Individual",
         widget=forms.TextInput(attrs={
-            'placeholder': 'Ex: Atlética Suprema ou Associação Acadêmica',
+            'placeholder': 'Ex: Atlética Suprema, Time de Servidores ou Competidor Individual',
             'class': 'w-full px-4 py-3 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm'
         })
     )

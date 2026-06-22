@@ -3,162 +3,335 @@
 {% block title %}Regulamento Oficial - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto pb-12">
-    <div class="text-center mb-12">
-        <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-4">REGULAMENTO GERAL DAS OLIMPÍADAS UNIVERSITÁRIAS DA UFVJM – 2026</h1>
-        <p class="text-lg text-slate-600">Diretório Central dos Estudantes (DCE) da UFVJM</p>
-        <div class="mt-6 h-1 w-24 bg-blue-600 mx-auto rounded-full"></div>
+<!-- Cabeçalho Principal -->
+<div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+            <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl">
+                <i class="fas fa-file-signature"></i>
+            </span>
+            Regulamento Oficial
+        </h1>
+        <p class="text-slate-400 mt-1.5 text-xs">Regras oficiais, diretrizes e código de conduta das Olimpíadas Universitárias.</p>
+    </div>
+</div>
+
+<!-- Layout de Documentação em Duas Colunas -->
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+    
+    <!-- Sumário Esquerdo (Fixo/Sticky no Desktop) -->
+    <div class="lg:sticky lg:top-6 order-2 lg:order-1 lg:col-span-1 space-y-4">
+        <div class="bg-white border border-slate-200/60 rounded-3xl p-5 shadow-sm">
+            <h3 class="font-bold text-slate-800 text-[10px] uppercase tracking-wider mb-3">Índice do Documento</h3>
+            <nav class="space-y-1">
+                <a href="#capitulo1" class="flex items-center px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-2 shrink-0"></span>
+                    Capítulo I: Disposições Gerais
+                </a>
+                <a href="#capitulo2" class="flex items-center px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-2 shrink-0"></span>
+                    Capítulo II: Competição
+                </a>
+                <a href="#capitulo3" class="flex items-center px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-2 shrink-0"></span>
+                    Capítulo III: Das Inscrições
+                </a>
+                <a href="#capitulo4" class="flex items-center px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-2 shrink-0"></span>
+                    Capítulo IV: Classificação Geral
+                </a>
+                <a href="#capitulov" class="flex items-center px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-2 shrink-0"></span>
+                    Capítulos V a VIII: Regras
+                </a>
+                <a href="#consideracoes" class="flex items-center px-3 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:text-blue-600 hover:bg-blue-50/50 transition">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-300 mr-2 shrink-0"></span>
+                    Considerações Finais
+                </a>
+            </nav>
+        </div>
+        
+        <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-5 shadow-sm border border-slate-800 relative overflow-hidden">
+            <div class="absolute -right-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full blur-xl"></div>
+            <h4 class="font-bold text-xs uppercase tracking-wider text-slate-400">Canal de Suporte</h4>
+            <p class="text-[10px] text-slate-300 mt-2 leading-relaxed">Dúvidas sobre o regulamento ou processos de inscrição?</p>
+            <div class="mt-4">
+                <a href="mailto:olimpiadasuniversitaria@gmail.com" class="inline-flex items-center justify-center w-full px-3 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-[10px] font-bold transition shadow-sm active:scale-95">
+                    <i class="far fa-envelope mr-1.5"></i> Enviar E-mail
+                </a>
+            </div>
+        </div>
     </div>
 
-    <div class="bg-white shadow-xl border border-slate-200 rounded-3xl p-8 sm:p-12 text-slate-800 leading-relaxed text-justify space-y-8">
+    <!-- Conteúdo Principal (Direito) -->
+    <div class="lg:col-span-3 order-1 lg:order-2 space-y-8 bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-10 shadow-sm text-slate-650 leading-relaxed text-xs">
         
-        <section>
-            <h2 class="text-2xl font-bold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4">CAPÍTULO I <br><span class="text-xl">DAS DISPOSIÇÕES GERAIS</span></h2>
-            
-            <p class="mb-4"><strong class="text-blue-700">Art. 1º</strong> Denomina-se Olimpíadas Universitárias da UFVJM a competição poliesportiva organizada e realizada pelo Diretório Central dos Estudantes (DCE) da UFVJM. O torneio conta com a participação de estudantes regularmente matriculados nos cursos de graduação presenciais, pós-graduação, Ensino a Distância (EaD) da universidade e servidores. As atividades abrangem os campi de Diamantina, Janaúba, Teófilo Otoni e Unaí.</p>
-            <p class="mb-6 italic pl-4 border-l-4 border-slate-300">Parágrafo único: Fica facultada a participação da Atlética Suprema da Universidade do Estado de Minas Gerais (UEMG), na qualidade de representante oficial e exclusiva de sua instituição. É assegurado a ela os mesmos direitos e deveres das demais atléticas regularmente inscritas.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 2º</strong> Denomina-se Comissão Organizadora a equipe técnica disponibilizada pelo Diretório Central dos Estudantes que fará a gestão esportiva e administrativa do evento.</p>
-            <p class="mb-6 italic pl-4 border-l-4 border-slate-300">Parágrafo único: Denomina-se Comitê Olímpico o órgão colegiado formado pela junção da Comissão Organizadora com 2 (dois) representantes titulares designados por cada Associação Atlética Acadêmica e Servidores, os quais atuarão como rede de apoio estratégico e administrativo do evento. A indicação desses membros deve ser oficialmente formalizada por meio de documento assinado pela diretoria de sua respectiva atlética (Anexo X), ficando a critério da Comissão Organizadora, em caso de necessidade de suporte extra, a nomeação discricionária de representantes adicionais para integrar o comitê. Ao término do evento, todos os membros devidamente homologados farão jus a um certificado de organização.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 3º</strong> As disposições deste regulamento são soberanas sobre quaisquer outros. As normas e regras das federações brasileiras e internacionais de cada modalidade são subsidiariamente complementares e aplicáveis, salvo as adaptações locais expressas neste documento.</p>
-            
-            <p class="mb-4"><strong class="text-blue-700">Art. 4º</strong> As fases preliminares classificatórias ocorrerão de maneira descentralizada em cada um dos campi da UFVJM (Diamantina e Teófilo Otoni), conforme os critérios de quórum estabelecidos. As semifinais e finais gerais de todas as modalidades serão centralizadas e realizadas no campus de Diamantina, reunindo as equipes e atletas classificados.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 5º</strong> As modalidades das Olimpíadas Universitárias da UFVJM serão classificadas em:</p>
-            
-            <h3 class="font-bold mt-2">I – Modalidades Oficiais</h3>
-            <p class="mb-2">São consideradas modalidades oficiais aquelas que compõem a classificação geral das Olimpíadas Universitárias e cujos resultados gerarão pontuação para o ranking geral das atléticas participantes:</p>
-            <ul class="list-disc pl-8 mb-4">
-                <li>a) Futsal Masculino e Futsal Feminino;</li>
-                <li>b) Voleibol Masculino e Voleibol Feminino;</li>
-                <li>c) Handebol Masculino e Handebol Feminino;</li>
-                <li>d) Atletismo Masculino e Atletismo Feminino;</li>
-                <li>e) Peteca Masculina; Peteca Feminina;</li>
-                <li>f) Natação Masculina Natação Feminina;</li>
-                <li>g) Tênis de Mesa Masculino; Tênis de Mesa Feminino;</li>
-                <li>h) Basquete Masculino; Basquete Feminino;</li>
-                <li>i) Xadrez misto.</li>
-            </ul>
-
-            <h3 class="font-bold mt-2">II – Modalidades Não Oficiais</h3>
-            <p class="mb-2">São consideradas modalidades não oficiais aquelas de caráter recreativo, integrativo e lúdico, cujos resultados não gerarão pontuação para a classificação geral das Olimpíadas:</p>
-            <ul class="list-disc pl-8 mb-4">
-                <li>a) Voleibol Misto;</li>
-                <li>b) Peteca Mista;</li>
-                <li>c) Truco Mineiro;</li>
-                <li>d) Queimada Mista.</li>
-            </ul>
-
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§1º As modalidades não oficiais terão regras adaptadas, definidas pela Comissão Organizadora, observando os princípios de integração, participação e espírito esportivo.</p>
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§2º As equipes vencedoras das modalidades não oficiais receberão premiação específica, sem atribuição de pontos para a classificação geral das Olimpíadas.</p>
-            <p class="mb-6 pl-4 border-l-4 border-slate-300">§3º Todas as modalidades, oficiais ou não oficiais, estarão sujeitas às normas disciplinares e administrativas previstas neste regulamento.</p>
-        </section>
-
-        <section>
-            <h2 class="text-2xl font-bold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4">CAPÍTULO II <br><span class="text-xl">DO MODELO DE COMPETIÇÃO E CHAVEAMENTO</span></h2>
-            
-            <h3 class="font-bold text-lg mb-2">SEÇÃO I – DA FASE CLASSIFICATÓRIA POR CAMPUS</h3>
-            <p class="mb-4"><strong class="text-blue-700">Art. 6º</strong> As fases preliminares regionais respeitarão o volume de Associações Atléticas Acadêmicas (AAAs) registradas em cada localidade:</p>
-            <ul class="list-disc pl-8 mb-4">
-                <li>Campus Diamantina: Composto por 15 (quinze) atléticas inscritas.</li>
-                <li>Campus Teófilo Otoni: Composto por 2 (duas) atléticas inscritas.</li>
-                <li>Campus Janaúba e Campus Unaí: Compostos por apenas 1 (uma) atlética cada. Devido à ausência de concorrência interna, estes campi não disputarão fase preliminar regional, estando automaticamente classificados para as Finais Gerais em Diamantina.</li>
-            </ul>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 7º</strong> O formato de disputa das modalidades coletivas e de duplas (Futsal, Voleibol, Handebol, Basquete, Peteca, Tenis de Mesa, Queimada e Truco) nas fases eliminatórias de cada campus será o Mata-Mata Simples (eliminatória simples) em jogo único. Poderão ocorrer confrontos de repescagem a critério da comissão organizadora para melhor organização do evento, respeitando os princípios de transparência e sendo previamente estabelecidos. Os vencedores de cada modalidade esportiva na fase pré-eliminar classificam-se para a Grande Fase Final.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 8º</strong> No Campus Diamantina, devido ao número ímpar de participantes (15 equipes), o chaveamento das oitavas de final exigirá que 14 (quatorze) equipes se enfrentem diretamente em 7 (sete) confrontos, enquanto 1 (uma) atlética — definida por sorteio aleatório prévio conduzido pela Comissão Organizadora — avançará diretamente para as quartas de final (bye).</p>
-
-            <p class="mb-6"><strong class="text-blue-700">Art. 9º</strong> No Campus Teófilo Otoni, a fase classificatória consistirá exclusivamente em 1 (um) confronto direto por modalidade entre as duas atléticas locais, definindo o representante do campus para a fase final.</p>
-
-            <h3 class="font-bold text-lg mb-2">SEÇÃO II – DA GRANDE FASE FINAL (CONFLUÊNCIA DOS CAMPI)</h3>
-            <p class="mb-4"><strong class="text-blue-700">Art. 10º</strong> A Fase Final Geral reunirá as 4 (quatro) equipes campeãs por modalidade no campus Diamantina: o campeão da classificatória de Diamantina, o campeão da classificatória de Teófilo Otoni, a atlética representante de Janaúba e a atlética representante de Unaí.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 11º</strong> O formato da Fase Final Geral consistirá em Semifinais e Finais. Haverá, obrigatoriamente, a disputa de 3º lugar (medalha de bronze) entre as equipes perdedoras das semifinais.</p>
-            <p class="mb-6 italic pl-4 border-l-4 border-slate-300">Parágrafo único: O chaveamento das semifinais será definido por sorteio aleatório realizado pela Comissão Organizadora antes do início da fase final, em data a ser estabelecida e divulgada nos meios oficiais de comunicação das olímpiadas.</p>
-        </section>
-
-        <section>
-            <h2 class="text-2xl font-bold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4">CAPÍTULO III <br><span class="text-xl">DAS INSCRIÇÕES</span></h2>
-            
-            <p class="mb-4"><strong class="text-blue-700">Art. 12º</strong> A inscrição na competição será realizada obrigatoriamente por equipe (Atlética ou time de Servidores), devendo a liderança responsável apresentar a listagem consolidada de todos os atletas de sua delegação, acompanhada das devidas documentações comprobatórias de vínculo e do comprovante do pagamento referente ao valor total de inscritos.</p>
-            <p class="mb-4 italic pl-4 border-l-4 border-slate-300">Parágrafo único: No ato da inscrição, a equipe deverá selecionar todas as modalidades das quais deseja competir, ficando expressamente vetada qualquer inclusão, exclusão ou alteração de modalidades após a homologação e encerramento do prazo de inscrições.</p>
-            <p class="mb-2">Cada atlética poderá inscrever:</p>
-            <ul class="list-disc pl-8 mb-4">
-                <li>I – uma equipe por modalidade coletiva;</li>
-                <li>II – uma dupla ou atleta por modalidade individual ou de duplas;</li>
-                <li>III – até 2 atletas por prova de atletismo e natação, por gênero.</li>
-            </ul>
-            <p class="mb-6">É permitida a participação de um mesmo atleta em mais de uma modalidade.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 13º</strong> A inscrição de egressos e servidores será permitida independentemente da comprovação de ausência de quórum mínimo da equipe, observando-se:</p>
-            <ul class="list-disc pl-8 mb-4">
-                <li>I – limite máximo de 3 (três) egressos por equipe;</li>
-                <li>II – apresentação de documentação comprobatória;</li>
-                <li>III – vedação à participação simultânea por mais de uma equipe.</li>
-            </ul>
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§ 2º Os egressos devem ter concluído o curso superior na UFVJM há, no máximo, 1 (um) ano em relação à data do evento. A comprovação deve ocorrer via diploma ou declaração oficial de colação de grau emitida pela instituição.</p>
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§ 3º A utilização de egressos fica flexibilizada, não estando condicionada exclusivamente à ausência de quórum mínimo, desde que respeitados o limite de dois atletas e o teto máximo de inscrições da modalidade. Não serão aceitas novas inclusões após os prazos limites estipulados.</p>
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§ 4º Nos casos em que a atlética representa mais de um curso ou um departamento inteiro por estatuto consolidado, será permitida a inscrição de estudantes matriculados em qualquer um desses cursos correlatos.</p>
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§ 5º Na impossibilidade de formação de equipes próprias de pós-graduação, os pós-graduandos poderão se inscrever na atlética de graduação de área correlata à sua formação, mediante anuência da Comissão Organizadora.</p>
-            <p class="mb-6 pl-4 border-l-4 border-slate-300">§ 6º Se não houver atlética estruturada no curso de graduação do estudante, este poderá ser inscrito em uma atlética de área correlata, após autorização da organização.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 14º</strong> Em caráter excepcional, caso um curso não possua associação atlética estruturada ou quórum mínimo de atletas, será facultada a fusão temporária entre dois ou mais cursos afins para viabilizar a participação no evento.</p>
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§ 1º A proposta de unificação deverá ser formalizada por um representante designado dos cursos interessados e submetida à avaliação prévia da Comissão Organizadora.</p>
-            <p class="mb-6 pl-4 border-l-4 border-slate-300">§ 2º Caso a Comissão Organizadora julgue a proposta pertinente, a união dos cursos será submetida à deliberação e votação oficial entre os representantes de todas as atléticas regularmente inscritas, exigindo-se o quórum de aprovação de, no mínimo, 60% (sessenta por cento) dos votos válidos para ser homologada.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 15º</strong> Após encerrado o prazo de inscrições, somente serão permitidas substituições mediante justificativa formal e aprovação da Comissão Organizadora. As solicitações de substituição de atletas inscritos deverão ser protocoladas com antecedência em prazo estipulado e divulgado pela comissão organizadora antes da partida.</p>
-
-            <p class="mb-6"><strong class="text-blue-700">Art. 16º</strong> A comprovação de matrícula ou vínculo SIAPE deverá ser realizada obrigatoriamente mediante a apresentação de atestado de vínculo emitido pelo sistema acadêmico oficial da UFVJM com data atualizada para o semestre vigente.</p>
-
-            <h3 class="font-bold text-lg mb-2">SEÇÃO III – TAXAS E PROCEDIMENTOS DE INSCRIÇÃO</h3>
-            <p class="mb-4"><strong class="text-blue-700">Art. 17º</strong> A taxa de inscrição na competição será de R$ 15,00 (dez reais) por atleta, aplicada igualmente para membros de Atléticas e para os times de Servidores.</p>
-            <p class="mb-6 italic pl-4 border-l-4 border-slate-300">Parágrafo único: O valor total deverá ser recolhido pelas lideranças e pago via PIX para a conta oficial indicada pela Comissão Organizadora. O comprovante consolidado, acompanhado da ficha oficial de inscrição (Anexos I ou II), deve ser enviado para o e-mail oficial: olimpiadasuniversitaria@gmail.com.</p>
-        </section>
-
-        <!-- Capítulos 4 em diante sumarizados visualmente devido a restrições de tamanho de tela, mas completos no conteúdo -->
-        <section>
-            <h2 class="text-2xl font-bold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4">CAPÍTULO IV <br><span class="text-xl">DA CLASSIFICAÇÃO GERAL DAS OLIMPÍADAS</span></h2>
-            
-            <p class="mb-4"><strong class="text-blue-700">Art. 18º</strong> A contagem de pontos para determinar a Atlética Campeã Geral das Olimpíadas Universitárias será feita por modalidade, atribuindo-se pontos de acordo com a classificação final na Fase Final Geral.</p>
-            
-            <p class="mb-4"><strong class="text-blue-700">Art. 19º</strong> As modalidades não oficiais não gerarão pontuação para a classificação geral, possuindo caráter exclusivamente recreativo, integrativo e cultural.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 20º</strong> A pontuação oficial das modalidades coletivas e individuais, computada para o ranking geral do campeonato, será atribuída aos 4 (quatro) primeiros colocados da Fase Final na seguinte proporção:</p>
-            <ul class="list-disc pl-8 mb-4">
-                <li>I – 1º lugar (Campeão): 12 pontos;</li>
-                <li>II – 2º lugar (Vice-campeão): 9 pontos;</li>
-                <li>III – 3º lugar: 7 pontos;</li>
-                <li>IV – 4º lugar: 5 pontos.</li>
-            </ul>
-            <p class="mb-2 pl-4 border-l-4 border-slate-300">§ 1º Como medida de fomento e incentivo à participação esportiva, todas as demais equipes participantes que não alcançarem as semifinais receberão 1 (um) ponto de bonificação por modalidade efetivamente disputada.</p>
-            <p class="mb-6 pl-4 border-l-4 border-slate-300">§ 2º Excluem-se do benefício do parágrafo anterior as equipes penalizadas por Walkover (W.O.). Nesses casos, além de não fazer jus a qualquer pontuação na modalidade, a delegação infratora sofrerá as sanções administrativas e pecuniárias previstas no Art. 51 deste regulamento.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 21º e 22º</strong> Será declarada Campeã Geral das Olimpíadas Universitárias da UFVJM a atlética que obtiver o maior número de pontos. Critérios de desempate incluem: maior número de títulos, vice-campeonatos, terceiros lugares, confronto direto e sorteio.</p>
-        </section>
-        
-        <section>
-            <h2 class="text-2xl font-bold text-slate-900 border-b-2 border-slate-100 pb-2 mb-4">CAPÍTULOS V A VIII <br><span class="text-xl">REGRAS ESPECÍFICAS, LOGÍSTICA E DISCIPLINA</span></h2>
-            
-            <p class="mb-4">As regras específicas detalham o quórum em quadra para as modalidades (Futsal, Vôlei, Handebol, Queimada, Truco, Peteca, Atletismo, Natação, Basquete, Tênis de Mesa e Xadrez). A tabela oficial é rígida, sem tolerância de atrasos (sujeito a W.O.).</p>
-            
-            <p class="mb-4"><strong class="text-blue-700">Art. 51º</strong> Penalidades por W.O. incluem desclassificação imediata, perda de 5 pontos na classificação geral e vitória padrão para a equipe adversária.</p>
-
-            <p class="mb-4"><strong class="text-blue-700">Art. 54º</strong> Política Estrita de Conflito de Interesses proíbe atuação de árbitros em partidas de atléticas com as quais tenham vínculo.</p>
-            
-            <p class="mb-4"><strong class="text-blue-700">Art. 57º e 58º</strong> O código de conduta prevê sanções que variam de advertência à exclusão completa da delegação, especialmente com tolerância zero para atitudes discriminatórias ou violentas.</p>
-        </section>
-
-        <div class="bg-blue-50 rounded-2xl p-6 border border-blue-100 text-center mt-12">
-            <h3 class="font-bold text-blue-900 mb-2">CONSIDERAÇÕES FINAIS</h3>
-            <p class="text-sm text-blue-800">
-                Os casos omissos neste documento serão avaliados e resolvidos de forma soberana e irrecorrível pela Comissão Organizadora das Olimpíadas Universitárias em conjunto com a junta de arbitragem.<br>
-                Este regulamento entra em vigor na data de sua publicação.<br><br>
-                <strong>Diamantina – MG, 17 de Junho de 2026.</strong><br>
-                COMISSÃO ORGANIZADORA DAS OLIMPÍADAS UNIVERSITÁRIAS DA UFVJM – 2026
-            </p>
+        <div class="text-center pb-8 border-b border-slate-100 mb-6">
+            <h2 class="text-lg font-bold text-slate-800 tracking-tight">REGULAMENTO GERAL DAS OLIMPÍADAS UNIVERSITÁRIAS DA UFVJM</h2>
+            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider font-semibold">Diretório Central dos Estudantes (DCE) da UFVJM</p>
         </div>
+
+        <!-- CAPÍTULO I -->
+        <section id="capitulo1" class="scroll-mt-8 space-y-4">
+            <h3 class="text-sm font-bold text-slate-800 border-l-4 border-blue-500 pl-3 uppercase tracking-wider">CAPÍTULO I - DAS DISPOSIÇÕES GERAIS</h3>
+            
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 1º</span>
+                Denomina-se Olimpíadas Universitárias da UFVJM a competição poliesportiva organizada e realizada pelo Diretório Central dos Estudantes (DCE) da UFVJM. O torneio conta com a participação de estudantes regularmente matriculados nos cursos de graduação presenciais, pós-graduação, Ensino a Distância (EaD) da universidade e servidores. As atividades abrangerão os campi de Diamantina, Janaúba, Teófilo Otoni e Unaí.
+            </p>
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl italic text-[11px] text-slate-500">
+                <strong>Parágrafo único:</strong> Fica facultada a participação da Atlética Suprema da Universidade do Estado de Minas Gerais (UEMG), na qualidade de representante oficial e exclusiva de sua instituição. É assegurado a ela os mesmos direitos e deveres das demais atléticas regularmente inscritas.
+            </div>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 2º</span>
+                Denomina-se Comissão Organizadora a equipe técnica disponibilizada pelo Diretório Central dos Estudantes que fará a gestão esportiva e administrativa do evento.
+            </p>
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl italic text-[11px] text-slate-500 leading-relaxed">
+                <strong>Parágrafo único:</strong> Denomina-se Comitê Olímpico o órgão colegiado formado pela junção da Comissão Organizadora com 2 (dois) representantes titulares designados por cada Associação Atlética Acadêmica e Servidores, os quais atuarão como rede de apoio estratégico e administrativo do evento. A indicação desses membros deve ser oficialmente formalizada por meio de documento assinado pela diretoria de sua respectiva atlética (Anexo X), ficando a critério da Comissão Organizadora, em caso de necessidade de suporte extra, a nomeação discricionária de representantes adicionais para integrar o comitê. Ao término do evento, todos os membros devidamente homologados farão jus a um certificado de organização.
+            </div>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 3º</span>
+                As disposições deste regulamento são soberanas sobre quaisquer outros. As normas e regras das federações brasileiras e internacionais de cada modalidade são subsidiariamente complementares e aplicáveis, salvo as adaptações locais expressas neste documento.
+            </p>
+            
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 4º</span>
+                As fases preliminares classificatórias ocorrerão de maneira descentralizada em cada um dos campi da UFVJM (Diamantina e Teófilo Otoni), conforme os critérios de quórum estabelecidos. As semifinais e finais gerais de todas as modalidades serão centralizadas e realizadas no campus de Diamantina, reunindo as equipes e atletas classificados.
+            </p>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 5º</span>
+                As modalidades das Olimpíadas Universitárias da UFVJM serão classificadas em:
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div class="border border-slate-100 rounded-2xl p-4 bg-slate-50/50">
+                    <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fas fa-trophy text-amber-500"></i> I – Modalidades Oficiais
+                    </h4>
+                    <p class="text-[10px] text-slate-400 mb-3">Geram pontuação para o ranking geral das atléticas:</p>
+                    <ul class="space-y-1 text-[11px]">
+                        <li>• Futsal (Masculino e Feminino)</li>
+                        <li>• Voleibol (Masculino e Feminino)</li>
+                        <li>• Handebol (Masculino e Feminino)</li>
+                        <li>• Atletismo (Masculino e Feminino)</li>
+                        <li>• Peteca (Masculino e Feminino)</li>
+                        <li>• Natação (Masculino e Feminino)</li>
+                        <li>• Tênis de Mesa (Masculino e Feminino)</li>
+                        <li>• Basquete (Masculino e Feminino)</li>
+                        <li>• Xadrez (Misto)</li>
+                    </ul>
+                </div>
+
+                <div class="border border-slate-100 rounded-2xl p-4 bg-slate-50/50">
+                    <h4 class="font-bold text-slate-800 text-[11px] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fas fa-laugh-beam text-teal-500"></i> II – Modalidades Não Oficiais
+                    </h4>
+                    <p class="text-[10px] text-slate-400 mb-3">Caráter recreativo e de integração, sem pontos no ranking:</p>
+                    <ul class="space-y-1 text-[11px]">
+                        <li>• Voleibol Misto</li>
+                        <li>• Peteca Mista</li>
+                        <li>• Truco Mineiro</li>
+                        <li>• Queimada Mista</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="space-y-1.5 text-[11px] text-slate-500 pl-4 border-l-2 border-slate-200 mt-2">
+                <p><strong>§ 1º</strong> As modalidades não oficiais terão regras adaptadas, definidas pela Comissão Organizadora, observando os princípios de integração, participação e espírito esportivo.</p>
+                <p><strong>§ 2º</strong> As equipes vencedoras das modalidades não oficiais receberão premiação específica, sem atribuição de pontos para a classificação geral das Olimpíadas.</p>
+                <p><strong>§ 3º</strong> Todas as modalidades, oficiais ou não oficiais, estarão sujeitas às normas disciplinares e administrativas previstas neste regulamento.</p>
+            </div>
+        </section>
+
+        <!-- CAPÍTULO II -->
+        <section id="capitulo2" class="scroll-mt-8 space-y-4 pt-6 border-t border-slate-100">
+            <h3 class="text-sm font-bold text-slate-800 border-l-4 border-blue-500 pl-3 uppercase tracking-wider">CAPÍTULO II - MODELO DE COMPETIÇÃO E CHAVEAMENTO</h3>
+            
+            <h4 class="font-semibold text-slate-800 text-[11px] uppercase tracking-wider mt-2">SEÇÃO I – DA FASE CLASSIFICATÓRIA POR CAMPUS</h4>
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 6º</span>
+                As fases preliminares regionais respeitarão o volume de Associações Atléticas Acadêmicas (AAAs) registradas em cada localidade:
+            </p>
+            <ul class="list-disc pl-5 space-y-1 text-[11px]">
+                <li><strong>Campus Diamantina:</strong> Composto por 15 (quinze) atléticas inscritas.</li>
+                <li><strong>Campus Teófilo Otoni:</strong> Composto por 2 (duas) atléticas inscritas.</li>
+                <li><strong>Campus Janaúba e Campus Unaí:</strong> Compostos por apenas 1 (uma) atlética cada. Devido à ausência de concorrência interna, estes campi não disputarão fase preliminar regional, estando automaticamente classificados para as Finais Gerais em Diamantina.</li>
+            </ul>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 7º</span>
+                O formato de disputa das modalidades coletivas e de duplas nas fases eliminatórias de cada campus será o Mata-Mata Simples (eliminatória simples) em jogo único. Confrontos de repescagem poderão ocorrer a critério da comissão organizadora. Os vencedores classificam-se para a Grande Fase Final.
+            </p>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 8º</span>
+                No Campus Diamantina, devido ao número ímpar de participantes (15 equipes), o chaveamento das oitavas de final exigirá que 14 (quatorze) equipes se enfrentem diretamente em 7 (sete) confrontos, enquanto 1 (uma) atlética — definida por sorteio aleatório prévio — avançará diretamente para as quartas de final (bye).
+            </p>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 9º</span>
+                No Campus Teófilo Otoni, a fase classificatória consistirá exclusivamente em 1 (um) confronto direto por modalidade entre as duas atléticas locais, definindo o representante do campus para a fase final.
+            </p>
+
+            <h4 class="font-semibold text-slate-800 text-[11px] uppercase tracking-wider mt-4">SEÇÃO II – DA GRANDE FASE FINAL (CONFLUÊNCIA DOS CAMPI)</h4>
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 10º</span>
+                A Fase Final Geral reunirá as 4 (quatro) equipes campeãs por modalidade no campus Diamantina: o campeão de Diamantina, o campeão de Teófilo Otoni, a atlética de Janaúba e a atlética de Unaí.
+            </p>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 11º</span>
+                O formato da Fase Final Geral consistirá em Semifinais e Finais. Haverá disputa de 3º lugar (medalha de bronze) entre as equipes perdedoras das semifinais.
+            </p>
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl italic text-[11px] text-slate-500">
+                <strong>Parágrafo único:</strong> O chaveamento das semifinais será definido por sorteio aleatório realizado pela Comissão Organizadora antes do início da fase final.
+            </div>
+        </section>
+
+        <!-- CAPÍTULO III -->
+        <section id="capitulo3" class="scroll-mt-8 space-y-4 pt-6 border-t border-slate-100">
+            <h3 class="text-sm font-bold text-slate-800 border-l-4 border-blue-500 pl-3 uppercase tracking-wider">CAPÍTULO III - DAS INSCRIÇÕES</h3>
+            
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 12º</span>
+                A inscrição na competição será realizada obrigatoriamente por equipe (Atlética ou time de Servidores), devendo a liderança responsável apresentar a listagem consolidada de todos os atletas de sua delegação, acompanhada das devidas documentações comprobatórias de vínculo e do comprovante do pagamento.
+            </p>
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl italic text-[11px] text-slate-500">
+                <strong>Parágrafo único:</strong> No ato da inscrição, a equipe deverá selecionar todas as modalidades das quais deseja competir, ficando expressamente vetada qualquer inclusão, exclusão ou alteração após a homologação.
+            </div>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 13º</span>
+                A inscrição de egressos e servidores será permitida independentemente da comprovação de ausência de quórum mínimo da equipe, observando-se:
+            </p>
+            <div class="border border-slate-100 rounded-2xl p-4 bg-slate-50/50 space-y-1.5 text-[11px]">
+                <p><strong>I –</strong> limite máximo de 3 (três) egressos por equipe;</p>
+                <p><strong>II –</strong> apresentação de documentação comprobatória (diploma ou declaração oficial de colação de grau emitida há no máximo 1 ano);</p>
+                <p><strong>III –</strong> vedação à participação simultânea por mais de uma equipe.</p>
+            </div>
+            
+            <div class="space-y-1.5 text-[11px] text-slate-500 pl-4 border-l-2 border-slate-200 mt-2">
+                <p><strong>§ 4º</strong> Nos casos em que a atlética representa mais de um curso ou um departamento inteiro por estatuto consolidado, será permitida a inscrição de estudantes matriculados em qualquer um desses cursos correlatos.</p>
+                <p><strong>§ 5º</strong> Na impossibilidade de formação de equipes próprias de pós-graduação, os pós-graduandos poderão se inscrever na atlética de graduação de área correlata.</p>
+                <p><strong>§ 6º</strong> Se não houver atlética estruturada no curso de graduação do estudante, este poderá ser inscrito em uma atlética de área correlata, após autorização da organização.</p>
+            </div>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 14º</span>
+                Em caráter excepcional, caso um curso não possua associação atlética estruturada ou quórum mínimo de atletas, será facultada a fusão temporária entre dois ou mais cursos afins.
+            </p>
+            <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl italic text-[11px] text-slate-500">
+                <strong>Parágrafo único:</strong> A fusão requer proposta formalizada e aprovação de, no mínimo, 60% (sessenta por cento) dos representantes de todas as atléticas inscritas em assembleia oficial.
+            </div>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 15º</span>
+                Após encerrado o prazo de inscrições, somente serão permitidas substituições mediante justificativa formal e aprovação da Comissão Organizadora.
+            </p>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 16º</span>
+                A comprovação de matrícula ou vínculo SIAPE deverá ser realizada obrigatoriamente mediante a apresentação de atestado de vínculo emitido pelo sistema acadêmico oficial da UFVJM com data atualizada para o semestre vigente.
+            </p>
+
+            <h4 class="font-semibold text-slate-800 text-[11px] uppercase tracking-wider mt-4">SEÇÃO III – TAXAS E PROCEDIMENTOS DE INSCRIÇÃO</h4>
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 17º</span>
+                A taxa de inscrição na competição será de <strong>R$ 15,00 (quinze reais)</strong> por atleta, aplicada igualmente para membros de Atléticas e para os times de Servidores.
+            </p>
+            <div class="p-4 bg-blue-50/50 border border-blue-100 rounded-2xl text-blue-800 text-[11px] leading-relaxed">
+                <strong>Procedimento:</strong> O valor total deve ser recolhido pelas lideranças e pago via PIX para a conta indicada. O comprovante consolidado com a ficha de inscrição (Anexos I ou II) deve ser enviado para o e-mail oficial: <a href="mailto:olimpiadasuniversitaria@gmail.com" class="font-bold text-blue-700 hover:underline">olimpiadasuniversitaria@gmail.com</a>.
+            </div>
+        </section>
+
+        <!-- CAPÍTULO IV -->
+        <section id="capitulo4" class="scroll-mt-8 space-y-4 pt-6 border-t border-slate-100">
+            <h3 class="text-sm font-bold text-slate-800 border-l-4 border-blue-500 pl-3 uppercase tracking-wider">CAPÍTULO IV - DA CLASSIFICAÇÃO GERAL DAS OLIMPÍADAS</h3>
+            
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 18º</span>
+                A contagem de pontos para determinar a Atlética Campeã Geral das Olimpíadas Universitárias será feita por modalidade, atribuindo-se pontos de acordo com a classificação final na Fase Final Geral.
+            </p>
+            
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 19º</span>
+                As modalidades não oficiais não gerarão pontuação para a classificação geral, possuindo caráter exclusivamente recreativo, integrativo e cultural.
+            </p>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 20º</span>
+                A pontuação oficial das modalidades coletivas e individuais, computada para o ranking geral do campeonato, será atribuída aos 4 (quatro) primeiros colocados da Fase Final na seguinte proporção:
+            </p>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="p-3 border border-slate-100 rounded-xl bg-slate-50 text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">1º Lugar</span>
+                    <span class="block text-lg font-extrabold text-blue-600 mt-1">12 pts</span>
+                </div>
+                <div class="p-3 border border-slate-100 rounded-xl bg-slate-50 text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">2º Lugar</span>
+                    <span class="block text-lg font-extrabold text-slate-700 mt-1">9 pts</span>
+                </div>
+                <div class="p-3 border border-slate-100 rounded-xl bg-slate-50 text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">3º Lugar</span>
+                    <span class="block text-lg font-extrabold text-slate-600 mt-1">7 pts</span>
+                </div>
+                <div class="p-3 border border-slate-100 rounded-xl bg-slate-50 text-center">
+                    <span class="block text-[10px] text-slate-400 font-bold uppercase">4º Lugar</span>
+                    <span class="block text-lg font-extrabold text-slate-500 mt-1">5 pts</span>
+                </div>
+            </div>
+
+            <div class="space-y-1.5 text-[11px] text-slate-500 pl-4 border-l-2 border-slate-200 mt-2">
+                <p><strong>§ 1º</strong> Como medida de fomento e incentivo à participação esportiva, todas as demais equipes participantes que não alcançarem as semifinais receberão 1 (um) ponto de bonificação por modalidade disputada.</p>
+                <p><strong>§ 2º</strong> Excluem-se do benefício as equipes penalizadas por Walkover (W.O.). Nesses casos, além de não fazer jus a pontos, a delegação infratora sofrerá sanções administrativas e pecuniárias.</p>
+            </div>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 21º / 22º</span>
+                Será declarada Campeã Geral a atlética que obtiver o maior somatório de pontos. Critérios de desempate: maior número de títulos (1º lugares), vice-campeonatos (2º lugares), terceiros lugares, confronto direto e sorteio.
+            </p>
+        </section>
+
+        <!-- CAPÍTULOS V A VIII -->
+        <section id="capitulov" class="scroll-mt-8 space-y-4 pt-6 border-t border-slate-100">
+            <h3 class="text-sm font-bold text-slate-800 border-l-4 border-blue-500 pl-3 uppercase tracking-wider">CAPÍTULOS V A VIII - REGRAS ESPECÍFICAS, LOGÍSTICA E DISCIPLINA</h3>
+            
+            <p>
+                As regras específicas detalham o quórum em quadra para as modalidades (Futsal, Vôlei, Handebol, Queimada, Truco, Peteca, Atletismo, Natação, Basquete, Tênis de Mesa e Xadrez). A tabela oficial é rígida, sem tolerância de atrasos (sujeito a W.O.).
+            </p>
+            
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-100 font-bold text-[9px] mr-1 uppercase">Art. 51º</span>
+                Penalidades por W.O. incluem desclassificação imediata da modalidade, perda de 5 pontos na classificação geral e vitória padrão por placar técnico para a equipe adversária.
+            </p>
+
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold text-[9px] mr-1 uppercase">Art. 54º</span>
+                Política Estrita de Conflito de Interesses proíbe a atuação de árbitros em partidas de atléticas com as quais possuam vínculo pessoal, acadêmico ou institucional.
+            </p>
+            
+            <p>
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded bg-red-50 text-red-700 border border-red-100 font-bold text-[9px] mr-1 uppercase">Art. 57º / 58º</span>
+                O código de conduta prevê sanções que variam de advertência à exclusão completa da delegação, especialmente com tolerância zero para atitudes discriminatórias ou violentas de qualquer espécie.
+            </p>
+        </section>
+
+        <!-- CONSIDERAÇÕES FINAIS -->
+        <section id="consideracoes" class="scroll-mt-8 pt-6 border-t border-slate-100">
+            <div class="bg-blue-50/50 border border-blue-100/70 rounded-2xl p-5 text-center">
+                <h4 class="font-bold text-blue-900 text-xs uppercase tracking-wider mb-2">CONSIDERAÇÕES FINAIS</h4>
+                <p class="text-[11px] text-blue-800 leading-relaxed max-w-xl mx-auto">
+                    Os casos omissos neste documento serão avaliados e resolvidos de forma soberana e irrecorrível pela Comissão Organizadora das Olimpíadas Universitárias em conjunto com a junta de arbitragem.<br>
+                    Este regulamento entra em vigor na data de sua publicação.<br><br>
+                    <span class="block mt-2 font-bold text-blue-900">Diamantina – MG.<br>COMISSÃO ORGANIZADORA DAS OLIMPÍADAS UNIVERSITÁRIAS DA UFVJM</span>
+                </p>
+            </div>
+        </section>
+        
     </div>
 </div>
 {% endblock %}
