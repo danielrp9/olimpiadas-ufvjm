@@ -268,5 +268,15 @@
             }
         }
     </script>
+
+    <!-- Script para salvar dados do último usuário autenticado -->
+    {% if user.is_authenticated %}
+    <script>
+        localStorage.setItem('last_user_name', '{{ user.nome_completo|default:user.email|escapejs }}');
+        localStorage.setItem('last_user_email', '{{ user.email|escapejs }}');
+        localStorage.setItem('last_user_avatar', '{{ user.foto_url|default:""|escapejs }}');
+        localStorage.setItem('last_user_role', '{{ user.get_role_display|escapejs }}');
+    </script>
+    {% endif %}
 </body>
 </html>

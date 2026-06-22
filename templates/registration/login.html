@@ -1,43 +1,109 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Entrar - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
 <style>
     body {
-        background-color: #f0f4f8 !important; /* Tom azulado sutil e limpo para destacar o card */
+        background-color: #f8fafc !important;
+        position: relative;
+    }
+    @keyframes pulse-slow {
+        0%, 100% {
+            transform: scale(1) translate(0px, 0px);
+        }
+        33% {
+            transform: scale(1.1) translate(20px, -30px);
+        }
+        66% {
+            transform: scale(0.95) translate(-15px, 15px);
+        }
+    }
+    .animate-glow-1 {
+        animation: pulse-slow 16s infinite ease-in-out;
+    }
+    .animate-glow-2 {
+        animation: pulse-slow 20s infinite ease-in-out reverse;
+    }
+    .animate-glow-3 {
+        animation: pulse-slow 24s infinite ease-in-out 1s;
+    }
+    .animate-glow-4 {
+        animation: pulse-slow 28s infinite ease-in-out 3s reverse;
     }
 </style>
 
-<div class="max-w-md mx-auto mt-12 px-4">
+<!-- Feixes de cores com cores das olimpíadas no background -->
+<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+    <!-- Orb 1: Azul (#0169C2) -->
+    <div class="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[150px] opacity-15 animate-glow-1" style="background-color: #0169C2;"></div>
+    
+    <!-- Orb 2: Dourado (#FDA003) -->
+    <div class="absolute -top-10 -right-10 w-[550px] h-[550px] rounded-full blur-[140px] opacity-15 animate-glow-2" style="background-color: #FDA003;"></div>
+    
+    <!-- Orb 3: Carmim (#CB0754) -->
+    <div class="absolute -bottom-32 -left-10 w-[600px] h-[600px] rounded-full blur-[150px] opacity-12 animate-glow-3" style="background-color: #CB0754;"></div>
+    
+    <!-- Orb 4: Laranja/Vermelho (#F24D0A) -->
+    <div class="absolute -bottom-10 right-20 w-[550px] h-[550px] rounded-full blur-[140px] opacity-12 animate-glow-4" style="background-color: #F24D0A;"></div>
+</div>
+
+<div class="max-w-md mx-auto mt-12 px-4 relative z-10">
     <!-- CONTAINER DO CARD -->
     <div class="bg-white shadow-xl rounded-3xl p-6 sm:p-8 transition-all duration-300">
         
         <!-- VISTA SOCIAL (GOOGLE) -->
         <div id="view-social" class="space-y-6">
             <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 text-blue-600 mb-3 animate-pulse">
-                    <i class="fas fa-shield-alt text-xl"></i>
-                </div>
+                <img src="{% static 'logo.png' %}" alt="Brasão das Olimpíadas" class="w-20 h-20 mx-auto mb-4 object-contain">
                 <h1 class="text-2xl font-black text-slate-800 tracking-tight">Portal de Acesso</h1>
-                <p class="text-slate-500 mt-1 text-xs font-semibold">
+                <p class="text-slate-550 mt-1 text-xs font-semibold" id="social-subtitle">
                     Faça login com sua conta Google
                 </p>
             </div>
 
-            <!-- Botão de Login Social do Google -->
-            <a href="{% url 'google_login' %}" 
-               class="w-full inline-flex items-center justify-center px-5 py-3 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold shadow-sm transition-all duration-200 active:scale-[0.98] group text-sm">
-                <svg class="flex-shrink-0 w-4 h-4 mr-2.5 group-hover:scale-110 transition-transform duration-200" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-                    <g transform="matrix(1, 0, 0, 1, 0, 0)">
-                        <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.58h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.48c0,-0.61 -0.05,-1.2 -0.15,-1.72z" fill="#4285F4" />
-                        <path d="M12,20.7c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.58c-0.91,0.61 -2.08,0.98 -3.3,0.98c-2.34,0 -4.32,-1.58 -5.03,-3.7H2.94v2.66c1.48,2.94 4.52,4.84 8.02,4.84z" fill="#34A853" />
-                        <path d="M6.97,13.2a5.21,5.21 0 0 1 0,-3.4V7.14H2.94a9.9,9.9 0 0 0 0,9.72l4.03,-2.66z" fill="#FBBC05" />
-                        <path d="M12,6.52c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,3.77 14.42,3.3 12,3.3C8.52,3.3 5.48,5.2 4,8.14l4.03,2.66c0.71,-2.12 2.69,-3.7 5.03,-3.7z" fill="#EA4335" />
-                    </g>
-                </svg>
-                Entrar com o Google
-            </a>
+            <!-- Bloco de Acesso Rápido (Exibido se houver usuário salvo no localStorage) -->
+            <div id="quick-access-container" class="hidden space-y-4">
+                <div class="flex items-center space-x-3.5 p-3.5 bg-slate-50 border border-slate-200/60 rounded-2xl">
+                    <img id="quick-avatar" src="" alt="Avatar" class="w-12 h-12 rounded-xl object-cover border border-slate-200 shadow-sm shrink-0 hidden">
+                    <div id="quick-avatar-placeholder" class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-650 font-bold text-lg shrink-0 hidden">
+                        A
+                    </div>
+                    <div class="text-left overflow-hidden">
+                        <span id="quick-name" class="text-xs font-bold text-slate-800 block leading-tight truncate">Nome</span>
+                        <span id="quick-email" class="text-[10px] text-slate-400 block truncate mt-0.5">email</span>
+                        <span id="quick-role" class="inline-flex items-center px-2 py-0.5 rounded-full text-[8px] font-bold bg-blue-50 text-blue-600 border border-blue-100 uppercase tracking-wide mt-1.5">Cargo</span>
+                    </div>
+                </div>
+
+                <a href="{% url 'google_login' %}" 
+                   class="w-full inline-flex items-center justify-center px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-all duration-200 active:scale-[0.98] text-sm gap-2">
+                    <i class="fas fa-sign-in-alt"></i> Entrar como <span id="quick-first-name" class="font-black">Usuário</span>
+                </a>
+
+                <div class="text-center pt-2">
+                    <button type="button" onclick="clearQuickAccess()" class="text-[11px] text-slate-400 hover:text-red-650 font-bold transition hover:underline">
+                        Entrar com outra conta Google
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botão Padrão do Google -->
+            <div id="standard-google-container">
+                <a href="{% url 'google_login' %}" 
+                   class="w-full inline-flex items-center justify-center px-5 py-3 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold shadow-sm transition-all duration-200 active:scale-[0.98] group text-sm">
+                    <svg class="flex-shrink-0 w-4 h-4 mr-2.5 group-hover:scale-110 transition-transform duration-200" viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+                        <g transform="matrix(1, 0, 0, 1, 0, 0)">
+                            <path d="M21.35,11.1H12v2.7h5.38c-0.24,1.28 -0.96,2.37 -2.04,3.1v2.58h3.3c1.93,-1.78 3.04,-4.4 3.04,-7.48c0,-0.61 -0.05,-1.2 -0.15,-1.72z" fill="#4285F4" />
+                            <path d="M12,20.7c2.43,0 4.47,-0.8 5.96,-2.2l-3.3,-2.58c-0.91,0.61 -2.08,0.98 -3.3,0.98c-2.34,0 -4.32,-1.58 -5.03,-3.7H2.94v2.66c1.48,2.94 4.52,4.84 8.02,4.84z" fill="#34A853" />
+                            <path d="M6.97,13.2a5.21,5.21 0 0 1 0,-3.4V7.14H2.94a9.9,9.9 0 0 0 0,9.72l4.03,-2.66z" fill="#FBBC05" />
+                            <path d="M12,6.52c1.32,0 2.5,0.45 3.44,1.35l2.58,-2.58C16.46,3.77 14.42,3.3 12,3.3C8.52,3.3 5.48,5.2 4,8.14l4.03,2.66c0.71,-2.12 2.69,-3.7 5.03,-3.7z" fill="#EA4335" />
+                        </g>
+                    </svg>
+                    Entrar com o Google
+                </a>
+            </div>
 
             <!-- Informações sobre o acesso social -->
             <div class="p-4 bg-blue-50/40 border border-blue-100/60 rounded-2xl text-[11px] text-slate-600 leading-relaxed space-y-2 shadow-sm">
@@ -60,9 +126,7 @@
         <!-- VISTA ADMINISTRATIVA (LOCAL) -->
         <div id="view-admin" class="hidden space-y-6">
             <div class="text-center mb-6">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-indigo-50 text-indigo-600 mb-3">
-                    <i class="fas fa-lock text-xl"></i>
-                </div>
+                <img src="{% static 'logo.png' %}" alt="Brasão das Olimpíadas" class="w-20 h-20 mx-auto mb-4 object-contain">
                 <h1 class="text-2xl font-black text-slate-800 tracking-tight">Acesso Restrito</h1>
                 <p class="text-slate-500 mt-1 text-xs font-semibold">
                     Painel Local para a Comissão
@@ -124,8 +188,53 @@ function switchToSocial() {
     document.getElementById('view-social').classList.remove('hidden');
 }
 
+function checkQuickAccess() {
+    const email = localStorage.getItem('last_user_email');
+    const name = localStorage.getItem('last_user_name');
+    const avatar = localStorage.getItem('last_user_avatar');
+    const role = localStorage.getItem('last_user_role');
+    
+    if (email && name) {
+        document.getElementById('quick-access-container').classList.remove('hidden');
+        document.getElementById('standard-google-container').classList.add('hidden');
+        
+        document.getElementById('social-subtitle').innerText = 'Deseja continuar com o acesso rápido?';
+        document.getElementById('quick-name').innerText = name;
+        document.getElementById('quick-email').innerText = email;
+        document.getElementById('quick-role').innerText = role || 'Representante';
+        
+        const firstName = name.split(' ')[0];
+        document.getElementById('quick-first-name').innerText = firstName;
+        
+        if (avatar && avatar !== '') {
+            const img = document.getElementById('quick-avatar');
+            img.src = avatar;
+            img.classList.remove('hidden');
+            document.getElementById('quick-avatar-placeholder').classList.add('hidden');
+        } else {
+            const placeholder = document.getElementById('quick-avatar-placeholder');
+            placeholder.innerText = firstName.charAt(0).toUpperCase();
+            placeholder.classList.remove('hidden');
+            document.getElementById('quick-avatar').classList.add('hidden');
+        }
+    } else {
+        document.getElementById('quick-access-container').classList.add('hidden');
+        document.getElementById('standard-google-container').classList.remove('hidden');
+        document.getElementById('social-subtitle').innerText = 'Faça login com sua conta Google';
+    }
+}
+
+function clearQuickAccess() {
+    localStorage.removeItem('last_user_email');
+    localStorage.removeItem('last_user_name');
+    localStorage.removeItem('last_user_avatar');
+    localStorage.removeItem('last_user_role');
+    checkQuickAccess();
+}
+
 // Se o formulário tiver erros (ex.: tentativa falha), exibe a aba admin de imediato
 document.addEventListener("DOMContentLoaded", function() {
+    checkQuickAccess();
     {% if form.errors %}
         switchToAdmin();
     {% endif %}
