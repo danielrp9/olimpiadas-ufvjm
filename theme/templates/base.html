@@ -32,19 +32,22 @@
                         
                         {% if user.is_staff %}
                             <!-- Menus exclusivos da Comissão -->
-                            <a href="{% url 'admin_modalidades' %}" class="{% if 'comissao/modalidade' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
-                                Gestão de Modalidades
+                            <a href="{% url 'admin_delegacoes' %}" class="{% if 'comissao/delegacoes' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
+                                Delegações
                             </a>
-                            <a href="{% url 'admin_equipes' %}" class="{% if 'comissao/equipe' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
-                                Todas as Equipes
+                            <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
+                                Pré-Súmulas
+                            </a>
+                            <a href="{% url 'admin_whitelist' %}" class="{% if 'comissao/whitelist' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
+                                Autorizar Comissão
                             </a>
                         {% else %}
                             <!-- Menus exclusivos dos Representantes/Atléticas -->
                             <a href="{% url 'atleta_list' %}" class="{% if 'atleta' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
                                 Atletas
                             </a>
-                            <a href="{% url 'modalidade_list' %}" class="{% if 'modalidade' in request.path and not 'comissao' in request.path or 'equipe' in request.path and not 'comissao' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
-                                Inscrições
+                            <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}border-blue-500 text-slate-900{% else %}border-transparent text-slate-500 hover:border-blue-500 hover:text-slate-700{% endif %} inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium transition">
+                                Pré-Súmulas (Escalar)
                             </a>
                         {% endif %}
                     </div>

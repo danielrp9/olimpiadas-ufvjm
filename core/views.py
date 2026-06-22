@@ -4,8 +4,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import Atleta, Modalidade, Equipe, SolicitacaoInclusao
-from .forms import RegisterForm, AtletaForm, EquipeForm
+from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta
+from .forms import RegisterForm, AtletaForm, JogoForm
+from users.models import ComissaoWhitelist
 
 class RegisterView(CreateView):
     form_class = RegisterForm
@@ -21,7 +22,8 @@ def logout_view(request):
     logout(request)
     return redirect('login')
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 from django.contrib.auth.decorators import user_passes_test, login_required
 from django.utils.decorators import method_decorator
 
@@ -38,31 +40,32 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         
         if user.is_staff:
             context['is_admin'] = True
-            context['total_equipes_global'] = Equipe.objects.count()
             context['total_atletas_global'] = Atleta.objects.count()
-            context['total_usuarios'] = User.objects.count()
-            context['ultimas_equipes'] = Equipe.objects.all().order_by('-data_inscricao')[:10]
+            context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE').count()
+            context['total_presumulas_global'] = PreSumula.objects.count()
+            context['ultimas_presumulas'] = PreSumula.objects.all().order_by('-data_criacao')[:10]
             
-            # Estatísticas por Modalidade
+            # Estatísticas por Modalidade baseadas em Pré-Súmulas
             context['stats_modalidade'] = Modalidade.objects.annotate(
-                num_equipes=Count('equipes')
-            ).order_by('-num_equipes')
+                num_presumulas=Count('jogos__presumulas')
+            ).order_by('-num_presumulas')
             
             # Estatísticas por Campus (Baseado nos Atletas)
             context['stats_campus'] = Atleta.objects.values('campus').annotate(
                 total=Count('id')
             ).order_by('-total')
             
-            # Estatísticas por Atlética/Usuário
-            context['stats_atletica'] = User.objects.filter(equipes_representadas__isnull=False).distinct().annotate(
-                num_inscricoes=Count('equipes_representadas')
-            ).order_by('-num_inscricoes')
+            # Estatísticas por Atlética/Delegação
+            context['stats_atletica'] = User.objects.filter(role='REPRESENTANTE').annotate(
+                num_atletas=Count('atletas'),
+                num_presumulas=Count('presumulas')
+            ).order_by('-num_atletas')
             
             return context
         
         context['is_admin'] = False
         context['total_atletas'] = Atleta.objects.filter(cadastrado_por=user).count()
-        context['minhas_equipes'] = Equipe.objects.filter(representante=user)
+        context['minhas_presumulas'] = PreSumula.objects.filter(representante=user).order_by('-jogo__data_jogo')
         context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True)
         return context
 
@@ -75,7 +78,7 @@ class AdminModalidadeListView(LoginRequiredMixin, ListView):
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
 class ModalidadeCreateView(LoginRequiredMixin, CreateView):
     model = Modalidade
-    fields = ['nome', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
+    fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
     template_name = 'core/modalidade_form.html'
     success_url = reverse_lazy('admin_modalidades')
 
@@ -86,7 +89,7 @@ class ModalidadeCreateView(LoginRequiredMixin, CreateView):
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
 class ModalidadeUpdateView(LoginRequiredMixin, UpdateView):
     model = Modalidade
-    fields = ['nome', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
+    fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
     template_name = 'core/modalidade_form.html'
     success_url = reverse_lazy('admin_modalidades')
 
@@ -100,32 +103,7 @@ class ModalidadeDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'core/confirm_delete.html'
     success_url = reverse_lazy('admin_modalidades')
 
-@method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
-class AdminEquipeListView(LoginRequiredMixin, ListView):
-    model = Equipe
-    template_name = 'core/admin_equipes.html'
-    context_object_name = 'equipes'
-    
-    def get_queryset(self):
-        queryset = Equipe.objects.all().order_by('-data_inscricao')
-        campus = self.request.GET.get('campus')
-        modalidade = self.request.GET.get('modalidade')
-        status = self.request.GET.get('status')
-        
-        if campus:
-            queryset = queryset.filter(atletas__campus=campus).distinct()
-        if modalidade:
-            queryset = queryset.filter(modalidade_id=modalidade)
-        if status:
-            queryset = queryset.filter(status=status)
-            
-        return queryset
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['campi_list'] = Atleta.objects.values_list('campus', flat=True).distinct()
-        context['modalidades_list'] = Modalidade.objects.all()
-        return context
+# Remoção de AdminEquipeListView de inscrições legadas
 
 @user_passes_test(lambda u: u.is_staff)
 def toggle_modalidade(request, pk):
@@ -135,54 +113,42 @@ def toggle_modalidade(request, pk):
     messages.success(request, f"Status da modalidade {modalidade.nome} alterado!")
     return redirect('admin_modalidades')
 
+@method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
+class JogoCreateView(LoginRequiredMixin, CreateView):
+    model = Jogo
+    form_class = JogoForm
+    template_name = 'core/jogo_form.html'
+    success_url = reverse_lazy('presumula_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Jogo lançado com sucesso! A pré-súmula está agora aberta para as delegações correspondentes.")
+        return super().form_valid(form)
+
+@method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
+class JogoUpdateView(LoginRequiredMixin, UpdateView):
+    model = Jogo
+    form_class = JogoForm
+    template_name = 'core/jogo_form.html'
+    success_url = reverse_lazy('presumula_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Dados do jogo atualizados com sucesso!")
+        return super().form_valid(form)
+
+@method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
+class JogoDeleteView(LoginRequiredMixin, DeleteView):
+    model = Jogo
+    template_name = 'core/confirm_delete.html'
+    success_url = reverse_lazy('presumula_list')
+
+    def form_valid(self, form):
+        messages.success(self.request, "Jogo excluído com sucesso!")
+        return super().form_valid(form)
+
 class RegulamentoView(TemplateView):
     template_name = 'core/regulamento.html'
 
-@user_passes_test(lambda u: u.is_staff)
-def avaliar_equipe(request, pk):
-    equipe = get_object_or_404(Equipe, pk=pk)
-    if request.method == 'POST':
-        novo_status = request.POST.get('status')
-        justificativa_equipe = request.POST.get('justificativa')
-        inconformes_ids = request.POST.getlist('atletas_inconformes[]')
-        
-        # Validação de Quórum
-        atletas_validos = equipe.atletas.count() - len(inconformes_ids)
-        if novo_status == 'aprovado' and atletas_validos < equipe.modalidade.limite_minimo_jogadores:
-            messages.error(request, f"Bloqueio: A equipe não pode ser aprovada. Quórum efetivo ({atletas_validos}) menor que o mínimo exigido ({equipe.modalidade.limite_minimo_jogadores}).")
-            return redirect('avaliar_equipe', pk=pk)
-
-        # Processar inconformidade de atletas individuais
-        for atleta in equipe.atletas.all():
-            str_id = str(atleta.id)
-            if str_id in inconformes_ids:
-                atleta.em_conformidade = False
-                atleta.justificativa_inconformidade = request.POST.get(f'justificativa_atleta_{str_id}')
-                atleta.permite_correcao = request.POST.get(f'permite_correcao_{str_id}') == 'on'
-                # Se a comissão avaliou de novo, podemos limpar o link_correcao antigo para forçar novo envio se necessário,
-                # ou manter. Vamos manter para o admin ver, mas se ele marcou permite_correcao, ele espera novo link.
-                atleta.save()
-            else:
-                # Se o admin desmarcou a irregularidade (talvez após ver a correção), o atleta volta a ficar ok
-                if not atleta.em_conformidade:
-                    atleta.em_conformidade = True
-                    atleta.justificativa_inconformidade = ''
-                    atleta.permite_correcao = False
-                    atleta.link_correcao = None
-                    atleta.save()
-
-        if novo_status in ['aprovado', 'rejeitado']:
-            equipe.status = novo_status
-            equipe.justificativa = justificativa_equipe
-            equipe.save()
-            
-            if novo_status == 'aprovado':
-                messages.success(request, f"Equipe aprovada! Quórum efetivo: {atletas_validos} de {equipe.modalidade.limite_minimo_jogadores}.")
-            else:
-                messages.success(request, f"Equipe rejeitada com sucesso.")
-            return redirect('admin_equipes')
-            
-    return render(request, 'core/avaliar_equipe.html', {'equipe': equipe})
+# Remoção de avaliar_equipe de inscrições legadas
 
 @login_required
 def enviar_correcao_atleta(request, pk):
@@ -207,7 +173,7 @@ def reset_conformidade_atleta(request, pk):
     atleta.justificativa_inconformidade = ""
     atleta.save()
     messages.success(request, f"Atleta {atleta.nome_completo} restaurado para conformidade!")
-    return redirect(request.META.get('HTTP_REFERER', 'admin_equipes'))
+    return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
 
 # Atletas Views
 class AtletaListView(LoginRequiredMixin, ListView):
@@ -228,6 +194,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
         matriculas = request.POST.getlist('matricula[]')
         cursos = request.POST.getlist('curso[]')
         campi = request.POST.getlist('campus[]')
+        generos = request.POST.getlist('genero[]')
         is_egressos = request.POST.getlist('is_egresso[]')
         links_egressos = request.POST.getlist('link_egresso[]')
 
@@ -236,6 +203,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
             if nomes[i].strip():
                 is_egr = (is_egressos[i] == '1') if i < len(is_egressos) else False
                 link_egr = links_egressos[i] if i < len(links_egressos) else ''
+                gen = generos[i] if i < len(generos) else 'M'
                 
                 Atleta.objects.create(
                     nome_completo=nomes[i],
@@ -244,6 +212,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                     matricula=matriculas[i],
                     curso=cursos[i],
                     campus=campi[i],
+                    genero=gen,
                     is_egresso=is_egr,
                     link_documento_egresso=link_egr,
                     cadastrado_por=request.user
@@ -271,135 +240,306 @@ class AtletaDeleteView(LoginRequiredMixin, DeleteView):
     def get_queryset(self):
         return Atleta.objects.filter(cadastrado_por=self.request.user)
 
-# Modalidades e Equipes
-class ModalidadeListView(LoginRequiredMixin, ListView):
-    model = Modalidade
-    template_name = 'core/modalidade_list.html'
-    context_object_name = 'modalidades'
+# Remoção de inscrições e solicitações de inclusão legadas por equipes
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['modalidades_inscritas_ids'] = list(Equipe.objects.filter(representante=self.request.user).values_list('modalidade_id', flat=True))
-        return context
 
-class EquipeCreateView(LoginRequiredMixin, CreateView):
-    model = Equipe
-    form_class = EquipeForm
-    template_name = 'core/equipe_form.html'
-    success_url = reverse_lazy('dashboard')
+# =====================================================================
+# Vistas Adicionais: Avaliação de Delegações & Pré-Súmulas Diárias
+# =====================================================================
 
-    def dispatch(self, request, *args, **kwargs):
-        modalidade_id = self.kwargs.get('modalidade_id')
-        if Equipe.objects.filter(representante=request.user, modalidade_id=modalidade_id).exists():
-            messages.error(request, "Sua atlética já possui uma inscrição para esta modalidade. Não é possível recadastrar.")
-            return redirect('modalidade_list')
-        return super().dispatch(request, *args, **kwargs)
+from django.contrib.auth import get_user_model
+from django.views import View
+from .models import PreSumula
 
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        kwargs['modalidade'] = get_object_or_404(Modalidade, pk=self.kwargs['modalidade_id'])
-        return kwargs
+User = get_user_model()
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['modalidade'] = get_object_or_404(Modalidade, pk=self.kwargs['modalidade_id'])
-        return context
-
-    def form_valid(self, form):
-        form.instance.representante = self.request.user
-        form.instance.modalidade = get_object_or_404(Modalidade, pk=self.kwargs['modalidade_id'])
-        if not form.instance.modalidade.inscricoes_abertas:
-            messages.error(self.request, "As inscrições para esta modalidade estão encerradas.")
-            return self.form_invalid(form)
-        
-        response = super().form_valid(form)
-        messages.success(self.request, f"Equipe inscrita com sucesso em {form.instance.modalidade.nome}!")
-        return response
-
-class EquipeUpdateView(LoginRequiredMixin, UpdateView):
-    model = Equipe
-    form_class = EquipeForm
-    template_name = 'core/equipe_form.html'
-    success_url = reverse_lazy('dashboard')
-
-    def dispatch(self, request, *args, **kwargs):
-        equipe = self.get_object()
-        if equipe.status in ['pendente', 'aprovado']:
-            messages.error(request, "Você não pode editar uma equipe que está em análise ou já foi aprovada.")
-            return redirect('dashboard')
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['user'] = self.request.user
-        kwargs['modalidade'] = self.object.modalidade
-        return kwargs
+@method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
+class AdminDelegacaoListView(LoginRequiredMixin, ListView):
+    """
+    Lista todas as delegações inscritas para avaliação da Comissão.
+    """
+    model = User
+    template_name = 'core/admin_delegacoes.html'
+    context_object_name = 'delegacoes'
 
     def get_queryset(self):
-        return Equipe.objects.filter(representante=self.request.user)
+        # Retorna todos os usuários com papel REPRESENTANTE, pre-buscando seus atletas
+        return User.objects.filter(role='REPRESENTANTE').prefetch_related('atletas').order_by('nome_delegacao')
 
-class EquipeDetailView(LoginRequiredMixin, DetailView):
-    model = Equipe
-    template_name = 'core/equipe_detail.html'
-    context_object_name = 'equipe'
-
-    def get_queryset(self):
-        # Admin vê qualquer equipe, usuário comum vê apenas a sua
-        if self.request.user.is_staff:
-            return Equipe.objects.all()
-        return Equipe.objects.filter(representante=self.request.user)
-
-class EquipeDeleteView(LoginRequiredMixin, DeleteView):
-    model = Equipe
-    template_name = 'core/confirm_delete.html'
-    success_url = reverse_lazy('dashboard')
-
-    def get_queryset(self):
-        return Equipe.objects.filter(representante=self.request.user)
-
-from .forms import SolicitacaoInclusaoForm
-
-class SolicitacaoInclusaoCreateView(LoginRequiredMixin, CreateView):
-    model = SolicitacaoInclusao
-    form_class = SolicitacaoInclusaoForm
-    template_name = 'core/solicitacao_form.html'
-
-    def dispatch(self, request, *args, **kwargs):
-        self.equipe = get_object_or_404(Equipe, pk=self.kwargs['equipe_id'], representante=request.user)
-        if self.equipe.status != 'aprovado':
-            messages.error(request, "Você só pode solicitar inclusão de atletas em equipes já aprovadas.")
-            return redirect('equipe_detail', pk=self.equipe.pk)
-        return super().dispatch(request, *args, **kwargs)
-
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['equipe'] = self.equipe
-        return kwargs
-
-    def form_valid(self, form):
-        form.instance.equipe = self.equipe
-        messages.success(self.request, "Solicitação de inclusão enviada para análise da comissão.")
-        return super().form_valid(form)
-
-    def get_success_url(self):
-        return reverse_lazy('equipe_detail', pk=self.equipe.pk)
 
 @user_passes_test(lambda u: u.is_staff)
-def avaliar_solicitacao(request, pk):
-    solicitacao = get_object_or_404(SolicitacaoInclusao, pk=pk)
+def avaliar_delegacao(request, pk):
+    """
+    Delega a aprovação/indeferimento da delegação do Representante como um todo.
+    """
+    representante = get_object_or_404(User, pk=pk, role='REPRESENTANTE')
     if request.method == 'POST':
-        novo_status = request.POST.get('status')
+        status = request.POST.get('status')
         justificativa = request.POST.get('justificativa', '')
         
-        if novo_status in ['aprovado', 'rejeitado']:
-            solicitacao.status = novo_status
-            solicitacao.justificativa = justificativa
-            solicitacao.save()
+        if status in ['deferido', 'indeferido', 'pendente']:
+            representante.status_delegacao = status
+            representante.justificativa_delegacao = justificativa
+            representante.save()
+            messages.success(request, f"Delegação de {representante.nome_completo} ({representante.nome_delegacao}) avaliada com sucesso como {representante.get_status_delegacao_display()}!")
             
-            if novo_status == 'aprovado':
-                solicitacao.equipe.atletas.add(solicitacao.atleta)
+    return redirect('admin_delegacoes')
+
+
+@user_passes_test(lambda u: u.is_staff)
+def avaliar_atleta(request, pk):
+    """
+    Avaliação individual de conformidade do Atleta pela Comissão.
+    """
+    atleta = get_object_or_404(Atleta, pk=pk)
+    if request.method == 'POST':
+        status = request.POST.get('status')  # 'deferido' ou 'indeferido'
+        justificativa = request.POST.get('justificativa', '')
+        permite_correcao = request.POST.get('permite_correcao') == 'on' or request.POST.get('permite_correcao') == 'true'
+
+        if status == 'deferido':
+            atleta.em_conformidade = True
+            atleta.justificativa_inconformidade = ''
+            atleta.permite_correcao = False
+            atleta.link_correcao = None
+        elif status == 'indeferido':
+            atleta.em_conformidade = False
+            atleta.justificativa_inconformidade = justificativa
+            atleta.permite_correcao = permite_correcao
+        atleta.save()
+        messages.success(request, f"Atleta {atleta.nome_completo} avaliado com sucesso!")
+    return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
+
+
+class PreSumulaListView(LoginRequiredMixin, ListView):
+    """
+    Lista os jogos para representantes escalarem jogadores, e exibe as pré-súmulas
+    enviadas.
+    """
+    model = Jogo
+    template_name = 'core/presumula_list.html'
+    context_object_name = 'jogos'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Jogo.objects.all().order_by('-data_jogo', '-horario_jogo')
+        if user.role == 'REPRESENTANTE' and user.status_delegacao != 'deferido':
+            return Jogo.objects.none()
+        return Jogo.objects.filter(Q(time_a=user) | Q(time_b=user)).order_by('-data_jogo', '-horario_jogo')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        if user.is_staff:
+            from collections import defaultdict
+            presumulas = PreSumula.objects.select_related('representante').all()
+            by_jogo = defaultdict(list)
+            for ps in presumulas:
+                by_jogo[ps.jogo_id].append(ps)
+            
+            for jogo in context['jogos']:
+                jogo.todas_presumulas = by_jogo[jogo.id]
+        else:
+            presumulas = PreSumula.objects.filter(representante=user)
+            ps_dict = {ps.jogo_id: ps for ps in presumulas}
+            for jogo in context['jogos']:
+                jogo.minha_presumula = ps_dict.get(jogo.id)
                 
-            messages.success(request, f"Solicitação de {solicitacao.atleta.nome_completo} avaliada!")
+        return context
+
+
+class PreSumulaCreateView(LoginRequiredMixin, View):
+    """
+    Cadastro de Pré-Súmula diária para escalar atletas em partidas.
+    Disponível apenas para Representantes para jogos de sua delegação.
+    """
+    def get(self, request):
+        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+            messages.error(request, "Acesso Bloqueado: Sua delegação ainda não foi deferida pela Comissão Organizadora. Você precisa ter a delegação aprovada para preencher pré-súmulas.")
+            return redirect('dashboard')
             
-    return redirect('avaliar_equipe', pk=solicitacao.equipe.pk)
+        jogo_id = request.GET.get('jogo')
+        if not jogo_id:
+            messages.error(request, "Selecione um jogo para preencher a pré-súmula.")
+            return redirect('presumula_list')
+        
+        jogo = get_object_or_404(Jogo, pk=jogo_id)
+        
+        # Verifica se o jogo é da delegação do usuário (ou se é staff)
+        if not request.user.is_staff and jogo.time_a != request.user and jogo.time_b != request.user:
+            messages.error(request, "Você não tem permissão para preencher a pré-súmula para este jogo.")
+            return redirect('presumula_list')
+            
+        # Verifica se já existe pré-súmula cadastrada por este representante para este jogo
+        if PreSumula.objects.filter(jogo=jogo, representante=request.user).exists():
+            ps = PreSumula.objects.get(jogo=jogo, representante=request.user)
+            return redirect('presumula_update', pk=ps.id)
+            
+        # Filtra os atletas da delegação em conformidade e pelo sexo da categoria
+        genero_modalidade = jogo.modalidade.genero
+        atletas = Atleta.objects.filter(cadastrado_por=request.user, em_conformidade=True)
+        if genero_modalidade == 'M':
+            atletas = atletas.filter(genero__in=['M', 'N'])
+        elif genero_modalidade == 'F':
+            atletas = atletas.filter(genero__in=['F', 'N'])
+            
+        return render(request, 'core/presumula_form.html', {
+            'jogo': jogo,
+            'atletas': atletas,
+            'is_create': True
+        })
+
+    def post(self, request):
+        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+            messages.error(request, "Acesso Bloqueado: Sua delegação não está deferida.")
+            return redirect('dashboard')
+
+        jogo_id = request.POST.get('jogo_id')
+        jogo = get_object_or_404(Jogo, pk=jogo_id)
+        
+        if not request.user.is_staff and jogo.time_a != request.user and jogo.time_b != request.user:
+            messages.error(request, "Acesso negado.")
+            return redirect('presumula_list')
+            
+        if PreSumula.objects.filter(jogo=jogo, representante=request.user).exists():
+            messages.error(request, "Você já preencheu a pré-súmula para este jogo.")
+            return redirect('presumula_list')
+            
+        atleta_ids = request.POST.getlist('atletas')
+        
+        presumula = PreSumula.objects.create(
+            jogo=jogo,
+            representante=request.user
+        )
+        
+        for atleta_id in atleta_ids:
+            numero_camisa = request.POST.get(f'camisa_{atleta_id}')
+            if numero_camisa:
+                PreSumulaAtleta.objects.create(
+                    presumula=presumula,
+                    atleta_id=atleta_id,
+                    numero_camisa=int(numero_camisa)
+                )
+                
+        messages.success(request, f"Pré-súmula enviada com sucesso para o jogo {jogo}!")
+        return redirect('presumula_list')
+
+
+class PreSumulaUpdateView(LoginRequiredMixin, View):
+    """
+    Edição de uma pré-súmula de escalação.
+    """
+    def get(self, request, pk):
+        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+            messages.error(request, "Acesso Bloqueado: Sua delegação ainda não foi deferida.")
+            return redirect('dashboard')
+
+        presumula = get_object_or_404(PreSumula, pk=pk)
+        if not request.user.is_staff and presumula.representante != request.user:
+            messages.error(request, "Você não tem permissão para editar esta pré-súmula.")
+            return redirect('presumula_list')
+
+        jogo = presumula.jogo
+        genero_modalidade = jogo.modalidade.genero
+        
+        # Filtra os atletas da delegação em conformidade e pelo sexo da categoria
+        atletas = Atleta.objects.filter(cadastrado_por=presumula.representante, em_conformidade=True)
+        if genero_modalidade == 'M':
+            atletas = atletas.filter(genero__in=['M', 'N'])
+        elif genero_modalidade == 'F':
+            atletas = atletas.filter(genero__in=['F', 'N'])
+            
+        # Busca atletas escalados para pré-marcar na view e carregar camisa
+        escalados_dict = {
+            pa.atleta_id: pa.numero_camisa 
+            for pa in PreSumulaAtleta.objects.filter(presumula=presumula)
+        }
+        for atleta in atletas:
+            if atleta.id in escalados_dict:
+                atleta.is_escalado = True
+                atleta.camisa = escalados_dict[atleta.id]
+            else:
+                atleta.is_escalado = False
+                atleta.camisa = ""
+
+        return render(request, 'core/presumula_form.html', {
+            'presumula': presumula,
+            'jogo': jogo,
+            'atletas': atletas,
+            'is_create': False
+        })
+
+    def post(self, request, pk):
+        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+            messages.error(request, "Acesso Bloqueado: Sua delegação não está deferida.")
+            return redirect('dashboard')
+
+        presumula = get_object_or_404(PreSumula, pk=pk)
+        if not request.user.is_staff and presumula.representante != request.user:
+            messages.error(request, "Sem permissão.")
+            return redirect('presumula_list')
+
+        atleta_ids = request.POST.getlist('atletas')
+
+        # Limpa escalações antigas
+        PreSumulaAtleta.objects.filter(presumula=presumula).delete()
+        
+        # Cria as novas escalações com os números de camisa
+        for atleta_id in atleta_ids:
+            numero_camisa = request.POST.get(f'camisa_{atleta_id}')
+            if numero_camisa:
+                PreSumulaAtleta.objects.create(
+                    presumula=presumula,
+                    atleta_id=atleta_id,
+                    numero_camisa=int(numero_camisa)
+                )
+        
+        messages.success(request, "Pré-súmula atualizada com sucesso!")
+        return redirect('presumula_list')
+
+
+class PreSumulaDetailView(LoginRequiredMixin, DetailView):
+    """
+    Visualização detalhada da escalação diária (Pré-Súmula).
+    """
+    model = PreSumula
+    template_name = 'core/presumula_detail.html'
+    context_object_name = 'presumula'
+
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return PreSumula.objects.all()
+        return PreSumula.objects.filter(representante=self.request.user)
+
+@method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
+class AdminWhitelistView(LoginRequiredMixin, View):
+    """
+    Lista e gerencia os e-mails autorizados para a Comissão Organizadora (Whitelist).
+    """
+    def get(self, request):
+        whitelist = ComissaoWhitelist.objects.all().order_by('-data_adicao')
+        return render(request, 'core/admin_whitelist.html', {'whitelist': whitelist})
+
+    def post(self, request):
+        email = request.POST.get('email', '').strip().lower()
+        if not email:
+            messages.error(request, "O e-mail é obrigatório.")
+            return redirect('admin_whitelist')
+        
+        if ComissaoWhitelist.objects.filter(email__iexact=email).exists():
+            messages.warning(request, f"O e-mail {email} já está na whitelist.")
+            return redirect('admin_whitelist')
+            
+        ComissaoWhitelist.objects.create(email=email)
+        messages.success(request, f"E-mail {email} autorizado com sucesso!")
+        return redirect('admin_whitelist')
+
+@user_passes_test(lambda u: u.is_staff)
+def whitelist_delete(request, pk):
+    item = get_object_or_404(ComissaoWhitelist, pk=pk)
+    email = item.email
+    item.delete()
+    messages.success(request, f"E-mail {email} removido da whitelist da comissão.")
+    return redirect('admin_whitelist')

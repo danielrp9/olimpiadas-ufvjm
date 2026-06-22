@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Pré-Súmula - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    
+    <!-- Botão de Voltar -->
+    <div class="flex justify-between items-center">
+        <a href="{% url 'presumula_list' %}" class="inline-flex items-center text-slate-500 hover:text-slate-700 text-sm font-semibold transition gap-1">
+            <i class="fas fa-arrow-left"></i> Voltar para a Lista
+        </a>
+        
+        {% if not user.is_staff or presumula.representante == user %}
+            {% if not presumula.jogo.finalizado %}
+            <a href="{% url 'presumula_update' presumula.id %}" 
+               class="inline-flex items-center px-4 py-2 border border-slate-200 hover:border-blue-500 hover:text-blue-600 bg-white rounded-xl text-sm font-bold shadow-sm transition gap-1.5">
+                <i class="far fa-edit"></i> Editar Escalação
+            </a>
+            {% endif %}
+        {% endif %}
+    </div>
+
+    <!-- Card de Informações Principais -->
+    <div class="bg-white shadow-xl border border-slate-200 rounded-3xl overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 text-white">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <span class="bg-white/20 text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm uppercase tracking-wider">
+                        Pré-Súmula de Partida
+                    </span>
+                    <h1 class="text-3xl font-extrabold mt-2 tracking-tight">
+                        {{ presumula.jogo.modalidade.nome }}
+                    </h1>
+                </div>
+                <div class="bg-white/15 border border-white/20 rounded-2xl px-4 py-3 text-center backdrop-blur-sm shadow-inner min-w-[140px]">
+                    <p class="text-xs text-blue-200 uppercase font-semibold">Data do Jogo</p>
+                    <p class="text-xl font-bold mt-0.5"><i class="far fa-calendar-alt mr-1"></i> {{ presumula.jogo.data_jogo|date:"d/m/Y" }}</p>
+                    {% if presumula.jogo.horario_jogo %}
+                        <p class="text-xs text-blue-200 uppercase font-semibold mt-1">Horário</p>
+                        <p class="text-lg font-bold mt-0.5"><i class="far fa-clock mr-1"></i> {{ presumula.jogo.horario_jogo|time:"H:i" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="p-8 space-y-6">
+            <!-- Confronto e Local -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Confronto</span>
+                    <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                        <div class="text-xs">
+                            <p class="font-bold text-slate-800">{{ presumula.jogo.time_a.nome_delegacao|default:presumula.jogo.time_a.email }}</p>
+                            <p class="text-slate-400">Responsável: {{ presumula.jogo.time_a.nome_completo }}</p>
+                        </div>
+                        <span class="text-slate-400 text-xs px-1.5 py-0.5 rounded border bg-white font-bold shrink-0">VS</span>
+                        <div class="text-xs">
+                            <p class="font-bold text-slate-800">{{ presumula.jogo.time_b.nome_delegacao|default:presumula.jogo.time_b.email }}</p>
+                            <p class="text-slate-400">Responsável: {{ presumula.jogo.time_b.nome_completo }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 border border-slate-100 rounded-2xl p-4">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase block">Local / Quadra</span>
+                    <p class="text-md font-bold text-slate-800 mt-1">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-1.5"></i>{{ presumula.jogo.local|default:"(Local não definido)" }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Informações da Delegação -->
+            <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 flex flex-col sm:flex-row justify-between gap-4">
+                <div>
+                    <h3 class="text-xs text-slate-400 font-bold uppercase tracking-wider">Delegação Escala</h3>
+                    <p class="text-lg font-extrabold text-slate-800 mt-1">
+                        <i class="fas fa-university text-slate-500 mr-1.5"></i> {{ presumula.representante.nome_delegacao|default:"(Sem Nome da Delegação)" }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-1">
+                        Representante: {{ presumula.representante.nome_completo }} &bull; {{ presumula.representante.email }}
+                    </p>
+                </div>
+                <div class="flex flex-col justify-center sm:items-end">
+                    <span class="text-xs text-slate-400 font-bold uppercase tracking-wider block">Atletas Escalados</span>
+                    <span class="text-3xl font-extrabold text-blue-600 mt-1">
+                        {{ presumula.atletas.count }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Lista de Atletas Escalados -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-1.5">
+                    <i class="fas fa-users text-blue-600"></i> Jogadores Escalados e Numeração de Camisa
+                </h3>
+                
+                <div class="border border-slate-200 rounded-2xl overflow-hidden bg-white">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-semibold uppercase">
+                                <th class="px-6 py-3 w-20 text-center">Camisa</th>
+                                <th class="px-6 py-3">Atleta / Gênero</th>
+                                <th class="px-6 py-3">Matrícula / Curso</th>
+                                <th class="px-6 py-3">Campus</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-700 text-sm">
+                            {% for pa in presumula.escalacao.all %}
+                            <tr class="hover:bg-slate-50/50 transition">
+                                <td class="px-6 py-4 text-center font-extrabold text-blue-700 text-lg bg-blue-50/30 border-r border-slate-100">
+                                    #{{ pa.numero_camisa }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <h4 class="font-bold text-slate-900 leading-tight">{{ pa.atleta.nome_completo }}</h4>
+                                    <span class="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded border border-slate-250 mt-1 inline-block font-semibold">
+                                        {{ pa.atleta.get_genero_display }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-medium text-slate-800">Matrícula: {{ pa.atleta.matricula }}</p>
+                                    <p class="text-xs text-slate-500">{{ pa.atleta.curso }}</p>
+                                </td>
+                                <td class="px-6 py-4 font-semibold text-slate-750">
+                                    {{ pa.atleta.campus }}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="p-8 text-center text-slate-400">
+                                    <i class="fas fa-user-slash text-3xl mb-2"></i>
+                                    <p>Nenhum atleta foi escalado nesta pré-súmula.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

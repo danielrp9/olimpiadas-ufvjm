@@ -22,10 +22,16 @@
                     {{ field.label }}
                 </label>
                 {% if field.field.widget.input_type == 'checkbox' %}
-                    <div class="flex items-center">
+                    <div class="flex items-center mt-1">
                         {{ field }}
-                        <span class="ml-2 text-sm text-slate-600">Habilitar inscrições para esta modalidade</span>
+                        <span class="ml-2 text-sm text-slate-650">{{ field.help_text|default:"Habilitar" }}</span>
                     </div>
+                {% elif field.field.choices %}
+                    <select name="{{ field.name }}" id="{{ field.id_for_label }}" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-sm bg-white">
+                        {% for value, label in field.field.choices %}
+                            <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
                 {% else %}
                     <input type="{{ field.field.widget.input_type|default:'text' }}" 
                            name="{{ field.name }}" 
@@ -39,7 +45,7 @@
                         <p class="mt-1 text-sm text-red-600">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
-                {% if field.help_text %}
+                {% if field.help_text and field.field.widget.input_type != 'checkbox' %}
                     <p class="mt-1 text-xs text-slate-500">{{ field.help_text }}</p>
                 {% endif %}
             </div>

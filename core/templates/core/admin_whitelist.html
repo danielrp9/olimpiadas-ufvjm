@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}Membros da Comissão - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Header -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
+                <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl">
+                    <i class="fas fa-users-cog"></i>
+                </span>
+                Membros da Comissão
+            </h1>
+            <p class="text-slate-550 mt-1 text-sm">
+                Gerencie os e-mails dos organizadores habilitados para acesso administrativo automático pelo login social.
+            </p>
+        </div>
+        
+        <div class="flex items-center gap-2 self-stretch sm:self-auto">
+            <!-- Botão sutil de adicionar e-mail -->
+            <button type="button" onclick="toggleAddForm()" class="inline-flex items-center px-3 py-2 border border-blue-200 rounded-xl text-xs font-bold text-blue-600 bg-blue-50/50 hover:bg-blue-50 transition shadow-sm gap-1.5">
+                <i class="fas fa-plus"></i> Autorizar Novo E-mail
+            </button>
+            <a href="{% url 'dashboard' %}" class="inline-flex items-center px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-650 bg-white hover:bg-slate-50 hover:text-slate-800 transition shadow-sm gap-2">
+                <i class="fas fa-arrow-left"></i> Painel Geral
+            </a>
+        </div>
+    </div>
+
+    <!-- Área do Formulário de Cadastro (Oculto por Padrão) -->
+    <div id="add-email-section" class="hidden transition-all duration-300 bg-slate-50 border border-slate-200 rounded-3xl p-5 space-y-3">
+        <div>
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Autorizar Novo E-mail</h3>
+            <p class="text-[11px] text-slate-400">Insira o e-mail Google ou Gov.br que o membro usará para fazer o login social.</p>
+        </div>
+        
+        <form method="post" class="flex flex-col sm:flex-row items-center gap-2.5 w-full">
+            {% csrf_token %}
+            <div class="relative w-full sm:w-80">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <i class="far fa-envelope text-xs"></i>
+                </span>
+                <input type="email" name="email" id="id_email" placeholder="exemplo@ufvjm.edu.br" required
+                       class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-xs shadow-inner bg-white">
+            </div>
+            
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button type="submit" class="flex-grow sm:flex-grow-0 inline-flex items-center justify-center px-4 py-2 bg-blue-650 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition active:scale-[0.98] gap-1.5 whitespace-nowrap shadow-sm">
+                    Confirmar Cadastro
+                </button>
+                <button type="button" onclick="toggleAddForm()" class="flex-grow sm:flex-grow-0 inline-flex items-center justify-center px-4 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-500 hover:bg-slate-100 transition whitespace-nowrap">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela/Lista da Comissão (Sempre no Topo e com Destaque) -->
+    <div class="bg-white shadow-xl border border-slate-200 rounded-3xl overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+            <h2 class="text-md font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-envelope-open-text text-blue-500"></i> Lista de E-mails Autorizados
+            </h2>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                {{ whitelist.count }} autorizado(s)
+            </span>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-500 text-xs font-bold uppercase tracking-wider">
+                        <th class="px-6 py-4">Membro / E-mail</th>
+                        <th class="px-6 py-4">Data de Autorização</th>
+                        <th class="px-6 py-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700 text-sm">
+                    {% for item in whitelist %}
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <td class="px-6 py-4">
+                            <span class="flex items-center gap-2.5 font-bold text-slate-850">
+                                <span class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse border border-white shadow-sm shrink-0"></span>
+                                {{ item.email }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-450 font-medium font-mono text-xs">
+                            {{ item.data_adicao|date:"d/m/Y \à\s H:i" }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <form action="{% url 'whitelist_delete' item.id %}" method="post" class="inline" onsubmit="return confirm('Deseja realmente remover o e-mail {{ item.email }} da comissão?');">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl font-bold transition text-xs gap-1.5 active:scale-95">
+                                    <i class="far fa-trash-alt text-[10px]"></i> Remover
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-20 text-center text-slate-400">
+                            <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200">
+                                <i class="fas fa-users text-2xl"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-700 text-md">Nenhum membro cadastrado</h3>
+                            <p class="text-xs text-slate-450 mt-1 max-w-sm mx-auto">Nenhum organizador foi autorizado. Clique em "Autorizar Novo E-mail" acima para adicionar.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAddForm() {
+    const formSection = document.getElementById('add-email-section');
+    if (formSection.classList.contains('hidden')) {
+        formSection.classList.remove('hidden');
+        document.getElementById('id_email').focus();
+    } else {
+        formSection.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

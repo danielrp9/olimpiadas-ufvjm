@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+
+{% block title %}Completar Perfil - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="max-w-xl mx-auto mt-10">
+    <div class="bg-white shadow-2xl border border-slate-200 rounded-3xl overflow-hidden transition-all duration-300 hover:shadow-blue-100/50">
+        
+        <!-- Header decorativo -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-8 text-center text-white relative">
+            <div class="absolute top-4 right-4 bg-white/20 text-xs font-semibold px-3 py-1 rounded-full backdrop-blur-sm">
+                Etapa 2 de 2
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-tight">Completar Perfil</h1>
+            <p class="text-blue-100 mt-2 text-sm max-w-sm mx-auto">
+                Para liberar seu acesso ao painel de delegações, precisamos de alguns dados adicionais para validação.
+            </p>
+        </div>
+
+        <div class="p-8 sm:p-10">
+            <!-- Card de Identidade do Google -->
+            <div class="flex items-center space-x-4 p-4 bg-slate-50 border border-slate-200 rounded-2xl mb-8">
+                {% if user.foto_url %}
+                    <img src="{{ user.foto_url }}" alt="Foto de {{ user.nome_completo }}" class="w-16 h-16 rounded-full border-2 border-blue-500 shadow-md object-cover">
+                {% else %}
+                    <div class="w-16 h-16 rounded-full bg-blue-100 border-2 border-blue-500 shadow-md flex items-center justify-center text-blue-600 font-bold text-2xl">
+                        {{ user.nome_completo|slice:":1"|upper }}
+                    </div>
+                {% endif %}
+                <div>
+                    <h2 class="text-lg font-bold text-slate-800 leading-tight">{{ user.nome_completo }}</h2>
+                    <p class="text-sm text-slate-500 mb-1">{{ user.email }}</p>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                        <i class="fas fa-clock mr-1"></i> Cadastro Pendente
+                    </span>
+                </div>
+            </div>
+
+            <!-- Formulário -->
+            <form method="post" class="space-y-6" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-2xl">
+                        {% for error in form.non_field_errors %}
+                            <p class="text-sm text-red-600 flex items-center">
+                                <i class="fas fa-exclamation-circle mr-2"></i> {{ error }}
+                            </p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Campo Nome da Delegação -->
+                <div>
+                    <label for="id_nome_delegacao" class="block text-sm font-semibold text-slate-700 mb-2 flex items-center justify-between">
+                        <span>Nome da Delegação / Atlética</span>
+                        <span class="text-xs text-red-500 font-normal">* Obrigatório</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-university text-slate-400"></i>
+                        </div>
+                        <input type="text" name="nome_delegacao" id="id_nome_delegacao" required 
+                               placeholder="Ex: Atlética Suprema ou Associação Acadêmica" 
+                               value="{{ form.nome_delegacao.value|default:'' }}"
+                               class="w-full pl-10 pr-4 py-3 border {% if form.nome_delegacao.errors %}border-red-300 focus:ring-red-500{% else %}border-slate-300 focus:ring-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 shadow-sm">
+                    </div>
+                    
+                    {% if form.nome_delegacao.errors %}
+                        {% for error in form.nome_delegacao.errors %}
+                            <p class="text-sm text-red-600 mt-2 flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-1.5 text-xs"></i> {{ error }}
+                            </p>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Campo CPF -->
+                <div>
+                    <label for="id_cpf" class="block text-sm font-semibold text-slate-700 mb-2 flex items-center justify-between">
+                        <span>CPF (Cadastro de Pessoa Física)</span>
+                        <span class="text-xs text-red-500 font-normal">* Obrigatório</span>
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-id-card text-slate-400"></i>
+                        </div>
+                        <input type="text" name="cpf" id="id_cpf" required 
+                               placeholder="000.000.000-00" 
+                               value="{{ form.cpf.value|default:'' }}"
+                               class="w-full pl-10 pr-4 py-3 border {% if form.cpf.errors %}border-red-300 focus:ring-red-500{% else %}border-slate-300 focus:ring-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200 shadow-sm"
+                               oninput="formatCPF(this)">
+                    </div>
+                    
+                    {% if form.cpf.errors %}
+                        {% for error in form.cpf.errors %}
+                            <p class="text-sm text-red-600 mt-2 flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-1.5 text-xs"></i> {{ error }}
+                            </p>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-xs text-slate-400 mt-2">
+                            O CPF deve ser de titularidade do representante e será verificado pela comissão.
+                        </p>
+                    {% endif %}
+                </div>
+
+                <!-- Botão de Ação -->
+                <button type="submit" 
+                        class="w-full inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-bold rounded-xl text-white bg-blue-600 hover:bg-blue-700 focus:ring-4 focus:ring-blue-500/20 active:scale-[0.98] transition-all duration-150 shadow-lg hover:shadow-blue-500/20">
+                    <i class="fas fa-check-circle mr-2"></i> Concluir Cadastro e Acessar
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Script para máscara simples de CPF -->
+<script>
+function formatCPF(input) {
+    let value = input.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+    if (value.length > 11) value = value.slice(0, 11);
+    
+    // Aplica a máscara
+    if (value.length > 9) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})$/, "$1.$2.$3-$4");
+    } else if (value.length > 6) {
+        value = value.replace(/^(\d{3})(\d{3})(\d{1,3})$/, "$1.$2.$3");
+    } else if (value.length > 3) {
+        value = value.replace(/^(\d{3})(\d{1,3})$/, "$1.$2");
+    }
+    
+    input.value = value;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestão de Delegações - Comissão{% endblock %}
+
+{% block content %}
+<div class="space-y-8">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+                <i class="fas fa-university text-blue-600"></i> Gestão de Delegações
+            </h1>
+            <p class="text-slate-500 mt-1">Homologue delegações e atletas individualmente de forma clara e organizada.</p>
+        </div>
+    </div>
+
+    <!-- Tabela de Delegações -->
+    <div class="bg-white shadow-xl border border-slate-200 rounded-3xl overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b border-slate-200 text-slate-600 text-sm font-semibold uppercase">
+                        <th class="px-6 py-4">Delegação / Representante</th>
+                        <th class="px-6 py-4">Atletas Cadastrados</th>
+                        <th class="px-6 py-4">Status da Delegação</th>
+                        <th class="px-6 py-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-700">
+                    {% for del in delegacoes %}
+                    <tr class="hover:bg-slate-50/50 transition">
+                        <!-- Delegação -->
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                {% if del.foto_url %}
+                                    <img src="{{ del.foto_url }}" alt="{{ del.nome_completo }}" class="w-10 h-10 rounded-full border shadow-sm object-cover">
+                                {% else %}
+                                    <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center font-bold text-slate-600">
+                                        {{ del.nome_completo|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h3 class="font-bold text-slate-900">{{ del.nome_delegacao|default:"(Sem Nome da Delegação)" }}</h3>
+                                    <p class="text-xs text-slate-500">{{ del.nome_completo }} &bull; {{ del.email }}</p>
+                                    <p class="text-xs text-slate-400">CPF: {{ del.cpf|default:"Não informado" }}</p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Atletas Cadastrados -->
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
+                                <i class="fas fa-users mr-1"></i> {{ del.atletas.count }} Atletas
+                            </span>
+                        </td>
+
+                        <!-- Status da Delegação -->
+                        <td class="px-6 py-4">
+                            {% if del.status_delegacao == 'deferido' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-700 border border-green-200">
+                                    <i class="fas fa-check-circle mr-1.5 text-green-600"></i> Deferida (Aprovada)
+                                </span>
+                            {% elif del.status_delegacao == 'indeferido' %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                                    <i class="fas fa-times-circle mr-1.5 text-red-650"></i> Indeferida (Recusada)
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-700 border border-amber-200 animate-pulse">
+                                    <i class="fas fa-clock mr-1.5 text-amber-600"></i> Pendente
+                                </span>
+                            {% endif %}
+                            {% if del.justificativa_delegacao %}
+                                <p class="text-xs text-slate-500 mt-1 max-w-xs truncate" title="{{ del.justificativa_delegacao }}">
+                                    <strong>Nota:</strong> {{ del.justificativa_delegacao }}
+                                </p>
+                            {% endif %}
+                        </td>
+
+                        <!-- Ações -->
+                        <td class="px-6 py-4 text-right">
+                            <button onclick="toggleAthletes('{{ del.id }}')" 
+                                    class="inline-flex items-center px-4 py-2 border border-blue-205 hover:border-blue-500 text-blue-650 hover:bg-blue-50 rounded-xl text-sm font-bold transition shadow-sm gap-1.5">
+                                <i class="fas fa-users-cog"></i> Avaliar Atletas
+                            </button>
+                        </td>
+                    </tr>
+
+                    <!-- Accordion Expandido -->
+                    <tr id="athletes-row-{{ del.id }}" class="hidden bg-slate-50/50">
+                        <td colspan="4" class="px-8 py-6">
+                            <div class="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-inner">
+                                
+                                <!-- Header do Accordion com Trigger para Avaliação de Delegação -->
+                                <div class="px-6 py-4 bg-slate-50 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 text-sm uppercase tracking-wider">Atletas da Delegação: {{ del.nome_delegacao|default:"Sem Nome" }}</h4>
+                                        <p class="text-xs text-slate-400 mt-0.5">Total cadastrado: {{ del.atletas.count }} atleta(s)</p>
+                                    </div>
+                                    <button onclick="toggleAvaliarDelegacaoInline('{{ del.id }}')" 
+                                            class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition shadow gap-1.5">
+                                        <i class="fas fa-gavel"></i> Deferir / Indeferir Delegação
+                                    </button>
+                                </div>
+
+                                <!-- Form de Avaliação da Delegação (Inline/Oculto por Padrão) -->
+                                <div id="delegacao-eval-form-{{ del.id }}" class="hidden px-6 py-5 bg-slate-50 border-b border-slate-200">
+                                    <form method="post" action="{% url 'avaliar_delegacao' del.id %}" class="bg-white border border-slate-250 rounded-2xl p-5 space-y-4 max-w-xl shadow-sm border border-slate-200">
+                                        {% csrf_token %}
+                                        <div>
+                                            <span class="text-[10px] text-slate-400 font-bold uppercase">Parecer de Delegação Geral</span>
+                                            <h4 class="font-bold text-slate-800 text-sm mt-0.5">{{ del.nome_delegacao|default:"Sem Nome" }}</h4>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <label class="block text-xs font-bold text-slate-600">Parecer Geral da Delegação</label>
+                                            <div class="flex gap-4">
+                                                <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                                                    <input type="radio" name="status" value="deferido" {% if del.status_delegacao == 'deferido' %}checked{% endif %} class="accent-green-600">
+                                                    <span><i class="fas fa-check-circle text-green-600"></i> Deferir</span>
+                                                </label>
+                                                <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                                                    <input type="radio" name="status" value="indeferido" {% if del.status_delegacao == 'indeferido' %}checked{% endif %} class="accent-red-600">
+                                                    <span><i class="fas fa-times-circle text-red-600"></i> Indeferir</span>
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-1">
+                                            <label for="justificativa_del_{{ del.id }}" class="block text-xs font-bold text-slate-600">Justificativa / Observações</label>
+                                            <textarea name="justificativa" id="justificativa_del_{{ del.id }}" rows="2" 
+                                                      placeholder="Informe a observação ou motivo do parecer..."
+                                                      class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none transition">{{ del.justificativa_delegacao|default:"" }}</textarea>
+                                        </div>
+
+                                        <div class="flex gap-2 pt-2 justify-end text-xs">
+                                            <button type="button" onclick="toggleAvaliarDelegacaoInline('{{ del.id }}')" 
+                                                    class="px-4 py-2 border border-slate-200 rounded-lg font-semibold text-slate-500 hover:bg-slate-50 transition">
+                                                Cancelar
+                                            </button>
+                                            <button type="submit" 
+                                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold text-white transition shadow shadow-blue-500/10">
+                                                Salvar Parecer
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+
+                                <!-- Lista de Atletas -->
+                                <div class="overflow-x-auto">
+                                    <table class="w-full text-left text-xs border-collapse">
+                                        <thead>
+                                            <tr class="bg-slate-100/60 border-b border-slate-200 text-slate-500 font-semibold uppercase">
+                                                <th class="px-4 py-3">Nome / CPF / Gênero</th>
+                                                <th class="px-4 py-3">Matrícula / Curso</th>
+                                                <th class="px-4 py-3">Campus</th>
+                                                <th class="px-4 py-3">Vínculo</th>
+                                                <th class="px-4 py-3">Documentos</th>
+                                                <th class="px-4 py-3">Conformidade</th>
+                                                <th class="px-4 py-3 text-right">Ação</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-slate-100 text-slate-700">
+                                            {% for atleta in del.atletas.all %}
+                                            <!-- Row do Atleta -->
+                                            <tr class="transition border-l-4 {% if atleta.em_conformidade %} bg-green-50/20 hover:bg-green-50/40 border-l-green-500 {% else %} bg-red-50/20 hover:bg-red-50/40 border-l-red-500 {% endif %}">
+                                                <td class="px-4 py-3">
+                                                    <p class="font-bold text-slate-900">{{ atleta.nome_completo }}</p>
+                                                    <p class="text-slate-400">CPF: {{ atleta.cpf|default:"-" }} &bull; Gênero: {{ atleta.get_genero_display }}</p>
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    <p class="font-medium text-slate-800">Matrícula: {{ atleta.matricula }}</p>
+                                                    <p class="text-slate-450">{{ atleta.curso }}</p>
+                                                </td>
+                                                <td class="px-4 py-3 font-medium">{{ atleta.campus }}</td>
+                                                <td class="px-4 py-3">
+                                                    {% if atleta.is_egresso %}
+                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-bold bg-purple-50 text-purple-700 border border-purple-200">
+                                                            Egresso
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                                                            Regular
+                                                        </span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="px-4 py-3 space-y-1">
+                                                    {% if atleta.link_documento %}
+                                                        <a href="{{ atleta.link_documento }}" target="_blank" class="inline-flex items-center text-blue-600 hover:underline gap-1">
+                                                            <i class="fas fa-file-alt"></i> Identidade
+                                                        </a>
+                                                    {% else %}
+                                                        <span class="text-slate-400">Sem documento</span>
+                                                    {% endif %}
+                                                    {% if atleta.is_egresso and atleta.link_documento_egresso %}
+                                                        <br>
+                                                        <a href="{{ atleta.link_documento_egresso }}" target="_blank" class="inline-flex items-center text-purple-600 hover:underline gap-1">
+                                                            <i class="fas fa-graduation-cap"></i> Doc. Egresso
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if atleta.link_correcao %}
+                                                        <div class="mt-1">
+                                                            <a href="{{ atleta.link_correcao }}" target="_blank" class="inline-flex items-center text-amber-600 hover:underline gap-1 font-bold">
+                                                                <i class="fas fa-history"></i> Doc. Correção
+                                                            </a>
+                                                            <span class="block text-[10px] text-amber-500 font-bold uppercase tracking-wider">Aguardando Avaliação</span>
+                                                        </div>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="px-4 py-3">
+                                                    {% if atleta.em_conformidade %}
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full font-bold bg-green-50 text-green-700 border border-green-200">
+                                                            <i class="fas fa-check-circle mr-1 text-[10px]"></i> Aprovado
+                                                        </span>
+                                                    {% else %}
+                                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full font-bold bg-red-50 text-red-700 border border-red-200">
+                                                            <i class="fas fa-times-circle mr-1 text-[10px]"></i> Rejeitado
+                                                        </span>
+                                                        {% if atleta.justificativa_inconformidade %}
+                                                            <p class="text-[10px] text-red-750 mt-1 max-w-[150px] italic">
+                                                                Obs: {{ atleta.justificativa_inconformidade }}
+                                                            </p>
+                                                        {% endif %}
+                                                    {% endif %}
+                                                </td>
+                                                <td class="px-4 py-3 text-right">
+                                                    <button onclick="toggleAvaliarAtletaInline('{{ atleta.id }}')"
+                                                            class="inline-flex items-center px-2.5 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-lg font-bold text-[11px] transition duration-150">
+                                                        <i class="fas fa-gavel mr-1"></i> Avaliar
+                                                    </button>
+                                                </td>
+                                            </tr>
+
+                                            <!-- Row de Avaliação do Atleta (Inline/Oculta por Padrão) -->
+                                            <tr id="atleta-eval-row-{{ atleta.id }}" class="hidden bg-slate-100/50">
+                                                <td colspan="7" class="px-6 py-4">
+                                                    <form method="post" action="{% url 'avaliar_atleta' atleta.id %}" class="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 max-w-xl shadow-sm border border-slate-200">
+                                                        {% csrf_token %}
+                                                        <div>
+                                                            <span class="text-[10px] text-slate-400 font-bold uppercase">Avaliar Atleta</span>
+                                                            <h4 class="font-bold text-slate-800 text-sm mt-0.5">{{ atleta.nome_completo }}</h4>
+                                                        </div>
+                                                        
+                                                        <div class="space-y-2">
+                                                            <label class="block text-xs font-bold text-slate-600">Conformidade com o Regulamento</label>
+                                                            <div class="flex gap-4">
+                                                                <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                                                                    <input type="radio" name="status" value="deferido" {% if atleta.em_conformidade %}checked{% endif %} class="accent-green-600" onchange="toggleJustificativaField('{{ atleta.id }}', false)">
+                                                                    <span><i class="fas fa-check-circle text-green-600"></i> Aprovado</span>
+                                                                </label>
+                                                                <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                                                                    <input type="radio" name="status" value="indeferido" {% if not atleta.em_conformidade %}checked{% endif %} class="accent-red-600" onchange="toggleJustificativaField('{{ atleta.id }}', true)">
+                                                                    <span><i class="fas fa-times-circle text-red-600"></i> Rejeitado</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+
+                                                        <div id="atleta-just-container-{{ atleta.id }}" class="{% if atleta.em_conformidade %}hidden{% endif %} space-y-3">
+                                                            <div>
+                                                                <label for="justificativa_atleta_{{ atleta.id }}" class="block text-xs font-bold text-slate-600 mb-1">Motivo da Rejeição</label>
+                                                                <textarea name="justificativa" id="justificativa_atleta_{{ atleta.id }}" rows="2" 
+                                                                          placeholder="Descreva o motivo pelo qual o atleta é irregular..."
+                                                                          class="w-full px-3 py-2 text-xs border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 outline-none transition">{{ atleta.justificativa_inconformidade|default:"" }}</textarea>
+                                                            </div>
+                                                            <div class="flex items-center gap-2">
+                                                                <input type="checkbox" name="permite_correcao" id="permite_correcao_{{ atleta.id }}" {% if atleta.permite_correcao %}checked{% endif %} class="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                                                                <label for="permite_correcao_{{ atleta.id }}" class="text-xs font-semibold text-slate-650 cursor-pointer">Permitir reenvio de documento para correção</label>
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="flex gap-2 pt-2 justify-end text-xs">
+                                                            <button type="button" onclick="toggleAvaliarAtletaInline('{{ atleta.id }}')" 
+                                                                    class="px-4 py-2 border border-slate-200 rounded-lg font-semibold text-slate-500 hover:bg-slate-50 transition">
+                                                                Cancelar
+                                                            </button>
+                                                            <button type="submit" 
+                                                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-bold text-white transition shadow shadow-blue-500/10">
+                                                                Salvar Avaliação
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            {% empty %}
+                                            <tr>
+                                                <td colspan="7" class="px-4 py-8 text-center text-slate-400">Nenhum atleta cadastrado nesta delegação.</td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                            <i class="fas fa-university text-4xl mb-3"></i>
+                            <p>Nenhuma delegação registrada no sistema até o momento.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAthletes(id) {
+    const row = document.getElementById(`athletes-row-${id}`);
+    row.classList.toggle('hidden');
+}
+
+function toggleAvaliarDelegacaoInline(id) {
+    const formDiv = document.getElementById(`delegacao-eval-form-${id}`);
+    formDiv.classList.toggle('hidden');
+}
+
+function toggleAvaliarAtletaInline(id) {
+    const row = document.getElementById(`atleta-eval-row-${id}`);
+    row.classList.toggle('hidden');
+}
+
+function toggleJustificativaField(id, show) {
+    const container = document.getElementById(`atleta-just-container-${id}`);
+    const textarea = document.getElementById(`justificativa_atleta_${id}`);
+    if (show) {
+        container.classList.remove('hidden');
+        textarea.required = true;
+    } else {
+        container.classList.add('hidden');
+        textarea.required = false;
+    }
+}
+</script>
+{% endblock %}

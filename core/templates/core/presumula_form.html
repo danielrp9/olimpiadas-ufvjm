@@ -1,0 +1,191 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if is_create %}Nova Pré-Súmula{% else %}Editar Pré-Súmula{% endif %} - Olimpíadas Universitárias{% endblock %}
+
+{% block block_content %}{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <div class="bg-white shadow-2xl border border-slate-200 rounded-3xl overflow-hidden">
+        
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-6 text-white">
+            <h1 class="text-2xl font-extrabold flex items-center gap-2">
+                <i class="fas fa-file-signature"></i> {% if is_create %}Nova Pré-Súmula de Escalação{% else %}Editar Pré-Súmula de Escalação{% endif %}
+            </h1>
+            <p class="text-blue-100 text-xs mt-1.5">
+                Marque os atletas que participarão do jogo e informe o número da camisa de cada um.
+            </p>
+        </div>
+
+        <!-- Informações do Jogo (Read Only) -->
+        <div class="px-8 py-6 bg-slate-50 border-b border-slate-200 space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Jogo Selecionado</span>
+                    <h3 class="text-lg font-bold text-slate-800 flex items-center gap-2 mt-1">
+                        <i class="fas fa-running text-blue-500"></i> {{ jogo.modalidade.nome }} 
+                        <span class="text-xs font-bold bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full border border-blue-200 ml-1">
+                            Categoria: {{ jogo.modalidade.get_genero_display }}
+                        </span>
+                    </h3>
+                </div>
+                <div class="bg-white px-4 py-2 border rounded-xl shadow-inner min-w-[130px] text-center">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Data da Partida</span>
+                    <p class="text-sm font-bold text-slate-800 mt-0.5"><i class="far fa-calendar-alt text-blue-500 mr-1"></i> {{ jogo.data_jogo|date:"d/m/Y" }}</p>
+                    {% if jogo.horario_jogo %}
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block mt-1.5">Horário</span>
+                        <p class="text-xs font-bold text-slate-800 mt-0.5"><i class="far fa-clock text-blue-500 mr-1"></i> {{ jogo.horario_jogo|time:"H:i" }}</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div class="p-3 bg-white border border-slate-200 rounded-xl">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Confronto</span>
+                    <div class="flex items-center gap-3 mt-1.5 flex-wrap">
+                        <div class="text-xs">
+                            <p class="font-bold text-slate-800">{{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }}</p>
+                            <p class="text-slate-400">Responsável: {{ jogo.time_a.nome_completo }}</p>
+                        </div>
+                        <span class="text-slate-400 text-xs px-1.5 py-0.5 rounded border bg-slate-50 font-bold shrink-0">VS</span>
+                        <div class="text-xs">
+                            <p class="font-bold text-slate-800">{{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}</p>
+                            <p class="text-slate-400">Responsável: {{ jogo.time_b.nome_completo }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-3 bg-white border border-slate-200 rounded-xl">
+                    <span class="text-[10px] text-slate-400 font-bold uppercase">Local / Quadra</span>
+                    <p class="text-sm font-bold text-slate-800 mt-0.5">
+                        <i class="fas fa-map-marker-alt text-red-500 mr-1.5"></i>{{ jogo.local|default:"(Local não definido)" }}
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <form method="post" class="p-8 space-y-6">
+            {% csrf_token %}
+            <input type="hidden" name="jogo_id" value="{{ jogo.id }}">
+
+            <!-- Seleção de Atletas -->
+            <div>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-users text-blue-600"></i> Escalar Atletas da Delegação
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">
+                            Apenas atletas <strong>aprovados</strong> e com <strong>gênero elegível</strong> para a modalidade são exibidos.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button type="button" onclick="selectAll(true)" class="text-xs font-semibold text-blue-600 hover:text-blue-700 bg-blue-50 hover:bg-blue-100/50 px-3 py-1.5 rounded-lg border border-blue-100 transition">
+                            Marcar Todos
+                        </button>
+                        <button type="button" onclick="selectAll(false)" class="text-xs font-semibold text-slate-600 hover:text-slate-700 bg-slate-100 hover:bg-slate-200/50 px-3 py-1.5 rounded-lg border border-slate-200 transition">
+                            Desmarcar Todos
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filtro de Busca Rápida -->
+                <div class="relative mb-4">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-slate-400"></i>
+                    </div>
+                    <input type="text" id="athleteSearch" placeholder="Pesquise por nome, curso ou matrícula..." onkeyup="filterAthletes()"
+                           class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm shadow-sm">
+                </div>
+
+                <!-- Lista de Checkboxes de Atletas -->
+                <div class="max-h-96 overflow-y-auto border border-slate-200 rounded-2xl divide-y divide-slate-100 p-2 space-y-1 bg-slate-50/50" id="athleteListContainer">
+                    {% for atleta in atletas %}
+                    <label class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 py-3 bg-white hover:bg-blue-50/30 rounded-xl border border-slate-100 hover:border-blue-100 cursor-pointer transition-all duration-150 relative select-none [&:has(input.athlete-checkbox:checked)]:bg-blue-50/40 [&:has(input.athlete-checkbox:checked)]:border-blue-200 text-slate-700"
+                           data-search-text="{{ atleta.nome_completo|lower }} {{ atleta.curso|lower }} {{ atleta.matricula|lower }}">
+                        <div class="flex items-center gap-4 flex-grow">
+                            <input type="checkbox" name="atletas" value="{{ atleta.id }}" class="athlete-checkbox w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20"
+                                   {% if atleta.is_escalado %}checked{% endif %}
+                                   onchange="toggleCamisaInput(this, '{{ atleta.id }}')">
+                            <div>
+                                <h4 class="font-bold text-slate-900 leading-tight">{{ atleta.nome_completo }}</h4>
+                                <p class="text-xs text-slate-500 mt-0.5">
+                                    Matrícula: <strong class="text-slate-700">{{ atleta.matricula }}</strong> &bull; Curso: <span class="text-slate-700">{{ atleta.curso }}</span> &bull; Campus: <span class="text-slate-700">{{ atleta.campus }}</span> &bull; Gênero: <span class="text-slate-750 font-semibold">{{ atleta.get_genero_display }}</span>
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Input da Camisa -->
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            <label for="camisa_{{ atleta.id }}" class="text-xs font-bold text-slate-500 uppercase tracking-wider">Camisa:</label>
+                            <input type="number" id="camisa_{{ atleta.id }}" name="camisa_{{ atleta.id }}" min="1" max="999"
+                                   value="{{ atleta.camisa }}"
+                                   {% if atleta.is_escalado %}required{% else %}disabled{% endif %}
+                                   placeholder="Nº"
+                                   class="camisa-input w-20 px-3 py-1.5 text-center font-bold text-slate-800 border border-slate-200 focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 outline-none rounded-lg bg-white disabled:bg-slate-100 disabled:text-slate-400 disabled:border-slate-100 transition shadow-inner">
+                        </div>
+                    </label>
+                    {% empty %}
+                    <div class="py-12 text-center text-slate-455">
+                        <i class="fas fa-user-slash text-3xl mb-2 text-slate-400"></i>
+                        <p>Nenhum atleta aprovado (em conformidade) com gênero elegível encontrado na delegação.</p>
+                        <a href="{% url 'atleta_list' %}" class="text-blue-600 hover:text-blue-500 font-bold text-xs mt-2 inline-block">Verificar lista de atletas</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex gap-4 border-t border-slate-200 pt-6">
+                <a href="{% url 'presumula_list' %}" 
+                   class="w-full text-center px-4 py-3.5 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition active:scale-[0.99]">
+                    Cancelar
+                </a>
+                <button type="submit" 
+                        class="w-full inline-flex items-center justify-center px-4 py-3.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition active:scale-[0.99] shadow-lg hover:shadow-blue-500/20 gap-2">
+                    <i class="fas fa-save"></i> Salvar Pré-Súmula
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleCamisaInput(checkbox, atletaId) {
+    const camisaInput = document.getElementById(`camisa_${atletaId}`);
+    if (checkbox.checked) {
+        camisaInput.disabled = false;
+        camisaInput.required = true;
+    } else {
+        camisaInput.disabled = true;
+        camisaInput.required = false;
+        camisaInput.value = "";
+    }
+}
+
+function selectAll(checked) {
+    const checkboxes = document.querySelectorAll('.athlete-checkbox');
+    checkboxes.forEach(cb => {
+        const parentLabel = cb.closest('label');
+        if (parentLabel && parentLabel.style.display !== 'none') {
+            cb.checked = checked;
+            toggleCamisaInput(cb, cb.value);
+        }
+    });
+}
+
+function filterAthletes() {
+    const query = document.getElementById('athleteSearch').value.toLowerCase().trim();
+    const items = document.querySelectorAll('#athleteListContainer label');
+    
+    items.forEach(item => {
+        const text = item.getAttribute('data-search-text') || '';
+        if (text.includes(query)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}
