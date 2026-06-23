@@ -48,7 +48,7 @@
     <div class="absolute -bottom-10 right-20 w-[550px] h-[550px] rounded-full blur-[140px] opacity-12 animate-glow-4" style="background-color: #F24D0A;"></div>
 </div>
 
-<div class="max-w-md sm:max-w-xl md:max-w-3xl mx-auto mt-12 px-4 relative z-10">
+<div class="max-w-md sm:max-w-lg md:max-w-xl mx-auto mt-12 px-4 relative z-10">
     
     <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-xl transition-all duration-300">
         
@@ -66,7 +66,7 @@
             </div>
         </div>
 
-        <div class="p-6 sm:p-8 space-y-6">
+        <div class="p-6 sm:p-10 space-y-8">
             <!-- Card de Identidade do Google -->
             <div class="flex items-center space-x-3.5 p-3.5 bg-slate-50/50 border border-slate-100 rounded-2xl">
                 {% if user.foto_url %}
@@ -86,7 +86,7 @@
             </div>
 
             <!-- Formulário -->
-            <form method="post" class="space-y-5" novalidate>
+            <form method="post" class="space-y-6" novalidate>
                 {% csrf_token %}
                 
                 {% if form.non_field_errors %}
@@ -99,26 +99,26 @@
                     </div>
                 {% endif %}
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="space-y-6">
                     <!-- Campo Nome da Delegação -->
-                    <div class="space-y-1">
-                        <label for="id_nome_delegacao" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                    <div class="space-y-2">
+                        <label for="id_nome_delegacao" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
                             <span>Nome da Delegação ou Atlética</span>
                             <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
                         </label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                <i class="fas fa-university text-xs"></i>
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fas fa-university text-sm"></i>
                             </span>
                             <input type="text" name="nome_delegacao" id="id_nome_delegacao" required 
-                                   placeholder="Ex: Atlética Suprema ou Time de Servidores" 
+                                   placeholder="Ex: A.A.A. Delegação, Atlética Suprema" 
                                    value="{{ form.nome_delegacao.value|default:'' }}"
-                                   class="w-full pl-9 pr-4 py-2 border {% if form.nome_delegacao.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm">
+                                   class="w-full pl-10 pr-4 py-3 border {% if form.nome_delegacao.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-sm bg-slate-50/30 focus:bg-white shadow-sm">
                         </div>
                         
                         {% if form.nome_delegacao.errors %}
                             {% for error in form.nome_delegacao.errors %}
-                                <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                                <p class="text-[10px] font-semibold text-red-650 mt-1.5 flex items-center gap-1">
                                     <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
                                 </p>
                             {% endfor %}
@@ -126,30 +126,30 @@
                     </div>
 
                     <!-- Campo CPF -->
-                    <div class="space-y-1">
-                        <label for="id_cpf" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                    <div class="space-y-2">
+                        <label for="id_cpf" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
                             <span>CPF do Responsável</span>
                             <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
                         </label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                                <i class="fas fa-id-card text-xs"></i>
+                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                                <i class="fas fa-id-card text-sm"></i>
                             </span>
                             <input type="text" name="cpf" id="id_cpf" required 
                                    placeholder="000.000.000-00" 
                                    value="{{ form.cpf.value|default:'' }}"
-                                   class="w-full pl-9 pr-4 py-2 border {% if form.cpf.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm"
+                                   class="w-full pl-10 pr-4 py-3 border {% if form.cpf.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-sm bg-slate-50/30 focus:bg-white shadow-sm"
                                    oninput="formatCPF(this)">
                         </div>
                         
                         {% if form.cpf.errors %}
                             {% for error in form.cpf.errors %}
-                                <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                                <p class="text-[10px] font-semibold text-red-650 mt-1.5 flex items-center gap-1">
                                     <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
                                 </p>
                             {% endfor %}
                         {% else %}
-                            <p class="text-[9px] text-slate-400 font-medium leading-relaxed mt-1">
+                            <p class="text-[10px] text-slate-400 font-medium leading-relaxed mt-1.5">
                                 O CPF deve ser de titularidade do representante e será verificado pela comissão.
                             </p>
                         {% endif %}
@@ -158,7 +158,7 @@
 
                 <!-- Botão de Ação -->
                 <button type="submit" 
-                        class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] text-xs gap-1.5 mt-2">
+                        class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] text-sm gap-1.5 mt-2">
                     <i class="fas fa-check-circle text-[11px]"></i> Concluir Cadastro e Acessar
                 </button>
             </form>
