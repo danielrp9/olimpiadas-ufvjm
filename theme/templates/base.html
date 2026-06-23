@@ -227,7 +227,7 @@
 
         <!-- Conteúdo Interno / Main -->
         <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
-            <div class="max-w-7xl mx-auto w-full {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md md:max-w-2xl{% endif %}">
+            <div class="max-w-7xl mx-auto w-full {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-xl md:max-w-3xl{% endif %}">
                 
                 <!-- Mensagens Django -->
                 {% if messages %}
