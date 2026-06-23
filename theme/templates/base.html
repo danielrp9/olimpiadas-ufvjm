@@ -229,16 +229,6 @@
         <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
             <div class="max-w-7xl mx-auto w-full {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-xl md:max-w-3xl{% endif %}">
                 
-                <!-- Mensagens Django -->
-                {% if messages %}
-                    <div class="mb-6 space-y-2">
-                    {% for message in messages %}
-                        <div class="p-4 rounded-xl shadow-sm text-sm {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-100{% elif message.tags == 'error' %}bg-red-50 text-red-700 border border-red-100{% else %}bg-blue-50 text-blue-700 border border-blue-100{% endif %}">
-                            {{ message }}
-                        </div>
-                    {% endfor %}
-                    </div>
-                {% endif %}
 
                 <!-- BLOCO ÚNICO DE CONTEÚDO -->
                 {% block content %}{% endblock %}
@@ -278,5 +268,60 @@
         localStorage.setItem('last_user_role', '{{ user.get_role_display|escapejs }}');
     </script>
     {% endif %}
+
+    <!-- Container de Toasts/Notificações Flutuantes -->
+    <div id="toast-container" class="fixed top-4 right-4 md:top-6 md:right-6 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none px-4 sm:px-0">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="toast-item pointer-events-auto bg-white/95 backdrop-blur-md border rounded-2xl shadow-xl p-4 flex items-start gap-3 transition-all duration-300 translate-x-12 opacity-0
+                            {% if message.tags == 'success' %}border-emerald-100 bg-emerald-50/95 text-emerald-800{% elif message.tags == 'error' %}border-red-100 bg-red-50/95 text-red-800{% else %}border-blue-100 bg-blue-50/95 text-blue-800{% endif %}"
+                     role="alert">
+                    <span class="shrink-0 mt-0.5 text-base">
+                        {% if message.tags == 'success' %}
+                            <i class="fas fa-check-circle text-emerald-500"></i>
+                        {% elif message.tags == 'error' %}
+                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                        {% else %}
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                        {% endif %}
+                    </span>
+                    <div class="flex-grow">
+                        <p class="text-xs font-semibold leading-relaxed">{{ message }}</p>
+                    </div>
+                    <button type="button" class="shrink-0 text-slate-400 hover:text-slate-650 transition p-0.5 rounded-lg hover:bg-slate-100/50" onclick="dismissToast(this.closest('.toast-item'))">
+                        <i class="fas fa-times text-xs"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <!-- Script para Toasts/Notificações -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const toasts = document.querySelectorAll('.toast-item');
+            toasts.forEach((toast, index) => {
+                // Animação de entrada escalonada
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-12', 'opacity-0');
+                    toast.classList.add('translate-x-0', 'opacity-100');
+                }, index * 150);
+
+                // Auto-dismiss após 5 segundos
+                setTimeout(() => {
+                    dismissToast(toast);
+                }, 5000 + (index * 150));
+            });
+        });
+
+        function dismissToast(toast) {
+            if (!toast) return;
+            toast.classList.remove('translate-x-0', 'opacity-100');
+            toast.classList.add('translate-x-12', 'opacity-0');
+            setTimeout(() => {
+                toast.remove();
+            }, 300);
+        }
+    </script>
 </body>
 </html>
