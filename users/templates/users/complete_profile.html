@@ -3,9 +3,54 @@
 {% block title %}Completar Perfil - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto space-y-6 pt-4">
+<style>
+    body {
+        background-color: #f8fafc !important;
+        position: relative;
+    }
+    @keyframes pulse-slow {
+        0%, 100% {
+            transform: scale(1) translate(0px, 0px);
+        }
+        33% {
+            transform: scale(1.1) translate(20px, -30px);
+        }
+        66% {
+            transform: scale(0.95) translate(-15px, 15px);
+        }
+    }
+    .animate-glow-1 {
+        animation: pulse-slow 16s infinite ease-in-out;
+    }
+    .animate-glow-2 {
+        animation: pulse-slow 20s infinite ease-in-out reverse;
+    }
+    .animate-glow-3 {
+        animation: pulse-slow 24s infinite ease-in-out 1s;
+    }
+    .animate-glow-4 {
+        animation: pulse-slow 28s infinite ease-in-out 3s reverse;
+    }
+</style>
+
+<!-- Feixes de cores com cores das olimpíadas no background -->
+<div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none select-none">
+    <!-- Orb 1: Azul (#0169C2) -->
+    <div class="absolute -top-32 -left-32 w-[600px] h-[600px] rounded-full blur-[150px] opacity-15 animate-glow-1" style="background-color: #0169C2;"></div>
     
-    <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
+    <!-- Orb 2: Dourado (#FDA003) -->
+    <div class="absolute -top-10 -right-10 w-[550px] h-[550px] rounded-full blur-[140px] opacity-15 animate-glow-2" style="background-color: #FDA003;"></div>
+    
+    <!-- Orb 3: Carmim (#CB0754) -->
+    <div class="absolute -bottom-32 -left-10 w-[600px] h-[600px] rounded-full blur-[150px] opacity-12 animate-glow-3" style="background-color: #CB0754;"></div>
+    
+    <!-- Orb 4: Laranja/Vermelho (#F24D0A) -->
+    <div class="absolute -bottom-10 right-20 w-[550px] h-[550px] rounded-full blur-[140px] opacity-12 animate-glow-4" style="background-color: #F24D0A;"></div>
+</div>
+
+<div class="max-w-md md:max-w-2xl mx-auto mt-12 px-4 relative z-10">
+    
+    <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-xl transition-all duration-300">
         
         <!-- Header -->
         <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 text-white relative overflow-hidden border-b border-slate-800 text-center">
@@ -41,7 +86,7 @@
             </div>
 
             <!-- Formulário -->
-            <form method="post" class="space-y-4" novalidate>
+            <form method="post" class="space-y-5" novalidate>
                 {% csrf_token %}
                 
                 {% if form.non_field_errors %}
@@ -54,59 +99,61 @@
                     </div>
                 {% endif %}
 
-                <!-- Campo Nome da Delegação -->
-                <div class="space-y-1">
-                    <label for="id_nome_delegacao" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                        <span>Nome da Delegação ou Atlética</span>
-                        <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <i class="fas fa-university text-xs"></i>
-                        </span>
-                        <input type="text" name="nome_delegacao" id="id_nome_delegacao" required 
-                               placeholder="Ex: Atlética Suprema ou Time de Servidores" 
-                               value="{{ form.nome_delegacao.value|default:'' }}"
-                               class="w-full pl-9 pr-4 py-2 border {% if form.nome_delegacao.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <!-- Campo Nome da Delegação -->
+                    <div class="space-y-1">
+                        <label for="id_nome_delegacao" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>Nome da Delegação ou Atlética</span>
+                            <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i class="fas fa-university text-xs"></i>
+                            </span>
+                            <input type="text" name="nome_delegacao" id="id_nome_delegacao" required 
+                                   placeholder="Ex: Atlética Suprema ou Time de Servidores" 
+                                   value="{{ form.nome_delegacao.value|default:'' }}"
+                                   class="w-full pl-9 pr-4 py-2 border {% if form.nome_delegacao.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm">
+                        </div>
+                        
+                        {% if form.nome_delegacao.errors %}
+                            {% for error in form.nome_delegacao.errors %}
+                                <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
+                                </p>
+                            {% endfor %}
+                        {% endif %}
                     </div>
-                    
-                    {% if form.nome_delegacao.errors %}
-                        {% for error in form.nome_delegacao.errors %}
-                            <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
-                                <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
-                            </p>
-                        {% endfor %}
-                    {% endif %}
-                </div>
 
-                <!-- Campo CPF -->
-                <div class="space-y-1">
-                    <label for="id_cpf" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                        <span>CPF do Responsável</span>
-                        <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
-                    </label>
-                    <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-                            <i class="fas fa-id-card text-xs"></i>
-                        </span>
-                        <input type="text" name="cpf" id="id_cpf" required 
-                               placeholder="000.000.000-00" 
-                               value="{{ form.cpf.value|default:'' }}"
-                               class="w-full pl-9 pr-4 py-2 border {% if form.cpf.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm"
-                               oninput="formatCPF(this)">
-                    </div>
-                    
-                    {% if form.cpf.errors %}
-                        {% for error in form.cpf.errors %}
-                            <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
-                                <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
+                    <!-- Campo CPF -->
+                    <div class="space-y-1">
+                        <label for="id_cpf" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                            <span>CPF do Responsável</span>
+                            <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
+                        </label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                                <i class="fas fa-id-card text-xs"></i>
+                            </span>
+                            <input type="text" name="cpf" id="id_cpf" required 
+                                   placeholder="000.000.000-00" 
+                                   value="{{ form.cpf.value|default:'' }}"
+                                   class="w-full pl-9 pr-4 py-2 border {% if form.cpf.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm"
+                                   oninput="formatCPF(this)">
+                        </div>
+                        
+                        {% if form.cpf.errors %}
+                            {% for error in form.cpf.errors %}
+                                <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
+                                </p>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-[9px] text-slate-400 font-medium leading-relaxed mt-1">
+                                O CPF deve ser de titularidade do representante e será verificado pela comissão.
                             </p>
-                        {% endfor %}
-                    {% else %}
-                        <p class="text-[9px] text-slate-400 font-medium leading-relaxed mt-1">
-                            O CPF deve ser de titularidade do representante e será verificado pela comissão.
-                        </p>
-                    {% endif %}
+                        {% endif %}
+                    </div>
                 </div>
 
                 <!-- Botão de Ação -->

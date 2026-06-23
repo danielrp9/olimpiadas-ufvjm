@@ -10,10 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body class="text-slate-900 font-sans min-h-screen {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}bg-[#f0f4f8] flex flex-col justify-center{% else %}bg-[#f8fafc]{% endif %}">
+<body class="text-slate-900 font-sans min-h-screen {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}bg-[#f0f4f8] flex flex-col justify-center{% else %}bg-[#f8fafc]{% endif %}">
     
-    <!-- ELEMENTOS LATERAIS (SIDEBARS) - Apenas se NÃO for tela de login/cadastro -->
-    {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+    <!-- ELEMENTOS LATERAIS (SIDEBARS) - Apenas se NÃO for tela de login/cadastro/completar perfil -->
+    {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
         <!-- Sidebar Desktop -->
         <aside class="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-4 md:left-4 bg-white border border-slate-200/60 rounded-3xl z-30 shadow-[0_2px_12px_rgba(0,0,0,0.015)] overflow-hidden">
             <!-- Logo -->
@@ -187,7 +187,7 @@
     {% endif %}
 
     <!-- ÁREA DE CONTEÚDO PRINCIPAL (Doutrina de Container Único) -->
-    <div class="flex-grow flex flex-col min-h-screen {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}md:pl-[17rem]{% else %}justify-center{% endif %}">
+    <div class="flex-grow flex flex-col min-h-screen {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}md:pl-[17rem]{% else %}justify-center{% endif %}">
         
         <!-- Topbar Header (Ocultado temporariamente para o teste de layout integrado) -->
         {% if False %}
@@ -226,8 +226,8 @@
         {% endif %}
 
         <!-- Conteúdo Interno / Main -->
-        <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}justify-center{% endif %}">
-            <div class="max-w-7xl mx-auto w-full {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% endif %}">
+        <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
+            <div class="max-w-7xl mx-auto w-full {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md md:max-w-2xl{% endif %}">
                 
                 <!-- Mensagens Django -->
                 {% if messages %}
@@ -246,7 +246,7 @@
         </main>
 
         <!-- Rodapé (Apenas para telas autenticadas/comuns) -->
-        {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' %}
+        {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
             <footer class="bg-white border-t border-slate-100 py-6 mt-auto">
                 <div class="max-w-7xl mx-auto px-4 text-center">
                     <p class="text-xs text-slate-400">
