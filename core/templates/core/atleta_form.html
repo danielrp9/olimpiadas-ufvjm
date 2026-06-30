@@ -3,7 +3,7 @@
 {% block title %}{% if object %}Editar{% else %}Novo{% endif %} Atleta - Olimpíadas Universitárias{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     
     <!-- Header do Cadastro com Seta de Voltar Integrada -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
@@ -24,31 +24,33 @@
         <form method="post" class="space-y-4">
             {% csrf_token %}
             
-            {% for field in form %}
-            <div class="space-y-1">
-                <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                    {{ field.label }}
-                </label>
-                
-                <div>
-                    {{ field }}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {% for field in form %}
+                <div class="space-y-1">
+                    <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        {{ field.label }}
+                    </label>
+                    
+                    <div>
+                        {{ field }}
+                    </div>
+                    
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
+                            </p>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if field.help_text %}
+                        <p class="text-[9px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
+                    {% endif %}
                 </div>
-                
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
-                        </p>
-                    {% endfor %}
-                {% endif %}
-                
-                {% if field.help_text %}
-                    <p class="text-[9px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
-                {% endif %}
+                {% endfor %}
             </div>
-            {% endfor %}
 
-            <div class="pt-4 flex items-center justify-end gap-3 text-xs">
+            <div class="pt-4 flex items-center justify-end gap-3 text-xs border-t border-slate-100 mt-6">
                 <a href="{% url 'atleta_list' %}" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
                     Cancelar
                 </a>

@@ -4,9 +4,9 @@
 
 {% block content %}
 <div class="space-y-6">
-       <!-- Header do Cadastro com Seta de Voltar Integrada -->
+    <!-- Header do Cadastro com Seta de Voltar Integrada -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
-        <a href="{% url 'atleta_list' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para a Lista">
+        <a href="{% url 'atleta_list' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" id="btn-back-link" title="Voltar para a Lista">
             <i class="fas fa-arrow-left text-lg"></i>
         </a>
         <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
@@ -14,184 +14,405 @@
         </span>
         <div>
             <h1 class="text-xl font-bold text-slate-800 tracking-tight">Cadastro em Lote</h1>
-            <p class="text-slate-400 mt-1 text-xs">Adicione múltiplos atletas simultaneamente preenchendo as linhas abaixo.</p>
+            <p class="text-slate-400 mt-1 text-xs">Insira os dados dos atletas para empilhá-los no lote temporário.</p>
         </div>
     </div>
 
-    <!-- Banner Informativo -->
-    <div class="bg-blue-50 border border-blue-100/50 rounded-2xl p-4 flex gap-3 text-xs text-blue-800">
-        <i class="fas fa-info-circle text-blue-600 text-sm mt-0.5"></i>
+    <!-- Status do Lote (Bolha de Atletas Adicionados) -->
+    <div id="lote-badge" onclick="openAddedModal()" class="bg-white border border-slate-200/60 hover:border-indigo-300 rounded-3xl p-5 shadow-sm flex items-center justify-between cursor-pointer transition duration-300 select-none group">
+        <div class="flex items-center gap-3.5">
+            <div id="badge-counter-circle" class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-650 flex items-center justify-center transition duration-300 font-bold text-sm">
+                0
+            </div>
+            <div>
+                <h3 class="font-bold text-slate-800 text-xs">Atletas Prontos para Envio</h3>
+                <p id="badge-helper-text" class="text-slate-400 text-[10px] mt-0.5">Nenhum atleta adicionado ao lote ainda.</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <span id="badge-view-link" class="hidden text-[10px] font-bold text-indigo-600 group-hover:underline">Visualizar Lista</span>
+            <i class="fas fa-chevron-right text-[10px] text-slate-450 group-hover:translate-x-0.5 transition duration-300"></i>
+        </div>
+    </div>
+
+    <!-- Seção de Formulário Vertical e Cadastro -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm space-y-6">
         <div>
-            <span class="font-bold">Dica sobre Documentação:</span>
-            <p class="text-blue-700 mt-0.5 leading-relaxed">Para atletas egressos, insira um link direto público (Google Drive, Dropbox, Gov.br, etc.) contendo o comprovante de colação de grau oficial ou diploma.</p>
+            <h3 class="font-bold text-slate-800 text-sm">Inserir Novo Atleta</h3>
+            <p class="text-slate-400 mt-0.5 text-[10px]">Preencha os campos abaixo e adicione o atleta ao lote temporário.</p>
         </div>
-    </div>
 
-    <form method="post" id="bulk-form" class="space-y-6">
-        {% csrf_token %}
-        
-        <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse" id="athletes-table">
-                    <thead>
-                        <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                            <th class="px-4 py-3.5 min-w-[200px]">Nome Completo</th>
-                            <th class="px-4 py-3.5 min-w-[130px]">CPF</th>
-                            <th class="px-4 py-3.5 min-w-[180px]">Email</th>
-                            <th class="px-4 py-3.5 min-w-[130px]">Gênero</th>
-                            <th class="px-4 py-3.5 min-w-[110px]">Matrícula</th>
-                            <th class="px-4 py-3.5 min-w-[220px]">Curso & Campus</th>
-                            <th class="px-4 py-3.5 min-w-[220px]">Pasta Drive Documentos</th>
-                            <th class="px-4 py-3.5 text-center min-w-[80px]">Egresso?</th>
-                            <th class="px-4 py-3.5 min-w-[200px]">Doc. Egresso</th>
-                            <th class="px-4 py-3.5 text-center w-12"></th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-slate-650 text-xs" id="athletes-body">
-                        <tr class="athlete-row hover:bg-slate-50/10 transition">
-                            <td class="px-3 py-3">
-                                <input type="text" name="nome[]" required 
-                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
-                                       placeholder="Nome do atleta">
-                            </td>
-                            <td class="px-3 py-3">
-                                <input type="text" name="cpf[]" 
-                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white" 
-                                       placeholder="000.000.000-00">
-                            </td>
-                            <td class="px-3 py-3">
-                                <input type="email" name="email[]" required 
-                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
-                                       placeholder="email@dominio.com">
-                            </td>
-                            <td class="px-3 py-3">
-                                <select name="genero[]" required 
-                                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
-                                    <option value="M">Masculino</option>
-                                    <option value="F">Feminino</option>
-                                    <option value="N">Não-binário</option>
-                                </select>
-                            </td>
-                            <td class="px-3 py-3">
-                                <input type="text" name="matricula[]" required 
-                                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
-                                        placeholder="Matrícula">
-                            </td>
-                            <td class="px-3 py-3 space-y-1">
-                                <input type="text" name="curso[]" required placeholder="Curso acadêmico" 
-                                       class="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
-                                <input type="text" name="campus[]" required placeholder="Campus" 
-                                       class="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
-                            </td>
-                            <td class="px-3 py-3">
-                                <input type="url" name="link_documento[]" required placeholder="Link da Pasta no Drive" 
-                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
-                                <span class="text-[9px] text-slate-400 block mt-1 leading-tight">Arq: NomeCompleto_NomeDelegação</span>
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <input type="checkbox" name="is_egresso[]" value="0" 
-                                       class="egresso-checkbox h-4 w-4 text-blue-600 rounded border-slate-200 focus:ring-blue-500/20 focus:outline-none accent-blue-600">
-                            </td>
-                            <td class="px-3 py-3">
-                                <input type="url" name="link_egresso[]" placeholder="Link do documento no Drive/Dropbox" 
-                                       class="doc-egresso-input hidden w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
-                            </td>
-                            <td class="px-3 py-3 text-center">
-                                <button type="button" class="text-slate-400 hover:text-red-500 transition remove-row p-1.5">
-                                    <i class="fas fa-times text-sm"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                    <tfoot class="bg-slate-50/20 border-t border-slate-100">
-                        <tr>
-                            <td class="px-3 py-3 text-left align-middle">
-                                <button type="button" id="add-row" 
-                                        class="w-7 h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-full transition shadow-sm hover:scale-105 active:scale-95"
-                                        title="Adicionar Nova Linha">
-                                    <i class="fas fa-plus text-[10px]"></i>
-                                </button>
-                            </td>
-                            <td class="px-3 py-3" colspan="9"></td>
-                        </tr>
-                    </tfoot>
-                </table>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4" id="atleta-temp-form">
+            <!-- Nome Completo -->
+            <div class="space-y-1">
+                <label for="temp-nome" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nome Completo</label>
+                <input type="text" id="temp-nome" placeholder="Nome completo do atleta"
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- E-mail -->
+            <div class="space-y-1">
+                <label for="temp-email" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">E-mail</label>
+                <input type="email" id="temp-email" placeholder="email@dominio.com"
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- CPF -->
+            <div class="space-y-1">
+                <label for="temp-cpf" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">CPF</label>
+                <input type="text" id="temp-cpf" placeholder="000.000.000-00"
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- Gênero -->
+            <div class="space-y-1">
+                <label for="temp-genero" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Gênero</label>
+                <select id="temp-genero"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+                    <option value="M">Masculino</option>
+                    <option value="F">Feminino</option>
+                    <option value="N">Não-binário</option>
+                </select>
+            </div>
+
+            <!-- Matrícula -->
+            <div class="space-y-1">
+                <label for="temp-matricula" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Matrícula</label>
+                <input type="text" id="temp-matricula" placeholder="Número de matrícula"
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- Curso -->
+            <div class="space-y-1">
+                <label for="temp-curso" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curso</label>
+                <input type="text" id="temp-curso" placeholder="Ex: Engenharia Civil"
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- Campus -->
+            <div class="space-y-1">
+                <label for="temp-campus" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Campus</label>
+                <input type="text" id="temp-campus" placeholder="Ex: Campus JK"
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- Pasta Drive Documentos -->
+            <div class="space-y-1">
+                <label for="temp-documento" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Pasta Drive Documentos</label>
+                <input type="url" id="temp-documento" placeholder="https://drive.google.com/drive/folders/..."
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- Checkbox Egresso -->
+            <div class="md:col-span-2 flex items-start gap-2.5 pt-2 select-none">
+                <div class="flex items-center h-5">
+                    <input type="checkbox" id="temp-egresso"
+                           class="h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600">
+                </div>
+                <div class="text-[10px]">
+                    <label for="temp-egresso" class="block font-bold text-slate-700 uppercase tracking-wider">
+                        Este atleta é egresso (formado)?
+                    </label>
+                    <p class="text-slate-400 mt-0.5">Marque se o atleta já concluiu a graduação.</p>
+                </div>
             </div>
         </div>
 
+        <div class="pt-4 border-t border-slate-100 flex justify-start">
+            <button type="button" onclick="addAtletaToLote()"
+                    class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition shadow-sm hover:scale-[1.02] active:scale-95 text-xs flex items-center gap-1.5">
+                <i class="fas fa-plus text-[10px]"></i> Adicionar Atleta ao Lote
+            </button>
+        </div>
+    </div>
+
+    <!-- Formulário Final para Envio de Lote ao Backend -->
+    <form method="post" id="bulk-form" class="space-y-4">
+        {% csrf_token %}
+        
+        <!-- Inputs Ocultos Gerados Dinamicamente -->
+        <div id="hidden-inputs-container"></div>
+
+        <!-- Banner de Estado Não Finalizado -->
+        <div class="bg-amber-55 text-amber-800 border border-amber-100/50 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
+            <i class="fas fa-exclamation-triangle text-amber-600 text-sm mt-0.5 shrink-0"></i>
+            <div>
+                <span class="font-bold">Ação Pendente de Finalização:</span>
+                <p class="text-amber-700 mt-0.5">
+                    Os atletas inseridos acima ficam retidos apenas temporariamente na memória do navegador. Você deve clicar no botão **"Salvar Todos os Atletas"** abaixo para persistir os registros de forma definitiva no sistema.
+                </p>
+            </div>
+        </div>
+
+        <!-- Rodapé de Ações Finais -->
         <div class="flex justify-end gap-3 text-xs">
-            <a href="{% url 'atleta_list' %}" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
+            <a href="{% url 'atleta_list' %}" id="btn-cancel-link" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
                 Cancelar
             </a>
-            <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98]">
+            <button type="submit" id="btn-submit-lote" disabled
+                    class="px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed">
                 Salvar Todos os Atletas
             </button>
         </div>
     </form>
 </div>
 
+<!-- Modal para Visualização de Atletas no Lote -->
+<div id="added-athletes-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-3xl w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
+            <div>
+                <span class="text-[9px] text-blue-700 font-bold uppercase tracking-wider block">Revisão do Lote</span>
+                <h4 class="font-bold text-slate-800 text-sm mt-0.5">Atletas no Lote</h4>
+            </div>
+            <button type="button" onclick="closeAddedModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 overflow-y-auto text-xs text-slate-650 max-h-[60vh]">
+            <div id="modal-empty-state" class="text-center py-8 text-slate-400 space-y-2">
+                <i class="fas fa-users text-2xl text-slate-350 block"></i>
+                <p class="font-semibold text-slate-600">Nenhum atleta no lote</p>
+                <p class="text-[10px] text-slate-400">Insira atletas no formulário para listá-los aqui.</p>
+            </div>
+            
+            <ul id="modal-athletes-list" class="divide-y divide-slate-100">
+                <!-- Inserido dinamicamente via JS -->
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="closeAddedModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-500 transition">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
-    function setupEgressoToggle(row) {
-        const checkbox = row.querySelector('.egresso-checkbox');
-        const docInput = row.querySelector('.doc-egresso-input');
-        
-        // Setup hidden input
-        let hiddenInput = row.querySelector('input[type="hidden"][name="is_egresso[]"]');
-        if (!hiddenInput) {
-            hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'is_egresso[]';
-            hiddenInput.value = '0';
-            row.appendChild(hiddenInput);
+    let atletasLote = [];
+    const hiddenContainer = document.getElementById('hidden-inputs-container');
+
+    // Interceptadores de Saída de Rota
+    function hasPendingData() {
+        return atletasLote.length > 0;
+    }
+
+    window.addEventListener('beforeunload', function(e) {
+        if (hasPendingData()) {
+            e.preventDefault();
+            e.returnValue = 'Você tem inscrições pendentes que não foram salvas. Se você sair agora, esses dados serão perdidos de forma permanente. Deseja mesmo sair?';
+            return e.returnValue;
+        }
+    });
+
+    // Interceptar cliques em Cancelar e Voltar
+    document.getElementById('btn-cancel-link').addEventListener('click', function(e) {
+        if (hasPendingData()) {
+            const confirmLeave = confirm("Você tem inscrições pendentes que não foram salvas. Se você sair agora, esses dados serão perdidos de forma permanente. Deseja mesmo sair?");
+            if (!confirmLeave) {
+                e.preventDefault();
+            }
+        }
+    });
+
+    document.getElementById('btn-back-link').addEventListener('click', function(e) {
+        if (hasPendingData()) {
+            const confirmLeave = confirm("Você tem inscrições pendentes que não foram salvas. Se você sair agora, esses dados serão perdidos de forma permanente. Deseja mesmo sair?");
+            if (!confirmLeave) {
+                e.preventDefault();
+            }
+        }
+    });
+
+    // Interceptar envio do formulário para desativar interceptador beforeunload
+    document.getElementById('bulk-form').addEventListener('submit', function() {
+        window.addEventListener('beforeunload', function(e) {});
+        atletasLote = []; // Limpa o estado local
+    });
+
+    function addAtletaToLote() {
+        // Obter inputs
+        const nomeInput = document.getElementById('temp-nome');
+        const emailInput = document.getElementById('temp-email');
+        const cpfInput = document.getElementById('temp-cpf');
+        const generoInput = document.getElementById('temp-genero');
+        const matriculaInput = document.getElementById('temp-matricula');
+        const cursoInput = document.getElementById('temp-curso');
+        const campusInput = document.getElementById('temp-campus');
+        const docInput = document.getElementById('temp-documento');
+        const egressoInput = document.getElementById('temp-egresso');
+
+        // Validação simples
+        if (!nomeInput.value.trim()) {
+            nomeInput.focus();
+            return;
+        }
+        if (!emailInput.value.trim() || !emailInput.checkValidity()) {
+            emailInput.focus();
+            return;
+        }
+        if (!matriculaInput.value.trim()) {
+            matriculaInput.focus();
+            return;
+        }
+        if (!cursoInput.value.trim()) {
+            cursoInput.focus();
+            return;
+        }
+        if (!campusInput.value.trim()) {
+            campusInput.focus();
+            return;
+        }
+        if (!docInput.value.trim() || !docInput.checkValidity()) {
+            docInput.focus();
+            return;
         }
 
-        checkbox.addEventListener('change', function() {
-            hiddenInput.value = this.checked ? '1' : '0';
-            if(this.checked) {
-                docInput.classList.remove('hidden');
-                docInput.required = true;
-            } else {
-                docInput.classList.add('hidden');
-                docInput.required = false;
-                docInput.value = "";
-            }
+        const atleta = {
+            id: Date.now(),
+            nome: nomeInput.value.trim(),
+            email: emailInput.value.trim(),
+            cpf: cpfInput.value.trim(),
+            genero: generoInput.value,
+            matricula: matriculaInput.value.trim(),
+            curso: cursoInput.value.trim(),
+            campus: campusInput.value.trim(),
+            link_documento: docInput.value.trim(),
+            is_egresso: egressoInput.checked ? '1' : '0'
+        };
+
+        // Adicionar ao array
+        atletasLote.push(atleta);
+
+        // Limpar inputs do formulário
+        nomeInput.value = '';
+        emailInput.value = '';
+        cpfInput.value = '';
+        generoInput.value = 'M';
+        matriculaInput.value = '';
+        cursoInput.value = '';
+        campusInput.value = '';
+        docInput.value = '';
+        egressoInput.checked = false;
+
+        // Atualizar interface
+        updateDOMInputs();
+        updateBadge();
+        animateBadge();
+    }
+
+    function removeAtletaFromLote(id) {
+        atletasLote = atletasLote.filter(a => a.id !== id);
+        updateDOMInputs();
+        updateBadge();
+        renderModalList();
+    }
+
+    function updateDOMInputs() {
+        hiddenContainer.innerHTML = '';
+        atletasLote.forEach(atleta => {
+            hiddenContainer.innerHTML += `
+                <input type="hidden" name="nome[]" value="${escapeHtml(atleta.nome)}">
+                <input type="hidden" name="cpf[]" value="${escapeHtml(atleta.cpf)}">
+                <input type="hidden" name="email[]" value="${escapeHtml(atleta.email)}">
+                <input type="hidden" name="genero[]" value="${escapeHtml(atleta.genero)}">
+                <input type="hidden" name="matricula[]" value="${escapeHtml(atleta.matricula)}">
+                <input type="hidden" name="curso[]" value="${escapeHtml(atleta.curso)}">
+                <input type="hidden" name="campus[]" value="${escapeHtml(atleta.campus)}">
+                <input type="hidden" name="link_documento[]" value="${escapeHtml(atleta.link_documento)}">
+                <input type="hidden" name="is_egresso[]" value="${escapeHtml(atleta.is_egresso)}">
+            `;
         });
     }
 
-    document.getElementById('add-row').addEventListener('click', function() {
-        const body = document.getElementById('athletes-body');
-        const firstRow = body.querySelector('.athlete-row');
-        const newRow = firstRow.cloneNode(true);
-        
-        newRow.querySelectorAll('input').forEach(input => {
-            if(input.type === 'checkbox') input.checked = false;
-            else if(input.type !== 'hidden') input.value = '';
-        });
-        
-        const docInput = newRow.querySelector('.doc-egresso-input');
-        docInput.classList.add('hidden');
-        docInput.required = false;
-        
-        setupEgressoToggle(newRow);
-        
-        body.appendChild(newRow);
-        
-        newRow.querySelector('.remove-row').addEventListener('click', function() {
-            if (body.querySelectorAll('.athlete-row').length > 1) {
-                newRow.remove();
-            }
-        });
-    });
+    function updateBadge() {
+        const count = atletasLote.length;
+        const circle = document.getElementById('badge-counter-circle');
+        const helperText = document.getElementById('badge-helper-text');
+        const viewLink = document.getElementById('badge-view-link');
+        const submitBtn = document.getElementById('btn-submit-lote');
 
-    // Setup initial row
-    document.querySelectorAll('.athlete-row').forEach(row => {
-        setupEgressoToggle(row);
-        row.querySelector('.remove-row').addEventListener('click', function() {
-            const body = document.getElementById('athletes-body');
-            if (body.querySelectorAll('.athlete-row').length > 1) {
-                this.closest('.athlete-row').remove();
-            }
-        });
-    });
+        circle.textContent = count;
+
+        if (count > 0) {
+            circle.className = "w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-indigo-100 animate-bounce-once";
+            helperText.textContent = `${count} atleta(s) pronto(s) para serem salvos definitivamente no lote.`;
+            viewLink.classList.remove('hidden');
+
+            submitBtn.disabled = false;
+            submitBtn.className = "px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] cursor-pointer";
+        } else {
+            circle.className = "w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm";
+            helperText.textContent = "Nenhum atleta adicionado ao lote ainda.";
+            viewLink.classList.add('hidden');
+
+            submitBtn.disabled = true;
+            submitBtn.className = "px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed";
+        }
+    }
+
+    function animateBadge() {
+        const badge = document.getElementById('lote-badge');
+        badge.classList.add('scale-[1.02]', 'border-indigo-300', 'bg-indigo-50/30');
+        setTimeout(() => {
+            badge.classList.remove('scale-[1.02]', 'border-indigo-300', 'bg-indigo-50/30');
+        }, 300);
+    }
+
+    function renderModalList() {
+        const emptyState = document.getElementById('modal-empty-state');
+        const listContainer = document.getElementById('modal-athletes-list');
+        listContainer.innerHTML = '';
+
+        if (atletasLote.length > 0) {
+            emptyState.classList.add('hidden');
+            atletasLote.forEach(atleta => {
+                listContainer.innerHTML += `
+                    <li class="py-3.5 flex justify-between items-center gap-4 text-xs">
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 flex-grow min-w-0">
+                            <div class="font-bold text-slate-800 truncate min-w-0" title="${escapeHtml(atleta.nome)}">${escapeHtml(atleta.nome)}</div>
+                            <div class="text-slate-500 truncate min-w-0" title="${escapeHtml(atleta.email)}">${escapeHtml(atleta.email)}</div>
+                            <div class="text-slate-500 font-semibold truncate min-w-0">Matrícula: ${escapeHtml(atleta.matricula)}</div>
+                            <div class="text-slate-450 truncate min-w-0">${escapeHtml(atleta.curso)} (${escapeHtml(atleta.campus)})</div>
+                        </div>
+                        <button type="button" onclick="removeAtletaFromLote(${atleta.id})"
+                                class="text-slate-450 hover:text-red-650 transition p-1.5 rounded-lg hover:bg-red-50 shrink-0" title="Remover do Lote">
+                            <i class="far fa-trash-alt text-sm"></i>
+                        </button>
+                    </li>
+                `;
+            });
+        } else {
+            emptyState.classList.remove('hidden');
+        }
+    }
+
+    function openAddedModal() {
+        renderModalList();
+        const modal = document.getElementById('added-athletes-modal');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeAddedModal() {
+        const modal = document.getElementById('added-athletes-modal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 </script>
 {% endblock %}

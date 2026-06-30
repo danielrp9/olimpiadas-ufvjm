@@ -3,14 +3,14 @@
 {% block title %}{% if object %}Editar{% else %}Nova{% endif %} Modalidade - Comissão{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     
     <!-- Header do Cadastro com Seta de Voltar Integrada -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
         <a href="{% url 'admin_modalidades' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para a Lista">
             <i class="fas fa-arrow-left text-lg"></i>
         </a>
-        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
+        <span class="p-2.5 bg-blue-550 text-blue-600 rounded-2xl shrink-0">
             <i class="fas fa-running text-base"></i>
         </span>
         <div>
@@ -24,59 +24,61 @@
         <form method="post" class="space-y-4">
             {% csrf_token %}
             
-            {% for field in form %}
-            <div class="space-y-1">
-                {% if field.field.widget.input_type == 'checkbox' %}
-                    <div class="flex items-start gap-2.5 pt-2 select-none">
-                        <div class="flex items-center h-5">
-                            <input type="checkbox" name="{{ field.name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %}
-                                   class="h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {% for field in form %}
+                <div class="space-y-1">
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="flex items-start gap-2.5 pt-2 select-none">
+                            <div class="flex items-center h-5">
+                                <input type="checkbox" name="{{ field.name }}" id="{{ field.id_for_label }}" {% if field.value %}checked{% endif %}
+                                       class="h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600">
+                            </div>
+                            <div class="text-xs">
+                                <label for="{{ field.id_for_label }}" class="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                                    {{ field.label }}
+                                </label>
+                                <p class="text-[10px] text-slate-400 mt-0.5">{{ field.help_text|default:"Permitir que representantes de atléticas inscrevam atletas nesta modalidade." }}</p>
+                            </div>
                         </div>
-                        <div class="text-xs">
-                            <label for="{{ field.id_for_label }}" class="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                                {{ field.label }}
-                            </label>
-                            <p class="text-[10px] text-slate-400 mt-0.5">{{ field.help_text|default:"Permitir que representantes de atléticas inscrevam atletas nesta modalidade." }}</p>
+                    {% elif field.field.choices %}
+                        <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            {{ field.label }}
+                        </label>
+                        <div>
+                            <select name="{{ field.name }}" id="{{ field.id_for_label }}" 
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+                                {% for value, label in field.field.choices %}
+                                    <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                    </div>
-                {% elif field.field.choices %}
-                    <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {{ field.label }}
-                    </label>
-                    <div>
-                        <select name="{{ field.name }}" id="{{ field.id_for_label }}" 
-                                class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
-                            {% for value, label in field.field.choices %}
-                                <option value="{{ value }}" {% if field.value == value %}selected{% endif %}>{{ label }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                {% else %}
-                    <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {{ field.label }}
-                    </label>
-                    <div>
-                        <input type="{{ field.field.widget.input_type|default:'text' }}" 
-                               name="{{ field.name }}" 
-                               value="{{ field.value|default:'' }}" 
-                               id="{{ field.id_for_label }}" 
-                               class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
-                    </div>
-                {% endif %}
-                
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
-                        </p>
-                    {% endfor %}
-                {% endif %}
-                
-                {% if field.help_text and field.field.widget.input_type != 'checkbox' %}
-                    <p class="text-[9px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
-                {% endif %}
+                    {% else %}
+                        <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            {{ field.label }}
+                        </label>
+                        <div>
+                            <input type="{{ field.field.widget.input_type|default:'text' }}" 
+                                   name="{{ field.name }}" 
+                                   value="{{ field.value|default:'' }}" 
+                                   id="{{ field.id_for_label }}" 
+                                   class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+                        </div>
+                    {% endif %}
+                    
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
+                            </p>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if field.help_text and field.field.widget.input_type != 'checkbox' %}
+                        <p class="text-[9px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
 
             <div class="pt-4 flex items-center justify-end gap-3 text-xs border-t border-slate-100 mt-6">
                 <a href="{% url 'admin_modalidades' %}" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">

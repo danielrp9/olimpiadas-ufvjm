@@ -3,7 +3,7 @@
 {% block title %}{% if object %}Editar{% else %}Lançar Novo{% endif %} Jogo - Comissão{% endblock %}
 
 {% block content %}
-<div class="max-w-xl mx-auto space-y-6">
+<div class="w-full space-y-6">
     
     <!-- Header do Cadastro com Seta de Voltar Integrada -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
@@ -24,42 +24,44 @@
         <form method="post" class="space-y-4">
             {% csrf_token %}
             
-            {% for field in form %}
-            <div class="space-y-1">
-                {% if field.field.widget.input_type == 'checkbox' %}
-                    <div class="flex items-start gap-2.5 pt-2 select-none">
-                        <div class="flex items-center h-5">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {% for field in form %}
+                <div class="space-y-1">
+                    {% if field.field.widget.input_type == 'checkbox' %}
+                        <div class="flex items-start gap-2.5 pt-2 select-none">
+                            <div class="flex items-center h-5">
+                                {{ field }}
+                            </div>
+                            <div class="text-xs">
+                                <label for="{{ field.id_for_label }}" class="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
+                                    {{ field.label }}
+                                </label>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Marcar este jogo como finalizado encerra a edição de pré-súmulas.</p>
+                            </div>
+                        </div>
+                    {% else %}
+                        <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                            {{ field.label }}
+                        </label>
+                        <div>
                             {{ field }}
                         </div>
-                        <div class="text-xs">
-                            <label for="{{ field.id_for_label }}" class="block font-bold text-slate-700 uppercase tracking-wider text-[10px]">
-                                {{ field.label }}
-                            </label>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Marcar este jogo como finalizado encerra a edição de pré-súmulas.</p>
-                        </div>
-                    </div>
-                {% else %}
-                    <label for="{{ field.id_for_label }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                        {{ field.label }}
-                    </label>
-                    <div>
-                        {{ field }}
-                    </div>
-                {% endif %}
-                
-                {% if field.errors %}
-                    {% for error in field.errors %}
-                        <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
-                            <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
-                        </p>
-                    {% endfor %}
-                {% endif %}
-                
-                {% if field.help_text and field.field.widget.input_type != 'checkbox' %}
-                    <p class="text-[9px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
-                {% endif %}
+                    {% endif %}
+                    
+                    {% if field.errors %}
+                        {% for error in field.errors %}
+                            <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
+                                <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
+                            </p>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    {% if field.help_text and field.field.widget.input_type != 'checkbox' %}
+                        <p class="text-[9px] text-slate-400 font-medium leading-relaxed">{{ field.help_text }}</p>
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
 
             <div class="pt-4 flex items-center justify-end gap-3 text-xs border-t border-slate-100 mt-6">
                 <a href="{% url 'presumula_list' %}" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">

@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 
-<body class="text-slate-900 font-sans min-h-screen {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}bg-[#f0f4f8] flex flex-col justify-center{% else %}bg-[#f8fafc]{% endif %}">
+<body class="text-slate-900 font-sans min-h-screen {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}bg-[#f0f4f8] flex flex-col justify-center{% else %}bg-[#f1f5f9]{% endif %}">
     
     <!-- ELEMENTOS LATERAIS (SIDEBARS) - Apenas se NÃO for tela de login/cadastro/completar perfil -->
     {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
@@ -235,7 +235,7 @@
 
         <!-- Conteúdo Interno / Main -->
         <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
-            <div class="max-w-7xl mx-auto w-full {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-lg md:max-w-xl{% endif %}">
+            <div class="{% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-lg md:max-w-xl{% else %}w-full max-w-[1440px]{% endif %} mx-auto">
                 
 
                 <!-- BLOCO ÚNICO DE CONTEÚDO -->

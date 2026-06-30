@@ -1,10 +1,20 @@
 @import "tailwindcss";
 
-/**
-  * A catch-all path to Django template files, JavaScript, and Python files
-  * that contain Tailwind CSS classes and will be scanned by Tailwind to generate the final CSS file.
-  *
-  * If your final CSS file is not being updated after code changes, you may want to broaden or narrow
-  * the scope of this path.
-  */
 @source "../../../**/*.{html,py,js}";
+
+/* Global styles for background and cards contrast */
+body:not(.login-body) {
+  background-color: #f1f5f9;
+}
+
+/* Modern soft shadow elevation for all white container cards */
+.bg-white {
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.045), 0 2px 8px -1px rgba(0, 0, 0, 0.02) !important;
+}
+
+/* Soften container borders to prevent dark/hard borders */
+.bg-white.border, 
+.border-slate-200\/60,
+.border-slate-200 {
+  border-color: rgba(226, 232, 240, 0.45) !important;
+}

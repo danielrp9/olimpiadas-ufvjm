@@ -58,7 +58,7 @@
             <div class="text-center mb-6">
                 <img src="{% static 'logo.png' %}" alt="Brasão das Olimpíadas" class="w-20 h-20 mx-auto mb-4 object-contain">
                 <h1 class="text-2xl font-black text-slate-800 tracking-tight">Portal de Acesso</h1>
-                <p class="text-slate-550 mt-1 text-xs font-semibold" id="social-subtitle">
+                <p class="text-slate-500 mt-1 text-xs font-semibold" id="social-subtitle">
                     Faça login com sua conta Google
                 </p>
             </div>
@@ -106,7 +106,7 @@
             </div>
 
             <!-- Informações sobre o acesso social -->
-            <div class="p-4 bg-blue-50/40 border border-blue-100/60 rounded-2xl text-[11px] text-slate-600 leading-relaxed space-y-2 shadow-sm">
+            <div class="p-4 bg-blue-50/40 border border-blue-100/60 rounded-2xl text-[11px] text-slate-655 leading-relaxed space-y-2 shadow-sm">
                 <p class="font-bold text-blue-700 flex items-center">
                     <i class="fas fa-info-circle mr-1.5 text-blue-500"></i> Importante:
                 </p>
@@ -127,13 +127,13 @@
         <div id="view-admin" class="hidden space-y-6">
             <div class="text-center mb-6">
                 <img src="{% static 'logo.png' %}" alt="Brasão das Olimpíadas" class="w-20 h-20 mx-auto mb-4 object-contain">
-                <h1 class="text-2xl font-black text-slate-800 tracking-tight">Acesso Restrito</h1>
-                <p class="text-slate-500 mt-1 text-xs font-semibold">
-                    Painel Local para a Comissão
+                <h1 class="text-2xl font-black text-slate-800 tracking-tight">Portal de Acesso</h1>
+                <p class="text-slate-550 mt-1 text-xs font-semibold">
+                    Painel Administrativo
                 </p>
             </div>
             
-            <form method="post" action="{% url 'login' %}" class="space-y-4">
+            <form method="post" action="{% url 'login' %}" class="space-y-6">
                 {% csrf_token %}
                 
                 {% if form.errors %}
@@ -143,28 +143,38 @@
                 {% endif %}
                 
                 <div>
-                    <label for="id_username" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">E-mail Administrativo</label>
+                    <label for="id_username" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">E-mail Administrativo</label>
                     <input type="email" name="username" required id="id_username" 
                            placeholder="admin@exemplo.com"
-                           class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50/50 shadow-inner">
+                           class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm">
                 </div>
 
                 <div>
-                    <label for="id_password" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
+                    <label for="id_password" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Senha</label>
                     <input type="password" name="password" required id="id_password" 
                            placeholder="••••••••"
-                           class="w-full px-3 py-2 text-sm border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition bg-slate-50/50 shadow-inner">
+                           class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm">
                 </div>
 
                 <button type="submit" 
-                        class="w-full inline-flex items-center justify-center px-4 py-2.5 border border-transparent text-sm font-bold rounded-xl text-white bg-slate-800 hover:bg-slate-900 transition shadow active:scale-[0.98]">
+                        class="w-full inline-flex items-center justify-center px-5 py-3 border border-slate-200 rounded-xl bg-white hover:bg-slate-50 text-slate-700 font-bold shadow-sm transition-all duration-200 active:scale-[0.98] text-sm">
                     Acessar Painel
                 </button>
             </form>
 
+            <!-- Caixa de Informações (Login Local) -->
+            <div class="p-4 bg-blue-50/40 border border-blue-100/60 rounded-2xl text-[11px] text-slate-655 leading-relaxed space-y-2 shadow-sm">
+                <p class="font-bold text-blue-700 flex items-center justify-center">
+                    <i class="fas fa-info-circle mr-1.5 text-blue-500"></i> Importante:
+                </p>
+                <p class="text-center font-medium">
+                    O acesso ao portal é realizado <strong>exclusivamente</strong> através de Login Local. Não são necessárias senhas sociais.
+                </p>
+            </div>
+
             <div class="pt-4 border-t border-slate-100 text-center">
                 <button type="button" onclick="switchToSocial()" 
-                        class="text-[11px] text-blue-600 hover:text-blue-700 font-bold transition hover:underline">
+                        class="text-[11px] text-slate-400 hover:text-blue-600 font-bold transition hover:underline">
                     <i class="fas fa-arrow-left mr-1"></i> Voltar para Login Social
                 </button>
             </div>

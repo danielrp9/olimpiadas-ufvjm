@@ -183,14 +183,12 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
         campi = request.POST.getlist('campus[]')
         generos = request.POST.getlist('genero[]')
         is_egressos = request.POST.getlist('is_egresso[]')
-        links_egressos = request.POST.getlist('link_egresso[]')
         links_documentos = request.POST.getlist('link_documento[]')
 
         atletas_criados = 0
         for i in range(len(nomes)):
             if nomes[i].strip():
                 is_egr = (is_egressos[i] == '1') if i < len(is_egressos) else False
-                link_egr = links_egressos[i] if i < len(links_egressos) else ''
                 gen = generos[i] if i < len(generos) else 'M'
                 link_doc = links_documentos[i] if i < len(links_documentos) else ''
                 
@@ -203,7 +201,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                     campus=campi[i],
                     genero=gen,
                     is_egresso=is_egr,
-                    link_documento_egresso=link_egr,
+                    link_documento_egresso='',
                     link_documento=link_doc,
                     cadastrado_por=request.user
                 )
