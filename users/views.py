@@ -7,7 +7,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 
-from users.models import ComissaoWhitelist
+from users.models import ComissaoWhitelist, MembroDelegacao
 from users.forms import CompleteProfileForm
 from users.utils.oauth_google import get_google_auth_url, get_google_user_info
 
@@ -48,20 +48,31 @@ class GoogleCallbackView(View):
             # 2. Checa se o e-mail está na Whitelist da Comissão
             is_in_whitelist = ComissaoWhitelist.objects.filter(email__iexact=email).exists()
             
+            # 2b. Checa se o e-mail é membro autorizado de alguma delegação
+            membro_autorizado = MembroDelegacao.objects.filter(email__iexact=email).first()
+            
             # 3. Tenta localizar ou criar o usuário
             user = User.objects.filter(email__iexact=email).first()
             
             if user is None:
                 # Primeiro Acesso: Registra novo usuário
-                role = 'COMISSAO' if is_in_whitelist else 'REPRESENTANTE'
+                if is_in_whitelist:
+                    role = 'COMISSAO'
+                    parent_delegate = None
+                elif membro_autorizado:
+                    role = 'REPRESENTANTE'
+                    parent_delegate = membro_autorizado.delegado_principal
+                else:
+                    role = 'REPRESENTANTE'
+                    parent_delegate = None
+                
                 user = User.objects.create_user(
                     email=email,
                     nome_completo=google_user['nome_completo'],
                     foto_url=google_user['foto_url'],
                     google_id=google_user['google_id'],
                     role=role,
-                    # Se for comissão, perfil_completo é True (definido automaticamente no save)
-                    # Se for representante, cpf será NULL e perfil_completo será False (definido no save)
+                    parent_delegate=parent_delegate,
                 )
                 messages.success(request, f"Cadastro realizado com sucesso como {user.get_role_display()}!")
             else:
@@ -71,16 +82,24 @@ class GoogleCallbackView(View):
                 if not user.google_id:
                     user.google_id = google_user['google_id']
                 
-                # Sincroniza o papel do usuário com o estado atual da whitelist
+                # Sincroniza o papel e vinculo de delegação do usuário
                 if is_in_whitelist:
                     if user.role != 'COMISSAO':
                         user.role = 'COMISSAO'
                         user.is_staff = True
                         messages.info(request, "Seu acesso foi atualizado para a Comissão Organizadora.")
+                    user.parent_delegate = None
+                elif membro_autorizado:
+                    user.role = 'REPRESENTANTE'
+                    user.parent_delegate = membro_autorizado.delegado_principal
+                    user.is_staff = False
                 else:
                     if user.role == 'COMISSAO' and not user.is_superuser:
                         user.role = 'REPRESENTANTE'
+                        user.is_staff = False
                         messages.warning(request, "Seu acesso de comissão expirou. Agora você é um Representante.")
+                    # Caso não esteja na whitelist nem autorizado, mas já tivesse parent_delegate, limpamos se o admin removeu
+                    user.parent_delegate = None
                 
                 user.save()
                 

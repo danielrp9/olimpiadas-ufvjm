@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.contrib import messages
 from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade
 from .forms import RegisterForm, AtletaForm, JogoForm, ModalidadeForm
-from users.models import ComissaoWhitelist
+from users.models import ComissaoWhitelist, MembroDelegacao
 
 class RegisterView(CreateView):
     form_class = RegisterForm
@@ -41,20 +41,42 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         if user.is_comissao:
             context['is_admin'] = True
             context['total_atletas_global'] = Atleta.objects.count()
-            context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE', inscricao__isnull=False).count()
+            context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True, inscricao__isnull=False).count()
             context['total_presumulas_global'] = PreSumula.objects.count()
             return context
         
+        delegacao = user.delegacao_ativa
         context['is_admin'] = False
-        context['total_atletas'] = Atleta.objects.filter(cadastrado_por=user).count()
-        context['minhas_presumulas'] = PreSumula.objects.filter(representante=user).order_by('-jogo__data_jogo')
+        context['total_atletas'] = Atleta.objects.filter(cadastrado_por=delegacao).count()
+        
+        presumulas = PreSumula.objects.filter(representante=delegacao)
+        context['total_presumulas'] = presumulas.count()
+        ps_dict = {ps.jogo_id: ps for ps in presumulas}
+        
+        # Jogos ativos (não finalizados)
+        jogos_ativos = Jogo.objects.filter(
+            Q(time_a=delegacao) | Q(time_b=delegacao),
+            finalizado=False
+        ).order_by('-data_jogo', '-horario_jogo', '-id')
+        for jogo in jogos_ativos:
+            jogo.minha_presumula = ps_dict.get(jogo.id)
+        context['jogos_ativos'] = jogos_ativos
+        
+        # Jogos encerrados (histórico)
+        jogos_encerrados = Jogo.objects.filter(
+            Q(time_a=delegacao) | Q(time_b=delegacao),
+            finalizado=True
+        ).order_by('-data_jogo', '-horario_jogo', '-id')
+        for jogo in jogos_encerrados:
+            jogo.minha_presumula = ps_dict.get(jogo.id)
+        context['jogos_encerrados'] = jogos_encerrados
         
         from django.utils import timezone
         context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True).filter(
             Q(data_publicacao__isnull=True) | Q(data_publicacao__lte=timezone.now())
         )
         
-        context['inscricao'] = getattr(user, 'inscricao', None)
+        context['inscricao'] = getattr(delegacao, 'inscricao', None)
         return context
 
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
@@ -133,13 +155,23 @@ class JogoDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(self.request, "Jogo excluído com sucesso!")
         return super().form_valid(form)
 
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def finalizar_jogo(request, pk):
+    if request.method == 'POST':
+        jogo = get_object_or_404(Jogo, pk=pk)
+        jogo.finalizado = True
+        jogo.save()
+        messages.success(request, f"O jogo {jogo.modalidade.nome} ({jogo.time_a.nome_delegacao or jogo.time_a.email} vs {jogo.time_b.nome_delegacao or jogo.time_b.email}) foi encerrado com sucesso!")
+    return redirect('presumula_list')
+
 
 
 # Remoção de avaliar_equipe de inscrições legadas
 
 @login_required
 def enviar_correcao_atleta(request, pk):
-    atleta = get_object_or_404(Atleta, pk=pk, cadastrado_por=request.user)
+    atleta = get_object_or_404(Atleta, pk=pk, cadastrado_por=request.user.delegacao_ativa)
     if not atleta.permite_correcao:
         messages.error(request, "Este atleta não está habilitado para correções.")
         return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
@@ -169,7 +201,7 @@ class AtletaListView(LoginRequiredMixin, ListView):
     context_object_name = 'atletas'
 
     def get_queryset(self):
-        return Atleta.objects.filter(cadastrado_por=self.request.user)
+        return Atleta.objects.filter(cadastrado_por=self.request.user.delegacao_ativa)
 
 class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
     template_name = 'core/atleta_bulk_form.html'
@@ -203,7 +235,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                     is_egresso=is_egr,
                     link_documento_egresso='',
                     link_documento=link_doc,
-                    cadastrado_por=request.user
+                    cadastrado_por=request.user.delegacao_ativa
                 )
                 atletas_criados += 1
         
@@ -218,7 +250,7 @@ class AtletaUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('atleta_list')
 
     def get_queryset(self):
-        return Atleta.objects.filter(cadastrado_por=self.request.user)
+        return Atleta.objects.filter(cadastrado_por=self.request.user.delegacao_ativa)
 
 class AtletaDeleteView(LoginRequiredMixin, DeleteView):
     model = Atleta
@@ -226,7 +258,7 @@ class AtletaDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy('atleta_list')
 
     def get_queryset(self):
-        return Atleta.objects.filter(cadastrado_por=self.request.user)
+        return Atleta.objects.filter(cadastrado_por=self.request.user.delegacao_ativa)
 
 # Remoção de inscrições e solicitações de inclusão legadas por equipes
 
@@ -252,7 +284,7 @@ class AdminDelegacaoListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         # Retorna apenas os representantes que de fato realizaram uma inscrição
-        return User.objects.filter(role='REPRESENTANTE', inscricao__isnull=False).prefetch_related(
+        return User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True, inscricao__isnull=False).prefetch_related(
             'atletas', 
             'inscricao__modalidades__modalidade', 
             'inscricao__modalidades__atletas'
@@ -322,15 +354,58 @@ class PreSumulaListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         user = self.request.user
+        
+        # Captura parâmetros de filtros
+        self.modalidade_id = self.request.GET.get('modalidade')
+        self.delegacao_id = self.request.GET.get('delegacao')
+        self.data_jogo = self.request.GET.get('data')
+        
         if user.is_staff:
-            return Jogo.objects.all().order_by('-data_jogo', '-horario_jogo')
-        if user.role == 'REPRESENTANTE' and user.status_delegacao != 'deferido':
-            return Jogo.objects.none()
-        return Jogo.objects.filter(Q(time_a=user) | Q(time_b=user)).order_by('-data_jogo', '-horario_jogo')
+            qs = Jogo.objects.all()
+        else:
+            delegacao = user.delegacao_ativa
+            if delegacao.role == 'REPRESENTANTE' and delegacao.status_delegacao != 'deferido':
+                return Jogo.objects.none()
+            qs = Jogo.objects.filter(Q(time_a=delegacao) | Q(time_b=delegacao))
+            
+        # Filtros
+        if self.modalidade_id:
+            qs = qs.filter(modalidade_id=self.modalidade_id)
+        if self.data_jogo:
+            qs = qs.filter(data_jogo=self.data_jogo)
+        if self.delegacao_id:
+            qs = qs.filter(Q(time_a_id=self.delegacao_id) | Q(time_b_id=self.delegacao_id))
+            
+        return qs.order_by('-data_jogo', '-horario_jogo', '-id')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        
+        # Filtros ativos count
+        modalidade_id = self.request.GET.get('modalidade')
+        delegacao_id = self.request.GET.get('delegacao')
+        data_jogo = self.request.GET.get('data')
+        
+        filtros_ativos = 0
+        if modalidade_id:
+            filtros_ativos += 1
+        if delegacao_id:
+            filtros_ativos += 1
+        if data_jogo:
+            filtros_ativos += 1
+            
+        context['filtros_ativos'] = filtros_ativos
+        context['selected_modalidade'] = modalidade_id
+        context['selected_delegacao'] = delegacao_id
+        context['selected_data'] = data_jogo
+        
+        # Listas para o dropdown de filtros
+        context['modalidades'] = Modalidade.objects.all().order_by('nome')
+        
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        context['delegacoes_list'] = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True).order_by('nome_delegacao')
         
         if user.is_staff:
             from collections import defaultdict
@@ -341,8 +416,11 @@ class PreSumulaListView(LoginRequiredMixin, ListView):
             
             for jogo in context['jogos']:
                 jogo.todas_presumulas = by_jogo[jogo.id]
+                jogo.presumula_a = next((ps for ps in by_jogo[jogo.id] if ps.representante_id == jogo.time_a_id), None)
+                jogo.presumula_b = next((ps for ps in by_jogo[jogo.id] if ps.representante_id == jogo.time_b_id), None)
         else:
-            presumulas = PreSumula.objects.filter(representante=user)
+            delegacao = user.delegacao_ativa
+            presumulas = PreSumula.objects.filter(representante=delegacao)
             ps_dict = {ps.jogo_id: ps for ps in presumulas}
             for jogo in context['jogos']:
                 jogo.minha_presumula = ps_dict.get(jogo.id)
@@ -356,7 +434,8 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
     Disponível apenas para Representantes para jogos de sua delegação.
     """
     def get(self, request):
-        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+        delegacao = request.user.delegacao_ativa
+        if delegacao.role == 'REPRESENTANTE' and delegacao.status_delegacao != 'deferido':
             messages.error(request, "Acesso Bloqueado: Sua delegação ainda não foi deferida pela Comissão Organizadora. Você precisa ter a delegação aprovada para preencher pré-súmulas.")
             return redirect('dashboard')
             
@@ -368,18 +447,18 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         jogo = get_object_or_404(Jogo, pk=jogo_id)
         
         # Verifica se o jogo é da delegação do usuário (ou se é staff)
-        if not request.user.is_staff and jogo.time_a != request.user and jogo.time_b != request.user:
+        if not request.user.is_staff and jogo.time_a != delegacao and jogo.time_b != delegacao:
             messages.error(request, "Você não tem permissão para preencher a pré-súmula para este jogo.")
             return redirect('presumula_list')
             
         # Verifica se já existe pré-súmula cadastrada por este representante para este jogo
-        if PreSumula.objects.filter(jogo=jogo, representante=request.user).exists():
-            ps = PreSumula.objects.get(jogo=jogo, representante=request.user)
+        if PreSumula.objects.filter(jogo=jogo, representante=delegacao).exists():
+            ps = PreSumula.objects.get(jogo=jogo, representante=delegacao)
             return redirect('presumula_update', pk=ps.id)
             
         # Filtra os atletas da delegação em conformidade e pelo sexo da categoria
         genero_modalidade = jogo.modalidade.genero
-        atletas = Atleta.objects.filter(cadastrado_por=request.user, em_conformidade=True)
+        atletas = Atleta.objects.filter(cadastrado_por=delegacao, em_conformidade=True)
         if genero_modalidade == 'M':
             atletas = atletas.filter(genero__in=['M', 'N'])
         elif genero_modalidade == 'F':
@@ -392,18 +471,19 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         })
 
     def post(self, request):
-        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+        delegacao = request.user.delegacao_ativa
+        if delegacao.role == 'REPRESENTANTE' and delegacao.status_delegacao != 'deferido':
             messages.error(request, "Acesso Bloqueado: Sua delegação não está deferida.")
             return redirect('dashboard')
 
         jogo_id = request.POST.get('jogo_id')
         jogo = get_object_or_404(Jogo, pk=jogo_id)
         
-        if not request.user.is_staff and jogo.time_a != request.user and jogo.time_b != request.user:
+        if not request.user.is_staff and jogo.time_a != delegacao and jogo.time_b != delegacao:
             messages.error(request, "Acesso negado.")
             return redirect('presumula_list')
             
-        if PreSumula.objects.filter(jogo=jogo, representante=request.user).exists():
+        if PreSumula.objects.filter(jogo=jogo, representante=delegacao).exists():
             messages.error(request, "Você já preencheu a pré-súmula para este jogo.")
             return redirect('presumula_list')
             
@@ -411,7 +491,7 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         
         presumula = PreSumula.objects.create(
             jogo=jogo,
-            representante=request.user
+            representante=delegacao
         )
         
         for atleta_id in atleta_ids:
@@ -432,12 +512,13 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
     Edição de uma pré-súmula de escalação.
     """
     def get(self, request, pk):
-        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+        delegacao = request.user.delegacao_ativa
+        if delegacao.role == 'REPRESENTANTE' and delegacao.status_delegacao != 'deferido':
             messages.error(request, "Acesso Bloqueado: Sua delegação ainda não foi deferida.")
             return redirect('dashboard')
 
         presumula = get_object_or_404(PreSumula, pk=pk)
-        if not request.user.is_staff and presumula.representante != request.user:
+        if not request.user.is_staff and presumula.representante != delegacao:
             messages.error(request, "Você não tem permissão para editar esta pré-súmula.")
             return redirect('presumula_list')
 
@@ -472,12 +553,13 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
         })
 
     def post(self, request, pk):
-        if request.user.role == 'REPRESENTANTE' and request.user.status_delegacao != 'deferido':
+        delegacao = request.user.delegacao_ativa
+        if delegacao.role == 'REPRESENTANTE' and delegacao.status_delegacao != 'deferido':
             messages.error(request, "Acesso Bloqueado: Sua delegação não está deferida.")
             return redirect('dashboard')
 
         presumula = get_object_or_404(PreSumula, pk=pk)
-        if not request.user.is_staff and presumula.representante != request.user:
+        if not request.user.is_staff and presumula.representante != delegacao:
             messages.error(request, "Sem permissão.")
             return redirect('presumula_list')
 
@@ -511,7 +593,7 @@ class PreSumulaDetailView(LoginRequiredMixin, DetailView):
     def get_queryset(self):
         if self.request.user.is_staff:
             return PreSumula.objects.all()
-        return PreSumula.objects.filter(representante=self.request.user)
+        return PreSumula.objects.filter(representante=self.request.user.delegacao_ativa)
 
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
 class AdminWhitelistView(LoginRequiredMixin, View):
@@ -549,7 +631,8 @@ def whitelist_delete(request, pk):
 def inscricao_passo1(request):
     if request.user.is_comissao:
         return redirect('dashboard')
-    inscricao = getattr(request.user, 'inscricao', None)
+    delegacao = request.user.delegacao_ativa
+    inscricao = getattr(delegacao, 'inscricao', None)
     if inscricao:
         return redirect('inscricao_detail')
         
@@ -574,7 +657,8 @@ def inscricao_passo1(request):
 def inscricao_passo2(request):
     if request.user.is_comissao:
         return redirect('dashboard')
-    inscricao = getattr(request.user, 'inscricao', None)
+    delegacao = request.user.delegacao_ativa
+    inscricao = getattr(delegacao, 'inscricao', None)
     if inscricao:
         return redirect('inscricao_detail')
         
@@ -584,7 +668,7 @@ def inscricao_passo2(request):
         return redirect('inscricao_passo1')
         
     modalidades = Modalidade.objects.filter(id__in=modalidades_ids)
-    atletas = Atleta.objects.filter(cadastrado_por=request.user)
+    atletas = Atleta.objects.filter(cadastrado_por=delegacao)
     
     if not atletas.exists():
         messages.warning(request, "Você precisa cadastrar seus atletas no sistema antes de prosseguir com a inscrição nas modalidades.")
@@ -592,7 +676,7 @@ def inscricao_passo2(request):
         
     if request.method == 'POST':
         atleta_ids = request.POST.getlist('atletas')
-        selected_atletas = Atleta.objects.filter(id__in=[int(aid) for aid in atleta_ids], cadastrado_por=request.user)
+        selected_atletas = Atleta.objects.filter(id__in=[int(aid) for aid in atleta_ids], cadastrado_por=delegacao)
         
         if not selected_atletas.exists():
             messages.error(request, "Por favor, selecione ao menos um atleta para a inscrição.")
@@ -603,7 +687,7 @@ def inscricao_passo2(request):
             })
             
         inscricao, created = Inscricao.objects.get_or_create(
-            delegacao=request.user,
+            delegacao=delegacao,
             defaults={'status': 'pendente'}
         )
         
@@ -613,9 +697,9 @@ def inscricao_passo2(request):
             insc_mod = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=mod)
             insc_mod.atletas.set(selected_atletas)
             
-        request.user.status_delegacao = 'pendente'
-        request.user.justificativa_delegacao = ''
-        request.user.save()
+        delegacao.status_delegacao = 'pendente'
+        delegacao.justificativa_delegacao = ''
+        delegacao.save()
         
         if 'inscricao_modalidades_ids' in request.session:
             del request.session['inscricao_modalidades_ids']
@@ -634,7 +718,8 @@ def inscricao_detail(request):
     if request.user.is_comissao:
         return redirect('dashboard')
         
-    inscricao = getattr(request.user, 'inscricao', None)
+    delegacao = request.user.delegacao_ativa
+    inscricao = getattr(delegacao, 'inscricao', None)
     if not inscricao:
         return redirect('inscricao_passo1')
         
@@ -652,14 +737,15 @@ def refazer_inscricao(request):
     if request.user.is_comissao:
         return redirect('dashboard')
         
-    inscricao = getattr(request.user, 'inscricao', None)
+    delegacao = request.user.delegacao_ativa
+    inscricao = getattr(delegacao, 'inscricao', None)
     if inscricao:
         if inscricao.status == 'pendente':
             return render(request, 'core/inscricao_fila_espera.html')
         elif inscricao.status == 'indeferido':
             inscricao.delete()
-            request.user.status_delegacao = 'pendente'
-            request.user.save()
+            delegacao.status_delegacao = 'pendente'
+            delegacao.save()
             messages.info(request, "Sua inscrição anterior foi cancelada. Você pode iniciar uma nova inscrição agora.")
             return redirect('inscricao_passo1')
         else:
@@ -693,4 +779,56 @@ def react_app(request, path=''):
     with open(dist_path, 'r', encoding='utf-8') as f:
         html_content = f.read()
     return HttpResponse(html_content)
+
+
+class MembrosDelegacaoView(LoginRequiredMixin, View):
+    """
+    Lista e gerencia os membros (co-delegados) autorizados pelo delegado principal.
+    Disponível apenas para delegados representantes principais (sem parent_delegate).
+    """
+    def get(self, request):
+        if request.user.role != 'REPRESENTANTE' or request.user.parent_delegate is not None:
+            messages.error(request, "Acesso negado: Apenas delegados representantes principais podem gerenciar membros autorizados.")
+            return redirect('dashboard')
+            
+        membros = MembroDelegacao.objects.filter(delegado_principal=request.user).order_by('-data_adicao')
+        return render(request, 'core/membros_delegacao.html', {'membros': membros})
+
+    def post(self, request):
+        if request.user.role != 'REPRESENTANTE' or request.user.parent_delegate is not None:
+            messages.error(request, "Acesso negado.")
+            return redirect('dashboard')
+            
+        email = request.POST.get('email', '').strip().lower()
+        if not email:
+            messages.error(request, "O e-mail é obrigatório.")
+            return redirect('membros_delegacao')
+            
+        if email == request.user.email:
+            messages.warning(request, "Você não precisa autorizar o seu próprio e-mail.")
+            return redirect('membros_delegacao')
+            
+        if MembroDelegacao.objects.filter(delegado_principal=request.user, email__iexact=email).exists():
+            messages.warning(request, f"O e-mail {email} já está autorizado na sua delegação.")
+            return redirect('membros_delegacao')
+            
+        MembroDelegacao.objects.create(delegado_principal=request.user, email=email)
+        messages.success(request, f"E-mail {email} autorizado com sucesso para acessar sua delegação!")
+        return redirect('membros_delegacao')
+
+
+@login_required
+def membro_delegacao_delete(request, pk):
+    """
+    Remove um membro autorizado da delegação.
+    """
+    membro = get_object_or_404(MembroDelegacao, pk=pk)
+    if membro.delegado_principal != request.user:
+        messages.error(request, "Acesso negado: Você não tem permissão para remover este membro.")
+        return redirect('dashboard')
+        
+    email = membro.email
+    membro.delete()
+    messages.success(request, f"E-mail {email} removido da sua delegação.")
+    return redirect('membros_delegacao')
 

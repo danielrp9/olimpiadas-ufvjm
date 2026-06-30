@@ -79,6 +79,30 @@ class Jogo(models.Model):
         nome_b = f"{self.time_b.nome_delegacao or self.time_b.email} ({self.time_b.nome_completo})"
         return f"{self.modalidade.nome} ({self.modalidade.get_genero_display()}): {nome_a} vs {nome_b} ({self.data_jogo.strftime('%d/%m/%Y')}{horario_str})"
 
+    def clean(self):
+        super().clean()
+        if self.data_jogo:
+            from django.utils import timezone
+            from django.core.exceptions import ValidationError
+            hoje = timezone.localdate()
+            
+            # Valida se for criação ou se a data/horário foram alterados
+            is_new = self.pk is None
+            date_changed = True
+            time_changed = True
+            if not is_new:
+                original = Jogo.objects.get(pk=self.pk)
+                date_changed = original.data_jogo != self.data_jogo
+                time_changed = original.horario_jogo != self.horario_jogo
+                
+            if is_new or date_changed or time_changed:
+                if self.data_jogo < hoje:
+                    raise ValidationError({'data_jogo': "A data do jogo não pode ser no passado."})
+                elif self.data_jogo == hoje and self.horario_jogo:
+                    agora = timezone.localtime().time()
+                    if self.horario_jogo.replace(microsecond=0) < agora.replace(microsecond=0):
+                        raise ValidationError({'horario_jogo': "O horário do jogo não pode ser no passado para o dia de hoje."})
+
     class Meta:
         verbose_name = 'Jogo'
         verbose_name_plural = 'Jogos'

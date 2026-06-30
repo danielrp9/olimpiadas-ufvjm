@@ -93,6 +93,16 @@ class User(AbstractUser):
         verbose_name="Nome da Delegação"
     )
     
+    # Campo para delegação compartilhada / co-delegado
+    parent_delegate = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='sub_delegados',
+        verbose_name="Delegado Principal"
+    )
+    
     STATUS_DELEGACAO_CHOICES = [
         ('pendente', 'Pendente de Análise'),
         ('deferido', 'Deferido (Aprovado)'),
@@ -140,13 +150,28 @@ class User(AbstractUser):
         else:
             if not self.is_superuser:
                 self.is_staff = False
-            # Para representante, o perfil está completo se CPF E Nome da Delegação estiverem informados
-            if self.cpf and self.nome_delegacao:
-                self.perfil_completo = True
+            
+            if self.parent_delegate:
+                # Se for sub-delegado, copia o status de perfil completo do pai
+                self.perfil_completo = self.parent_delegate.perfil_completo
             else:
-                self.perfil_completo = False
+                # Para representante principal, o perfil está completo se CPF E Nome da Delegação estiverem informados
+                if self.cpf and self.nome_delegacao:
+                    self.perfil_completo = True
+                else:
+                    self.perfil_completo = False
                 
         super().save(*args, **kwargs)
+
+        # Se for delegado principal, atualiza todos os sub-delegados vinculados
+        if self.role == 'REPRESENTANTE' and not self.parent_delegate:
+            self.sub_delegados.all().update(perfil_completo=self.perfil_completo)
+
+    @property
+    def delegacao_ativa(self):
+        if self.parent_delegate:
+            return self.parent_delegate
+        return self
 
     @property
     def is_comissao(self) -> bool:
@@ -158,3 +183,51 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.nome_completo or self.email} ({self.get_role_display()})"
+
+
+class MembroDelegacao(models.Model):
+    """
+    Tabela de membros autorizados por um delegado representante.
+    Membros nesta lista poderão acessar o perfil/delegação do delegado principal.
+    """
+    delegado_principal = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='membros_autorizados',
+        verbose_name="Delegado Principal"
+    )
+    email = models.EmailField(verbose_name="E-mail Autorizado")
+    data_adicao = models.DateTimeField(auto_now_add=True, verbose_name="Data de Adição")
+
+    class Meta:
+        verbose_name = "Membro da Delegação"
+        verbose_name_plural = "Membros da Delegação"
+        unique_together = ('delegado_principal', 'email')
+
+    def __str__(self):
+        return f"{self.email} -> {self.delegado_principal.nome_delegacao or self.delegado_principal.email}"
+
+    def save(self, *args, **kwargs):
+        # Normaliza email para lowercase
+        self.email = self.email.strip().lower()
+        super().save(*args, **kwargs)
+        
+        # Sincroniza o usuário existente, se houver
+        existing_user = User.objects.filter(email__iexact=self.email).first()
+        if existing_user:
+            existing_user.parent_delegate = self.delegado_principal
+            existing_user.role = 'REPRESENTANTE'
+            existing_user.perfil_completo = self.delegado_principal.perfil_completo
+            existing_user.save()
+
+    def delete(self, *args, **kwargs):
+        email = self.email
+        delegado_principal = self.delegado_principal
+        super().delete(*args, **kwargs)
+        
+        # Sincroniza desvinculação se o usuário existir
+        existing_user = User.objects.filter(email__iexact=email, parent_delegate=delegado_principal).first()
+        if existing_user:
+            existing_user.parent_delegate = None
+            existing_user.save()
+

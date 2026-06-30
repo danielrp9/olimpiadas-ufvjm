@@ -16,17 +16,19 @@ User = get_user_model()
 def user_to_dict(user):
     if not user:
         return None
+    delegacao = user.delegacao_ativa
     return {
         'id': user.id,
         'email': user.email,
         'nome_completo': user.nome_completo,
         'foto_url': user.foto_url,
         'role': user.role,
+        'parent_delegate_id': user.parent_delegate_id,
         'perfil_completo': user.perfil_completo,
-        'cpf': user.cpf,
-        'nome_delegacao': user.nome_delegacao,
-        'status_delegacao': user.status_delegacao,
-        'justificativa_delegacao': user.justificativa_delegacao,
+        'cpf': user.cpf or (user.parent_delegate.cpf if user.parent_delegate else None),
+        'nome_delegacao': delegacao.nome_delegacao,
+        'status_delegacao': delegacao.status_delegacao,
+        'justificativa_delegacao': delegacao.justificativa_delegacao,
         'is_comissao': user.is_comissao,
         'is_superuser': user.is_superuser
     }
@@ -175,9 +177,10 @@ class APIDashboardView(View):
                 'total_modalidades': total_modalidades
             })
         
-        total_atletas = Atleta.objects.filter(cadastrado_por=user).count()
+        delegacao = user.delegacao_ativa
+        total_atletas = Atleta.objects.filter(cadastrado_por=delegacao).count()
         
-        minhas_presumulas = PreSumula.objects.filter(representante=user).order_by('-jogo__data_jogo')
+        minhas_presumulas = PreSumula.objects.filter(representante=delegacao).order_by('-jogo__data_jogo')
         presumulas_data = []
         for ps in minhas_presumulas:
             presumulas_data.append({
@@ -192,7 +195,7 @@ class APIDashboardView(View):
         )
         modalidades_data = [modalidade_to_dict(m) for m in modalidades_abertas]
         
-        inscricao = getattr(user, 'inscricao', None)
+        inscricao = getattr(delegacao, 'inscricao', None)
         inscricao_data = None
         if inscricao:
             inscricao_data = {
@@ -224,7 +227,7 @@ class APIAtletasView(View):
         if request.user.is_comissao:
             atletas = Atleta.objects.all().order_by('nome_completo')
         else:
-            atletas = Atleta.objects.filter(cadastrado_por=request.user).order_by('nome_completo')
+            atletas = Atleta.objects.filter(cadastrado_por=request.user.delegacao_ativa).order_by('nome_completo')
             
         return JsonResponse({'atletas': [atleta_to_dict(a) for a in atletas]})
         
@@ -258,7 +261,7 @@ class APIAtletasView(View):
                     is_egresso=bool(item.get('is_egresso', False)),
                     link_documento_egresso=item.get('link_documento_egresso', '').strip(),
                     link_documento=item.get('link_documento', '').strip(),
-                    cadastrado_por=request.user
+                    cadastrado_por=request.user.delegacao_ativa
                 )
                 atletas_criados.append(atleta_to_dict(atleta))
                 
@@ -273,7 +276,7 @@ class APIAtletaDetailView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         atleta = get_object_or_404(Atleta, pk=pk)
-        if not request.user.is_comissao and atleta.cadastrado_por != request.user:
+        if not request.user.is_comissao and atleta.cadastrado_por != request.user.delegacao_ativa:
             return JsonResponse({'error': 'Não autorizado'}, status=403)
             
         try:
@@ -317,7 +320,7 @@ class APIAtletaDetailView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         atleta = get_object_or_404(Atleta, pk=pk)
-        if not request.user.is_comissao and atleta.cadastrado_por != request.user:
+        if not request.user.is_comissao and atleta.cadastrado_por != request.user.delegacao_ativa:
             return JsonResponse({'error': 'Não autorizado'}, status=403)
             
         atleta.delete()
@@ -328,7 +331,7 @@ class APIAtletaEnviarCorrecaoView(View):
     def post(self, request, pk):
         if not request.user.is_authenticated:
             return JsonResponse({'error': 'Não autorizado'}, status=401)
-        atleta = get_object_or_404(Atleta, pk=pk, cadastrado_por=request.user)
+        atleta = get_object_or_404(Atleta, pk=pk, cadastrado_por=request.user.delegacao_ativa)
         if not atleta.permite_correcao:
             return JsonResponse({'error': 'Este atleta não está habilitado para correções.'}, status=400)
             
@@ -479,7 +482,8 @@ class APIJogosView(View):
         if request.user.is_comissao:
             jogos = Jogo.objects.all().order_by('-data_jogo', '-horario_jogo')
         else:
-            jogos = Jogo.objects.filter(Q(time_a=request.user) | Q(time_b=request.user)).order_by('-data_jogo', '-horario_jogo')
+            delegacao = request.user.delegacao_ativa
+            jogos = Jogo.objects.filter(Q(time_a=delegacao) | Q(time_b=delegacao)).order_by('-data_jogo', '-horario_jogo')
             
         return JsonResponse({'jogos': [jogo_to_dict(j) for j in jogos]})
 
@@ -638,14 +642,15 @@ class APIPreSumulasView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         user = request.user
+        delegacao = user.delegacao_ativa
         
         # Filtra os jogos
         if user.is_comissao:
             jogos = Jogo.objects.all().order_by('-data_jogo', '-horario_jogo')
         else:
-            if user.status_delegacao != 'deferido':
+            if delegacao.status_delegacao != 'deferido':
                 return JsonResponse({'jogos': [], 'error': 'Delegação não está deferida'}, status=403)
-            jogos = Jogo.objects.filter(Q(time_a=user) | Q(time_b=user)).order_by('-data_jogo', '-horario_jogo')
+            jogos = Jogo.objects.filter(Q(time_a=delegacao) | Q(time_b=delegacao)).order_by('-data_jogo', '-horario_jogo')
             
         # Para cada jogo, busca as pré-súmulas
         jogos_data = []
@@ -656,7 +661,7 @@ class APIPreSumulasView(View):
             if user.is_comissao:
                 presumulas = PreSumula.objects.filter(jogo=jogo)
             else:
-                presumulas = PreSumula.objects.filter(jogo=jogo, representante=user)
+                presumulas = PreSumula.objects.filter(jogo=jogo, representante=delegacao)
                 
             for ps in presumulas:
                 escalacao = []
@@ -686,7 +691,8 @@ class APIPreSumulasView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         user = request.user
-        if not user.is_comissao and user.status_delegacao != 'deferido':
+        delegacao = user.delegacao_ativa
+        if not user.is_comissao and delegacao.status_delegacao != 'deferido':
             return JsonResponse({'error': 'Acesso Bloqueado: Sua delegação não está deferida.'}, status=403)
             
         try:
@@ -695,15 +701,15 @@ class APIPreSumulasView(View):
             atletas_escalados = data.get('atletas', []) # lista de objetos { atleta_id: ..., camisa: ... }
             
             jogo = get_object_or_404(Jogo, pk=jogo_id)
-            if not user.is_comissao and jogo.time_a != user and jogo.time_b != user:
+            if not user.is_comissao and jogo.time_a != delegacao and jogo.time_b != delegacao:
                 return JsonResponse({'error': 'Você não tem permissão para preencher a pré-súmula para este jogo.'}, status=403)
                 
-            if PreSumula.objects.filter(jogo=jogo, representante=user).exists():
+            if PreSumula.objects.filter(jogo=jogo, representante=delegacao).exists():
                 return JsonResponse({'error': 'Você já enviou uma pré-súmula para este jogo.'}, status=400)
                 
             presumula = PreSumula.objects.create(
                 jogo=jogo,
-                representante=user
+                representante=delegacao
             )
             
             for item in atletas_escalados:
@@ -727,7 +733,7 @@ class APIPreSumulaDetailView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         presumula = get_object_or_404(PreSumula, pk=pk)
-        if not request.user.is_comissao and presumula.representante != request.user:
+        if not request.user.is_comissao and presumula.representante != request.user.delegacao_ativa:
             return JsonResponse({'error': 'Não autorizado'}, status=403)
             
         escalacao = []
@@ -750,7 +756,7 @@ class APIPreSumulaDetailView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         presumula = get_object_or_404(PreSumula, pk=pk)
-        if not request.user.is_comissao and presumula.representante != request.user:
+        if not request.user.is_comissao and presumula.representante != request.user.delegacao_ativa:
             return JsonResponse({'error': 'Não autorizado'}, status=403)
             
         try:
@@ -789,7 +795,8 @@ class APIInscricaoFluxoView(View):
         if user.is_comissao:
             return JsonResponse({'error': 'Comissão não se inscreve'}, status=403)
             
-        inscricao = getattr(user, 'inscricao', None)
+        delegacao = user.delegacao_ativa
+        inscricao = getattr(delegacao, 'inscricao', None)
         if not inscricao:
             return JsonResponse({'inscricao': None})
             
@@ -819,12 +826,13 @@ class APIInscricaoFluxoView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         user = request.user
+        delegacao = user.delegacao_ativa
         if user.is_comissao:
             return JsonResponse({'error': 'Comissão não se inscreve'}, status=403)
             
-        inscricao = getattr(user, 'inscricao', None)
+        inscricao = getattr(delegacao, 'inscricao', None)
         if inscricao and inscricao.status != 'indeferido':
-            return JsonResponse({'error': 'Você já possui uma inscrição ativa.'}, status=400)
+            return JsonResponse({'error': 'Você já possui uma inscrição activa.'}, status=400)
             
         try:
             data = json.loads(request.body)
@@ -843,20 +851,20 @@ class APIInscricaoFluxoView(View):
                 inscricao.delete()
                 
             inscricao = Inscricao.objects.create(
-                delegacao=user,
+                delegacao=delegacao,
                 status='pendente'
             )
             
             selected_modalidades = Modalidade.objects.filter(id__in=modalidades_ids)
-            selected_atletas = Atleta.objects.filter(id__in=atletas_ids, cadastrado_por=user)
+            selected_atletas = Atleta.objects.filter(id__in=atletas_ids, cadastrado_por=delegacao)
             
             for mod in selected_modalidades:
                 insc_mod = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=mod)
                 insc_mod.atletas.set(selected_atletas)
                 
-            user.status_delegacao = 'pendente'
-            user.justificativa_delegacao = ''
-            user.save()
+            delegacao.status_delegacao = 'pendente'
+            delegacao.justificativa_delegacao = ''
+            delegacao.save()
             
             return JsonResponse({'success': True, 'inscricao_id': inscricao.id})
         except Exception as e:
@@ -869,14 +877,15 @@ class APIInscricaoRefazerView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
         user = request.user
-        inscricao = getattr(user, 'inscricao', None)
+        delegacao = user.delegacao_ativa
+        inscricao = getattr(delegacao, 'inscricao', None)
         if not inscricao:
             return JsonResponse({'error': 'Nenhuma inscrição encontrada'}, status=404)
             
         if inscricao.status == 'indeferido':
             inscricao.delete()
-            user.status_delegacao = 'pendente'
-            user.save()
+            delegacao.status_delegacao = 'pendente'
+            delegacao.save()
             return JsonResponse({'success': True, 'message': 'Inscrição cancelada. Pronta para refazer.'})
         elif inscricao.status == 'pendente':
             return JsonResponse({'error': 'Sua inscrição está pendente e não pode ser cancelada.'}, status=400)

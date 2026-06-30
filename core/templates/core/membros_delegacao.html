@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Membros da Delegação - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Header com Voltar Integrado -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'dashboard' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para o Painel Geral">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                    <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl">
+                        <i class="fas fa-user-friends"></i>
+                    </span>
+                    Membros Autorizados
+                </h1>
+                <p class="text-slate-400 mt-1.5 text-xs">
+                    Cadastre os e-mails de outros membros (como co-delegados) para que possam acessar e gerenciar esta delegação com suas próprias contas Google.
+                </p>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2 self-stretch sm:self-auto shrink-0">
+            <!-- Botão de adicionar membro -->
+            <button type="button" onclick="toggleAddForm()" class="inline-flex items-center px-3.5 py-2 border border-blue-200 rounded-xl text-xs font-bold text-blue-600 bg-blue-50/50 hover:bg-blue-50 transition shadow-sm gap-1.5">
+                <i class="fas fa-plus"></i> Autorizar Novo E-mail
+            </button>
+        </div>
+    </div>
+
+    <!-- Área do Formulário de Cadastro (Oculto por Padrão) -->
+    <div id="add-email-section" class="hidden transition-all duration-300 bg-white border border-slate-200/60 rounded-3xl p-6 space-y-4 shadow-sm shadow-slate-100">
+        <div>
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Autorizar Novo E-mail</h3>
+            <p class="text-[11px] text-slate-400">Insira o e-mail Google que o membro usará para realizar o login social no sistema.</p>
+        </div>
+        
+        <form method="post" class="flex flex-col sm:flex-row items-center gap-2.5 w-full">
+            {% csrf_token %}
+            <div class="relative w-full sm:w-80">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                    <i class="far fa-envelope text-xs"></i>
+                </span>
+                <input type="email" name="email" id="id_email" placeholder="exemplo@gmail.com" required
+                       class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30">
+            </div>
+            
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+                <button type="submit" class="flex-grow sm:flex-grow-0 inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition active:scale-[0.98] gap-1.5 whitespace-nowrap shadow-sm">
+                    Autorizar Acesso
+                </button>
+                <button type="button" onclick="toggleAddForm()" class="flex-grow sm:flex-grow-0 inline-flex items-center justify-center px-4 py-2.5 border border-slate-200 text-xs font-semibold rounded-xl text-slate-500 hover:bg-slate-100 transition whitespace-nowrap">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabela/Lista de Membros -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+            <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <i class="fas fa-envelope-open-text text-blue-500"></i> E-mails com Acesso Habilitado
+            </h2>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
+                {{ membros.count }} autorizado(s)
+            </span>
+        </div>
+        
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                        <th class="px-6 py-4">Membro / E-mail</th>
+                        <th class="px-6 py-4">Data de Autorização</th>
+                        <th class="px-6 py-4 text-right">Ações</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                    {% for item in membros %}
+                    <tr class="hover:bg-slate-50/30 transition">
+                        <td class="px-6 py-4">
+                            <span class="flex items-center gap-2 font-bold text-slate-800">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 border border-white shadow-sm shrink-0"></span>
+                                {{ item.email }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-400 font-medium font-mono">
+                            {{ item.data_adicao|date:"d/m/Y \à\s H:i" }}
+                        </td>
+                        <td class="px-6 py-4 text-right">
+                            <form action="{% url 'membro_delegacao_delete' item.id %}" method="post" class="inline" onsubmit="return confirm('Deseja realmente revogar a autorização de acesso para {{ item.email }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl font-bold transition text-[10px] gap-1.5 active:scale-95">
+                                    <i class="far fa-trash-alt text-[9px]"></i> Revogar Acesso
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-20 text-center text-slate-400">
+                            <div class="w-12 h-12 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200">
+                                <i class="fas fa-users text-lg"></i>
+                            </div>
+                            <h3 class="font-bold text-slate-700 text-sm">Nenhum membro autorizado</h3>
+                            <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">Sua delegação ainda não possui acessos compartilhados. Clique em "Autorizar Novo E-mail" acima para adicionar.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAddForm() {
+    const formSection = document.getElementById('add-email-section');
+    if (formSection.classList.contains('hidden')) {
+        formSection.classList.remove('hidden');
+        document.getElementById('id_email').focus();
+    } else {
+        formSection.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

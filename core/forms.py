@@ -52,6 +52,8 @@ class ModalidadeForm(forms.ModelForm):
         if self.instance and self.instance.data_publicacao:
             self.initial['data_publicacao'] = self.instance.data_publicacao.strftime('%Y-%m-%dT%H:%M')
 
+from django.db.models import Q
+
 class DelegationModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
         return f"{obj.nome_delegacao or 'Sem Nome'} (Responsável: {obj.nome_completo})"
@@ -73,8 +75,8 @@ class JogoForm(forms.ModelForm):
         fields = ['modalidade', 'data_jogo', 'horario_jogo', 'time_a', 'time_b', 'local', 'finalizado']
         widgets = {
             'modalidade': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
-            'data_jogo': forms.DateInput(attrs={'type': 'date', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
-            'horario_jogo': forms.TimeInput(attrs={'type': 'time', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'data_jogo': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'horario_jogo': forms.TimeInput(format='%H:%M', attrs={'type': 'time', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'local': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'finalizado': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600'}),
         }
@@ -82,5 +84,30 @@ class JogoForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         reps = User.objects.filter(role='REPRESENTANTE', status_delegacao='deferido').order_by('nome_delegacao', 'email')
+        
+        # Garante que os times da partida atual estejam no queryset de opções de edição
+        if self.instance and self.instance.pk:
+            additional_ids = []
+            if self.instance.time_a_id:
+                additional_ids.append(self.instance.time_a_id)
+            if self.instance.time_b_id:
+                additional_ids.append(self.instance.time_b_id)
+            if additional_ids:
+                reps = User.objects.filter(
+                    Q(role='REPRESENTANTE', status_delegacao='deferido') | Q(id__in=additional_ids)
+                ).distinct().order_by('nome_delegacao', 'email')
+                
         self.fields['time_a'].queryset = reps
         self.fields['time_b'].queryset = reps
+
+        # Define limite mínimo do calendário (evita datas passadas)
+        from django.utils import timezone
+        hoje = timezone.localdate()
+        if self.instance and self.instance.pk and self.instance.data_jogo:
+            # Se for edição, permite selecionar a data do próprio jogo (mesmo se for passada) ou hoje
+            limite_data = min(self.instance.data_jogo, hoje)
+        else:
+            limite_data = hoje
+        self.fields['data_jogo'].widget.attrs['min'] = limite_data.strftime('%Y-%m-%d')
+
+

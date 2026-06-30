@@ -34,6 +34,7 @@ urlpatterns = [
     path('comissao/jogo/novo/', views.JogoCreateView.as_view(), name='jogo_create'),
     path('comissao/jogo/<int:pk>/editar/', views.JogoUpdateView.as_view(), name='jogo_update'),
     path('comissao/jogo/<int:pk>/remover/', views.JogoDeleteView.as_view(), name='jogo_delete'),
+    path('comissao/jogo/<int:pk>/finalizar/', views.finalizar_jogo, name='jogo_finalizar'),
     path('comissao/whitelist/', views.AdminWhitelistView.as_view(), name='admin_whitelist'),
     path('comissao/whitelist/<int:pk>/remover/', views.whitelist_delete, name='whitelist_delete'),
     path('comissao/atleta/<int:pk>/reset-conformidade/', views.reset_conformidade_atleta, name='atleta_reset_conformidade'),
@@ -49,4 +50,8 @@ urlpatterns = [
     path('presumula/criar/', views.PreSumulaCreateView.as_view(), name='presumula_create'),
     path('presumula/<int:pk>/', views.PreSumulaDetailView.as_view(), name='presumula_detail'),
     path('presumula/<int:pk>/editar/', views.PreSumulaUpdateView.as_view(), name='presumula_update'),
+    
+    # Gestão de Membros Autorizados da Delegação
+    path('delegacao/membros/', views.MembrosDelegacaoView.as_view(), name='membros_delegacao'),
+    path('delegacao/membros/<int:pk>/remover/', views.membro_delegacao_delete, name='membro_delegacao_delete'),
 ]

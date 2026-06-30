@@ -175,6 +175,20 @@
 {% else %}
     <!-- DASHBOARD DO REPRESENTANTE -->
     
+    {% if user.parent_delegate %}
+    <div class="relative bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/50 rounded-3xl p-5 flex items-start gap-4 mb-6 shadow-sm">
+        <span class="p-2.5 bg-blue-500/20 text-blue-600 rounded-2xl shrink-0 flex items-center justify-center">
+            <i class="fas fa-info-circle text-base animate-pulse"></i>
+        </span>
+        <div>
+            <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wide">Acesso Compartilhado</h4>
+            <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                Você está acessando a delegação <strong>{{ user.delegacao_ativa.nome_delegacao|default:"Sem Nome" }}</strong>, gerenciada por <strong>{{ user.parent_delegate.nome_completo }}</strong> ({{ user.parent_delegate.email }}).
+            </p>
+        </div>
+    </div>
+    {% endif %}
+    
     <!-- Banner de Apresentação (Estilo Fincan.io) -->
     <div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl pt-16 pb-24 px-8 sm:px-10 border border-slate-800 shadow-sm overflow-hidden mb-6 flex flex-col sm:flex-row justify-between items-start gap-6">
         <!-- Abstract SVG Wave Grid -->
@@ -243,7 +257,7 @@
             </div>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Pré-Súmulas</span>
-                <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ minhas_presumulas.count }}</span>
+                <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_presumulas }}</span>
             </div>
         </div>
 
@@ -258,129 +272,135 @@
             </div>
         </div>
 
-        <!-- Status do Cadastro -->
-        <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
+        <!-- Status do Cadastro (Clicável) -->
+        {% if inscricao %}
+            <a href="{% url 'inscricao_detail' %}" class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-md transition">
+        {% else %}
+            <a href="{% url 'inscricao_passo1' %}" class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4 hover:shadow-md transition">
+        {% endif %}
             <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
                 <i class="fas fa-university text-base"></i>
             </div>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delegação</span>
                 {% if user.status_delegacao == 'deferido' %}
-                    <span class="text-xs font-bold text-emerald-600 block mt-1">Ativa (Aprovada)</span>
+                    <span class="text-xs font-bold text-emerald-600 block mt-1">Deferida</span>
                 {% elif user.status_delegacao == 'indeferido' %}
                     <span class="text-xs font-bold text-red-600 block mt-1">Recusada</span>
                 {% else %}
                     <span class="text-xs font-bold text-amber-600 block mt-1">Pendente</span>
                 {% endif %}
             </div>
-        </div>
+        </a>
     </div>
 
-    <!-- 2. Blocos de Status & Ações Rápidas em Destaque no Topo (2 Colunas) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <!-- Card de Inscrição da Delegação (Destaque Proeminente) -->
-        {% if inscricao %}
-            <a href="{% url 'inscricao_detail' %}" class="block bg-white rounded-3xl p-6 hover:shadow-lg transition duration-200 group relative overflow-hidden" style="border: 1px solid rgba(226,232,240,0.5);">
-                <!-- Decorative Orb -->
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 rounded-full blur-2xl opacity-10 
-                    {% if inscricao.status == 'deferido' %}bg-emerald-500{% elif inscricao.status == 'indeferido' %}bg-red-500{% else %}bg-amber-500{% endif %}"></div>
-                
-                <div class="space-y-4 h-full flex flex-col justify-between">
-                    <div>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wide">
-                            Situação da Delegação
-                        </span>
-                        <h4 class="text-sm font-semibold text-slate-550 mt-3.5">Status da Inscrição:</h4>
-                        
-                        <!-- Consolidado de Status Prominente -->
-                        <div class="mt-2.5 p-4 rounded-2xl flex items-center gap-3.5 
-                            {% if inscricao.status == 'deferido' %}bg-emerald-50/70 border border-emerald-100/60 text-emerald-850{% elif inscricao.status == 'indeferido' %}bg-red-50/70 border border-red-100/60 text-red-850{% else %}bg-amber-50/70 border border-amber-100/60 text-amber-850{% endif %}">
-                            <span class="text-2xl shrink-0">
-                                {% if inscricao.status == 'deferido' %}
-                                    <i class="fas fa-check-circle text-emerald-500"></i>
-                                {% elif inscricao.status == 'indeferido' %}
-                                    <i class="fas fa-times-circle text-red-500"></i>
-                                {% else %}
-                                    <i class="fas fa-clock text-amber-500"></i>
-                                {% endif %}
-                            </span>
-                            <div>
-                                <span class="text-lg font-black tracking-tight leading-tight block">
-                                    {% if inscricao.status == 'deferido' %}
-                                        Deferida (Aprovada)
-                                    {% elif inscricao.status == 'indeferido' %}
-                                        Indeferida (Recusada)
-                                    {% else %}
-                                        Pendente de Análise
-                                    {% endif %}
-                                </span>
-                                <span class="text-[10px] opacity-75 font-semibold mt-0.5 block">
-                                    {% if inscricao.status == 'deferido' %}
-                                        Sua delegação foi homologada com sucesso para os jogos.
-                                    {% elif inscricao.status == 'indeferido' %}
-                                        Verifique os erros apontados pela comissão para correção.
-                                    {% else %}
-                                        A comissão organizadora está analisando sua documentação.
-                                    {% endif %}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="flex items-center justify-between text-xs font-bold text-slate-500 group-hover:text-blue-600 transition pt-3 border-t border-slate-50">
-                        <span>Verificar Detalhes da Inscrição</span>
-                        <span class="p-1.5 bg-slate-50 border border-slate-100 rounded-xl text-slate-400 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition"><i class="fas fa-chevron-right text-[10px]"></i></span>
-                    </div>
-                </div>
-            </a>
-        {% else %}
-            <div class="bg-white rounded-3xl p-6 flex flex-col justify-between min-h-[220px]" style="border: 1px solid rgba(226,232,240,0.5);">
-                <div class="space-y-4">
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-indigo-50 text-indigo-600 uppercase tracking-wide">
-                        Etapa Obrigatória
-                    </span>
-                    <div>
-                        <h3 class="text-base font-black text-slate-800 tracking-tight leading-tight">Submeter Inscrição</h3>
-                        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Você precisa selecionar as modalidades oficiais que sua delegação disputará antes de enviar as escalações diárias.</p>
-                    </div>
-                </div>
-                <a href="{% url 'inscricao_passo1' %}" class="mt-4 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold text-center py-3 rounded-xl block transition shadow-sm active:scale-95">
-                    Realizar Inscrição Oficial
-                </a>
-            </div>
-        {% endif %}
 
-        <!-- Card de Cadastrar Atletas (Destaque Proeminente) -->
-        <div class="bg-white rounded-3xl p-6 flex flex-col justify-between min-h-[220px]" style="border: 1px solid rgba(226,232,240,0.5);">
-            <div class="space-y-4">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 uppercase tracking-wide">
-                    Gestão do Elenco
-                </span>
-                <div>
-                    <h3 class="text-base font-black text-slate-800 tracking-tight leading-tight">Cadastro de Atletas</h3>
-                    <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Monte seu elenco registrando os atletas regulares e egressos da instituição. Após o cadastro, você poderá vinculá-los às súmulas oficiais das partidas.</p>
-                </div>
-            </div>
-            <a href="{% url 'atleta_list' %}" class="mt-4 bg-slate-900 hover:bg-slate-955 text-white text-xs font-bold text-center py-3 rounded-xl block transition shadow-sm active:scale-95">
-                Gerenciar Elenco de Atletas
-            </a>
-        </div>
-    </div>
 
     <!-- 3. Grid de Conteúdo Secundário (Tabela + Detalhes Delegação) -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Coluna da Esquerda (2/3) - Tabela de Pré-Súmulas -->
+        <!-- Coluna da Esquerda (2/3) - Tabelas de Jogos -->
         <div class="lg:col-span-2 space-y-6">
+            <!-- Jogos e Pré-Súmulas Ativas -->
             <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
                     <div>
-                        <h3 class="text-base font-bold text-slate-800">Escalações Recentes</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Pré-súmulas digitais enviadas para conferência de jogos.</p>
+                        <h3 class="text-base font-bold text-slate-800">Jogos e Pré-Súmulas Ativas</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Jogos programados e abertos para escalação da sua delegação.</p>
                     </div>
-                    {% if user.status_delegacao == 'deferido' %}
-                        <a href="{% url 'presumula_list' %}" class="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
-                            Escalar Jogo <i class="fas fa-plus"></i>
-                        </a>
-                    {% endif %}
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                                <th class="px-6 py-4">Modalidade & Confronto</th>
+                                <th class="px-6 py-3">Data / Local</th>
+                                <th class="px-6 py-3">Status</th>
+                                <th class="px-6 py-3 text-right">Ação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                            {% for jogo in jogos_ativos %}
+                            <tr class="hover:bg-slate-50/30 transition">
+                                <td class="px-6 py-4 font-bold text-slate-800">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fas fa-running text-blue-500"></i> {{ jogo.modalidade.nome }}
+                                    </span>
+                                    <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
+                                        {{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }} vs {{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-100 text-[10px]">
+                                        {{ jogo.data_jogo|date:"d/m/Y" }}
+                                        {% if jogo.horario_jogo %}
+                                            <span class="text-slate-400 font-medium ml-1">às {{ jogo.horario_jogo|time:"H:i" }}</span>
+                                        {% endif %}
+                                    </span>
+                                    {% if jogo.local %}
+                                        <span class="block text-[9px] text-slate-400 mt-1">
+                                            <i class="fas fa-map-marker-alt text-slate-400 mr-1"></i> {{ jogo.local }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if jogo.minha_presumula %}
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-wide">
+                                            <i class="fas fa-check mr-1 text-[8px]"></i> Escalado ({{ jogo.minha_presumula.atletas.count }} atletas)
+                                        </span>
+                                    {% else %}
+                                        {% if user.status_delegacao == 'deferido' %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
+                                                <i class="fas fa-circle mr-1 text-blue-500 text-[6px] animate-pulse"></i> Pendente
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-400 border border-slate-200 uppercase tracking-wide">
+                                                <i class="fas fa-lock mr-1 text-[8px]"></i> Bloqueado
+                                            </span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 text-right">
+                                    {% if jogo.minha_presumula %}
+                                        <div class="flex items-center justify-end gap-2">
+                                            <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" class="inline-flex items-center px-2.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-550 bg-white transition shadow-sm gap-1">
+                                                Ver
+                                            </a>
+                                            <a href="{% url 'presumula_update' jogo.minha_presumula.id %}" class="inline-flex items-center px-2.5 py-1.5 border border-blue-200 text-blue-600 hover:bg-blue-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1">
+                                                Editar
+                                            </a>
+                                        </div>
+                                    {% else %}
+                                        {% if user.status_delegacao == 'deferido' %}
+                                            <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
+                                                <i class="fas fa-plus"></i> Escalar
+                                            </a>
+                                        {% else %}
+                                            <span class="text-[10px] text-slate-400 italic">Delegação pendente</span>
+                                        {% endif %}
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                    <i class="far fa-file-signature text-3xl mb-2 text-slate-300"></i>
+                                    <p class="font-bold text-slate-700 text-sm">Nenhum jogo aberto</p>
+                                    <p class="text-[11px] text-slate-400 mt-1">Não há nenhuma partida ativa no momento que precise de escalação.</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Histórico de Partidas (Jogos Encerrados) -->
+            <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Histórico de Partidas</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">Jogos encerrados em que a sua delegação esteve envolvida.</p>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -388,42 +408,59 @@
                             <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                                 <th class="px-6 py-4">Modalidade & Confronto</th>
                                 <th class="px-6 py-3">Data do Jogo</th>
-                                <th class="px-6 py-3">Escalação</th>
+                                <th class="px-6 py-3">Status</th>
                                 <th class="px-6 py-3 text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
-                            {% for ps in minhas_presumulas %}
+                            {% for jogo in jogos_encerrados %}
                             <tr class="hover:bg-slate-50/30 transition">
                                 <td class="px-6 py-4 font-bold text-slate-800">
                                     <span class="flex items-center gap-1.5">
-                                        <i class="fas fa-running text-blue-500"></i> {{ ps.jogo.modalidade.nome }}
+                                        <i class="fas fa-running text-slate-400"></i> {{ jogo.modalidade.nome }}
                                     </span>
                                     <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
-                                        {{ ps.jogo.time_a.nome_delegacao|default:"Sem Nome" }} vs {{ ps.jogo.time_b.nome_delegacao|default:"Sem Nome" }}
+                                        {{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }} vs {{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-100 text-[10px]">
-                                        {{ ps.jogo.data_jogo|date:"d/m/Y" }}
-                                        {% if ps.jogo.horario_jogo %}
-                                            <span class="text-slate-400 font-medium ml-1">às {{ ps.jogo.horario_jogo|time:"H:i" }}</span>
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-100 text-[10px]">
+                                        {{ jogo.data_jogo|date:"d/m/Y" }}
+                                        {% if jogo.horario_jogo %}
+                                            <span class="text-slate-400 font-medium ml-1">às {{ jogo.horario_jogo|time:"H:i" }}</span>
                                         {% endif %}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 font-semibold text-slate-700">{{ ps.atletas.count }} atletas</td>
+                                <td class="px-6 py-4">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-100 uppercase tracking-wide">
+                                        <i class="fas fa-flag-checkered mr-1 text-slate-400"></i> Finalizado
+                                    </span>
+                                    {% if jogo.minha_presumula %}
+                                        <span class="block text-[9px] text-emerald-600 mt-1 font-semibold">
+                                            Escalação: {{ jogo.minha_presumula.atletas.count }} atletas
+                                        </span>
+                                    {% else %}
+                                        <span class="block text-[9px] text-slate-400 mt-1 italic">
+                                            Não escalado
+                                        </span>
+                                    {% endif %}
+                                </td>
                                 <td class="px-6 py-4 text-right">
-                                    <a href="{% url 'presumula_detail' ps.id %}" class="text-blue-600 hover:text-blue-800 font-bold">Ver Detalhes</a>
+                                    {% if jogo.minha_presumula %}
+                                        <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1">
+                                            Ver Súmula
+                                        </a>
+                                    {% else %}
+                                        <span class="text-[10px] text-slate-400 italic">Sem registro</span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
                                 <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-                                    <i class="far fa-file-signature text-3xl mb-2 text-slate-300"></i>
-                                    <p>Nenhuma pré-súmula diária enviada.</p>
-                                    {% if user.status_delegacao == 'deferido' %}
-                                        <a href="{% url 'presumula_list' %}" class="text-blue-600 font-bold hover:underline text-xs mt-2 inline-block">Visualizar confrontos para escalar</a>.
-                                    {% endif %}
+                                    <i class="fas fa-history text-3xl mb-2 text-slate-300"></i>
+                                    <p class="font-bold text-slate-700 text-sm">Nenhum histórico</p>
+                                    <p class="text-[11px] text-slate-400 mt-1">Nenhum jogo encerrado registrado até o momento.</p>
                                 </td>
                             </tr>
                             {% endfor %}
@@ -441,23 +478,36 @@
                 <div class="space-y-4">
                     <div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nome da Delegação</span>
-                        <span class="text-sm font-bold text-slate-700 block mt-0.5">{{ user.nome_delegacao|default:"Não cadastrado" }}</span>
+                        <span class="text-sm font-bold text-slate-700 block mt-0.5">{{ user.delegacao_ativa.nome_delegacao|default:"Não cadastrado" }}</span>
                     </div>
 
                     <div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Representante Legal</span>
-                        <span class="text-xs text-slate-600 block mt-0.5">{{ user.nome_completo }}</span>
-                        <span class="text-[10px] text-slate-400 block mt-0.5">{{ user.email }}</span>
+                        <span class="text-xs text-slate-600 block mt-0.5">{{ user.delegacao_ativa.nome_completo }}</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">{{ user.delegacao_ativa.email }}</span>
                     </div>
 
-                    {% if user.justificativa_delegacao %}
+                    {% if user.delegacao_ativa.justificativa_delegacao %}
                         <div class="p-3 bg-red-50/60 border border-red-100/50 rounded-2xl text-[11px] text-red-700">
                             <p class="font-bold flex items-center gap-1">
                                 <i class="fas fa-comment-dots text-xs"></i> Feedback da Comissão:
                             </p>
-                            <p class="mt-1 leading-relaxed">{{ user.justificativa_delegacao }}</p>
+                            <p class="mt-1 leading-relaxed">{{ user.delegacao_ativa.justificativa_delegacao }}</p>
                         </div>
                     {% endif %}
+                    
+                    <div class="pt-4 border-t border-slate-100 space-y-2">
+                        <a href="{% url 'atleta_list' %}" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 transition shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
+                            <span class="text-xs font-bold text-slate-700">Gerenciar Elenco (Atletas)</span>
+                            <span class="p-1 bg-white rounded-lg text-slate-500 shadow-sm"><i class="fas fa-user-plus text-xs"></i></span>
+                        </a>
+                        {% if not user.parent_delegate %}
+                            <a href="{% url 'membros_delegacao' %}" class="flex items-center justify-between p-3 rounded-2xl bg-blue-50/40 border border-blue-100 hover:bg-blue-50/70 hover:border-blue-200 transition">
+                                <span class="text-xs font-bold text-blue-600">Membros Autorizados</span>
+                                <span class="p-1 bg-white border border-blue-100 rounded-lg text-blue-500"><i class="fas fa-users text-xs"></i></span>
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
