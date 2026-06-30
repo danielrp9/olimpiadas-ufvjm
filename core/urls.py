@@ -1,14 +1,22 @@
-from django.urls import path
+from django.urls import path, re_path
 from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
+    # Interface React SPA (basenames under /app/)
+    path('app/', views.react_app, name='react_app_root'),
+    re_path(r'^app/(?P<path>.*)$', views.react_app, name='react_app'),
     path('', views.DashboardView.as_view(), name='dashboard'),
-    path('regulamento/', views.RegulamentoView.as_view(), name='regulamento'),
+
     path('register/', views.RegisterView.as_view(), name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='registration/login.html'), name='login'),
     path('logout/', views.logout_view, name='logout'),
     
+    # Inscrição de Delegação
+    path('inscricao/passo1/', views.inscricao_passo1, name='inscricao_passo1'),
+    path('inscricao/passo2/', views.inscricao_passo2, name='inscricao_passo2'),
+    path('inscricao/detalhe/', views.inscricao_detail, name='inscricao_detail'),
+    path('inscricao/refazer/', views.refazer_inscricao, name='refazer_inscricao'),
     # Atletas
     path('atletas/', views.AtletaListView.as_view(), name='atleta_list'),
     path('atletas/adicionar/', views.AtletaBulkCreateView.as_view(), name='atleta_bulk_create'),

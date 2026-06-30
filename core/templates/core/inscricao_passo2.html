@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load core_tags %}
+
+{% block title %}Inscrição - Escalação dos Atletas - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Indicador de Passos com Voltar Integrado -->
+    <div class="flex items-center justify-between mb-8 bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'inscricao_passo1' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1 mr-1" title="Voltar para Escolha de Modalidades">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <div class="flex items-center gap-4 opacity-50">
+                <span class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm">1</span>
+                <div>
+                    <h4 class="font-bold text-slate-700 text-sm">Escolha de Modalidades</h4>
+                    <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Concluído</p>
+                </div>
+            </div>
+        </div>
+        <div class="w-12 h-0.5 bg-slate-100 hidden sm:block"></div>
+        <div class="flex items-center gap-4">
+            <span class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/20">2</span>
+            <div>
+                <h4 class="font-bold text-slate-800 text-sm">Escalação dos Atletas</h4>
+                <p class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Etapa Atual</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modalidades Selecionadas -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex items-center gap-2">
+            <span class="p-1 bg-blue-50 text-blue-700 rounded-lg text-xs"><i class="fas fa-trophy"></i></span>
+            <h3 class="font-bold text-slate-800 text-sm">Modalidades de Interesse Selecionadas</h3>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            {% for mod in modalidades %}
+                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50/70 hover:bg-blue-100/50 text-slate-800 rounded-full text-xs font-semibold shadow-sm transition-all duration-200">
+                    <span class="text-blue-700 text-[10px]">
+                        {% if 'futsal' in mod.nome|lower %}
+                            <i class="fas fa-futbol"></i>
+                        {% elif 'vôlei' in mod.nome|lower or 'volei' in mod.nome|lower %}
+                            <i class="fas fa-volleyball"></i>
+                        {% elif 'basquete' in mod.nome|lower %}
+                            <i class="fas fa-basketball"></i>
+                        {% elif 'handebol' in mod.nome|lower %}
+                            <i class="fas fa-hand-paper"></i>
+                        {% elif 'xadrez' in mod.nome|lower %}
+                            <i class="fas fa-chess"></i>
+                        {% elif 'tênis' in mod.nome|lower or 'tenis' in mod.nome|lower %}
+                            <i class="fas fa-table-tennis"></i>
+                        {% else %}
+                            <i class="fas fa-running"></i>
+                        {% endif %}
+                    </span>
+                    <span class="text-slate-800 font-bold">{{ mod.nome }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Formulário de Seleção de Atletas -->
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+
+        <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-150/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-user-check"></i></span>
+                    <h3 class="font-bold text-slate-800 text-sm">Lista de Atletas da Delegação</h3>
+                </div>
+                <button type="button" id="btn-select-all" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-650 rounded-xl font-bold text-[10px] transition active:scale-95 flex items-center gap-1.5 shadow-sm">
+                    <i class="fas fa-check-double text-[9px] text-blue-600"></i> Selecionar Todos
+                </button>
+            </div>
+
+            <div class="p-6">
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {% for atleta in atletas %}
+                        <label class="relative border border-slate-200 hover:border-blue-400 rounded-2xl p-3.5 flex items-start gap-3 cursor-pointer select-none transition bg-slate-50/20 hover:bg-slate-50/50">
+                            <input type="checkbox" name="atletas" value="{{ atleta.id }}" 
+                                   class="mt-0.5 h-4 w-4 text-blue-600 rounded border-slate-200 focus:ring-blue-500/20 accent-blue-600 shrink-0"
+                                   {% if selected_data %}
+                                       {% if atleta.id|stringformat:"s" in selected_data %}checked{% endif %}
+                                   {% endif %}>
+                            <div>
+                                <span class="font-bold text-slate-700 text-xs block leading-tight">{{ atleta.nome_completo }}</span>
+                                <span class="text-[9px] text-slate-400 block mt-0.5">Gênero: {{ atleta.get_genero_display }}</span>
+                                <span class="text-[9px] text-slate-400 block">Matrícula: {{ atleta.matricula }}</span>
+                                {% if atleta.link_documento %}
+                                    <span class="inline-flex items-center text-[9px] text-blue-600 font-semibold mt-1 gap-0.5">
+                                        <i class="fas fa-link"></i> Pasta Drive OK
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center text-[9px] text-red-500 font-semibold mt-1 gap-0.5">
+                                        <i class="fas fa-exclamation-triangle"></i> Sem Pasta Drive
+                                    </span>
+                                {% endif %}
+                            </div>
+                        </label>
+                    {% empty %}
+                        <div class="col-span-full py-8 text-center space-y-2">
+                            <p class="text-slate-450 text-xs">Sua delegação ainda não possui atletas cadastrados no sistema.</p>
+                            <a href="{% url 'atleta_bulk_create' %}" class="inline-flex items-center px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] rounded-xl transition">
+                                <i class="fas fa-plus mr-1"></i> Cadastrar Atletas
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
+            <a href="{% url 'inscricao_passo1' %}" class="px-5 py-2.5 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition flex items-center gap-1.5">
+                <i class="fas fa-arrow-left text-[10px]"></i> Voltar Etapa
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl transition shadow-sm active:scale-[0.98] flex items-center gap-2">
+                <i class="fas fa-check text-[10px]"></i> Finalizar Inscrição
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const btnSelectAll = document.getElementById("btn-select-all");
+        if (btnSelectAll) {
+            btnSelectAll.addEventListener("click", function() {
+                const checkboxes = document.querySelectorAll('input[name="atletas"]');
+                if (checkboxes.length === 0) return;
+                
+                const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+                
+                checkboxes.forEach(cb => {
+                    cb.checked = !allChecked;
+                });
+                
+                if (!allChecked) {
+                    btnSelectAll.innerHTML = '<i class="fas fa-times-circle text-[9px] text-red-500"></i> Desmarcar Todos';
+                } else {
+                    btnSelectAll.innerHTML = '<i class="fas fa-check-double text-[9px] text-blue-600"></i> Selecionar Todos';
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

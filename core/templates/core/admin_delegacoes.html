@@ -98,198 +98,164 @@
                                     <h4 class="font-bold text-slate-700 text-xs uppercase tracking-wider">Atletas da Delegação: {{ del.nome_delegacao|default:"Sem Nome" }}</h4>
                                     <p class="text-[10px] text-slate-400 mt-0.5">Total cadastrado: {{ del.atletas.count }} atleta(s)</p>
                                 </div>
-                                <button onclick="toggleAvaliarDelegacaoInline('{{ del.id }}')" 
-                                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-[0.98]">
+                                 <button onclick="openDelEvalModal(this)" 
+                                         data-id="{{ del.id }}"
+                                         data-nome="{{ del.nome_delegacao|default:'Sem Nome' }}"
+                                         data-representante="{{ del.nome_completo }} ({{ del.email }})"
+                                         data-status="{{ del.status_delegacao }}"
+                                         data-justificativa="{{ del.justificativa_delegacao|default:'' }}"
+                                         data-foto="{{ del.foto_url|default:'' }}"
+                                         class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-[0.98]">
                                     <i class="fas fa-gavel"></i> Deferir / Indeferir Delegação
                                 </button>
                             </div>
 
-                            <!-- Form de Avaliação da Delegação (Inline/Oculto por Padrão) -->
-                            <div id="delegacao-eval-form-{{ del.id }}" class="hidden px-5 py-4 bg-slate-50/50 border-b border-slate-100">
-                                <form method="post" action="{% url 'avaliar_delegacao' del.id %}" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-4 max-w-xl shadow-sm">
-                                    {% csrf_token %}
-                                    <div>
-                                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Parecer de Delegação Geral</span>
-                                        <h4 class="font-bold text-slate-800 text-xs mt-0.5">{{ del.nome_delegacao|default:"Sem Nome" }}</h4>
-                                    </div>
-
-                                    <div class="space-y-1.5">
-                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Parecer Geral da Delegação</label>
-                                        <div class="flex gap-4">
-                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
-                                                <input type="radio" name="status" value="deferido" {% if del.status_delegacao == 'deferido' %}checked{% endif %} class="accent-green-600">
-                                                <span class="inline-flex items-center text-green-700"><i class="fas fa-check-circle mr-1 text-green-600"></i> Deferir</span>
-                                            </label>
-                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
-                                                <input type="radio" name="status" value="indeferido" {% if del.status_delegacao == 'indeferido' %}checked{% endif %} class="accent-red-600">
-                                                <span class="inline-flex items-center text-red-700"><i class="fas fa-times-circle mr-1 text-red-650"></i> Indeferir</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div class="space-y-1">
-                                        <label for="justificativa_del_{{ del.id }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Justificativa / Observações</label>
-                                        <textarea name="justificativa" id="justificativa_del_{{ del.id }}" rows="2" 
-                                                  placeholder="Informe a observação ou motivo do parecer..."
-                                                  class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-slate-50/50 focus:bg-white">{{ del.justificativa_delegacao|default:"" }}</textarea>
-                                    </div>
-
-                                    <div class="flex gap-2 pt-2 justify-end text-xs">
-                                        <button type="button" onclick="toggleAvaliarDelegacaoInline('{{ del.id }}')" 
-                                                class="px-3 py-1.5 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
-                                            Cancelar
-                                        </button>
-                                        <button type="submit" 
-                                                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition shadow-sm active:scale-[0.98]">
-                                            Salvar Parecer
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-
-                            <!-- Lista de Atletas -->
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left text-xs border-collapse">
-                                    <thead>
-                                        <tr class="bg-slate-50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                                            <th class="px-4 py-3">Nome / CPF / Gênero</th>
-                                            <th class="px-4 py-3">Matrícula / Curso</th>
-                                            <th class="px-4 py-3">Campus</th>
-                                            <th class="px-4 py-3">Vínculo</th>
-                                            <th class="px-4 py-3">Documentos</th>
-                                            <th class="px-4 py-3">Conformidade</th>
-                                            <th class="px-4 py-3 text-right">Ação</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-100 text-slate-650">
-                                        {% for atleta in del.atletas.all %}
-                                        <!-- Row do Atleta -->
-                                        <tr class="transition border-l-4 {% if atleta.em_conformidade %} bg-green-50/5 hover:bg-green-50/15 border-l-green-500 {% else %} bg-red-50/5 hover:bg-red-50/15 border-l-red-500 {% endif %}">
-                                            <td class="px-4 py-3">
-                                                <p class="font-bold text-slate-800 leading-tight">{{ atleta.nome_completo }}</p>
-                                                <p class="text-[10px] text-slate-400 mt-0.5">CPF: {{ atleta.cpf|default:"-" }} &bull; Gênero: {{ atleta.get_genero_display }}</p>
-                                            </td>
-                                            <td class="px-4 py-3">
-                                                <p class="font-semibold text-slate-700">Matrícula: {{ atleta.matricula }}</p>
-                                                <p class="text-[10px] text-slate-400 mt-0.5">{{ atleta.curso }}</p>
-                                            </td>
-                                            <td class="px-4 py-3 font-medium text-slate-700">{{ atleta.campus }}</td>
-                                            <td class="px-4 py-3">
-                                                {% if atleta.is_egresso %}
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-100">
-                                                        Egresso
-                                                    </span>
-                                                {% else %}
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-100">
-                                                        Regular
-                                                    </span>
-                                                {% endif %}
-                                            </td>
-                                            <td class="px-4 py-3 space-y-1">
-                                                {% if atleta.link_documento %}
-                                                    <a href="{{ atleta.link_documento }}" target="_blank" class="inline-flex items-center text-blue-600 hover:underline gap-1 font-medium">
-                                                        <i class="fas fa-file-alt"></i> Identidade
-                                                    </a>
-                                                {% else %}
-                                                    <span class="text-slate-400">Sem documento</span>
-                                                {% endif %}
-                                                {% if atleta.is_egresso and atleta.link_documento_egresso %}
-                                                    <br>
-                                                    <a href="{{ atleta.link_documento_egresso }}" target="_blank" class="inline-flex items-center text-purple-600 hover:underline gap-1 font-medium">
-                                                        <i class="fas fa-graduation-cap"></i> Doc. Egresso
-                                                    </a>
-                                                {% endif %}
-                                                {% if atleta.link_correcao %}
-                                                    <div class="mt-1">
-                                                        <a href="{{ atleta.link_correcao }}" target="_blank" class="inline-flex items-center text-amber-650 hover:underline gap-1 font-bold">
-                                                            <i class="fas fa-history"></i> Doc. Correção
-                                                        </a>
-                                                        <span class="block text-[8px] text-amber-500 font-bold uppercase tracking-wider mt-0.5">Aguardando Avaliação</span>
-                                                    </div>
-                                                {% endif %}
-                                            </td>
-                                            <td class="px-4 py-3">
-                                                {% if atleta.em_conformidade %}
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100 uppercase tracking-wide">
-                                                        <i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado
-                                                    </span>
-                                                {% else %}
-                                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 uppercase tracking-wide">
-                                                        <i class="fas fa-times-circle mr-1 text-red-650"></i> Rejeitado
-                                                    </span>
-                                                    {% if atleta.justificativa_inconformidade %}
-                                                        <p class="text-[9px] text-red-750 mt-1 max-w-[150px] italic leading-tight">
-                                                            Obs: {{ atleta.justificativa_inconformidade }}
-                                                        </p>
-                                                    {% endif %}
-                                                {% endif %}
-                                            </td>
-                                            <td class="px-4 py-3 text-right">
-                                                <button onclick="toggleAvaliarAtletaInline('{{ atleta.id }}')"
-                                                        class="inline-flex items-center px-2 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-lg font-bold text-[10px] transition duration-150 active:scale-95">
-                                                    <i class="fas fa-gavel mr-1"></i> Avaliar
-                                                </button>
-                                            </td>
-                                        </tr>
-
-                                        <!-- Row de Avaliação do Atleta (Inline/Oculta por Padrão) -->
-                                        <tr id="atleta-eval-row-{{ atleta.id }}" class="hidden bg-slate-100/30">
-                                            <td colspan="7" class="px-6 py-4">
-                                                <form method="post" action="{% url 'avaliar_atleta' atleta.id %}" class="bg-white border border-slate-200 rounded-2xl p-4 space-y-4 max-w-xl shadow-sm">
-                                                    {% csrf_token %}
-                                                    <div>
-                                                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Avaliar Atleta</span>
-                                                        <h4 class="font-bold text-slate-800 text-xs mt-0.5">{{ atleta.nome_completo }}</h4>
-                                                    </div>
-                                                    
-                                                    <div class="space-y-1.5">
-                                                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Conformidade com o Regulamento</label>
-                                                        <div class="flex gap-4">
-                                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
-                                                                <input type="radio" name="status" value="deferido" {% if atleta.em_conformidade %}checked{% endif %} class="accent-green-600" onchange="toggleJustificativaField('{{ atleta.id }}', false)">
-                                                                <span class="inline-flex items-center text-green-700"><i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado</span>
-                                                            </label>
-                                                            <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
-                                                                <input type="radio" name="status" value="indeferido" {% if not atleta.em_conformidade %}checked{% endif %} class="accent-red-600" onchange="toggleJustificativaField('{{ atleta.id }}', true)">
-                                                                <span class="inline-flex items-center text-red-700"><i class="fas fa-times-circle mr-1 text-red-650"></i> Rejeitado</span>
-                                                            </label>
-                                                        </div>
-                                                    </div>
-
-                                                    <div id="atleta-just-container-{{ atleta.id }}" class="{% if atleta.em_conformidade %}hidden{% endif %} space-y-3">
-                                                        <div>
-                                                            <label for="justificativa_atleta_{{ atleta.id }}" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Motivo da Rejeição</label>
-                                                            <textarea name="justificativa" id="justificativa_atleta_{{ atleta.id }}" rows="2" 
-                                                                      placeholder="Descreva o motivo pelo qual o atleta é irregular..."
-                                                                      class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-slate-50/50 focus:bg-white">{{ atleta.justificativa_inconformidade|default:"" }}</textarea>
-                                                        </div>
-                                                        <div class="flex items-center gap-2">
-                                                            <input type="checkbox" name="permite_correcao" id="permite_correcao_{{ atleta.id }}" {% if atleta.permite_correcao %}checked{% endif %} class="h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600">
-                                                            <label for="permite_correcao_{{ atleta.id }}" class="text-[11px] font-semibold text-slate-500 cursor-pointer select-none">Permitir reenvio de documento para correção</label>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="flex gap-2 pt-2 justify-end text-xs">
-                                                        <button type="button" onclick="toggleAvaliarAtletaInline('{{ atleta.id }}')" 
-                                                                class="px-3 py-1.5 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
-                                                            Cancelar
-                                                        </button>
-                                                        <button type="submit" 
-                                                                class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition shadow-sm active:scale-[0.98]">
-                                                            Salvar Avaliação
-                                                        </button>
-                                                    </div>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                        {% empty %}
-                                        <tr>
-                                            <td colspan="7" class="px-4 py-8 text-center text-slate-400 text-xs">Nenhum atleta cadastrado nesta delegação.</td>
-                                        </tr>
+                            <!-- Lista de Atletas por Modalidade -->
+                            {% if del.inscricao %}
+                            <div class="p-5 space-y-6">
+                                <!-- Modalidades Selecionadas -->
+                                <div class="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-3">
+                                    <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                        <i class="fas fa-trophy text-amber-500"></i> Modalidades Selecionadas
+                                    </h5>
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for im in del.inscricao.modalidades.all %}
+                                            <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-50 text-slate-750 font-bold border border-slate-200 text-[10px] shadow-sm">
+                                                <i class="fas fa-running text-blue-500"></i> {{ im.modalidade.nome }} ({{ im.modalidade.get_genero_display }})
+                                            </span>
                                         {% endfor %}
-                                    </tbody>
-                                </table>
+                                    </div>
+                                </div>
+
+                                <!-- Tabela Única de Atletas -->
+                                <div class="bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
+                                    <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
+                                        <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                                            <i class="fas fa-users text-blue-500"></i> Elenco de Atletas Inscritos
+                                        </h5>
+                                        <span class="text-[10px] font-semibold text-slate-400">
+                                            Total: {{ del.inscricao.atletas_inscritos.count }} atletas
+                                        </span>
+                                    </div>
+
+                                    <div class="overflow-x-auto">
+                                        <table class="w-full text-left text-xs border-collapse">
+                                            <thead>
+                                                <tr class="bg-slate-50/20 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                                                    <th class="px-4 py-3">Nome / CPF / Gênero</th>
+                                                    <th class="px-4 py-3">Matrícula / Curso</th>
+                                                    <th class="px-4 py-3">Campus</th>
+                                                    <th class="px-4 py-3">Vínculo</th>
+                                                    <th class="px-4 py-3">Documentos</th>
+                                                    <th class="px-4 py-3">Conformidade</th>
+                                                    <th class="px-4 py-3 text-right">Ação</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody class="divide-y divide-slate-100 text-slate-650">
+                                                {% for atleta in del.inscricao.atletas_inscritos %}
+                                                <!-- Row do Atleta -->
+                                                 <tr class="transition border-l-4 {% if atleta.em_conformidade %} bg-green-50/5 hover:bg-green-50/15 border-l-green-500 {% elif atleta.justificativa_inconformidade or atleta.permite_correcao or atleta.link_correcao %} bg-red-50/5 hover:bg-red-50/15 border-l-red-500 {% else %} bg-amber-50/5 hover:bg-amber-50/15 border-l-amber-500 {% endif %}">
+                                                    <td class="px-4 py-3">
+                                                        <p class="font-bold text-slate-800 leading-tight">{{ atleta.nome_completo }}</p>
+                                                        <p class="text-[10px] text-slate-400 mt-0.5">CPF: {{ atleta.cpf|default:"-" }} &bull; Gênero: {{ atleta.get_genero_display }}</p>
+                                                    </td>
+                                                    <td class="px-4 py-3">
+                                                        <p class="font-semibold text-slate-700">Matrícula: {{ atleta.matricula }}</p>
+                                                        <p class="text-[10px] text-slate-400 mt-0.5">{{ atleta.curso }}</p>
+                                                    </td>
+                                                    <td class="px-4 py-3 font-medium text-slate-700">{{ atleta.campus }}</td>
+                                                    <td class="px-4 py-3">
+                                                        {% if atleta.is_egresso %}
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-100">
+                                                                Egresso
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-50 text-teal-700 border border-teal-100">
+                                                                Regular
+                                                            </span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="px-4 py-3 space-y-1">
+                                                        {% if atleta.link_documento %}
+                                                            <a href="{{ atleta.link_documento }}" target="_blank" class="inline-flex items-center text-blue-600 hover:underline gap-1 font-medium">
+                                                                <i class="fas fa-folder-open"></i> Pasta Drive
+                                                            </a>
+                                                            <span class="block text-[8px] text-slate-400 leading-tight">Doc deve ter arq: Nome_Delegação</span>
+                                                        {% else %}
+                                                            <span class="text-slate-400">Sem documento</span>
+                                                        {% endif %}
+                                                        {% if atleta.is_egresso and atleta.link_documento_egresso %}
+                                                            <br>
+                                                            <a href="{{ atleta.link_documento_egresso }}" target="_blank" class="inline-flex items-center text-purple-600 hover:underline gap-1 font-medium">
+                                                                <i class="fas fa-graduation-cap"></i> Doc. Egresso
+                                                            </a>
+                                                        {% endif %}
+                                                        {% if atleta.link_correcao %}
+                                                            <div class="mt-1">
+                                                                <a href="{{ atleta.link_correcao }}" target="_blank" class="inline-flex items-center text-amber-650 hover:underline gap-1 font-bold">
+                                                                    <i class="fas fa-history"></i> Doc. Correção
+                                                                </a>
+                                                                <span class="block text-[8px] text-amber-500 font-bold uppercase tracking-wider mt-0.5">Aguardando Avaliação</span>
+                                                            </div>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="px-4 py-3">
+                                                        {% if atleta.em_conformidade %}
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100 uppercase tracking-wide">
+                                                                <i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado
+                                                            </span>
+                                                        {% elif atleta.justificativa_inconformidade or atleta.permite_correcao or atleta.link_correcao %}
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 uppercase tracking-wide">
+                                                                <i class="fas fa-times-circle mr-1 text-red-650"></i> Rejeitado
+                                                            </span>
+                                                            {% if atleta.justificativa_inconformidade %}
+                                                                <p class="text-[9px] text-red-750 mt-1 max-w-[150px] italic leading-tight">
+                                                                    Obs: {{ atleta.justificativa_inconformidade }}
+                                                                </p>
+                                                            {% endif %}
+                                                        {% else %}
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wide">
+                                                                <i class="fas fa-clock mr-1 text-amber-600"></i> Pendente
+                                                            </span>
+                                                        {% endif %}
+                                                    </td>
+                                                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                                                        <button onclick="openEvalModal(this)"
+                                                                data-id="{{ atleta.id }}"
+                                                                data-nome="{{ atleta.nome_completo }}"
+                                                                data-curso="{{ atleta.curso }}"
+                                                                data-matricula="{{ atleta.matricula }}"
+                                                                data-cpf="{{ atleta.cpf|default:'-' }}"
+                                                                data-genero="{{ atleta.get_genero_display }}"
+                                                                data-campus="{{ atleta.campus }}"
+                                                                data-vinculo="{% if atleta.is_egresso %}Egresso{% else %}Regular{% endif %}"
+                                                                data-link-documento="{{ atleta.link_documento|default:'' }}"
+                                                                data-link-documento-egresso="{{ atleta.link_documento_egresso|default:'' }}"
+                                                                data-link-correcao="{{ atleta.link_correcao|default:'' }}"
+                                                                data-em-conformidade="{% if atleta.em_conformidade %}true{% else %}false{% endif %}"
+                                                                data-justificativa="{{ atleta.justificativa_inconformidade|default:'' }}"
+                                                                data-permite-correcao="{% if atleta.permite_correcao %}true{% else %}false{% endif %}"
+                                                                class="inline-flex items-center px-2 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-600 border border-slate-200 rounded-lg font-bold text-[10px] transition duration-150 active:scale-95">
+                                                            <i class="fas fa-gavel mr-1"></i> Avaliar
+                                                        </button>
+                                                    </td>
+                                                </tr>
+
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="7" class="px-4 py-8 text-center text-slate-400">
+                                                            Nenhum atleta inscrito nesta delegação.
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
+                            {% else %}
+                            <p class="text-slate-400 text-center py-6 text-xs">Nenhuma inscrição submetida.</p>
+                            {% endif %}
                         </div>
                     </td>
                 </tr>
@@ -309,25 +275,388 @@
     </div>
 </div>
 
+<!-- Modal de Avaliação de Atleta -->
+<div id="atleta-eval-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50">
+            <div>
+                <span class="text-[9px] text-slate-450 font-bold uppercase tracking-wider block">Avaliação de Atleta</span>
+                <h4 id="modal-atleta-nome-title" class="font-bold text-slate-800 text-sm mt-0.5"></h4>
+            </div>
+            <button type="button" onclick="closeEvalModal()" class="text-slate-400 hover:text-slate-600 transition p-1 rounded-lg hover:bg-slate-100">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <!-- Body / Form -->
+        <form id="modal-eval-form" method="post" action="" class="p-6 space-y-5 overflow-y-auto">
+            {% csrf_token %}
+            
+            <!-- Atleta Info Grid inside Modal -->
+            <div class="space-y-3">
+                <div class="grid grid-cols-2 gap-3 text-xs">
+                    <!-- Nome Completo (Top Card) -->
+                    <div class="col-span-2 bg-slate-50/60 rounded-2xl p-3" style="border: 1px solid #e2e8f0;">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Nome Completo</span>
+                        <span id="modal-atleta-nome" class="font-bold text-slate-800 text-sm"></span>
+                    </div>
+
+                    <!-- Matrícula -->
+                    <div class="bg-slate-50/60 rounded-2xl p-3" style="border: 1px solid #e2e8f0;">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Matrícula</span>
+                        <span id="modal-atleta-matricula" class="font-bold text-slate-700"></span>
+                    </div>
+
+                    <!-- CPF -->
+                    <div class="bg-slate-50/60 rounded-2xl p-3" style="border: 1px solid #e2e8f0;">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">CPF</span>
+                        <span id="modal-atleta-cpf" class="font-bold text-slate-700"></span>
+                    </div>
+
+                    <!-- Curso -->
+                    <div class="col-span-2 bg-slate-50/60 rounded-2xl p-3" style="border: 1px solid #e2e8f0;">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Curso</span>
+                        <span id="modal-atleta-curso" class="font-bold text-slate-700"></span>
+                    </div>
+
+                    <!-- Gênero -->
+                    <div class="bg-slate-50/60 rounded-2xl p-3" style="border: 1px solid #e2e8f0;">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Gênero</span>
+                        <span id="modal-atleta-genero" class="font-bold text-slate-700"></span>
+                    </div>
+
+                    <!-- Vínculo -->
+                    <div class="bg-slate-50/60 rounded-2xl p-3" style="border: 1px solid #e2e8f0;">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Vínculo</span>
+                        <span id="modal-atleta-vinculo" class="font-bold text-slate-700"></span>
+                    </div>
+
+                    <!-- Campus -->
+                    <div class="col-span-2 bg-slate-50/60 rounded-2xl p-3" style="border: 1px solid #e2e8f0;">
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Campus</span>
+                        <span id="modal-atleta-campus" class="font-semibold text-slate-700"></span>
+                    </div>
+                </div>
+
+                <!-- Documentos -->
+                <div class="bg-slate-50/60 rounded-2xl p-3 text-xs" style="border: 1px solid #e2e8f0;">
+                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Documentação Anexada</span>
+                    <div id="modal-atleta-docs" class="mt-2 flex flex-wrap gap-2.5">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radio choices -->
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Conformidade com o Regulamento</label>
+                <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                        <input type="radio" name="status" value="deferido" id="modal-radio-deferido" class="accent-green-600" onchange="toggleModalJustificativa(false)" required>
+                        <span class="inline-flex items-center text-green-700"><i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                        <input type="radio" name="status" value="indeferido" id="modal-radio-indeferido" class="accent-red-600" onchange="toggleModalJustificativa(true)" required>
+                        <span class="inline-flex items-center text-red-700"><i class="fas fa-times-circle mr-1 text-red-650"></i> Rejeitado</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Justification details -->
+            <div id="modal-just-container" class="space-y-3 hidden">
+                <div>
+                    <label for="modal-justificativa" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Motivo da Rejeição</label>
+                    <textarea name="justificativa" id="modal-justificativa" rows="2" 
+                              placeholder="Descreva o motivo pelo qual o atleta é irregular..."
+                              class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-slate-50/50 focus:bg-white"></textarea>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" name="permite_correcao" id="modal-permite-correcao" class="h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600">
+                    <label for="modal-permite-correcao" class="text-[11px] font-semibold text-slate-500 cursor-pointer select-none">Permitir reenvio de documento para correção</label>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex gap-2 pt-2 justify-end text-xs">
+                <button type="button" onclick="closeEvalModal()" 
+                        class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition shadow-sm active:scale-[0.98]">
+                    Salvar Avaliação
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Avaliação de Delegação -->
+<div id="delegacao-eval-modal" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-50">
+            <span class="text-[10px] text-slate-450 font-bold uppercase tracking-wider block">Avaliação de Delegação</span>
+            <button type="button" onclick="closeDelEvalModal()" class="text-slate-400 hover:text-slate-600 transition p-1 rounded-lg hover:bg-slate-100">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <!-- Body / Form -->
+        <form id="modal-del-form" method="post" action="" class="flex flex-col h-full overflow-hidden mb-0">
+            {% csrf_token %}
+            
+            <!-- Scrollable Content -->
+            <div class="p-6 flex flex-col items-center text-center space-y-5 overflow-y-auto max-h-[60vh] w-full">
+                <!-- Icon/Profile Photo Placeholder -->
+                <div class="flex justify-center mt-1">
+                    <!-- User Profile Photo -->
+                    <img id="modal-del-foto" src="" class="w-20 h-20 rounded-full object-cover shadow-md border-2 border-slate-100 hidden" />
+                    <!-- Generic Shield Icon Placeholder -->
+                    <div id="modal-del-foto-placeholder" class="w-20 h-20 rounded-full bg-blue-50/80 border border-blue-100/60 flex items-center justify-center text-blue-600 shadow-sm">
+                        <i class="fas fa-shield-alt text-3xl"></i>
+                    </div>
+                </div>
+
+                <!-- Destaque Nome da Delegação -->
+                <div class="space-y-1">
+                    <h3 id="modal-del-nome-destaque" class="text-lg font-black text-slate-800 tracking-tight leading-tight">Nome da Delegação</h3>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-600 border border-blue-100/30 uppercase tracking-wider">Delegação Oficial</span>
+                </div>
+
+                <!-- Dados do Representante -->
+                <div class="bg-slate-50/60 rounded-2xl p-3 w-full text-xs text-center border border-slate-100/40" style="border: 1px solid #e2e8f0;">
+                    <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block mb-0.5">Representante Autorizado</span>
+                    <span id="modal-del-representante" class="font-bold text-slate-700 block"></span>
+                </div>
+
+                <!-- Botões de Ação em Destaque -->
+                <div class="w-full space-y-2">
+                    <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider text-left pl-1">Parecer de Homologação</label>
+                    <div class="grid grid-cols-2 gap-4 w-full">
+                        <label class="flex flex-col items-center justify-center p-4 rounded-2xl bg-green-50/30 hover:bg-green-50/60 hover:border-green-300 transition cursor-pointer text-center group active:scale-[0.98]" style="border: 1px solid #e2e8f0;">
+                            <input type="radio" name="status" value="deferido" id="modal-del-radio-deferido" class="accent-green-600 h-4 w-4" onchange="toggleDelModalJustificativa(false)" required>
+                            <i class="fas fa-check-circle text-2xl text-green-500 mt-2.5 mb-1 group-hover:scale-110 transition"></i>
+                            <span class="text-xs font-bold text-green-700">Deferir</span>
+                            <span class="text-[9px] text-green-500/80 mt-0.5 font-medium leading-none">Aprovar Delegação</span>
+                        </label>
+                        <label class="flex flex-col items-center justify-center p-4 rounded-2xl bg-red-50/30 hover:bg-red-50/60 hover:border-red-300 transition cursor-pointer text-center group active:scale-[0.98]" style="border: 1px solid #e2e8f0;">
+                            <input type="radio" name="status" value="indeferido" id="modal-del-radio-indeferido" class="accent-red-600 h-4 w-4" onchange="toggleDelModalJustificativa(true)" required>
+                            <i class="fas fa-times-circle text-2xl text-red-500 mt-2.5 mb-1 group-hover:scale-110 transition"></i>
+                            <span class="text-xs font-bold text-red-700">Indeferir</span>
+                            <span class="text-[9px] text-red-500/80 mt-0.5 font-medium leading-none">Recusar Delegação</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Justification details -->
+                <div id="modal-del-just-container" class="w-full space-y-2 hidden text-left">
+                    <label for="modal-del-justificativa" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider pl-1">Motivo do Indeferimento</label>
+                    <textarea name="justificativa" id="modal-del-justificativa" rows="3" 
+                              placeholder="Descreva detalhadamente o motivo do indeferimento..."
+                              class="w-full px-3 py-2.5 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-slate-50/50 focus:bg-white"></textarea>
+                </div>
+            </div>
+
+            <!-- Footer Buttons Container (Distinct Panel) -->
+            <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-50 flex gap-3 justify-center text-xs w-full">
+                <button type="button" onclick="closeDelEvalModal()" 
+                        class="w-1/2 py-2.5 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition bg-white">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="w-1/2 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition shadow-md hover:shadow-lg active:scale-[0.98]">
+                    Confirmar Parecer
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Overlay de Animação de Sucesso -->
+<div id="success-animation-overlay" class="fixed inset-0 z-50 hidden bg-slate-950/80 backdrop-blur-md flex flex-col items-center justify-center text-white">
+    <div class="flex flex-col items-center gap-4">
+        <!-- Animated Check Circle -->
+        <div class="success-checkmark">
+            <div class="check-icon">
+                <span class="icon-line line-tip"></span>
+                <span class="icon-line line-long"></span>
+                <div class="icon-circle"></div>
+                <div class="icon-fix"></div>
+            </div>
+        </div>
+        <h3 class="text-xl font-bold tracking-tight mt-6">Delegação Deferida!</h3>
+        <p class="text-slate-400 text-xs">Atualizando dados e homologando a participação...</p>
+    </div>
+</div>
+
+<style>
+/* Estilos para animação do Checkmark */
+.success-checkmark {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+}
+.success-checkmark .check-icon {
+    width: 80px;
+    height: 80px;
+    position: relative;
+    border-radius: 50%;
+    box-sizing: content-box;
+    border: 4px solid #4caf50;
+}
+.success-checkmark .check-icon::before {
+    top: 3px;
+    left: -2px;
+    width: 30px;
+    transform-origin: 100% 50%;
+    border-radius: 100px 0 0 100px;
+}
+.success-checkmark .check-icon::after {
+    top: 0;
+    left: 30px;
+    width: 60px;
+    transform-origin: 0 50%;
+    border-radius: 0 100px 100px 0;
+    animation: rotate-circle 4.25s ease-in;
+}
+.success-checkmark .check-icon::before, .success-checkmark .check-icon::after {
+    content: '';
+    height: 100px;
+    position: absolute;
+    background: transparent;
+    transform: rotate(-45deg);
+}
+.success-checkmark .check-icon .icon-line {
+    height: 5px;
+    background-color: #4caf50;
+    display: block;
+    border-radius: 2px;
+    position: absolute;
+    z-index: 10;
+}
+.success-checkmark .check-icon .icon-line.line-tip {
+    top: 46px;
+    left: 14px;
+    width: 25px;
+    transform: rotate(45deg);
+    animation: icon-line-tip 0.75s;
+}
+.success-checkmark .check-icon .icon-line.line-long {
+    top: 38px;
+    right: 8px;
+    width: 47px;
+    transform: rotate(-45deg);
+    animation: icon-line-long 0.75s;
+}
+.success-checkmark .check-icon .icon-circle {
+    top: -4px;
+    left: -4px;
+    z-index: 10;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    border: 4px solid rgba(76, 175, 80, 0.5);
+    box-sizing: content-box;
+    position: absolute;
+}
+.success-checkmark .check-icon .icon-fix {
+    top: 8px;
+    left: 28px;
+    z-index: 1;
+    width: 5px;
+    height: 85px;
+    position: absolute;
+    transform: rotate(-45deg);
+}
+
+@keyframes rotate-circle {
+    0% { transform: rotate(-45deg); }
+    5% { transform: rotate(-45deg); }
+    12% { transform: rotate(-405deg); }
+    100% { transform: rotate(-405deg); }
+}
+@keyframes icon-line-tip {
+    0% { width: 0; left: 1px; top: 19px; }
+    54% { width: 0; left: 1px; top: 19px; }
+    70% { width: 50px; left: -8px; top: 37px; }
+    84% { width: 17px; left: 21px; top: 48px; }
+    100% { width: 25px; left: 14px; top: 46px; }
+}
+@keyframes icon-line-long {
+    0% { width: 0; right: 46px; top: 54px; }
+    65% { width: 0; right: 46px; top: 54px; }
+    84% { width: 55px; right: 0px; top: 35px; }
+    100% { width: 47px; right: 8px; top: 38px; }
+}
+</style>
+
 <script>
 function toggleAthletes(id) {
     const row = document.getElementById(`athletes-row-${id}`);
     row.classList.toggle('hidden');
+    
+    // Guardar estado no localStorage
+    let openDelegations = JSON.parse(localStorage.getItem('open_delegations') || '[]');
+    if (row.classList.contains('hidden')) {
+        openDelegations = openDelegations.filter(dId => dId !== id);
+    } else {
+        if (!openDelegations.includes(id)) {
+            openDelegations.push(id);
+        }
+    }
+    localStorage.setItem('open_delegations', JSON.stringify(openDelegations));
 }
 
-function toggleAvaliarDelegacaoInline(id) {
-    const formDiv = document.getElementById(`delegacao-eval-form-${id}`);
-    formDiv.classList.toggle('hidden');
+function openDelEvalModal(btn) {
+    const id = btn.dataset.id;
+    const nome = btn.dataset.nome;
+    const representante = btn.dataset.representante;
+    const status = btn.dataset.status;
+    const justificativa = btn.dataset.justificativa;
+    const foto = btn.dataset.foto;
+
+    // URL action
+    const actionUrl = "{% url 'avaliar_delegacao' 999999 %}".replace('999999', id);
+    document.getElementById('modal-del-form').action = actionUrl;
+
+    // Nome em destaque
+    document.getElementById('modal-del-nome-destaque').innerText = nome;
+    document.getElementById('modal-del-representante').innerText = representante;
+
+    // Foto ou placeholder
+    const imgEl = document.getElementById('modal-del-foto');
+    const placeholderEl = document.getElementById('modal-del-foto-placeholder');
+    if (foto && foto !== 'None' && foto !== '') {
+        imgEl.src = foto;
+        imgEl.classList.remove('hidden');
+        placeholderEl.classList.add('hidden');
+    } else {
+        imgEl.classList.add('hidden');
+        placeholderEl.classList.remove('hidden');
+    }
+
+    const radioDeferido = document.getElementById('modal-del-radio-deferido');
+    const radioIndeferido = document.getElementById('modal-del-radio-indeferido');
+
+    // Deselecionar por padrão para exigir clique
+    radioDeferido.checked = false;
+    radioIndeferido.checked = false;
+    toggleDelModalJustificativa(false);
+
+    document.getElementById('modal-del-justificativa').value = justificativa || '';
+
+    // Show modal
+    document.getElementById('delegacao-eval-modal').classList.remove('hidden');
 }
 
-function toggleAvaliarAtletaInline(id) {
-    const row = document.getElementById(`atleta-eval-row-${id}`);
-    row.classList.toggle('hidden');
+function closeDelEvalModal() {
+    document.getElementById('delegacao-eval-modal').classList.add('hidden');
 }
 
-function toggleJustificativaField(id, show) {
-    const container = document.getElementById(`atleta-just-container-${id}`);
-    const textarea = document.getElementById(`justificativa_atleta_${id}`);
+function toggleDelModalJustificativa(show) {
+    const container = document.getElementById('modal-del-just-container');
+    const textarea = document.getElementById('modal-del-justificativa');
     if (show) {
         container.classList.remove('hidden');
         textarea.required = true;
@@ -336,5 +665,140 @@ function toggleJustificativaField(id, show) {
         textarea.required = false;
     }
 }
+
+function openEvalModal(btn) {
+    const id = btn.dataset.id;
+    const nome = btn.dataset.nome;
+    const curso = btn.dataset.curso;
+    const matricula = btn.dataset.matricula;
+    const cpf = btn.dataset.cpf;
+    const genero = btn.dataset.genero;
+    const campus = btn.dataset.campus;
+    const vinculo = btn.dataset.vinculo;
+    const linkDocumento = btn.dataset.linkDocumento;
+    const linkDocumentoEgresso = btn.dataset.linkDocumentoEgresso;
+    const linkCorrecao = btn.dataset.linkCorrecao;
+    const emConformidade = btn.dataset.emConformidade === 'true';
+    const justificativa = btn.dataset.justificativa;
+    const permiteCorrecao = btn.dataset.permiteCorrecao === 'true';
+
+    // Definir URL do form action
+    const actionUrl = "{% url 'avaliar_atleta' 999999 %}".replace('999999', id);
+    document.getElementById('modal-eval-form').action = actionUrl;
+
+    // Setar textos dos detalhes
+    document.getElementById('modal-atleta-nome-title').innerText = nome;
+    document.getElementById('modal-atleta-nome').innerText = nome;
+    document.getElementById('modal-atleta-matricula').innerText = matricula;
+    document.getElementById('modal-atleta-cpf').innerText = cpf;
+    document.getElementById('modal-atleta-curso').innerText = curso;
+    document.getElementById('modal-atleta-genero').innerText = genero;
+    document.getElementById('modal-atleta-vinculo').innerText = vinculo;
+    document.getElementById('modal-atleta-campus').innerText = campus;
+
+    // Preencher links de documentos
+    const docsContainer = document.getElementById('modal-atleta-docs');
+    docsContainer.innerHTML = '';
+    let temDocs = false;
+    
+    if (linkDocumento && linkDocumento !== 'None' && linkDocumento !== '') {
+        temDocs = true;
+        docsContainer.innerHTML += `
+            <a href="${linkDocumento}" target="_blank" class="inline-flex items-center px-3 py-2 bg-blue-50 border border-blue-100 hover:bg-blue-100 hover:text-blue-700 rounded-xl font-semibold text-blue-650 transition text-[11px] gap-1.5 shadow-sm">
+                <i class="fas fa-folder-open text-xs"></i> Pasta Drive
+            </a>
+        `;
+    }
+    if (vinculo === 'Egresso' && linkDocumentoEgresso && linkDocumentoEgresso !== 'None' && linkDocumentoEgresso !== '') {
+        temDocs = true;
+        docsContainer.innerHTML += `
+            <a href="${linkDocumentoEgresso}" target="_blank" class="inline-flex items-center px-3 py-2 bg-purple-50 border border-purple-100 hover:bg-purple-100 hover:text-purple-700 rounded-xl font-semibold text-purple-650 transition text-[11px] gap-1.5 shadow-sm">
+                <i class="fas fa-graduation-cap text-xs"></i> Doc. Egresso
+            </a>
+        `;
+    }
+    if (linkCorrecao && linkCorrecao !== 'None' && linkCorrecao !== '') {
+        temDocs = true;
+        docsContainer.innerHTML += `
+            <a href="${linkCorrecao}" target="_blank" class="inline-flex items-center px-3 py-2 bg-amber-50 border border-amber-150 hover:bg-amber-100 hover:text-amber-700 rounded-xl font-bold text-amber-600 transition text-[11px] gap-1.5 shadow-sm">
+                <i class="fas fa-history text-xs"></i> Doc. Correção
+            </a>
+        `;
+    }
+    if (!temDocs) {
+        docsContainer.innerHTML = `<span class="text-slate-400 font-semibold">Nenhum documento anexado.</span>`;
+    }
+
+    // Desativar/desmarcar os radios por padrão ao abrir o modal
+    document.getElementById('modal-radio-deferido').checked = false;
+    document.getElementById('modal-radio-indeferido').checked = false;
+    toggleModalJustificativa(false); // Esconder justificativa por padrão
+
+    document.getElementById('modal-justificativa').value = justificativa || '';
+    document.getElementById('modal-permite-correcao').checked = permiteCorrecao;
+
+    // Exibir o Modal
+    document.getElementById('atleta-eval-modal').classList.remove('hidden');
+}
+
+function closeEvalModal() {
+    document.getElementById('atleta-eval-modal').classList.add('hidden');
+}
+
+function toggleModalJustificativa(show) {
+    const container = document.getElementById('modal-just-container');
+    const textarea = document.getElementById('modal-justificativa');
+    if (show) {
+        container.classList.remove('hidden');
+        textarea.required = true;
+    } else {
+        container.classList.add('hidden');
+        textarea.required = false;
+    }
+}
+
+// Restaurar estados salvos e posição do scroll ao carregar a página
+document.addEventListener('DOMContentLoaded', () => {
+    let openDelegations = JSON.parse(localStorage.getItem('open_delegations') || '[]');
+    openDelegations.forEach(id => {
+        const row = document.getElementById(`athletes-row-${id}`);
+        if (row) {
+            row.classList.remove('hidden');
+        }
+    });
+
+    // Restaurar scroll
+    const scrollPos = localStorage.getItem('scroll_pos_admin');
+    if (scrollPos) {
+        setTimeout(() => {
+            window.scrollTo({
+                top: parseInt(scrollPos),
+                behavior: 'instant'
+            });
+        }, 50);
+        localStorage.removeItem('scroll_pos_admin');
+    }
+
+    // Submit handler para o form da delegação com animação de sucesso
+    const delForm = document.getElementById('modal-del-form');
+    if (delForm) {
+        delForm.addEventListener('submit', function(e) {
+            const isDeferido = document.getElementById('modal-del-radio-deferido').checked;
+            if (isDeferido) {
+                e.preventDefault();
+                closeDelEvalModal();
+                document.getElementById('success-animation-overlay').classList.remove('hidden');
+                setTimeout(() => {
+                    delForm.submit();
+                }, 1800);
+            }
+        });
+    }
+});
+
+// Salvar a posição do scroll antes do reload da página
+window.addEventListener('beforeunload', () => {
+    localStorage.setItem('scroll_pos_admin', window.scrollY);
+});
 </script>
 {% endblock %}

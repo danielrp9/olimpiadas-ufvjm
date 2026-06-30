@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block title %}Fila de Espera - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-8 sm:p-12 shadow-[0_4px_20px_rgba(0,0,0,0.02)] text-center space-y-6 relative overflow-hidden">
+        
+        <!-- Background decorative gradient -->
+        <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl"></div>
+
+        <!-- Animated icon -->
+        <div class="flex justify-center">
+            <div class="relative">
+                <span class="flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 border border-amber-100 shadow-sm animate-pulse">
+                    <i class="fas fa-clock text-3xl"></i>
+                </span>
+                <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500"></span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Greeting & Primary Message -->
+        <div class="space-y-2">
+            <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Olá, {{ user.nome_completo|default:user.username }}!</h1>
+            <p class="text-slate-500 font-semibold text-sm">Sua delegação já se encontra na fila de inscrição para as Olimpíadas Universitárias.</p>
+        </div>
+
+        <!-- Descriptive Alert box -->
+        <div class="bg-amber-50/40 border border-amber-100/80 rounded-2xl p-5 text-left text-xs text-slate-650 leading-relaxed space-y-3">
+            <p class="font-bold text-amber-700 flex items-center gap-1.5">
+                <i class="fas fa-exclamation-circle text-sm"></i> Atenção
+            </p>
+            <p class="font-medium text-slate-700">
+                A delegação já submeteu a inscrição e nenhuma ação ou alteração pode ser efetuada até o veredito da comissão das Olimpíadas Universitárias.
+            </p>
+            <ul class="space-y-2 list-disc list-inside text-slate-500">
+                <li>A Comissão Organizadora está revisando as modalidades solicitadas e a documentação de cada atleta.</li>
+                <li>Quando a avaliação for concluída, o sistema liberará a listagem normal exibindo o deferimento ou indeferimento, além dos atletas aprovados, reprovados e os respectivos motivos.</li>
+            </ul>
+        </div>
+
+        <p class="text-xs text-slate-450 italic">
+            Para consultar o que foi enviado, clique no botão abaixo.
+        </p>
+
+        <!-- Actions -->
+        <div class="pt-4 flex flex-col sm:flex-row justify-center items-center gap-3">
+            <a href="{% url 'inscricao_detail' %}" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm hover:shadow-md hover:shadow-blue-500/10 active:scale-98 flex items-center justify-center gap-1.5">
+                <i class="fas fa-eye text-xs"></i> Visualizar Modalidades e Atletas Inscritos
+            </a>
+            <a href="{% url 'dashboard' %}" class="w-full sm:w-auto px-6 py-2.5 border border-slate-200 text-slate-500 hover:bg-slate-50 font-bold rounded-xl text-xs transition active:scale-98 flex items-center justify-center gap-1.5">
+                <i class="fas fa-chart-pie text-xs"></i> Ir para o Dashboard
+            </a>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

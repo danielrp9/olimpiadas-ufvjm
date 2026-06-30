@@ -4,17 +4,12 @@
 
 {% block content %}
 <div class="space-y-6">
-    
-    <!-- Botão de Voltar -->
-    <div class="flex items-center justify-between mb-4">
-        <a href="{% url 'atleta_list' %}" class="inline-flex items-center text-slate-500 hover:text-slate-700 text-xs font-bold transition gap-1.5">
-            <i class="fas fa-arrow-left"></i> Voltar para a Lista
+       <!-- Header do Cadastro com Seta de Voltar Integrada -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
+        <a href="{% url 'atleta_list' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para a Lista">
+            <i class="fas fa-arrow-left text-lg"></i>
         </a>
-    </div>
-
-    <!-- Header do Cadastro -->
-    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-start gap-3">
-        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 mt-0.5">
+        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
             <i class="fas fa-user-plus text-base"></i>
         </span>
         <div>
@@ -46,6 +41,7 @@
                             <th class="px-4 py-3.5 min-w-[130px]">Gênero</th>
                             <th class="px-4 py-3.5 min-w-[110px]">Matrícula</th>
                             <th class="px-4 py-3.5 min-w-[220px]">Curso & Campus</th>
+                            <th class="px-4 py-3.5 min-w-[220px]">Pasta Drive Documentos</th>
                             <th class="px-4 py-3.5 text-center min-w-[80px]">Egresso?</th>
                             <th class="px-4 py-3.5 min-w-[200px]">Doc. Egresso</th>
                             <th class="px-4 py-3.5 text-center w-12"></th>
@@ -78,14 +74,19 @@
                             </td>
                             <td class="px-3 py-3">
                                 <input type="text" name="matricula[]" required 
-                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
-                                       placeholder="Matrícula">
+                                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white"
+                                        placeholder="Matrícula">
                             </td>
                             <td class="px-3 py-3 space-y-1">
                                 <input type="text" name="curso[]" required placeholder="Curso acadêmico" 
                                        class="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
                                 <input type="text" name="campus[]" required placeholder="Campus" 
                                        class="w-full px-3 py-1.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
+                            </td>
+                            <td class="px-3 py-3">
+                                <input type="url" name="link_documento[]" required placeholder="Link da Pasta no Drive" 
+                                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-[11px] bg-slate-50/30 focus:bg-white">
+                                <span class="text-[9px] text-slate-400 block mt-1 leading-tight">Arq: NomeCompleto_NomeDelegação</span>
                             </td>
                             <td class="px-3 py-3 text-center">
                                 <input type="checkbox" name="is_egresso[]" value="0" 
@@ -102,14 +103,19 @@
                             </td>
                         </tr>
                     </tbody>
+                    <tfoot class="bg-slate-50/20 border-t border-slate-100">
+                        <tr>
+                            <td class="px-3 py-3 text-left align-middle">
+                                <button type="button" id="add-row" 
+                                        class="w-7 h-7 flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 text-white rounded-full transition shadow-sm hover:scale-105 active:scale-95"
+                                        title="Adicionar Nova Linha">
+                                    <i class="fas fa-plus text-[10px]"></i>
+                                </button>
+                            </td>
+                            <td class="px-3 py-3" colspan="9"></td>
+                        </tr>
+                    </tfoot>
                 </table>
-            </div>
-            
-            <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100">
-                <button type="button" id="add-row" 
-                        class="inline-flex items-center px-3 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-bold text-slate-600 transition shadow-sm gap-1.5 active:scale-95 bg-white">
-                    <i class="fas fa-plus text-slate-400"></i> Adicionar Nova Linha
-                </button>
             </div>
         </div>
 

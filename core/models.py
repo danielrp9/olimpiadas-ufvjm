@@ -22,7 +22,7 @@ class Atleta(models.Model):
     is_egresso = models.BooleanField(default=False, verbose_name="É egresso?", help_text="Marque se o atleta for formado.")
     link_documento_egresso = models.URLField(blank=True, null=True, help_text="Link obrigatório (Drive) caso seja egresso.")
     cadastrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='atletas')
-    em_conformidade = models.BooleanField(default=True, help_text="Define se o atleta cumpre todos os requisitos do regulamento")
+    em_conformidade = models.BooleanField(default=False, help_text="Define se o atleta cumpre todos os requisitos do regulamento")
     justificativa_inconformidade = models.TextField(blank=True, null=True, help_text="Motivo pelo qual o atleta não está em conformidade")
     permite_correcao = models.BooleanField(default=False, help_text="Se marcado, o representante pode enviar um novo documento")
     link_correcao = models.URLField(blank=True, null=True, help_text="Novo documento enviado pelo representante para reavaliação")
@@ -49,6 +49,7 @@ class Modalidade(models.Model):
     limite_minimo_jogadores = models.PositiveIntegerField(default=1)
     limite_maximo_jogadores = models.PositiveIntegerField(default=20)
     inscricoes_abertas = models.BooleanField(default=True)
+    data_publicacao = models.DateTimeField(blank=True, null=True, verbose_name="Data/Hora de Publicação (Agendamento)", help_text="Se preenchido, a modalidade só ficará pública para inscrições a partir desta data/hora.")
 
     def __str__(self):
         return f"{self.nome} ({self.get_genero_display()})"
@@ -117,3 +118,47 @@ class PreSumulaAtleta(models.Model):
 
     def __str__(self):
         return f"Atleta {self.atleta.nome_completo} - Camisa #{self.numero_camisa}"
+
+
+class Inscricao(models.Model):
+    """
+    Representa a inscrição geral de uma delegação.
+    Reúne as modalidades que a delegação escolheu e os atletas alocados em cada uma.
+    """
+    STATUS_CHOICES = [
+        ('pendente', 'Pendente de Análise'),
+        ('deferido', 'Deferido (Aprovado)'),
+        ('indeferido', 'Indeferido (Recusado)'),
+    ]
+    delegacao = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='inscricao')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pendente', verbose_name="Status da Inscrição")
+    justificativa = models.TextField(blank=True, null=True, verbose_name="Justificativa")
+    data_envio = models.DateTimeField(auto_now_add=True, verbose_name="Data de Envio")
+
+    def __str__(self):
+        return f"Inscrição de {self.delegacao.nome_delegacao or self.delegacao.email}"
+
+    class Meta:
+        verbose_name = "Inscrição"
+        verbose_name_plural = "Inscrições"
+
+    @property
+    def atletas_inscritos(self):
+        return Atleta.objects.filter(modalidades_inscritas__inscricao=self).distinct()
+
+
+class InscricaoModalidade(models.Model):
+    """
+    Vínculo de uma modalidade específica à inscrição da delegação, contendo os respectivos atletas escalados.
+    """
+    inscricao = models.ForeignKey(Inscricao, on_delete=models.CASCADE, related_name='modalidades')
+    modalidade = models.ForeignKey(Modalidade, on_delete=models.CASCADE, related_name='inscricoes')
+    atletas = models.ManyToManyField(Atleta, related_name='modalidades_inscritas')
+
+    def __str__(self):
+        return f"{self.inscricao.delegacao.nome_delegacao or self.inscricao.delegacao.email} - {self.modalidade.nome}"
+
+    class Meta:
+        verbose_name = "Modalidade Inscrita"
+        verbose_name_plural = "Modalidades Inscritas"
+        unique_together = ('inscricao', 'modalidade')

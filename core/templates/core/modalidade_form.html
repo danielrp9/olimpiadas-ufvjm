@@ -5,16 +5,12 @@
 {% block content %}
 <div class="max-w-xl mx-auto space-y-6">
     
-    <!-- Botão de Voltar -->
-    <div class="flex items-center justify-between mb-4">
-        <a href="{% url 'admin_modalidades' %}" class="inline-flex items-center text-slate-500 hover:text-slate-700 text-xs font-bold transition gap-1.5">
-            <i class="fas fa-arrow-left"></i> Voltar para a Lista
+    <!-- Header do Cadastro com Seta de Voltar Integrada -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
+        <a href="{% url 'admin_modalidades' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para a Lista">
+            <i class="fas fa-arrow-left text-lg"></i>
         </a>
-    </div>
-
-    <!-- Header do Cadastro -->
-    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-start gap-3">
-        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 mt-0.5">
+        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
             <i class="fas fa-running text-base"></i>
         </span>
         <div>

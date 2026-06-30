@@ -4,8 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta
-from .forms import RegisterForm, AtletaForm, JogoForm
+from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade
+from .forms import RegisterForm, AtletaForm, JogoForm, ModalidadeForm
 from users.models import ComissaoWhitelist
 
 class RegisterView(CreateView):
@@ -41,14 +41,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         if user.is_comissao:
             context['is_admin'] = True
             context['total_atletas_global'] = Atleta.objects.count()
-            context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE').count()
+            context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE', inscricao__isnull=False).count()
             context['total_presumulas_global'] = PreSumula.objects.count()
             return context
         
         context['is_admin'] = False
         context['total_atletas'] = Atleta.objects.filter(cadastrado_por=user).count()
         context['minhas_presumulas'] = PreSumula.objects.filter(representante=user).order_by('-jogo__data_jogo')
-        context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True)
+        
+        from django.utils import timezone
+        context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True).filter(
+            Q(data_publicacao__isnull=True) | Q(data_publicacao__lte=timezone.now())
+        )
+        
+        context['inscricao'] = getattr(user, 'inscricao', None)
         return context
 
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
@@ -60,7 +66,7 @@ class AdminModalidadeListView(LoginRequiredMixin, ListView):
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
 class ModalidadeCreateView(LoginRequiredMixin, CreateView):
     model = Modalidade
-    fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
+    form_class = ModalidadeForm
     template_name = 'core/modalidade_form.html'
     success_url = reverse_lazy('admin_modalidades')
 
@@ -71,7 +77,7 @@ class ModalidadeCreateView(LoginRequiredMixin, CreateView):
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
 class ModalidadeUpdateView(LoginRequiredMixin, UpdateView):
     model = Modalidade
-    fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
+    form_class = ModalidadeForm
     template_name = 'core/modalidade_form.html'
     success_url = reverse_lazy('admin_modalidades')
 
@@ -127,8 +133,7 @@ class JogoDeleteView(LoginRequiredMixin, DeleteView):
         messages.success(self.request, "Jogo excluído com sucesso!")
         return super().form_valid(form)
 
-class RegulamentoView(TemplateView):
-    template_name = 'core/regulamento.html'
+
 
 # Remoção de avaliar_equipe de inscrições legadas
 
@@ -179,6 +184,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
         generos = request.POST.getlist('genero[]')
         is_egressos = request.POST.getlist('is_egresso[]')
         links_egressos = request.POST.getlist('link_egresso[]')
+        links_documentos = request.POST.getlist('link_documento[]')
 
         atletas_criados = 0
         for i in range(len(nomes)):
@@ -186,6 +192,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                 is_egr = (is_egressos[i] == '1') if i < len(is_egressos) else False
                 link_egr = links_egressos[i] if i < len(links_egressos) else ''
                 gen = generos[i] if i < len(generos) else 'M'
+                link_doc = links_documentos[i] if i < len(links_documentos) else ''
                 
                 Atleta.objects.create(
                     nome_completo=nomes[i],
@@ -197,6 +204,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                     genero=gen,
                     is_egresso=is_egr,
                     link_documento_egresso=link_egr,
+                    link_documento=link_doc,
                     cadastrado_por=request.user
                 )
                 atletas_criados += 1
@@ -245,8 +253,12 @@ class AdminDelegacaoListView(LoginRequiredMixin, ListView):
     context_object_name = 'delegacoes'
 
     def get_queryset(self):
-        # Retorna todos os usuários com papel REPRESENTANTE, pre-buscando seus atletas
-        return User.objects.filter(role='REPRESENTANTE').prefetch_related('atletas').order_by('nome_delegacao')
+        # Retorna apenas os representantes que de fato realizaram uma inscrição
+        return User.objects.filter(role='REPRESENTANTE', inscricao__isnull=False).prefetch_related(
+            'atletas', 
+            'inscricao__modalidades__modalidade', 
+            'inscricao__modalidades__atletas'
+        ).order_by('nome_delegacao')
 
 
 @user_passes_test(lambda u: u.is_staff)
@@ -255,15 +267,23 @@ def avaliar_delegacao(request, pk):
     Delega a aprovação/indeferimento da delegação do Representante como um todo.
     """
     representante = get_object_or_404(User, pk=pk, role='REPRESENTANTE')
+    inscricao = get_object_or_404(Inscricao, delegacao=representante)
     if request.method == 'POST':
         status = request.POST.get('status')
         justificativa = request.POST.get('justificativa', '')
         
         if status in ['deferido', 'indeferido', 'pendente']:
+            # Salva o status na Inscrição
+            inscricao.status = status
+            inscricao.justificativa = justificativa
+            inscricao.save()
+            
+            # Mantém em sincronia com o modelo User legada
             representante.status_delegacao = status
             representante.justificativa_delegacao = justificativa
             representante.save()
-            messages.success(request, f"Delegação de {representante.nome_completo} ({representante.nome_delegacao}) avaliada com sucesso como {representante.get_status_delegacao_display()}!")
+            
+            messages.success(request, f"Delegação de {representante.nome_completo} ({representante.nome_delegacao}) avaliada com sucesso como {inscricao.get_status_display()}!")
             
     return redirect('admin_delegacoes')
 
@@ -525,3 +545,154 @@ def whitelist_delete(request, pk):
     item.delete()
     messages.success(request, f"E-mail {email} removido da whitelist da comissão.")
     return redirect('admin_whitelist')
+
+
+@login_required
+def inscricao_passo1(request):
+    if request.user.is_comissao:
+        return redirect('dashboard')
+    inscricao = getattr(request.user, 'inscricao', None)
+    if inscricao:
+        return redirect('inscricao_detail')
+        
+    from django.utils import timezone
+    modalidades = Modalidade.objects.filter(inscricoes_abertas=True).filter(
+        Q(data_publicacao__isnull=True) | Q(data_publicacao__lte=timezone.now())
+    )
+    
+    if request.method == 'POST':
+        selected_modalidades = request.POST.getlist('modalidades')
+        if not selected_modalidades:
+            messages.error(request, "Por favor, selecione ao menos uma modalidade para se inscrever.")
+            return redirect('inscricao_passo1')
+            
+        request.session['inscricao_modalidades_ids'] = [int(mid) for mid in selected_modalidades]
+        return redirect('inscricao_passo2')
+        
+    return render(request, 'core/inscricao_passo1.html', {'modalidades': modalidades})
+
+
+@login_required
+def inscricao_passo2(request):
+    if request.user.is_comissao:
+        return redirect('dashboard')
+    inscricao = getattr(request.user, 'inscricao', None)
+    if inscricao:
+        return redirect('inscricao_detail')
+        
+    modalidades_ids = request.session.get('inscricao_modalidades_ids', [])
+    if not modalidades_ids:
+        messages.error(request, "Sua sessão expirou ou você não selecionou nenhuma modalidade. Por favor, reinicie o processo.")
+        return redirect('inscricao_passo1')
+        
+    modalidades = Modalidade.objects.filter(id__in=modalidades_ids)
+    atletas = Atleta.objects.filter(cadastrado_por=request.user)
+    
+    if not atletas.exists():
+        messages.warning(request, "Você precisa cadastrar seus atletas no sistema antes de prosseguir com a inscrição nas modalidades.")
+        return redirect('atleta_list')
+        
+    if request.method == 'POST':
+        atleta_ids = request.POST.getlist('atletas')
+        selected_atletas = Atleta.objects.filter(id__in=[int(aid) for aid in atleta_ids], cadastrado_por=request.user)
+        
+        if not selected_atletas.exists():
+            messages.error(request, "Por favor, selecione ao menos um atleta para a inscrição.")
+            return render(request, 'core/inscricao_passo2.html', {
+                'modalidades': modalidades,
+                'atletas': atletas,
+                'selected_data': atleta_ids
+            })
+            
+        inscricao, created = Inscricao.objects.get_or_create(
+            delegacao=request.user,
+            defaults={'status': 'pendente'}
+        )
+        
+        inscricao.modalidades.all().delete()
+        
+        for mod in modalidades:
+            insc_mod = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=mod)
+            insc_mod.atletas.set(selected_atletas)
+            
+        request.user.status_delegacao = 'pendente'
+        request.user.justificativa_delegacao = ''
+        request.user.save()
+        
+        if 'inscricao_modalidades_ids' in request.session:
+            del request.session['inscricao_modalidades_ids']
+            
+        messages.success(request, "Inscrição enviada com sucesso! A Comissão Organizadora fará a avaliação.")
+        return redirect('inscricao_detail')
+        
+    return render(request, 'core/inscricao_passo2.html', {
+        'modalidades': modalidades,
+        'atletas': atletas
+    })
+
+
+@login_required
+def inscricao_detail(request):
+    if request.user.is_comissao:
+        return redirect('dashboard')
+        
+    inscricao = getattr(request.user, 'inscricao', None)
+    if not inscricao:
+        return redirect('inscricao_passo1')
+        
+    modalidades_inscritas = inscricao.modalidades.all().select_related('modalidade')
+    
+    return render(request, 'core/inscricao_detail.html', {
+        'inscricao': inscricao,
+        'modalidades_inscritas': modalidades_inscritas,
+        'atletas_inscritos': inscricao.atletas_inscritos
+    })
+
+
+@login_required
+def refazer_inscricao(request):
+    if request.user.is_comissao:
+        return redirect('dashboard')
+        
+    inscricao = getattr(request.user, 'inscricao', None)
+    if inscricao:
+        if inscricao.status == 'pendente':
+            return render(request, 'core/inscricao_fila_espera.html')
+        elif inscricao.status == 'indeferido':
+            inscricao.delete()
+            request.user.status_delegacao = 'pendente'
+            request.user.save()
+            messages.info(request, "Sua inscrição anterior foi cancelada. Você pode iniciar uma nova inscrição agora.")
+            return redirect('inscricao_passo1')
+        else:
+            messages.warning(request, "Sua inscrição já foi deferida e não pode ser alterada.")
+            return redirect('inscricao_detail')
+            
+    return redirect('inscricao_passo1')
+
+
+import os
+from django.conf import settings
+from django.http import HttpResponse
+
+def react_app(request, path=''):
+    dist_path = os.path.join(settings.BASE_DIR, 'static', 'react', 'dist', 'index.html')
+    if not os.path.exists(dist_path):
+        return HttpResponse(
+            "<html><body style='font-family: sans-serif; background: #0f172a; color: #f1f5f9; padding: 2rem;'>"
+            "<h2 style='color: #6366f1;'>Interface React não compilada no Django!</h2>"
+            "<p>Para inicializar e rodar o React integrado ao Django, você precisa:</p>"
+            "<ol>"
+            "<li>Entrar no diretório do front-end: <code>cd frontend</code></li>"
+            "<li>Gerar o build de produção: <code>npm run build</code></li>"
+            "</ol>"
+            "<p>Isso criará a pasta <code>static/react/dist/</code> com os arquivos corretos. "
+            "Depois, basta recarregar esta página.</p>"
+            "<p><i>Dica de Desenvolvimento:</i> Você também pode rodar o React no servidor dinâmico do Vite (porta 5173) executando <code>npm run dev</code> dentro da pasta <code>frontend</code>.</p>"
+            "</body></html>",
+            status=404
+        )
+    with open(dist_path, 'r', encoding='utf-8') as f:
+        html_content = f.read()
+    return HttpResponse(html_content)
+

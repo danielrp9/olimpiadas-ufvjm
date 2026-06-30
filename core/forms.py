@@ -12,7 +12,7 @@ class RegisterForm(forms.ModelForm):
 class AtletaForm(forms.ModelForm):
     class Meta:
         model = Atleta
-        fields = ['nome_completo', 'cpf', 'email', 'matricula', 'curso', 'campus', 'genero']
+        fields = ['nome_completo', 'cpf', 'email', 'matricula', 'curso', 'campus', 'genero', 'link_documento']
         widgets = {
             'nome_completo': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'cpf': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white', 'placeholder': '000.000.000-00'}),
@@ -21,7 +21,35 @@ class AtletaForm(forms.ModelForm):
             'curso': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'campus': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'genero': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'link_documento': forms.URLInput(attrs={
+                'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white',
+                'placeholder': 'https://drive.google.com/drive/folders/...'
+            }),
         }
+
+class ModalidadeForm(forms.ModelForm):
+    class Meta:
+        model = Modalidade
+        fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas', 'data_publicacao']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'genero': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'limite_minimo_jogadores': forms.NumberInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'limite_maximo_jogadores': forms.NumberInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'inscricoes_abertas': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600'}),
+            'data_publicacao': forms.DateTimeInput(
+                attrs={
+                    'type': 'datetime-local',
+                    'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'
+                },
+                format='%Y-%m-%dT%H:%M'
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.data_publicacao:
+            self.initial['data_publicacao'] = self.instance.data_publicacao.strftime('%Y-%m-%dT%H:%M')
 
 class DelegationModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):

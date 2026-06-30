@@ -56,10 +56,7 @@
         <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 text-white relative overflow-hidden border-b border-slate-800 text-center">
             <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl"></div>
             <div class="relative z-10">
-                <span class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-3 py-1 rounded-full border border-blue-500/30 uppercase tracking-wider">
-                    Etapa Final
-                </span>
-                <h1 class="text-xl font-bold mt-3 tracking-tight">Completar Perfil</h1>
+                <h1 class="text-xl font-bold tracking-tight">Completar Perfil</h1>
                 <p class="text-slate-400 mt-2 text-xs max-w-xs md:max-w-md mx-auto">
                     Insira os dados adicionais necessários para homologar sua delegação no sistema.
                 </p>
@@ -103,17 +100,17 @@
                     <!-- Campo Nome da Delegação -->
                     <div class="space-y-2">
                         <label for="id_nome_delegacao" class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                            <span>Nome da Delegação ou Atlética</span>
+                            <span>Nome da Delegação</span>
                             <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
                         </label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                                 <i class="fas fa-university text-sm"></i>
                             </span>
                             <input type="text" name="nome_delegacao" id="id_nome_delegacao" required 
-                                   placeholder="Ex: A.A.A. Delegação, Atlética Suprema" 
+                                   placeholder="Ex.: A.A.A. Delegação" 
                                    value="{{ form.nome_delegacao.value|default:'' }}"
-                                   class="w-full pl-10 pr-4 py-3 border {% if form.nome_delegacao.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-sm bg-slate-50/30 focus:bg-white shadow-sm">
+                                   class="w-full pl-12 pr-4 py-3 border {% if form.nome_delegacao.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-sm bg-slate-50/30 focus:bg-white shadow-sm">
                         </div>
                         
                         {% if form.nome_delegacao.errors %}
@@ -132,13 +129,13 @@
                             <span class="text-[9px] text-red-500 font-semibold">* Obrigatório</span>
                         </label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                                 <i class="fas fa-id-card text-sm"></i>
                             </span>
                             <input type="text" name="cpf" id="id_cpf" required 
                                    placeholder="000.000.000-00" 
                                    value="{{ form.cpf.value|default:'' }}"
-                                   class="w-full pl-10 pr-4 py-3 border {% if form.cpf.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-sm bg-slate-50/30 focus:bg-white shadow-sm"
+                                   class="w-full pl-12 pr-4 py-3 border {% if form.cpf.errors %}border-red-300 focus:ring-red-100 focus:border-red-500{% else %}border-slate-200 focus:ring-blue-100 focus:border-blue-500{% endif %} rounded-xl focus:outline-none focus:ring-4 transition text-sm bg-slate-50/30 focus:bg-white shadow-sm"
                                    oninput="formatCPF(this)">
                         </div>
                         

@@ -5,39 +5,37 @@
 {% block content %}
 <div class="max-w-3xl mx-auto space-y-6">
     
-    <!-- Botão de Voltar -->
-    <div class="flex justify-between items-center mb-6">
-        <a href="{% url 'presumula_list' %}" class="inline-flex items-center text-slate-500 hover:text-slate-700 text-xs font-bold transition gap-1.5">
-            <i class="fas fa-arrow-left"></i> Voltar para a Lista
-        </a>
-        
-        {% if not user.is_staff or presumula.representante == user %}
-            {% if not presumula.jogo.finalizado %}
-            <a href="{% url 'presumula_update' presumula.id %}" 
-               class="inline-flex items-center px-3.5 py-2 border border-blue-200 text-blue-600 hover:bg-blue-50 bg-white rounded-xl text-xs font-bold shadow-sm transition gap-1.5 active:scale-95">
-                <i class="far fa-edit"></i> Editar Escalação
-            </a>
-            {% endif %}
-        {% endif %}
-    </div>
-
-    <!-- Card de Informações Principais -->
+    <!-- Card de Informações Principais com Voltar Integrado -->
     <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
         <div class="bg-gradient-to-br from-slate-900 to-slate-800 p-6 sm:p-8 text-white relative overflow-hidden border-b border-slate-800">
             <div class="absolute -right-16 -bottom-16 w-48 h-48 bg-blue-500/10 rounded-full blur-2xl"></div>
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 relative z-10">
-                <div>
-                    <span class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-3 py-1 rounded-full border border-blue-500/30 uppercase tracking-wider">
-                        Pré-Súmula de Partida
-                    </span>
-                    <h1 class="text-2xl font-bold mt-2 tracking-tight">
-                        {{ presumula.jogo.modalidade.nome }}
-                    </h1>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'presumula_list' %}" class="text-blue-300 hover:text-blue-100 transition flex items-center justify-center p-1" title="Voltar para a Lista">
+                        <i class="fas fa-arrow-left text-lg"></i>
+                    </a>
+                    <div>
+                        <span class="bg-blue-500/20 text-blue-300 text-[10px] font-bold px-3 py-1 rounded-full border border-blue-500/30 uppercase tracking-wider">
+                            Pré-Súmula de Partida
+                        </span>
+                        <h1 class="text-2xl font-bold mt-2 tracking-tight">
+                            {{ presumula.jogo.modalidade.nome }}
+                        </h1>
+                    </div>
                 </div>
-                <div class="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-center min-w-[140px] shadow-sm">
-                    <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Data do Jogo</p>
-                    <p class="text-base font-bold mt-0.5"><i class="far fa-calendar-alt mr-1"></i> {{ presumula.jogo.data_jogo|date:"d/m/Y" }}</p>
-                    {% if presumula.jogo.horario_jogo %}
+                <div class="flex flex-wrap items-center gap-3 shrink-0">
+                    {% if not user.is_staff or presumula.representante == user %}
+                        {% if not presumula.jogo.finalizado %}
+                        <a href="{% url 'presumula_update' presumula.id %}" 
+                           class="inline-flex items-center px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-sm transition gap-1.5 active:scale-95 border border-blue-500/30">
+                            <i class="far fa-edit"></i> Editar Escalação
+                        </a>
+                        {% endif %}
+                    {% endif %}
+                    <div class="bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-center min-w-[140px] shadow-sm">
+                        <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Data do Jogo</p>
+                        <p class="text-base font-bold mt-0.5"><i class="far fa-calendar-alt mr-1"></i> {{ presumula.jogo.data_jogo|date:"d/m/Y" }}</p>
+                        {% if presumula.jogo.horario_jogo %}
                         <p class="text-[9px] text-slate-400 uppercase font-bold tracking-wider mt-1.5">Horário</p>
                         <p class="text-sm font-bold mt-0.5"><i class="far fa-clock mr-1"></i> {{ presumula.jogo.horario_jogo|time:"H:i" }}</p>
                     {% endif %}

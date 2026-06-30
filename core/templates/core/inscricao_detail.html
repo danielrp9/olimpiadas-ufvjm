@@ -1,0 +1,362 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalhes da Inscrição - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-6">
+
+    {% if inscricao.status == 'pendente' %}
+        <!-- Mensagem Informativa na Tela Toda -->
+        <div class="bg-white border border-slate-200/60 rounded-3xl p-8 sm:p-12 shadow-[0_4px_25px_rgba(0,0,0,0.02)] text-center space-y-6 relative overflow-hidden">
+            <!-- Background decorative gradients -->
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-amber-500/5 rounded-full blur-3xl"></div>
+
+            <!-- Animated Icon -->
+            <div class="flex justify-center">
+                <div class="relative">
+                    <span class="flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50 text-amber-500 border border-amber-100 shadow-sm animate-pulse">
+                        <i class="fas fa-clock text-3xl"></i>
+                    </span>
+                    <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-4 w-4 bg-amber-500"></span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Header & Message -->
+            <div class="space-y-2">
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Olá, {{ user.nome_completo|default:user.username }}!</h1>
+                <p class="text-slate-500 font-semibold text-sm">Sua delegação já realizou a inscrição.</p>
+            </div>
+
+            <!-- Informative Message Box -->
+            <div class="bg-amber-50/45 border border-amber-100/80 rounded-2xl p-6 text-left text-xs text-slate-650 leading-relaxed space-y-3 max-w-xl mx-auto">
+                <p class="font-bold text-amber-700 flex items-center gap-1.5">
+                    <i class="fas fa-exclamation-triangle text-sm animate-bounce"></i> Processo em Análise
+                </p>
+                <p class="font-semibold text-slate-700">
+                    A delegação já se inscreveu e nenhuma ação ou alteração pode ser efetuada até o veredito da comissão das Olimpíadas Universitárias.
+                </p>
+                <ul class="space-y-2 list-disc list-inside text-slate-550">
+                    <li>A Comissão Organizadora está revisando as modalidades selecionadas e a documentação de cada atleta.</li>
+                    <li>Quando o processo terminar, esta tela liberará a listagem normal mostrando o deferimento ou indeferimento da sua inscrição, junto com os motivos e conformidade de cada atleta.</li>
+                </ul>
+            </div>
+
+            <p class="text-xs text-slate-450 italic">
+                Você pode conferir quais modalidades foram selecionadas e quem está inscrito clicando no botão abaixo:
+            </p>
+
+            <!-- Action Button -->
+            <div class="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3">
+                <button onclick="toggleInscricaoDetails()" id="btn-toggle-detalhes" class="w-full sm:w-auto px-6 py-3 bg-blue-750 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition shadow-sm hover:shadow-md hover:shadow-blue-700/10 active:scale-98 flex items-center justify-center gap-1.5">
+                    <i class="fas fa-eye text-xs"></i> Ver esportes e atletas inscritos
+                </button>
+                <a href="{% url 'dashboard' %}" class="w-full sm:w-auto px-6 py-3 border border-slate-200 text-slate-550 hover:bg-slate-50 font-bold rounded-xl text-xs transition active:scale-98 flex items-center justify-center gap-1.5">
+                    <i class="fas fa-chart-pie text-xs"></i> Voltar ao Dashboard
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Container de Detalhes da Inscrição -->
+    <div id="container-detalhes-inscricao" class="space-y-6 {% if inscricao.status == 'pendente' %}hidden{% endif %}">
+        
+        <!-- Header do Status da Inscrição -->
+        <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+            <div class="flex items-start gap-4">
+                <span class="p-3.5 bg-blue-550 text-blue-700 border border-blue-100 rounded-2xl shrink-0 mt-0.5 shadow-sm">
+                    <i class="fas fa-file-invoice text-xl"></i>
+                </span>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Status da Inscrição</h1>
+                    <p class="text-slate-400 mt-1 text-xs">Acompanhe a análise da Comissão Organizadora para sua delegação.</p>
+                    <span class="text-[10px] text-slate-400 font-semibold block mt-1 uppercase tracking-wider">Enviado em: {{ inscricao.data_envio|date:"d/m/Y H:i" }}</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-end gap-2.5 self-stretch sm:self-auto">
+                {% if inscricao.status == 'deferido' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700 uppercase tracking-wide shadow-sm">
+                        <i class="fas fa-check-circle mr-1.5 text-green-655 text-sm"></i> Deferida (Aprovada)
+                    </span>
+                {% elif inscricao.status == 'indeferido' %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-red-50 text-red-700 uppercase tracking-wide shadow-sm">
+                        <i class="fas fa-times-circle mr-1.5 text-red-655 text-sm"></i> Indeferida (Recusada)
+                    </span>
+                {% else %}
+                    <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 uppercase tracking-wide shadow-sm animate-pulse">
+                        <i class="fas fa-clock mr-1.5 text-amber-600 text-sm"></i> Pendente de Análise
+                    </span>
+                {% endif %}
+                
+                <!-- Botão de Cancelar / Refazer Inscrição -->
+                {% if inscricao.status == 'indeferido' %}
+                    <a href="{% url 'refazer_inscricao' %}" onclick="return confirm('Deseja realmente cancelar/alterar esta inscrição? Você terá que selecionar as modalidades e atletas novamente.')" 
+                       class="inline-flex items-center justify-center px-3.5 py-1.5 border border-slate-200 hover:border-red-200 hover:bg-red-50 hover:text-red-650 text-slate-500 rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-95 bg-white">
+                        <i class="fas fa-undo-alt"></i> Cancelar / Alterar Inscrição
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Feedback da Comissão se houver justificativa -->
+        {% if inscricao.justificativa %}
+            <div class="bg-red-50 border border-red-100/50 rounded-3xl p-6 text-red-800 space-y-2">
+                <h4 class="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fas fa-comment-dots text-sm"></i> Justificativa / Parecer da Comissão
+                </h4>
+                <p class="text-xs text-red-700 leading-relaxed font-medium">
+                    {{ inscricao.justificativa }}
+                </p>
+            </div>
+        {% endif %}
+
+        <!-- Modalidades Selecionadas -->
+        <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-md space-y-4">
+            <div class="flex items-center gap-2">
+                <span class="p-1 bg-blue-50 text-blue-700 rounded-lg text-xs"><i class="fas fa-trophy"></i></span>
+                <h3 class="font-bold text-slate-800 text-sm">Modalidades de Interesse Selecionadas</h3>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                {% for im in modalidades_inscritas %}
+                    <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50/70 hover:bg-blue-100/50 text-slate-800 rounded-full text-xs font-semibold shadow-sm transition-all duration-200">
+                        <span class="text-blue-700 text-[10px]">
+                            {% if 'futsal' in im.modalidade.nome|lower %}
+                                <i class="fas fa-futbol"></i>
+                            {% elif 'vôlei' in im.modalidade.nome|lower or 'volei' in im.modalidade.nome|lower %}
+                                <i class="fas fa-volleyball"></i>
+                            {% elif 'basquete' in im.modalidade.nome|lower %}
+                                <i class="fas fa-basketball"></i>
+                            {% elif 'handebol' in im.modalidade.nome|lower %}
+                                <i class="fas fa-hand-paper"></i>
+                            {% elif 'xadrez' in im.modalidade.nome|lower %}
+                                <i class="fas fa-chess"></i>
+                            {% elif 'tênis' in im.modalidade.nome|lower or 'tenis' in im.modalidade.nome|lower %}
+                                <i class="fas fa-table-tennis"></i>
+                            {% else %}
+                                <i class="fas fa-running"></i>
+                            {% endif %}
+                        </span>
+                        <span class="text-slate-800 font-bold">{{ im.modalidade.nome }}</span>
+                    </div>
+                {% empty %}
+                    <span class="text-slate-400 text-xs italic">Nenhuma modalidade selecionada.</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Elenco de Atletas Inscritos -->
+        <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-md">
+            <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-150/60 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="p-1 bg-blue-550 text-blue-700 rounded-lg text-xs"><i class="fas fa-users"></i></span>
+                    <h3 class="font-bold text-slate-800 text-sm">Elenco de Atletas Inscritos</h3>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded bg-slate-100 text-slate-655 font-bold text-[10px]">
+                    Total: {{ atletas_inscritos.count }} atletas
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/30 border-b border-slate-100 text-slate-500 text-[9px] font-bold uppercase tracking-wider">
+                            <th class="px-6 py-3.5">Nome / CPF / Gênero</th>
+                            <th class="px-6 py-3.5">Matrícula / Curso</th>
+                            <th class="px-6 py-3.5">Campus / Vínculo</th>
+                            <th class="px-6 py-3.5">Documentos no Drive</th>
+                            <th class="px-6 py-3.5">Status (Conformidade)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-650">
+                        {% for atleta in atletas_inscritos %}
+                            <tr class="hover:bg-slate-100/50 transition odd:bg-white even:bg-slate-50/50">
+                                <!-- Nome / Gênero -->
+                                <td class="px-6 py-4">
+                                    <div class="font-bold text-slate-800 leading-tight">{{ atleta.nome_completo }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">{{ atleta.email }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">CPF: {{ atleta.cpf|default:"-" }} &bull; Gênero: {{ atleta.get_genero_display }}</div>
+                                </td>
+                                
+                                <!-- Matrícula / Curso -->
+                                <td class="px-6 py-4">
+                                    <div class="font-semibold text-slate-700">Matrícula: {{ atleta.matricula }}</div>
+                                    <div class="text-[10px] text-slate-400 mt-0.5">{{ atleta.curso }}</div>
+                                </td>
+
+                                <!-- Campus / Vínculo -->
+                                <td class="px-6 py-4">
+                                    <div class="font-medium text-slate-700">{{ atleta.campus }}</div>
+                                    <div class="mt-1">
+                                        {% if atleta.is_egresso %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 text-[10px] font-bold">
+                                                Egresso
+                                            </span>
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full bg-teal-550 text-teal-800 text-[10px] font-bold">
+                                                Regular
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+
+                                <!-- Documentos -->
+                                <td class="px-6 py-4 space-y-1">
+                                    {% if atleta.link_documento %}
+                                        <a href="{{ atleta.link_documento }}" target="_blank" class="inline-flex items-center text-blue-700 hover:text-blue-805 hover:underline gap-1 font-semibold">
+                                            <i class="fas fa-file-alt"></i> Pasta Drive
+                                        </a>
+                                    {% endif %}
+                                    {% if atleta.is_egresso and atleta.link_documento_egresso %}
+                                        <br>
+                                        <a href="{{ atleta.link_documento_egresso }}" target="_blank" class="inline-flex items-center text-purple-700 hover:text-purple-800 hover:underline gap-1 font-semibold">
+                                            <i class="fas fa-graduation-cap"></i> Doc. Egresso
+                                        </a>
+                                    {% endif %}
+                                    {% if atleta.link_correcao %}
+                                        <div class="mt-1.5">
+                                            <a href="{{ atleta.link_correcao }}" target="_blank" class="inline-flex items-center text-amber-700 hover:text-amber-805 hover:underline gap-1 font-bold">
+                                                <i class="fas fa-history"></i> Doc. Correção
+                                            </a>
+                                            <span class="block text-[8px] text-amber-500 font-bold uppercase tracking-wider mt-0.5">Aguardando Avaliação</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+
+                                <!-- Status / Conformidade -->
+                                <td class="px-6 py-4">
+                                    {% if atleta.em_conformidade %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-wide">
+                                            <i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado
+                                        </span>
+                                    {% elif atleta.justificativa_inconformidade or atleta.permite_correcao or atleta.link_correcao %}
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wide">
+                                                <i class="fas fa-times-circle mr-1 text-red-655"></i> Rejeitado
+                                            </span>
+                                            <button type="button" 
+                                                    onclick="openRejeicaoModal('{{ atleta.nome_completo|escapejs }}', '{{ atleta.justificativa_inconformidade|default:''|escapejs }}', {{ atleta.permite_correcao|yesno:'true,false' }}, '{% url 'enviar_correcao_atleta' atleta.id %}')"
+                                                    class="p-1 text-blue-750 hover:text-blue-900 hover:bg-blue-50 rounded-lg transition-colors flex items-center justify-center shadow-sm" 
+                                                    title="Ver Detalhes e Enviar Correção">
+                                                <i class="fas fa-info-circle text-xs"></i>
+                                            </button>
+                                        </div>
+                                    {% else %}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wide">
+                                            <i class="fas fa-clock mr-1 text-amber-600"></i> Pendente
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="px-6 py-8 text-slate-400 text-center">
+                                    Nenhum atleta inscrito nesta delegação.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Modal de Detalhes da Rejeição -->
+<div id="rejeicao-modal" class="fixed inset-0 z-50 hidden bg-slate-955/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
+            <div>
+                <span class="text-[9px] text-blue-700 font-bold uppercase tracking-wider block">Detalhes da Rejeição</span>
+                <h4 id="modal-rejeicao-atleta-nome" class="font-bold text-slate-800 text-sm mt-0.5"></h4>
+            </div>
+            <button type="button" onclick="closeRejeicaoModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 space-y-5 overflow-y-auto">
+            <!-- Justificativa -->
+            <div class="bg-red-50 border border-red-100/50 rounded-2xl p-4 text-red-800 space-y-2">
+                <h5 class="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
+                    <i class="fas fa-comment-dots text-sm"></i> Parecer da Comissão
+                </h5>
+                <p id="modal-rejeicao-justificativa" class="text-xs text-red-700 leading-relaxed font-medium text-justify"></p>
+            </div>
+
+            <!-- Form de Correção -->
+            <div id="modal-rejeicao-form-container" class="hidden">
+                <div class="border-t border-slate-100 pt-4 space-y-3">
+                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
+                        <i class="fas fa-exclamation-triangle text-amber-500 mr-1 animate-pulse"></i> Enviar Correção
+                    </span>
+                    <form id="modal-rejeicao-form" method="post" action="" class="space-y-3">
+                        {% csrf_token %}
+                        <div class="space-y-1">
+                            <label for="link_correcao_input" class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Novo Link Pasta Drive</label>
+                            <input type="url" name="link_correcao" id="link_correcao_input" required placeholder="https://drive.google.com/..." 
+                                   class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition bg-slate-50/50 focus:bg-white">
+                        </div>
+                        <button type="submit" class="w-full bg-blue-700 hover:bg-blue-800 text-white font-bold text-xs py-2.5 rounded-xl transition active:scale-98 shadow-md">
+                            Enviar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    {% if inscricao.status == 'pendente' %}
+    function toggleInscricaoDetails() {
+        const container = document.getElementById('container-detalhes-inscricao');
+        const btn = document.getElementById('btn-toggle-detalhes');
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+            btn.innerHTML = '<i class="fas fa-eye-slash text-xs"></i> Ocultar Modalidades e Atletas Inscritos';
+            container.scrollIntoView({ behavior: 'smooth' });
+        } else {
+            container.classList.add('hidden');
+            btn.innerHTML = '<i class="fas fa-eye text-xs"></i> Ver esportes e atletas inscritos';
+        }
+    }
+    {% endif %}
+
+    function openRejeicaoModal(nome, justificativa, permiteCorrecao, formAction) {
+        document.getElementById('modal-rejeicao-atleta-nome').innerText = nome;
+        document.getElementById('modal-rejeicao-justificativa').innerText = justificativa || 'Nenhuma justificativa detalhada foi fornecida.';
+        
+        const formContainer = document.getElementById('modal-rejeicao-form-container');
+        const form = document.getElementById('modal-rejeicao-form');
+        
+        if (permiteCorrecao) {
+            formContainer.classList.remove('hidden');
+            form.action = formAction;
+        } else {
+            formContainer.classList.add('hidden');
+            form.action = '';
+        }
+        
+        document.getElementById('rejeicao-modal').classList.remove('hidden');
+    }
+
+    function closeRejeicaoModal() {
+        document.getElementById('rejeicao-modal').classList.add('hidden');
+    }
+
+    window.addEventListener('click', function(e) {
+        const modal = document.getElementById('rejeicao-modal');
+        if (e.target === modal) {
+            closeRejeicaoModal();
+        }
+    });
+</script>
+{% endblock %}

@@ -35,11 +35,7 @@
                     </a>
                     {% endif %}
 
-                    <!-- Regulamento -->
-                    <a href="{% url 'regulamento' %}" class="{% if request.path == '/regulamento/' %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200">
-                        <i class="fas fa-file-alt mr-3 text-base"></i>
-                        Regulamento
-                    </a>
+
 
                     {% if user.is_authenticated %}
                         {% if user.is_comissao %}
@@ -51,6 +47,10 @@
                                 <i class="fas fa-university mr-3 text-base"></i>
                                 Delegações
                             </a>
+                            <a href="{% url 'admin_modalidades' %}" class="{% if 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-running mr-3 text-base"></i>
+                                Modalidades
+                            </a>
                             <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-file-signature mr-3 text-base"></i>
                                 Pré-Súmulas
@@ -59,11 +59,15 @@
                                 <i class="fas fa-envelope-open-text mr-3 text-base"></i>
                                 Autorizar Comissão
                             </a>
-                        {% else %}
                             <!-- Menus do Representante -->
+                            {% else %}
                             <div class="pt-5 pb-1">
                                 <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
                             </div>
+                            <a href="{% url 'inscricao_detail' %}" class="{% if 'inscricao' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-file-invoice mr-3 text-base"></i>
+                                Inscrição
+                            </a>
                             <a href="{% url 'atleta_list' %}" class="{% if 'atleta' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-users mr-3 text-base"></i>
                                 Atletas
@@ -129,11 +133,7 @@
                         </a>
                         {% endif %}
 
-                        <!-- Regulamento -->
-                        <a href="{% url 'regulamento' %}" class="{% if request.path == '/regulamento/' %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
-                            <i class="fas fa-file-alt mr-3 text-base"></i>
-                            Regulamento
-                        </a>
+
 
                         {% if user.is_authenticated %}
                             {% if user.is_comissao %}
@@ -143,6 +143,10 @@
                                 <a href="{% url 'admin_delegacoes' %}" class="{% if 'comissao/delegacoes' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-university mr-3 text-base"></i>
                                     Delegações
+                                </a>
+                                <a href="{% url 'admin_modalidades' %}" class="{% if 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-running mr-3 text-base"></i>
+                                    Modalidades
                                 </a>
                                 <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-file-signature mr-3 text-base"></i>
@@ -156,6 +160,10 @@
                                 <div class="pt-5 pb-1">
                                     <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
                                 </div>
+                                <a href="{% url 'inscricao_detail' %}" class="{% if 'inscricao' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-file-invoice mr-3 text-base"></i>
+                                    Inscrição
+                                </a>
                                 <a href="{% url 'atleta_list' %}" class="{% if 'atleta' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-users mr-3 text-base"></i>
                                     Atletas
