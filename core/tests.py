@@ -346,3 +346,79 @@ class RecursosTestCase(TestCase):
         self.assertTrue(notif.exists())
         self.assertIn('respondido e encerrado', notif.first().mensagem)
 
+
+class AtletaStatusTestCase(TestCase):
+    def setUp(self):
+        self.delegacao = User.objects.create_user(
+            email='delegado@example.com',
+            nome_completo='Delegado Teste',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            nome_delegacao='Delegação Teste'
+        )
+        self.staff_user = User.objects.create_superuser(
+            email='admin@example.com',
+            nome_completo='Admin Comissão',
+            role='COMISSAO',
+            is_staff=True
+        )
+        self.atleta = Atleta.objects.create(
+            nome_completo='Atleta Teste',
+            email='atleta@example.com',
+            matricula='123456',
+            curso='Sistemas de Informação',
+            genero='M',
+            cadastrado_por=self.delegacao
+        )
+
+    def test_default_status_is_nao_avaliado(self):
+        self.assertEqual(self.atleta.status_avaliacao, 'nao_avaliado')
+        self.assertFalse(self.atleta.em_conformidade)
+
+    def test_eval_atleta_deferido(self):
+        from django.urls import reverse
+        self.client.force_login(self.staff_user)
+        url = reverse('avaliar_atleta', kwargs={'pk': self.atleta.id})
+        response = self.client.post(url, data={
+            'status': 'deferido',
+            'justificativa': ''
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        self.atleta.refresh_from_db()
+        self.assertEqual(self.atleta.status_avaliacao, 'deferido')
+        self.assertTrue(self.atleta.em_conformidade)
+
+    def test_eval_atleta_indeferido(self):
+        from django.urls import reverse
+        self.client.force_login(self.staff_user)
+        url = reverse('avaliar_atleta', kwargs={'pk': self.atleta.id})
+        response = self.client.post(url, data={
+            'status': 'indeferido',
+            'justificativa': 'Documento ilegível',
+            'permite_correcao': 'on'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        self.atleta.refresh_from_db()
+        self.assertEqual(self.atleta.status_avaliacao, 'indeferido')
+        self.assertFalse(self.atleta.em_conformidade)
+        self.assertEqual(self.atleta.justificativa_inconformidade, 'Documento ilegível')
+        self.assertTrue(self.atleta.permite_correcao)
+
+    def test_reset_conformidade(self):
+        from django.urls import reverse
+        self.atleta.status_avaliacao = 'indeferido'
+        self.atleta.em_conformidade = False
+        self.atleta.save()
+        
+        self.client.force_login(self.staff_user)
+        url = reverse('atleta_reset_conformidade', kwargs={'pk': self.atleta.id})
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        
+        self.atleta.refresh_from_db()
+        self.assertEqual(self.atleta.status_avaliacao, 'deferido')
+        self.assertTrue(self.atleta.em_conformidade)
+
+

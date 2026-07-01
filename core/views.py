@@ -255,6 +255,7 @@ def reset_conformidade_atleta(request, pk):
     atleta = get_object_or_404(Atleta, pk=pk)
     atleta.em_conformidade = True
     atleta.justificativa_inconformidade = ""
+    atleta.status_avaliacao = 'deferido'
     atleta.save()
     messages.success(request, f"Atleta {atleta.nome_completo} restaurado para conformidade!")
     return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
@@ -411,13 +412,16 @@ def avaliar_atleta(request, pk):
             atleta.justificativa_inconformidade = ''
             atleta.permite_correcao = False
             atleta.link_correcao = None
+            atleta.status_avaliacao = 'deferido'
         elif status == 'indeferido':
             atleta.em_conformidade = False
             atleta.justificativa_inconformidade = justificativa
             atleta.permite_correcao = permite_correcao
+            atleta.status_avaliacao = 'indeferido'
         atleta.save()
         messages.success(request, f"Atleta {atleta.nome_completo} avaliado com sucesso!")
     return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
+
 
 
 class PreSumulaListView(LoginRequiredMixin, ListView):

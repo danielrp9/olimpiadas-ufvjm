@@ -38,10 +38,22 @@ class Atleta(models.Model):
     is_egresso = models.BooleanField(default=False, verbose_name="É egresso?", help_text="Marque se o atleta for formado.")
     link_documento_egresso = models.URLField(blank=True, null=True, help_text="Link obrigatório (Drive) caso seja egresso.")
     cadastrado_por = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='atletas')
+    STATUS_AVALIACAO_CHOICES = [
+        ('nao_avaliado', 'Não avaliado'),
+        ('deferido', 'Deferido'),
+        ('indeferido', 'Indeferido'),
+    ]
+    status_avaliacao = models.CharField(
+        max_length=20,
+        choices=STATUS_AVALIACAO_CHOICES,
+        default='nao_avaliado',
+        verbose_name="Status da Avaliação"
+    )
     em_conformidade = models.BooleanField(default=False, help_text="Define se o atleta cumpre todos os requisitos do regulamento")
     justificativa_inconformidade = models.TextField(blank=True, null=True, help_text="Motivo pelo qual o atleta não está em conformidade")
     permite_correcao = models.BooleanField(default=False, help_text="Se marcado, o representante pode enviar um novo documento")
     link_correcao = models.URLField(blank=True, null=True, help_text="Novo documento enviado pelo representante para reavaliação")
+
 
     def __str__(self):
         return f"{self.nome_completo} ({self.get_genero_display()})"

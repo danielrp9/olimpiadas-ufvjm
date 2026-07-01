@@ -228,14 +228,14 @@
 
                                 <!-- Status / Conformidade -->
                                 <td class="px-6 py-4">
-                                    {% if atleta.em_conformidade %}
+                                    {% if atleta.status_avaliacao == 'deferido' %}
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-bold uppercase tracking-wide">
-                                            <i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado
+                                            <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido
                                         </span>
-                                    {% elif atleta.justificativa_inconformidade or atleta.permite_correcao or atleta.link_correcao %}
+                                    {% elif atleta.status_avaliacao == 'indeferido' %}
                                         <div class="flex items-center gap-1.5">
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-bold uppercase tracking-wide">
-                                                <i class="fas fa-times-circle mr-1 text-red-655"></i> Rejeitado
+                                                <i class="fas fa-times-circle mr-1 text-red-655"></i> Indeferido
                                             </span>
                                             <button type="button" 
                                                     onclick="openRejeicaoModal('{{ atleta.nome_completo|escapejs }}', '{{ atleta.justificativa_inconformidade|default:''|escapejs }}', {{ atleta.permite_correcao|yesno:'true,false' }}, '{% url 'enviar_correcao_atleta' atleta.id %}')"
@@ -245,8 +245,8 @@
                                             </button>
                                         </div>
                                     {% else %}
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-wide">
-                                            <i class="fas fa-clock mr-1 text-amber-600"></i> Pendente
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wide">
+                                            <i class="fas fa-clock mr-1 text-slate-400"></i> Não avaliado
                                         </span>
                                     {% endif %}
                                 </td>
@@ -267,13 +267,13 @@
 
 </div>
 
-<!-- Modal de Detalhes da Rejeição -->
+<!-- Modal de Detalhes do Indeferimento -->
 <div id="rejeicao-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
         <!-- Header -->
         <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
             <div>
-                <span class="text-[9px] text-blue-700 font-bold uppercase tracking-wider block">Detalhes da Rejeição</span>
+                <span class="text-[9px] text-blue-700 font-bold uppercase tracking-wider block">Detalhes do Indeferimento</span>
                 <h4 id="modal-rejeicao-atleta-nome" class="font-bold text-slate-800 text-sm mt-0.5"></h4>
             </div>
             <button type="button" onclick="closeRejeicaoModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100">

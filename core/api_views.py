@@ -68,7 +68,9 @@ def atleta_to_dict(atleta):
         'justificativa_inconformidade': atleta.justificativa_inconformidade,
         'permite_correcao': atleta.permite_correcao,
         'link_correcao': atleta.link_correcao,
-        'cadastrado_por_id': atleta.cadastrado_por_id
+        'cadastrado_por_id': atleta.cadastrado_por_id,
+        'status_avaliacao': atleta.status_avaliacao,
+        'status_avaliacao_display': atleta.get_status_avaliacao_display()
     }
 
 def modalidade_to_dict(modalidade):
@@ -378,6 +380,7 @@ class APIAtletaResetConformidadeView(View):
         atleta = get_object_or_404(Atleta, pk=pk)
         atleta.em_conformidade = True
         atleta.justificativa_inconformidade = ""
+        atleta.status_avaliacao = 'deferido'
         atleta.save()
         return JsonResponse({'success': True, 'atleta': atleta_to_dict(atleta)})
 
@@ -399,10 +402,12 @@ class APIAtletaAvaliarView(View):
                 atleta.justificativa_inconformidade = ''
                 atleta.permite_correcao = False
                 atleta.link_correcao = None
+                atleta.status_avaliacao = 'deferido'
             elif status == 'indeferido':
                 atleta.em_conformidade = False
                 atleta.justificativa_inconformidade = justificativa
                 atleta.permite_correcao = permite_correcao
+                atleta.status_avaliacao = 'indeferido'
             else:
                 return JsonResponse({'error': 'Status inválido. Deve ser deferido ou indeferido'}, status=400)
                 
