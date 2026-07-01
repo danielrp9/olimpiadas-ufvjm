@@ -1,6 +1,17 @@
 from django.db import models
 from django.conf import settings
 
+class Campus(models.Model):
+    nome = models.CharField(max_length=100, unique=True)
+
+    def __str__(self):
+        return self.nome
+
+    class Meta:
+        verbose_name = 'Campus'
+        verbose_name_plural = 'Campi'
+
+
 class Atleta(models.Model):
     """
     Modelo representativo de um Atleta da delegação acadêmica.
@@ -11,13 +22,18 @@ class Atleta(models.Model):
         ('F', 'Feminino'),
         ('N', 'Não-binário'),
     ]
+    TIPO_ATLETA_CHOICES = [
+        ('estudante', 'Estudante'),
+        ('servidor', 'Servidor/Técnico'),
+    ]
     nome_completo = models.CharField(max_length=255)
     email = models.EmailField()
     cpf = models.CharField(max_length=14, verbose_name="CPF", null=True, blank=True)
-    matricula = models.CharField(max_length=50)
-    curso = models.CharField(max_length=100)
-    campus = models.CharField(max_length=100)
+    matricula = models.CharField(max_length=50, verbose_name="Matrícula/SIAPE")
+    curso = models.CharField(max_length=100, verbose_name="Curso (estudante)/Lotação (servidor)")
+    campus = models.ForeignKey(Campus, on_delete=models.PROTECT, null=True, blank=True)
     genero = models.CharField(max_length=1, choices=GENERO_CHOICES, default='M', verbose_name="Gênero")
+    tipo_atleta = models.CharField(max_length=20, choices=TIPO_ATLETA_CHOICES, default='estudante', verbose_name="Tipo de Atleta")
     link_documento = models.URLField(blank=True, null=True, help_text="Link para o documento de identificação (RG, CNH, etc.)")
     is_egresso = models.BooleanField(default=False, verbose_name="É egresso?", help_text="Marque se o atleta for formado.")
     link_documento_egresso = models.URLField(blank=True, null=True, help_text="Link obrigatório (Drive) caso seja egresso.")

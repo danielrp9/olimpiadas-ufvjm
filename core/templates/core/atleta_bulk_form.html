@@ -75,25 +75,40 @@
                 </select>
             </div>
 
+            <!-- Tipo de Atleta -->
+            <div class="space-y-1">
+                <label for="temp-tipo-atleta" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Tipo de Atleta</label>
+                <select id="temp-tipo-atleta"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+                    <option value="estudante">Estudante</option>
+                    <option value="servidor">Servidor/Técnico</option>
+                </select>
+            </div>
+
             <!-- Matrícula -->
             <div class="space-y-1">
-                <label for="temp-matricula" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Matrícula</label>
-                <input type="text" id="temp-matricula" placeholder="Número de matrícula"
+                <label for="temp-matricula" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Matrícula/SIAPE</label>
+                <input type="text" id="temp-matricula" placeholder="Número de matrícula ou SIAPE"
                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
             </div>
 
             <!-- Curso -->
             <div class="space-y-1">
-                <label for="temp-curso" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curso</label>
-                <input type="text" id="temp-curso" placeholder="Ex: Engenharia Civil"
+                <label for="temp-curso" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Curso (estudante)/Lotação (servidor)</label>
+                <input type="text" id="temp-curso" placeholder="Ex: Engenharia Civil ou Pró-Reitoria"
                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
             </div>
 
             <!-- Campus -->
             <div class="space-y-1">
                 <label for="temp-campus" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Campus</label>
-                <input type="text" id="temp-campus" placeholder="Ex: Campus JK"
-                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+                <select id="temp-campus"
+                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white">
+                    <option value="" disabled selected>Selecione um campus</option>
+                    {% for c in campi %}
+                        <option value="{{ c.id }}">{{ c.nome }}</option>
+                    {% endfor %}
+                </select>
             </div>
 
             <!-- Pasta Drive Documentos -->
@@ -241,6 +256,7 @@
         const emailInput = document.getElementById('temp-email');
         const cpfInput = document.getElementById('temp-cpf');
         const generoInput = document.getElementById('temp-genero');
+        const tipoAtletaInput = document.getElementById('temp-tipo-atleta');
         const matriculaInput = document.getElementById('temp-matricula');
         const cursoInput = document.getElementById('temp-curso');
         const campusInput = document.getElementById('temp-campus');
@@ -264,7 +280,7 @@
             cursoInput.focus();
             return;
         }
-        if (!campusInput.value.trim()) {
+        if (!campusInput.value) {
             campusInput.focus();
             return;
         }
@@ -279,9 +295,12 @@
             email: emailInput.value.trim(),
             cpf: cpfInput.value.trim(),
             genero: generoInput.value,
+            tipo_atleta: tipoAtletaInput.value,
+            tipo_atleta_display: tipoAtletaInput.options[tipoAtletaInput.selectedIndex].text,
             matricula: matriculaInput.value.trim(),
             curso: cursoInput.value.trim(),
-            campus: campusInput.value.trim(),
+            campus: campusInput.value,
+            campusNome: campusInput.options[campusInput.selectedIndex].text,
             link_documento: docInput.value.trim(),
             is_egresso: egressoInput.checked ? '1' : '0'
         };
@@ -294,6 +313,7 @@
         emailInput.value = '';
         cpfInput.value = '';
         generoInput.value = 'M';
+        tipoAtletaInput.value = 'estudante';
         matriculaInput.value = '';
         cursoInput.value = '';
         campusInput.value = '';
@@ -324,6 +344,7 @@
                 <input type="hidden" name="matricula[]" value="${escapeHtml(atleta.matricula)}">
                 <input type="hidden" name="curso[]" value="${escapeHtml(atleta.curso)}">
                 <input type="hidden" name="campus[]" value="${escapeHtml(atleta.campus)}">
+                <input type="hidden" name="tipo_atleta[]" value="${escapeHtml(atleta.tipo_atleta)}">
                 <input type="hidden" name="link_documento[]" value="${escapeHtml(atleta.link_documento)}">
                 <input type="hidden" name="is_egresso[]" value="${escapeHtml(atleta.is_egresso)}">
             `;
@@ -377,8 +398,8 @@
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 flex-grow min-w-0">
                             <div class="font-bold text-slate-800 truncate min-w-0" title="${escapeHtml(atleta.nome)}">${escapeHtml(atleta.nome)}</div>
                             <div class="text-slate-500 truncate min-w-0" title="${escapeHtml(atleta.email)}">${escapeHtml(atleta.email)}</div>
-                            <div class="text-slate-500 font-semibold truncate min-w-0">Matrícula: ${escapeHtml(atleta.matricula)}</div>
-                            <div class="text-slate-450 truncate min-w-0">${escapeHtml(atleta.curso)} (${escapeHtml(atleta.campus)})</div>
+                            <div class="text-slate-500 font-semibold truncate min-w-0">Matrícula/SIAPE: ${escapeHtml(atleta.matricula)}</div>
+                            <div class="text-slate-450 truncate min-w-0">${escapeHtml(atleta.curso)} (${escapeHtml(atleta.campusNome)}) - <span class="font-semibold text-indigo-650">${escapeHtml(atleta.tipo_atleta_display)}</span></div>
                         </div>
                         <button type="button" onclick="removeAtletaFromLote(${atleta.id})"
                                 class="text-slate-450 hover:text-red-650 transition p-1.5 rounded-lg hover:bg-red-50 shrink-0" title="Remover do Lote">

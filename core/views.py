@@ -228,6 +228,12 @@ class AtletaListView(LoginRequiredMixin, ListView):
 class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
     template_name = 'core/atleta_bulk_form.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        from .models import Campus
+        context['campi'] = Campus.objects.all().order_by('nome')
+        return context
+
     def post(self, request, *args, **kwargs):
         nomes = request.POST.getlist('nome[]')
         cpfs = request.POST.getlist('cpf[]')
@@ -236,6 +242,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
         cursos = request.POST.getlist('curso[]')
         campi = request.POST.getlist('campus[]')
         generos = request.POST.getlist('genero[]')
+        tipo_atletas = request.POST.getlist('tipo_atleta[]')
         is_egressos = request.POST.getlist('is_egresso[]')
         links_documentos = request.POST.getlist('link_documento[]')
 
@@ -244,7 +251,11 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
             if nomes[i].strip():
                 is_egr = (is_egressos[i] == '1') if i < len(is_egressos) else False
                 gen = generos[i] if i < len(generos) else 'M'
+                tipo_atl = tipo_atletas[i] if i < len(tipo_atletas) else 'estudante'
                 link_doc = links_documentos[i] if i < len(links_documentos) else ''
+                
+                # Fetch selected campus ID
+                c_id = int(campi[i]) if i < len(campi) and campi[i].isdigit() else None
                 
                 Atleta.objects.create(
                     nome_completo=nomes[i],
@@ -252,8 +263,9 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                     email=emails[i],
                     matricula=matriculas[i],
                     curso=cursos[i],
-                    campus=campi[i],
+                    campus_id=c_id,
                     genero=gen,
+                    tipo_atleta=tipo_atl,
                     is_egresso=is_egr,
                     link_documento_egresso='',
                     link_documento=link_doc,

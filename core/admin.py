@@ -1,11 +1,16 @@
 from django.contrib import admin
-from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao
+from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao
+
+@admin.register(Campus)
+class CampusAdmin(admin.ModelAdmin):
+    list_display = ('nome',)
+    search_fields = ('nome',)
 
 @admin.register(Atleta)
 class AtletaAdmin(admin.ModelAdmin):
-    list_display = ('nome_completo', 'matricula', 'curso', 'campus', 'genero', 'em_conformidade', 'cadastrado_por')
+    list_display = ('nome_completo', 'matricula', 'curso', 'campus', 'genero', 'tipo_atleta', 'em_conformidade', 'cadastrado_por')
     search_fields = ('nome_completo', 'matricula')
-    list_filter = ('campus', 'curso', 'genero', 'em_conformidade')
+    list_filter = ('campus', 'curso', 'genero', 'tipo_atleta', 'em_conformidade')
 
 @admin.register(Modalidade)
 class ModalidadeAdmin(admin.ModelAdmin):

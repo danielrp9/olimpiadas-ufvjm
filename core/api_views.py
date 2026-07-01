@@ -8,10 +8,25 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils import timezone
-from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade
+from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade
 from users.models import ComissaoWhitelist
 
 User = get_user_model()
+
+def get_campus_instance(value):
+    if not value:
+        return None
+    val_str = str(value).strip()
+    if not val_str:
+        return None
+    if val_str.isdigit():
+        campus = Campus.objects.filter(pk=int(val_str)).first()
+        if campus:
+            return campus
+    campus = Campus.objects.filter(nome__iexact=val_str).first()
+    if not campus and not val_str.isdigit():
+        campus = Campus.objects.create(nome=val_str)
+    return campus
 
 def user_to_dict(user):
     if not user:
@@ -41,9 +56,11 @@ def atleta_to_dict(atleta):
         'cpf': atleta.cpf,
         'matricula': atleta.matricula,
         'curso': atleta.curso,
-        'campus': atleta.campus,
+        'campus': atleta.campus.nome if atleta.campus else '',
         'genero': atleta.genero,
         'genero_display': atleta.get_genero_display(),
+        'tipo_atleta': atleta.tipo_atleta,
+        'tipo_atleta_display': atleta.get_tipo_atleta_display(),
         'link_documento': atleta.link_documento,
         'is_egresso': atleta.is_egresso,
         'link_documento_egresso': atleta.link_documento_egresso,
@@ -258,8 +275,9 @@ class APIAtletasView(View):
                     email=item.get('email', '').strip(),
                     matricula=item.get('matricula', '').strip(),
                     curso=item.get('curso', '').strip(),
-                    campus=item.get('campus', '').strip(),
+                    campus=get_campus_instance(item.get('campus')),
                     genero=item.get('genero', 'M'),
+                    tipo_atleta=item.get('tipo_atleta', 'estudante'),
                     is_egresso=bool(item.get('is_egresso', False)),
                     link_documento_egresso=item.get('link_documento_egresso', '').strip(),
                     link_documento=item.get('link_documento', '').strip(),
@@ -290,8 +308,9 @@ class APIAtletaDetailView(View):
                 atleta.email = data.get('email', atleta.email)
                 atleta.matricula = data.get('matricula', atleta.matricula)
                 atleta.curso = data.get('curso', atleta.curso)
-                atleta.campus = data.get('campus', atleta.campus)
+                atleta.campus = get_campus_instance(data.get('campus')) if 'campus' in data else atleta.campus
                 atleta.genero = data.get('genero', atleta.genero)
+                atleta.tipo_atleta = data.get('tipo_atleta', atleta.tipo_atleta)
                 atleta.is_egresso = bool(data.get('is_egresso', atleta.is_egresso))
                 atleta.link_documento_egresso = data.get('link_documento_egresso', atleta.link_documento_egresso)
                 atleta.link_documento = data.get('link_documento', atleta.link_documento)
@@ -306,8 +325,9 @@ class APIAtletaDetailView(View):
                 atleta.email = data.get('email', atleta.email)
                 atleta.matricula = data.get('matricula', atleta.matricula)
                 atleta.curso = data.get('curso', atleta.curso)
-                atleta.campus = data.get('campus', atleta.campus)
+                atleta.campus = get_campus_instance(data.get('campus')) if 'campus' in data else atleta.campus
                 atleta.genero = data.get('genero', atleta.genero)
+                atleta.tipo_atleta = data.get('tipo_atleta', atleta.tipo_atleta)
                 atleta.is_egresso = bool(data.get('is_egresso', atleta.is_egresso))
                 atleta.link_documento_egresso = data.get('link_documento_egresso', atleta.link_documento_egresso)
                 atleta.link_documento = data.get('link_documento', atleta.link_documento)

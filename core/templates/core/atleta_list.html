@@ -26,7 +26,7 @@
                 <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                     <th class="px-6 py-4">Nome Completo</th>
                     <th class="px-6 py-4">E-mail</th>
-                    <th class="px-6 py-4">Matrícula</th>
+                    <th class="px-6 py-4">Matrícula/SIAPE</th>
                     <th class="px-6 py-4">Status da Condição</th>
                     <th class="px-6 py-4 text-right">Ações</th>
                 </tr>
@@ -76,6 +76,7 @@
                                 data-curso="{{ atleta.curso }}"
                                 data-campus="{{ atleta.campus }}"
                                 data-egresso="{% if atleta.is_egresso %}Egresso{% else %}Regular{% endif %}"
+                                data-tipo="{{ atleta.get_tipo_atleta_display }}"
                                 data-conformidade="{% if atleta.em_conformidade %}1{% else %}0{% endif %}"
                                 data-link-doc="{{ atleta.link_documento|default:'' }}"
                                 data-link-egresso="{{ atleta.link_documento_egresso|default:'' }}"
@@ -186,7 +187,7 @@
                         <span id="detail-cpf" class="font-semibold text-slate-700 mt-0.5 block"></span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Matrícula</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Matrícula/SIAPE</span>
                         <span id="detail-matricula" class="font-semibold text-slate-700 mt-0.5 block"></span>
                     </div>
                     <div>
@@ -194,7 +195,7 @@
                         <span id="detail-genero" class="font-semibold text-slate-700 mt-0.5 block"></span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Curso</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Curso (estudante)/Lotação (servidor)</span>
                         <span id="detail-curso" class="font-semibold text-slate-700 mt-0.5 block"></span>
                     </div>
                     <div>
@@ -202,8 +203,12 @@
                         <span id="detail-campus" class="font-semibold text-slate-700 mt-0.5 block"></span>
                     </div>
                     <div>
-                        <span class="text-[9px] font-bold text-slate-450 uppercase tracking-wider block">Vínculo</span>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Vínculo</span>
                         <span id="detail-egresso" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Categoria</span>
+                        <span id="detail-tipo" class="font-semibold text-slate-700 mt-0.5 block"></span>
                     </div>
                 </div>
             </div>
@@ -244,6 +249,7 @@
         const curso = btn.getAttribute('data-curso');
         const campus = btn.getAttribute('data-campus');
         const egresso = btn.getAttribute('data-egresso');
+        const tipo = btn.getAttribute('data-tipo');
         const conformidade = btn.getAttribute('data-conformidade') === '1';
         const linkDoc = btn.getAttribute('data-link-doc');
         const linkCorrecao = btn.getAttribute('data-link-correcao');
@@ -262,6 +268,7 @@
         document.getElementById('detail-curso').textContent = curso;
         document.getElementById('detail-campus').textContent = campus;
         document.getElementById('detail-egresso').textContent = egresso;
+        document.getElementById('detail-tipo').textContent = tipo;
 
         // Toggle blocks based on status
         const rejeicaoBlock = document.getElementById('detail-rejeicao-block');
