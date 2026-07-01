@@ -391,6 +391,22 @@ def avaliar_delegacao(request, pk):
             representante.justificativa_delegacao = justificativa
             representante.save()
             
+            # Notifica os representantes e membros da delegação
+            if status == 'deferido':
+                msg_notif = "Sua inscrição foi avaliada e DEFERIDA (aprovada) pela comissão organizadora."
+            elif status == 'indeferido':
+                msg_notif = f"Sua inscrição foi avaliada e INDEFERIDA (recusada) pela comissão organizadora. Motivo: {justificativa}"
+            else:
+                msg_notif = "Sua inscrição foi alterada para PENDENTE de análise."
+                
+            usuarios_delegacao = User.objects.filter(Q(id=representante.id) | Q(parent_delegate=representante))
+            for usr in usuarios_delegacao:
+                Notificacao.objects.create(
+                    usuario=usr,
+                    mensagem=msg_notif,
+                    link='/inscricao/detalhe/'
+                )
+            
             messages.success(request, f"Delegação de {representante.nome_completo} ({representante.nome_delegacao}) avaliada com sucesso como {inscricao.get_status_display()}!")
             
     return redirect('admin_delegacoes')
@@ -866,6 +882,15 @@ def inscricao_passo2(request):
         delegacao.status_delegacao = 'pendente'
         delegacao.justificativa_delegacao = ''
         delegacao.save()
+        
+        # Notifica a comissão organizadora de que há uma nova inscrição
+        comissao = User.objects.filter(role='COMISSAO')
+        for admin in comissao:
+            Notificacao.objects.create(
+                usuario=admin,
+                mensagem=f"Nova inscrição pendente de avaliação da delegação {delegacao.nome_delegacao or delegacao.email}.",
+                link='/comissao/delegacoes/'
+            )
         
         if 'inscricao_modalidades_ids' in request.session:
             del request.session['inscricao_modalidades_ids']

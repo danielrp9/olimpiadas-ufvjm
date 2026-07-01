@@ -8,7 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
 from django.utils import timezone
-from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade
+from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade, Notificacao
 from users.models import ComissaoWhitelist
 
 User = get_user_model()
@@ -653,6 +653,22 @@ class APIDelegacaoAvaliarView(View):
                 representante.justificativa_delegacao = justificativa
                 representante.save()
                 
+                # Notifica os representantes e membros da delegação
+                if status == 'deferido':
+                    msg_notif = "Sua inscrição foi avaliada e DEFERIDA (aprovada) pela comissão organizadora."
+                elif status == 'indeferido':
+                    msg_notif = f"Sua inscrição foi avaliada e INDEFERIDA (recusada) pela comissão organizadora. Motivo: {justificativa}"
+                else:
+                    msg_notif = "Sua inscrição foi alterada para PENDENTE de análise."
+                    
+                usuarios_delegacao = User.objects.filter(Q(id=representante.id) | Q(parent_delegate=representante))
+                for usr in usuarios_delegacao:
+                    Notificacao.objects.create(
+                        usuario=usr,
+                        mensagem=msg_notif,
+                        link='/inscricao/detalhe/'
+                    )
+                
                 return JsonResponse({'success': True})
             else:
                 return JsonResponse({'error': 'Status inválido'}, status=400)
@@ -910,6 +926,15 @@ class APIInscricaoFluxoView(View):
             delegacao.status_delegacao = 'pendente'
             delegacao.justificativa_delegacao = ''
             delegacao.save()
+            
+            # Notifica a comissão organizadora de que há uma nova inscrição
+            comissao = User.objects.filter(role='COMISSAO')
+            for admin in comissao:
+                Notificacao.objects.create(
+                    usuario=admin,
+                    mensagem=f"Nova inscrição pendente de avaliação da delegação {delegacao.nome_delegacao or delegacao.email}.",
+                    link='/comissao/delegacoes/'
+                )
             
             return JsonResponse({'success': True, 'inscricao_id': inscricao.id})
         except Exception as e:

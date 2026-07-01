@@ -422,3 +422,104 @@ class AtletaStatusTestCase(TestCase):
         self.assertTrue(self.atleta.em_conformidade)
 
 
+class InscricaoNotificacoesTestCase(TestCase):
+    def setUp(self):
+        # 1. Commission / Admin user
+        self.staff_user = User.objects.create_superuser(
+            email='admin@example.com',
+            nome_completo='Admin Comissão',
+            role='COMISSAO',
+            is_staff=True
+        )
+        # 2. Main delegate
+        self.delegacao = User.objects.create_user(
+            email='delegado@example.com',
+            nome_completo='Delegado Teste',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            nome_delegacao='Delegação Teste'
+        )
+        # 3. Sub delegate / Member
+        self.sub_delegate = User.objects.create_user(
+            email='membro@example.com',
+            nome_completo='Membro Auxiliar',
+            role='REPRESENTANTE',
+            parent_delegate=self.delegacao
+        )
+        # 4. Modality and Athlete
+        self.modalidade = Modalidade.objects.create(
+            nome='Futsal',
+            genero='M'
+        )
+        self.atleta = Atleta.objects.create(
+            nome_completo='Atleta Teste',
+            email='atleta@example.com',
+            matricula='123456',
+            curso='Sistemas de Informação',
+            genero='M',
+            cadastrado_por=self.delegacao
+        )
+
+    def test_inscription_submission_notifies_commission(self):
+        from django.urls import reverse
+        from core.models import Notificacao
+        
+        # Force session data for selected modalities
+        session = self.client.session
+        session['inscricao_modalidades_ids'] = [self.modalidade.id]
+        session.save()
+
+        self.client.force_login(self.delegacao)
+        url = reverse('inscricao_passo2')
+        response = self.client.post(url, data={
+            'atletas': [self.atleta.id]
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Check notifications for commission
+        notifs = Notificacao.objects.filter(usuario=self.staff_user)
+        self.assertEqual(notifs.count(), 1)
+        self.assertIn("Nova inscrição pendente de avaliação", notifs.first().mensagem)
+        self.assertEqual(notifs.first().link, '/comissao/delegacoes/')
+
+    def test_inscription_evaluation_notifies_delegation(self):
+        from django.urls import reverse
+        from core.models import Inscricao, Notificacao
+
+        # Create inscription
+        inscricao = Inscricao.objects.create(
+            delegacao=self.delegacao,
+            status='pendente'
+        )
+
+        self.client.force_login(self.staff_user)
+        url = reverse('avaliar_delegacao', kwargs={'pk': self.delegacao.id})
+        
+        # Test deferido notification
+        response = self.client.post(url, data={
+            'status': 'deferido',
+            'justificativa': ''
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Main delegate and sub delegate should both be notified
+        notif_main = Notificacao.objects.filter(usuario=self.delegacao)
+        notif_sub = Notificacao.objects.filter(usuario=self.sub_delegate)
+        self.assertEqual(notif_main.count(), 1)
+        self.assertEqual(notif_sub.count(), 1)
+        self.assertIn("DEFERIDA", notif_main.first().mensagem)
+        self.assertEqual(notif_main.first().link, '/inscricao/detalhe/')
+
+        # Test indeferido notification
+        response = self.client.post(url, data={
+            'status': 'indeferido',
+            'justificativa': 'Assinatura inválida'
+        })
+        self.assertEqual(response.status_code, 302)
+
+        notif_main = Notificacao.objects.filter(usuario=self.delegacao).order_by('-id')
+        self.assertIn("INDEFERIDA", notif_main.first().mensagem)
+        self.assertIn("Assinatura inválida", notif_main.first().mensagem)
+
+
+
