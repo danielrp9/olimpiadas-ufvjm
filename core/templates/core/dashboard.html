@@ -137,70 +137,165 @@
         </div>
     </div>
 
-    <!-- 2. Grid de Conteúdo Principal (2 Colunas: Esquerda 2/3, Direita 1/3) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Coluna da Esquerda (2/3) -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Painel Administrativo Informativo -->
-            <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
-                <h3 class="text-base font-bold text-slate-800">Atividades Gerais</h3>
-                <p class="text-xs text-slate-400 mt-1">Visão geral do andamento do torneio universitário.</p>
-                
-                <div class="mt-6 border-t border-slate-100 pt-6 space-y-6">
-                    <div class="flex items-start gap-4">
-                        <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs">
-                            <i class="fas fa-university"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-slate-800 leading-tight">Delegações Pendentes</h4>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">Representantes registram delegações que requerem avaliação para aprovar a entrada dos atletas nas Olimpíadas.</p>
-                            <a href="{% url 'admin_delegacoes' %}" class="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 mt-2">
-                                Avaliar Delegações <i class="fas fa-chevron-right text-[10px]"></i>
-                            </a>
-                        </div>
-                    </div>
+    <!-- 2. Seção de Estatísticas e Análise Quantitativa -->
+    <div id="analytics-section" class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] mb-8 scroll-mt-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <div>
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                        <i class="fas fa-chart-line text-xs"></i>
+                    </span>
+                    Análise Quantitativa de Inscrições
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Estatísticas detalhadas de delegações, estudantes e servidores por campus.</p>
+            </div>
+        </div>
 
-                    <div class="flex items-start gap-4">
-                        <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 text-xs">
-                            <i class="fas fa-file-signature"></i>
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-slate-800 leading-tight">Pré-Súmulas de Jogos</h4>
-                            <p class="text-xs text-slate-400 mt-1 leading-relaxed">Ficha digital com atletas escalados pelos representantes antes dos confrontos. Utilizado para conferência da arbitragem.</p>
-                            <a href="{% url 'presumula_list' %}" class="text-xs font-bold text-purple-600 hover:text-purple-700 inline-flex items-center gap-1 mt-2">
-                                Visualizar Súmulas <i class="fas fa-chevron-right text-[10px]"></i>
-                            </a>
-                        </div>
-                    </div>
+        <!-- Cards de Resumo de Totais Globais -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Servidores no Total -->
+            <div class="bg-slate-50/50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-user-shield text-base"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Servidores no Total</span>
+                    <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_servidores_global }}</span>
+                </div>
+            </div>
+            <!-- Estudantes no Total -->
+            <div class="bg-slate-50/50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-users text-base"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Estudantes no Total</span>
+                    <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_estudantes_global }}</span>
+                </div>
+            </div>
+            <!-- Total -->
+            <div class="bg-slate-50/50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                    <i class="fas fa-running text-base"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total</span>
+                    <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_inscritos_global }}</span>
                 </div>
             </div>
         </div>
 
-        <!-- Coluna da Direita (1/3) -->
-        <div class="space-y-6">
-            <!-- Card de Destaque Azul (Referência Invo) -->
-            <div class="bg-slate-800 text-white rounded-3xl p-6 border border-slate-700/30 shadow-[0_2px_12px_rgba(0,0,0,0.05)] flex flex-col justify-between min-h-[220px]">
-                <div>
-                    <span class="bg-white/10 text-slate-100 text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">Painel Admin</span>
-                    <h3 class="text-lg font-bold mt-4 leading-tight">Fácil Gestão</h3>
-                    <p class="text-xs text-slate-300 mt-2">Cadastre e-mails autorizados para compartilhar privilégios da Comissão e auditar delegados.</p>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Grid de Campi (Esquerda - 2/3) -->
+            <div class="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {% for stat in campi_stats %}
+                <div class="bg-white p-5 rounded-3xl border border-slate-200/50 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
+                            <span class="p-2 bg-slate-50 text-slate-500 rounded-xl">
+                                <i class="fas fa-map-marker-alt text-xs"></i>
+                            </span>
+                            <h4 class="font-bold text-slate-800 text-sm">{{ stat.nome }}</h4>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="p-2 bg-slate-50 rounded-2xl">
+                                <span class="text-[9px] text-slate-400 font-bold block uppercase">Delegações</span>
+                                <span class="text-xs font-bold text-slate-700 mt-1 block">{{ stat.delegacoes }}</span>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded-2xl">
+                                <span class="text-[9px] text-slate-400 font-bold block uppercase">Estudantes</span>
+                                <span class="text-xs font-bold text-blue-600 mt-1 block">{{ stat.atletas }}</span>
+                            </div>
+                            <div class="p-2 bg-slate-50 rounded-2xl">
+                                <span class="text-[9px] text-slate-400 font-bold block uppercase">Servidores</span>
+                                <span class="text-xs font-bold text-indigo-600 mt-1 block">{{ stat.servidores }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4">
+                        {% if stat.total_membros > 0 %}
+                            <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
+                                <div class="bg-blue-500 h-full" style="width: {% widthratio stat.atletas stat.total_membros 100 %}%"></div>
+                                <div class="bg-indigo-500 h-full" style="width: {% widthratio stat.servidores stat.total_membros 100 %}%"></div>
+                            </div>
+                            <div class="flex justify-between items-center text-[9px] text-slate-400 mt-2 font-semibold">
+                                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span> Estudantes ({% widthratio stat.atletas stat.total_membros 100 %}%)</span>
+                                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block"></span> Servidores ({% widthratio stat.servidores stat.total_membros 100 %}%)</span>
+                            </div>
+                        {% else %}
+                            <div class="w-full bg-slate-100 rounded-full h-2"></div>
+                            <div class="text-[9px] text-slate-400 mt-2 text-center font-semibold">Nenhum inscrito registrado</div>
+                        {% endif %}
+                    </div>
                 </div>
-                <a href="{% url 'admin_whitelist' %}" class="mt-6 bg-white text-slate-800 text-xs font-bold text-center py-2.5 rounded-xl block hover:bg-slate-100 hover:text-slate-955 transition shadow-sm">
-                    Autorizar Comissão
-                </a>
+                {% endfor %}
             </div>
 
-            <!-- Card de Ferramentas de Gestão -->
-            <div class="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
-                <h3 class="text-sm font-bold text-slate-800 mb-4">Ações Rápidas</h3>
-                <div class="space-y-3">
-                    <a href="{% url 'admin_delegacoes' %}" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50/50 border border-slate-100 hover:bg-blue-50/20 hover:border-blue-200 transition">
-                        <span class="text-xs font-semibold text-slate-700">Delegações</span>
-                        <i class="fas fa-chevron-right text-[10px] text-slate-400"></i>
+            <!-- Gráfico Comparativo (Direita - 1/3) -->
+            <div class="bg-slate-900 text-white rounded-3xl p-6 flex flex-col justify-between shadow-lg">
+                <div class="space-y-4">
+                    <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fas fa-balance-scale text-indigo-400"></i> Comparativo de Volume
+                    </h4>
+                    
+                    <div class="space-y-4 mt-4">
+                        {% for stat in campi_stats %}
+                            <div class="space-y-1.5">
+                                <div class="flex justify-between text-xs font-bold">
+                                    <span class="text-slate-200">{{ stat.nome }}</span>
+                                    <span class="text-white">{{ stat.total_membros }} inscritos</span>
+                                </div>
+                                <div class="w-full bg-slate-950/40 rounded-full h-3.5 overflow-hidden relative">
+                                    {% if max_members > 0 %}
+                                        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500" style="width: {% widthratio stat.total_membros max_members 100 %}%"></div>
+                                    {% else %}
+                                        <div class="bg-slate-200 h-full rounded-full w-0"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="pt-6 border-t border-slate-800/80 mt-6 text-center">
+                    <p class="text-[10px] text-slate-400 font-semibold leading-relaxed">
+                        Os dados acima são atualizados dinamicamente a cada nova inscrição processada ou deferida.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Atividades Gerais -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] mt-6">
+        <h3 class="text-base font-bold text-slate-800">Atividades Gerais</h3>
+        <p class="text-xs text-slate-400 mt-1">Visão geral do andamento do torneio universitário.</p>
+        
+        <div class="mt-6 border-t border-slate-100 pt-6 space-y-6">
+            <div class="flex items-start gap-4">
+                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs">
+                    <i class="fas fa-university"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-800 leading-tight">Delegações Pendentes</h4>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Representantes registram delegações que requerem avaliação para aprovar a entrada dos atletas nas Olimpíadas.</p>
+                    <a href="{% url 'admin_delegacoes' %}" class="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 mt-2">
+                        Avaliar Delegações <i class="fas fa-chevron-right text-[10px]"></i>
                     </a>
-                    <a href="{% url 'presumula_list' %}" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50/50 border border-slate-100 hover:bg-blue-50/20 hover:border-blue-200 transition">
-                        <span class="text-xs font-semibold text-slate-700">Pré-Súmulas</span>
-                        <i class="fas fa-chevron-right text-[10px] text-slate-400"></i>
+                </div>
+            </div>
+
+            <div class="flex items-start gap-4">
+                <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 text-xs">
+                    <i class="fas fa-file-signature"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-800 leading-tight">Pré-Súmulas de Jogos</h4>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Ficha digital com atletas escalados pelos representantes antes dos confrontos. Utilizado para conferência da arbitragem.</p>
+                    <a href="{% url 'presumula_list' %}" class="text-xs font-bold text-purple-600 hover:text-purple-700 inline-flex items-center gap-1 mt-2">
+                        Visualizar Súmulas <i class="fas fa-chevron-right text-[10px]"></i>
                     </a>
                 </div>
             </div>

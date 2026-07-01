@@ -44,6 +44,49 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['total_atletas_global'] = Atleta.objects.count()
             context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True, inscricao__isnull=False).count()
             context['total_presumulas_global'] = PreSumula.objects.count()
+            
+            # Analytics data for the Commission
+            from core.models import Campus
+            campi_list = Campus.objects.all().order_by('nome')
+            
+            campi_stats = []
+            total_servidores_global = Atleta.objects.filter(tipo_atleta='servidor').count()
+            total_estudantes_global = Atleta.objects.filter(tipo_atleta='estudante').count()
+            total_inscritos_global = Atleta.objects.count()
+            
+            for campus in campi_list:
+                # Count distinct delegations with athletes in this campus
+                delegacoes_count = User.objects.filter(
+                    role='REPRESENTANTE',
+                    parent_delegate__isnull=True,
+                    inscricao__isnull=False,
+                    atletas__campus=campus
+                ).distinct().count()
+                
+                atletas_count = Atleta.objects.filter(campus=campus, tipo_atleta='estudante').count()
+                servidores_count = Atleta.objects.filter(campus=campus, tipo_atleta='servidor').count()
+                total_membros = atletas_count + servidores_count
+                
+                campi_stats.append({
+                    'nome': campus.nome,
+                    'delegacoes': delegacoes_count,
+                    'atletas': atletas_count,
+                    'servidores': servidores_count,
+                    'total_membros': total_membros,
+                })
+                
+            max_members = 0
+            for stat in campi_stats:
+                total_m = stat['total_membros']
+                if total_m > max_members:
+                    max_members = total_m
+            
+            context['campi_stats'] = campi_stats
+            context['total_servidores_global'] = total_servidores_global
+            context['total_estudantes_global'] = total_estudantes_global
+            context['total_inscritos_global'] = total_inscritos_global
+            context['max_members'] = max_members
+                
             return context
         
         delegacao = user.delegacao_ativa
