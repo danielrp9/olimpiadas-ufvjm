@@ -204,3 +204,145 @@ class JogoFormValidationTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response.context['form'], 'data_jogo', "A data do jogo não pode ser no passado.")
 
+
+class RecursosTestCase(TestCase):
+    def setUp(self):
+        self.staff_user = User.objects.create_superuser(
+            email='admin@example.com',
+            nome_completo='Admin Comissão',
+            role='COMISSAO'
+        )
+        self.time_a = User.objects.create_user(
+            email='timea@example.com',
+            nome_completo='Delegado A',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            nome_delegacao='Atlética A'
+        )
+        self.time_b = User.objects.create_user(
+            email='timeb@example.com',
+            nome_completo='Delegado B',
+            role='REPRESENTANTE',
+            cpf='181.498.521-23',
+            nome_delegacao='Atlética B'
+        )
+        self.time_c = User.objects.create_user(
+            email='timec@example.com',
+            nome_completo='Delegado C',
+            role='REPRESENTANTE',
+            cpf='069.258.583-45',
+            nome_delegacao='Atlética C'
+        )
+        
+        from core.models import Modalidade, Jogo
+        self.modalidade = Modalidade.objects.create(
+            nome='Futsal',
+            genero='M',
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12,
+            inscricoes_abertas=True
+        )
+        
+        # Jogo finalizado
+        self.jogo = Jogo.objects.create(
+            modalidade=self.modalidade,
+            data_jogo=timezone.localdate(),
+            horario_jogo='15:00',
+            time_a=self.time_a,
+            time_b=self.time_b,
+            local='Quadra A',
+            finalizado=True,
+            data_hora_fim=timezone.now() # finalizado agora
+        )
+
+    def test_recurso_creation_within_window(self):
+        from django.urls import reverse
+        self.client.force_login(self.time_a)
+        
+        url = reverse('recurso_create', kwargs={'jogo_id': self.jogo.id})
+        # GET do form
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        
+        # POST do form
+        post_data = {
+            'titulo': 'Irregularidade',
+            'corpo': 'Atleta escalado de forma irregular.',
+            'link_anexo': 'https://drive.google.com/test'
+        }
+        response = self.client.post(url, data=post_data)
+        self.assertEqual(response.status_code, 302) # Redirects to detail page
+        
+        from core.models import Recurso, Notificacao
+        recurso = Recurso.objects.get(jogo=self.jogo, requerente=self.time_a)
+        self.assertEqual(recurso.titulo, 'Irregularidade')
+        self.assertEqual(recurso.status, 'aberto')
+        
+        # Notificação criada para a comissão
+        notif = Notificacao.objects.filter(usuario=self.staff_user)
+        self.assertTrue(notif.exists())
+        self.assertIn('Novo recurso interposto', notif.first().mensagem)
+
+    def test_recurso_creation_expired_window(self):
+        from django.urls import reverse
+        # Altera fim do jogo para 2 horas atrás
+        self.jogo.data_hora_fim = timezone.now() - timedelta(hours=2)
+        self.jogo.save()
+        
+        self.client.force_login(self.time_a)
+        url = reverse('recurso_create', kwargs={'jogo_id': self.jogo.id})
+        response = self.client.post(url, data={
+            'titulo': 'Irregularidade',
+            'corpo': 'Atleta escalado de forma irregular.'
+        })
+        self.assertEqual(response.status_code, 302) # Redirect back with error
+        
+        from core.models import Recurso
+        self.assertFalse(Recurso.objects.filter(jogo=self.jogo, requerente=self.time_a).exists())
+
+    def test_recurso_creation_unrelated_team(self):
+        from django.urls import reverse
+        self.client.force_login(self.time_c)
+        url = reverse('recurso_create', kwargs={'jogo_id': self.jogo.id})
+        response = self.client.post(url, data={
+            'titulo': 'Irregularidade',
+            'corpo': 'Atleta escalado de forma irregular.'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        from core.models import Recurso
+        self.assertFalse(Recurso.objects.filter(jogo=self.jogo, requerente=self.time_c).exists())
+
+    def test_commission_reply_and_close(self):
+        from django.urls import reverse
+        from core.models import Recurso, RecursoMensagem, Notificacao
+        recurso = Recurso.objects.create(
+            jogo=self.jogo,
+            requerente=self.time_a,
+            titulo='Protesto',
+            corpo='Conteúdo'
+        )
+        
+        self.client.force_login(self.staff_user)
+        url = reverse('recurso_mensagem_enviar', kwargs={'pk': recurso.id})
+        
+        # Envia parecer e encerra
+        response = self.client.post(url, data={
+            'texto': 'Parecer deferido.',
+            'novo_status': 'encerrado'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        recurso.refresh_from_db()
+        self.assertEqual(recurso.status, 'encerrado')
+        
+        # Mensagem gravada
+        msg = RecursoMensagem.objects.filter(recurso=recurso, remetente=self.staff_user)
+        self.assertTrue(msg.exists())
+        self.assertEqual(msg.first().texto, 'Parecer deferido.')
+        
+        # Notificação criada para o requerente
+        notif = Notificacao.objects.filter(usuario=self.time_a)
+        self.assertTrue(notif.exists())
+        self.assertIn('respondido e encerrado', notif.first().mensagem)
+

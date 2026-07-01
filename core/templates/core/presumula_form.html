@@ -78,12 +78,34 @@
             {% csrf_token %}
             <input type="hidden" name="jogo_id" value="{{ jogo.id }}">
 
+            <!-- Nome do Técnico -->
+            <div class="space-y-2 mb-6">
+                <label for="tecnico" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Nome do Técnico da Partida *
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                        <i class="fas fa-user-tie text-xs"></i>
+                    </div>
+                    <input type="text" id="tecnico" name="tecnico" required
+                           value="{% if presumula and presumula.tecnico %}{{ presumula.tecnico }}{% elif tecnico %}{{ tecnico }}{% endif %}"
+                           placeholder="Digite o nome completo do técnico para esta partida..."
+                           class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm">
+                </div>
+            </div>
+
             <!-- Seleção de Atletas -->
             <div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                     <div>
-                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fas fa-users text-blue-600"></i> Escalar Atletas da Delegação
+                        <h2 class="text-sm font-bold text-slate-800 flex flex-wrap items-center gap-2">
+                            <span class="flex items-center gap-2 shrink-0">
+                                <i class="fas fa-users text-blue-600"></i> Escalar Atletas da Delegação
+                            </span>
+                            <!-- Dynamic Quorum Badge -->
+                            <span id="quorum-badge" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm transition-all duration-200">
+                                Selecionados: <span id="checked-count" class="mx-1">0</span> / Mínimo: {{ jogo.modalidade.limite_minimo_jogadores }} (Máximo: {{ jogo.modalidade.limite_maximo_jogadores }})
+                            </span>
                         </h2>
                         <p class="text-[10px] text-slate-400 mt-1">
                             Apenas atletas <strong>aprovados</strong> e com <strong>gênero elegível</strong> para a modalidade são exibidos.
@@ -95,10 +117,16 @@
                             Marcar Todos
                         </button>
                         <button type="button" onclick="selectAll(false)" 
-                                class="text-[10px] font-bold text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200/50 px-3 py-1.5 rounded-xl border border-slate-200 transition active:scale-95">
+                                class="text-[10px] font-bold text-slate-500 hover:text-slate-800 hover:bg-slate-100 px-3 py-1.5 rounded-xl transition active:scale-95 border-0 focus:outline-none bg-transparent">
                             Desmarcar Todos
                         </button>
                     </div>
+                </div>
+
+                <!-- Info Box Limite da Modalidade -->
+                <div class="bg-blue-50/40 border border-blue-100/30 rounded-xl p-2.5 mb-4 text-[11px] text-blue-700 flex items-center gap-2 shadow-inner">
+                    <i class="fas fa-info-circle text-base shrink-0"></i>
+                    <span>Regra da Modalidade (<strong>{{ jogo.modalidade.nome }}</strong>): O elenco escalado deve possuir no mínimo <strong>{{ jogo.modalidade.limite_minimo_jogadores }}</strong> e no máximo <strong>{{ jogo.modalidade.limite_maximo_jogadores }}</strong> atletas aptos.</span>
                 </div>
 
                 <!-- Filtro de Busca Rápida -->
@@ -113,17 +141,17 @@
                 <!-- Lista de Checkboxes de Atletas -->
                 <div class="max-h-96 overflow-y-auto border border-slate-200 rounded-2xl divide-y divide-slate-100 p-2 space-y-1 bg-slate-50/30" id="athleteListContainer">
                     {% for atleta in atletas %}
-                    <label class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-4 py-3 bg-white hover:bg-blue-50/20 rounded-xl border border-slate-100 hover:border-blue-100 cursor-pointer transition-all duration-150 relative select-none [&:has(input.athlete-checkbox:checked)]:bg-blue-50/30 [&:has(input.athlete-checkbox:checked)]:border-blue-150 text-slate-700"
+                    <label class="flex flex-row items-center justify-between gap-4 px-5 py-3.5 bg-white hover:bg-blue-50/20 rounded-xl border border-slate-100 hover:border-blue-100 cursor-pointer transition-all duration-150 relative select-none [&:has(input.athlete-checkbox:checked)]:bg-blue-50/30 [&:has(input.athlete-checkbox:checked)]:border-blue-150 text-slate-700"
                            data-search-text="{{ atleta.nome_completo|lower }} {{ atleta.curso|lower }} {{ atleta.matricula|lower }}">
-                        <div class="flex items-center gap-4 flex-grow">
+                        <div class="flex items-center gap-4 flex-grow min-w-0">
                             <input type="checkbox" name="atletas" value="{{ atleta.id }}" 
-                                   class="athlete-checkbox w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 accent-blue-600"
+                                   class="athlete-checkbox w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 accent-blue-600 shrink-0"
                                    {% if atleta.is_escalado %}checked{% endif %}
                                    onchange="toggleCamisaInput(this, '{{ atleta.id }}')">
-                            <div>
-                                <h4 class="font-bold text-slate-800 leading-tight text-xs">{{ atleta.nome_completo }}</h4>
-                                <p class="text-[10px] text-slate-400 mt-1 leading-normal">
-                                    Matrícula: <strong class="text-slate-600">{{ atleta.matricula }}</strong> &bull; Curso: <span class="text-slate-600">{{ atleta.curso }}</span> &bull; Campus: <span class="text-slate-600">{{ atleta.campus }}</span> &bull; Gênero: <span class="text-slate-600 font-semibold">{{ atleta.get_genero_display }}</span>
+                            <div class="min-w-0 flex-grow">
+                                <h4 class="font-bold text-slate-800 leading-tight text-xs truncate">{{ atleta.nome_completo }}</h4>
+                                <p class="text-[10px] text-slate-400 mt-1 leading-normal truncate">
+                                    Matrícula: <strong class="text-slate-650">{{ atleta.matricula }}</strong> &bull; Curso: <span class="text-slate-600">{{ atleta.curso }}</span> &bull; Campus: <span class="text-slate-600">{{ atleta.campus }}</span> &bull; Gênero: <span class="text-slate-600 font-semibold">{{ atleta.get_genero_display }}</span>
                                 </p>
                             </div>
                         </div>
@@ -154,11 +182,11 @@
             <!-- Botões de Ação -->
             <div class="flex gap-3 border-t border-slate-150 pt-5 text-xs">
                 <a href="{% url 'presumula_list' %}" 
-                   class="w-full text-center px-4 py-2.5 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition active:scale-[0.99] bg-white">
+                   class="w-full text-center px-4 py-2.5 border border-slate-200 rounded-xl font-semibold text-slate-550 hover:bg-slate-50 transition active:scale-[0.99] bg-white">
                     Cancelar
                 </a>
-                <button type="submit" 
-                        class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition active:scale-[0.99] shadow-sm gap-1.5">
+                <button type="submit" id="submit-button"
+                        class="w-full inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition active:scale-[0.99] shadow-sm gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
                     <i class="fas fa-save"></i> Salvar Pré-Súmula
                 </button>
             </div>
@@ -167,6 +195,12 @@
 </div>
 
 <script>
+const minAtletas = parseInt("{{ jogo.modalidade.limite_minimo_jogadores }}");
+const maxAtletas = parseInt("{{ jogo.modalidade.limite_maximo_jogadores }}");
+const submitBtn = document.getElementById('submit-button');
+const countSpan = document.getElementById('checked-count');
+const badge = document.getElementById('quorum-badge');
+
 function toggleCamisaInput(checkbox, atletaId) {
     const camisaInput = document.getElementById(`camisa_${atletaId}`);
     if (checkbox.checked) {
@@ -188,6 +222,7 @@ function selectAll(checked) {
             toggleCamisaInput(cb, cb.value);
         }
     });
+    updateQuorumValidation();
 }
 
 function filterAthletes() {
@@ -203,5 +238,42 @@ function filterAthletes() {
         }
     });
 }
+
+function updateQuorumValidation() {
+    const checkedCount = document.querySelectorAll('.athlete-checkbox:checked').length;
+    
+    if (countSpan) {
+        countSpan.textContent = checkedCount;
+    }
+    
+    if (checkedCount < minAtletas) {
+        submitBtn.disabled = true;
+        if (badge) {
+            badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm transition-all duration-200 bg-amber-50 text-amber-800 border border-amber-200";
+        }
+    } else if (checkedCount > maxAtletas) {
+        submitBtn.disabled = true;
+        if (badge) {
+            badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm transition-all duration-200 bg-red-50 text-red-800 border border-red-200";
+        }
+    } else {
+        submitBtn.disabled = false;
+        if (badge) {
+            badge.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold shadow-sm transition-all duration-200 bg-emerald-50 text-emerald-800 border border-emerald-300";
+        }
+    }
+}
+
+// Hook it up to checkbox change event
+document.addEventListener('DOMContentLoaded', () => {
+    // Run validation on load
+    updateQuorumValidation();
+    
+    // Add change listeners
+    const checkboxes = document.querySelectorAll('.athlete-checkbox');
+    checkboxes.forEach(cb => {
+        cb.addEventListener('change', updateQuorumValidation);
+    });
+});
 </script>
 {% endblock %}

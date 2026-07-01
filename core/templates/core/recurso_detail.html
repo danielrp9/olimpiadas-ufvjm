@@ -1,0 +1,327 @@
+{% extends 'base.html' %}
+
+{% block title %}Recurso #{{ recurso.id }} - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<style>
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(-12px) scale(0.98);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+    }
+    @keyframes drawCheck {
+        0% { stroke-dashoffset: 24; }
+        100% { stroke-dashoffset: 0; }
+    }
+    .animate-success-banner {
+        animation: fadeInUp 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .checkmark-icon {
+        stroke-dasharray: 24;
+        stroke-dashoffset: 24;
+        animation: drawCheck 0.6s 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+
+<div class="space-y-6">
+    <!-- Cabeçalho Principal -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-4">
+        <!-- Botão Voltar Interno -->
+        <a href="{% url 'recurso_list' %}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl hover:bg-slate-50 text-blue-600 transition shrink-0">
+            <i class="fas fa-arrow-left text-base"></i>
+        </a>
+        
+        <div class="flex items-center gap-3">
+            <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
+                <i class="fas fa-balance-scale text-base"></i>
+            </span>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">
+                    Acompanhamento de Recurso
+                </h1>
+                <p class="text-slate-400 text-xs mt-0.5">
+                    Acompanhe o andamento, visualize o parecer e interaja no processo de recurso de partida.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Painel de Informações do Recurso -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl shadow-sm overflow-hidden">
+        <!-- Cabeçalho do Recurso -->
+        <div class="p-6 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50">
+            <div>
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Protocolo de Recurso #{{ recurso.id }}</span>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight mt-0.5">
+                    {{ recurso.titulo }}
+                </h1>
+                <p class="text-xs text-slate-400 mt-1">
+                    Interposto por <strong>{{ recurso.requerente.nome_delegacao|default:recurso.requerente.email }}</strong> em {{ recurso.data_criacao|date:"d/m/Y \à\s H:i" }}
+                </p>
+            </div>
+            <div class="shrink-0 flex items-center gap-2">
+                {% if recurso.status == 'aberto' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
+                        <i class="fas fa-clock mr-1 text-[10px]"></i> Aguardando Parecer
+                    </span>
+                {% elif recurso.status == 'parecer_emitido' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-750 border border-yellow-100 uppercase tracking-wide">
+                        <i class="fas fa-balance-scale mr-1 text-[10px]"></i> Parecer Emitido
+                    </span>
+                {% elif recurso.status == 'encerrado' %}
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">
+                        <i class="fas fa-archive mr-1 text-[10px]"></i> Encerrado / Concluído
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Banner de Sucesso Embutido (Se aplicável) -->
+        {% if exibir_banner_sucesso %}
+        <div class="px-6 pt-6 animate-success-banner">
+            <div class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 flex items-start gap-3">
+                <span class="p-1.5 bg-emerald-100 rounded-xl text-emerald-700 shrink-0 flex items-center justify-center">
+                    <!-- Animated SVG checkmark -->
+                    <svg class="w-4.5 h-4.5 text-emerald-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path class="checkmark-icon" stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </span>
+                <div>
+                    <h4 class="font-bold text-xs text-emerald-800 uppercase tracking-wide">Recurso registrado com sucesso!</h4>
+                    <p class="text-[11px] text-emerald-700 mt-1.5 leading-relaxed">
+                        Sua manifestação foi recebida pelo nosso sistema de arbitragem. O parecer da Comissão será respondido e publicado aqui neste painel em até **7 dias úteis**. Você será notificado por e-mail/painel quando houver movimentação.
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="p-6 space-y-6">
+            <!-- Confronto e Jogo -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-b border-slate-100 pb-6">
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Partida / Modalidade</span>
+                    <span class="text-xs font-bold text-slate-700 mt-1 block">
+                        {{ recurso.jogo.modalidade.nome }} ({{ recurso.jogo.modalidade.get_genero_display }})
+                    </span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Confronto</span>
+                    <span class="text-xs font-bold text-slate-700 mt-1 block">
+                        {{ recurso.jogo.time_a.nome_delegacao|default:recurso.jogo.time_a.email }} vs {{ recurso.jogo.time_b.nome_delegacao|default:recurso.jogo.time_b.email }}
+                    </span>
+                </div>
+                <div>
+                    <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Encerramento Real</span>
+                    <span class="text-xs font-bold text-slate-700 mt-1 block">
+                        {{ recurso.jogo.data_hora_fim|date:"d/m/Y H:i" }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Corpo Inicial do Recurso -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Argumentação Inicial</h4>
+                
+                <!-- Conteúdo Ocultável com "Ver Mais" -->
+                <div class="bg-blue-50/40 rounded-2xl p-5 relative overflow-hidden">
+                    <div class="message-content max-h-36 overflow-hidden transition-all duration-300 relative" id="initial-argument">
+                        <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{{ recurso.corpo }}</p>
+                        
+                        <!-- Overlay de Gradiente de Fade Out -->
+                        <div class="fade-overlay absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-blue-50 to-transparent pointer-events-none"></div>
+                    </div>
+                    
+                    <!-- Botão de Mostrar Tudo -->
+                    <div class="mt-4 text-center toggle-btn-container hidden">
+                        <button type="button" onclick="toggleMessage('initial-argument', this)" class="inline-flex items-center text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white hover:bg-slate-50 px-3 py-1.5 border border-slate-200 rounded-xl transition shadow-sm gap-1">
+                            <span>Ver tudo</span> <i class="fas fa-chevron-down text-[8px]"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Link de Anexo -->
+            {% if recurso.link_anexo %}
+            <div class="bg-blue-50/40 border border-blue-100 rounded-2xl p-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="p-2 bg-blue-100 text-blue-600 rounded-xl shrink-0">
+                        <i class="fas fa-link text-xs"></i>
+                    </span>
+                    <div>
+                        <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Documentação em Anexo</span>
+                        <span class="text-xs text-slate-655 font-medium truncate max-w-xs block">{{ recurso.link_anexo }}</span>
+                    </div>
+                </div>
+                <a href="{{ recurso.link_anexo }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 shrink-0 active:scale-95">
+                    Abrir Link <i class="fas fa-external-link-alt text-[8px]"></i>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Histórico de Mensagens / Árvore de Diálogo -->
+    <div class="space-y-4">
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="far fa-comments text-base text-slate-400"></i>
+            Pareceres e Respostas da Comissão Organizadora
+        </h3>
+
+        <div class="relative pl-6 space-y-6 before:content-[''] before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200/60">
+            {% for msg in recurso.mensagens.all %}
+            <div class="relative">
+                <!-- Ponto na timeline -->
+                <span class="absolute -left-[20px] top-2.5 w-3.5 h-3.5 rounded-full border-2 bg-white flex items-center justify-center
+                             {% if msg.remetente.is_comissao %}border-yellow-450 bg-yellow-50{% else %}border-blue-450 bg-blue-50{% endif %}">
+                    <span class="w-1.5 h-1.5 rounded-full {% if msg.remetente.is_comissao %}bg-yellow-500{% else %}bg-blue-500{% endif %}"></span>
+                </span>
+
+                <!-- Balão da Mensagem -->
+                <div class="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-3">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 border-b border-slate-50 pb-2">
+                        <span class="font-bold uppercase tracking-wider
+                                     {% if msg.remetente.is_comissao %}text-yellow-650{% else %}text-blue-650{% endif %}">
+                            <i class="{% if msg.remetente.is_comissao %}fas fa-user-shield{% else %}fas fa-university{% endif %} mr-1"></i>
+                            {% if msg.remetente.is_comissao %}Comissão Organizadora{% else %}Representante {{ msg.remetente.nome_delegacao|default:msg.remetente.email }}{% endif %}
+                        </span>
+                        <span>{{ msg.data_envio|date:"d/m/Y H:i" }}</span>
+                    </div>
+
+                    <!-- Conteúdo Ocultável com "Ver Mais" -->
+                    <div class="relative overflow-hidden">
+                        <div class="message-content max-h-36 overflow-hidden transition-all duration-300 relative" id="msg-{{ msg.id }}">
+                            <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line">{{ msg.texto }}</p>
+                            
+                            <!-- Overlay de Gradiente de Fade Out -->
+                            <div class="fade-overlay absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                        </div>
+                        
+                        <!-- Botão de Mostrar Tudo -->
+                        <div class="mt-3 text-center toggle-btn-container hidden">
+                            <button type="button" onclick="toggleMessage('msg-{{ msg.id }}', this)" class="inline-flex items-center text-[9px] font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100/50 px-2.5 py-1 border border-slate-200 rounded-lg transition shadow-sm gap-1">
+                                <span>Ver tudo</span> <i class="fas fa-chevron-down text-[6px]"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="relative bg-slate-50/50 border border-dashed border-slate-300/80 rounded-2xl p-6 text-center text-slate-400">
+                <i class="far fa-comment-alt text-2xl mb-2 text-slate-350 block"></i>
+                <span class="text-xs font-semibold">Nenhuma interação registrada até o momento.</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Área de Envio de Parecer / Mensagem -->
+    {% if recurso.status != 'encerrado' or user.is_comissao %}
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
+        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <i class="fas fa-reply text-slate-400"></i>
+            {% if user.is_comissao %}
+                Adicionar Parecer / Deliberar Recurso
+            {% else %}
+                Enviar Nova Mensagem / Réplica
+            {% endif %}
+        </h3>
+
+        <form method="post" action="{% url 'recurso_mensagem_enviar' recurso.id %}" class="space-y-4">
+            {% csrf_token %}
+
+            <div class="space-y-1.5">
+                <textarea name="texto" rows="5" required
+                          placeholder="Digite aqui o seu texto explicativo ou parecer oficial..."
+                          class="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm"></textarea>
+            </div>
+
+            <!-- Opções da Comissão -->
+            {% if user.is_comissao %}
+            <div class="bg-yellow-50/30 border border-yellow-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-slate-700">
+                <div>
+                    <span class="text-[10px] text-yellow-650 font-bold uppercase tracking-wider block">Decisão de Status do Processo</span>
+                    <span class="text-[11px] text-slate-400 block mt-0.5">Defina se o recurso continuará em andamento ou se será encerrado definitivamente.</span>
+                </div>
+                <div class="flex items-center gap-4 shrink-0">
+                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                        <input type="radio" name="novo_status" value="parecer_emitido" checked class="w-4 h-4 text-blue-600 border-slate-350 focus:ring-blue-500">
+                        <span class="text-xs font-bold text-slate-700">Manter Aberto</span>
+                    </label>
+                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                        <input type="radio" name="novo_status" value="encerrado" class="w-4 h-4 text-red-600 border-slate-350 focus:ring-red-500">
+                        <span class="text-xs font-bold text-red-750">Responder & Encerrar</span>
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Botões de Ação -->
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button type="submit" 
+                        class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
+                    <i class="fas fa-paper-plane"></i>
+                    {% if user.is_comissao %}
+                        Registrar Decisão
+                    {% else %}
+                        Enviar Mensagem
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Scripts de Exibição Dinâmica (Ver Mais) -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // Verifica se cada elemento de conteúdo de mensagem necessita de um botão "Ver tudo"
+        const messages = document.querySelectorAll('.message-content');
+        messages.forEach(container => {
+            const innerText = container.querySelector('p');
+            // Se o scrollHeight for maior que o offsetHeight, significa que foi truncado
+            if (innerText.scrollHeight > 144) {
+                // Exibe o botão de alternar
+                const card = container.closest('.relative');
+                const btnContainer = card.querySelector('.toggle-btn-container');
+                if (btnContainer) {
+                    btnContainer.classList.remove('hidden');
+                }
+            } else {
+                // Remove o overlay de fade se não for truncado
+                const overlay = container.querySelector('.fade-overlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+            }
+        });
+    });
+
+    function toggleMessage(containerId, button) {
+        const container = document.getElementById(containerId);
+        const overlay = container.querySelector('.fade-overlay');
+        const textSpan = button.querySelector('span');
+        const icon = button.querySelector('i');
+
+        if (container.classList.contains('max-h-36')) {
+            // Expandir
+            container.classList.remove('max-h-36');
+            if (overlay) overlay.classList.add('hidden');
+            textSpan.textContent = "Ocultar";
+            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+        } else {
+            // Recolher
+            container.classList.add('max-h-36');
+            if (overlay) overlay.classList.remove('hidden');
+            textSpan.textContent = "Ver tudo";
+            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+        }
+    }
+</script>
+{% endblock %}

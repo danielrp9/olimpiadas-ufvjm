@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Minhas Notificações - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Cabeçalho Principal -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex justify-between items-center gap-4">
+        <div class="flex items-center gap-4">
+            <!-- Botão Voltar Interno -->
+            <a href="{% url 'dashboard' %}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl hover:bg-slate-50 text-blue-600 transition shrink-0">
+                <i class="fas fa-arrow-left text-base"></i>
+            </a>
+            
+            <div class="flex items-center gap-3">
+                <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
+                    <i class="far fa-bell text-base"></i>
+                </span>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">
+                        Notificações
+                    </h1>
+                    <p class="text-slate-400 mt-1 text-xs">Fique por dentro das atualizações e decisões sobre os seus recursos.</p>
+                </div>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'notificacoes_limpar' %}" class="inline-flex items-center px-3 py-1.5 border border-slate-200 text-xs font-semibold rounded-xl text-slate-550 bg-white hover:bg-slate-50 transition shadow-sm gap-1">
+                Marcar todas como lidas
+            </a>
+        </div>
+    </div>
+
+    <!-- Lista de Notificações -->
+    <div class="bg-white rounded-3xl border border-slate-200/60 shadow-md overflow-hidden">
+        <div class="divide-y divide-slate-150/60">
+            {% for notif in notificacoes %}
+            <a href="{% url 'notificacao_ler' notif.id %}" class="flex items-start gap-4 p-5 hover:bg-slate-50/50 transition relative {% if not notif.lida %}bg-blue-50/10{% endif %}">
+                <!-- Indicador de Não Lida -->
+                {% if not notif.lida %}
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-blue-600"></span>
+                {% endif %}
+
+                <!-- Icone -->
+                <div class="p-2.5 rounded-xl shrink-0 ml-4 {% if not notif.lida %}bg-blue-50 text-blue-600{% else %}bg-slate-100 text-slate-400{% endif %}">
+                    <i class="far fa-envelope text-xs"></i>
+                </div>
+
+                <!-- Conteúdo -->
+                <div class="flex-grow min-w-0">
+                    <p class="text-xs {% if not notif.lida %}font-bold text-slate-800{% else %}font-medium text-slate-600{% endif %} leading-normal pr-4">
+                        {{ notif.mensagem }}
+                    </p>
+                    <span class="text-[9px] text-slate-400 mt-1 block">Recebida em {{ notif.data_criacao|date:"d/m/Y H:i" }}</span>
+                </div>
+
+                <!-- Setinha -->
+                <div class="shrink-0 text-slate-350 self-center">
+                    <i class="fas fa-chevron-right text-[10px]"></i>
+                </div>
+            </a>
+            {% empty %}
+            <div class="p-12 text-center text-slate-450">
+                <i class="far fa-bell-slash text-3xl mb-2 text-slate-300"></i>
+                <p class="font-bold text-slate-700 text-sm">Nenhuma notificação por aqui</p>
+                <p class="text-[11px] text-slate-400 mt-1">Quando houver novas respostas sobre os seus processos, elas serão listadas nesta página.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

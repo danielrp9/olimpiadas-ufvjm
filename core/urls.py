@@ -54,4 +54,15 @@ urlpatterns = [
     # Gestão de Membros Autorizados da Delegação
     path('delegacao/membros/', views.MembrosDelegacaoView.as_view(), name='membros_delegacao'),
     path('delegacao/membros/<int:pk>/remover/', views.membro_delegacao_delete, name='membro_delegacao_delete'),
+
+    # Recursos (Representante e Comissao)
+    path('recursos/', views.RecursoListView.as_view(), name='recurso_list'),
+    path('recurso/criar/<int:jogo_id>/', views.RecursoCreateView.as_view(), name='recurso_create'),
+    path('recurso/<int:pk>/', views.RecursoDetailView.as_view(), name='recurso_detail'),
+    path('recurso/<int:pk>/mensagem/', views.enviar_mensagem_recurso, name='recurso_mensagem_enviar'),
+    
+    # Notificações
+    path('notificacoes/', views.NotificacaoListView.as_view(), name='notificacao_list'),
+    path('notificacao/<int:pk>/ler/', views.notificacao_ler, name='notificacao_ler'),
+    path('notificacoes/limpar/', views.notificacoes_limpar, name='notificacoes_limpar'),
 ]

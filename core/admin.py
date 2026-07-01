@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta
+from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao
 
 @admin.register(Atleta)
 class AtletaAdmin(admin.ModelAdmin):
@@ -15,9 +15,9 @@ class ModalidadeAdmin(admin.ModelAdmin):
 
 @admin.register(Jogo)
 class JogoAdmin(admin.ModelAdmin):
-    list_display = ('modalidade', 'time_a', 'time_b', 'data_jogo', 'horario_jogo', 'local', 'finalizado')
+    list_display = ('modalidade', 'time_a', 'time_b', 'data_jogo', 'horario_jogo', 'local', 'arbitro', 'finalizado')
     list_filter = ('modalidade', 'data_jogo', 'finalizado')
-    search_fields = ('time_a__nome_delegacao', 'time_b__nome_delegacao', 'local')
+    search_fields = ('time_a__nome_delegacao', 'time_b__nome_delegacao', 'local', 'arbitro')
 
 class PreSumulaAtletaInline(admin.TabularInline):
     model = PreSumulaAtleta
@@ -25,6 +25,22 @@ class PreSumulaAtletaInline(admin.TabularInline):
 
 @admin.register(PreSumula)
 class PreSumulaAdmin(admin.ModelAdmin):
-    list_display = ('jogo', 'representante', 'data_criacao')
+    list_display = ('jogo', 'representante', 'tecnico', 'data_criacao')
     inlines = [PreSumulaAtletaInline]
-    search_fields = ('representante__nome_delegacao', 'representante__nome_completo')
+    search_fields = ('representante__nome_delegacao', 'representante__nome_completo', 'tecnico')
+
+@admin.register(Recurso)
+class RecursoAdmin(admin.ModelAdmin):
+    list_display = ('jogo', 'requerente', 'titulo', 'status', 'data_criacao')
+    list_filter = ('status', 'data_criacao')
+    search_fields = ('requerente__nome_delegacao', 'requerente__email', 'titulo')
+
+@admin.register(RecursoMensagem)
+class RecursoMensagemAdmin(admin.ModelAdmin):
+    list_display = ('recurso', 'remetente', 'data_envio')
+    search_fields = ('recurso__titulo', 'remetente__email', 'texto')
+
+@admin.register(Notificacao)
+class NotificacaoAdmin(admin.ModelAdmin):
+    list_display = ('usuario', 'mensagem', 'lida', 'data_criacao')
+    list_filter = ('lida', 'data_criacao')

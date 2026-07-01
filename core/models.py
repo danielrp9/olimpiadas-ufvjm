@@ -70,8 +70,53 @@ class Jogo(models.Model):
     time_a = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='jogos_time_a', verbose_name="Time A")
     time_b = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='jogos_time_b', verbose_name="Time B")
     local = models.CharField(max_length=100, blank=True, null=True, verbose_name="Local/Quadra")
+    arbitro = models.CharField(max_length=255, blank=True, null=True, verbose_name="Árbitro")
     finalizado = models.BooleanField(default=False, verbose_name="Jogo Finalizado?")
+    data_hora_fim = models.DateTimeField(verbose_name="Fim Real do Jogo", blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def can_file_recurso(self):
+        if not self.finalizado or not self.data_hora_fim:
+            return False
+        from django.utils import timezone
+        import datetime
+        limit = self.data_hora_fim + datetime.timedelta(hours=1)
+        return timezone.now() <= limit
+
+    @property
+    def presumula_deadline(self):
+        if self.data_jogo and self.horario_jogo:
+            from django.utils import timezone
+            import datetime
+            dt = datetime.datetime.combine(self.data_jogo, self.horario_jogo)
+            dt_aware = timezone.make_aware(dt, timezone.get_current_timezone())
+            return dt_aware - datetime.timedelta(hours=1)
+        return None
+
+    @property
+    def is_presumula_deadline_passed(self):
+        deadline = self.presumula_deadline
+        if deadline:
+            from django.utils import timezone
+            return timezone.now() > deadline
+        return False
+
+    @property
+    def has_wo_time_a(self):
+        if self.is_presumula_deadline_passed:
+            return not self.presumulas.filter(representante=self.time_a).exists()
+        return False
+
+    @property
+    def has_wo_time_b(self):
+        if self.is_presumula_deadline_passed:
+            return not self.presumulas.filter(representante=self.time_b).exists()
+        return False
+
+    @property
+    def is_finalizado_por_wo(self):
+        return self.has_wo_time_a or self.has_wo_time_b
 
     def __str__(self):
         horario_str = f" às {self.horario_jogo.strftime('%H:%M')}" if self.horario_jogo else ""
@@ -114,6 +159,7 @@ class PreSumula(models.Model):
     """
     jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='presumulas')
     representante = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='presumulas')
+    tecnico = models.CharField(max_length=255, blank=True, null=True, verbose_name="Técnico da Partida")
     atletas = models.ManyToManyField(Atleta, through='PreSumulaAtleta', related_name='presumulas_escaladas')
     data_criacao = models.DateTimeField(auto_now_add=True)
 
@@ -186,3 +232,58 @@ class InscricaoModalidade(models.Model):
         verbose_name = "Modalidade Inscrita"
         verbose_name_plural = "Modalidades Inscritas"
         unique_together = ('inscricao', 'modalidade')
+
+
+class Recurso(models.Model):
+    STATUS_CHOICES = [
+        ('aberto', 'Aberto'),
+        ('parecer_emitido', 'Parecer Emitido'),
+        ('encerrado', 'Encerrado'),
+    ]
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='recursos')
+    requerente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='recursos_interpostos')
+    titulo = models.CharField(max_length=255, verbose_name="Título")
+    corpo = models.TextField(verbose_name="Corpo do Recurso")
+    link_anexo = models.URLField(blank=True, null=True, verbose_name="Link para Anexo (Drive, etc.)")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='aberto')
+    data_criacao = models.DateTimeField(auto_now_add=True)
+    data_atualizacao = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Recurso"
+        verbose_name_plural = "Recursos"
+        ordering = ['-data_criacao']
+
+    def __str__(self):
+        return f"Recurso {self.id} - Jogo: {self.jogo} - Requerente: {self.requerente}"
+
+
+class RecursoMensagem(models.Model):
+    recurso = models.ForeignKey(Recurso, on_delete=models.CASCADE, related_name='mensagens')
+    remetente = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    texto = models.TextField(verbose_name="Mensagem")
+    data_envio = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Mensagem do Recurso"
+        verbose_name_plural = "Mensagens dos Recursos"
+        ordering = ['data_envio']
+
+    def __str__(self):
+        return f"Mensagem de {self.remetente} no Recurso {self.recurso_id}"
+
+
+class Notificacao(models.Model):
+    usuario = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='notificacoes')
+    mensagem = models.CharField(max_length=255)
+    link = models.CharField(max_length=255, blank=True, null=True)
+    lida = models.BooleanField(default=False)
+    data_criacao = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Notificação"
+        verbose_name_plural = "Notificações"
+        ordering = ['-data_criacao']
+
+    def __str__(self):
+        return f"Notificação para {self.usuario.email}: {self.mensagem}"

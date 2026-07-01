@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade
+from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade, Recurso, RecursoMensagem, Notificacao
 from .forms import RegisterForm, AtletaForm, JogoForm, ModalidadeForm
 from users.models import ComissaoWhitelist, MembroDelegacao
 
@@ -37,6 +37,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        context['unread_notifications'] = Notificacao.objects.filter(usuario=user, lida=False)
         
         if user.is_comissao:
             context['is_admin'] = True
@@ -53,22 +54,41 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context['total_presumulas'] = presumulas.count()
         ps_dict = {ps.jogo_id: ps for ps in presumulas}
         
-        # Jogos ativos (não finalizados)
-        jogos_ativos = Jogo.objects.filter(
+        # Jogos ativos (não finalizados e sem WO)
+        jogos_ativos_raw = Jogo.objects.filter(
             Q(time_a=delegacao) | Q(time_b=delegacao),
             finalizado=False
         ).order_by('-data_jogo', '-horario_jogo', '-id')
-        for jogo in jogos_ativos:
+        
+        jogos_ativos = []
+        jogos_wo = []
+        for jogo in jogos_ativos_raw:
             jogo.minha_presumula = ps_dict.get(jogo.id)
+            if jogo.is_finalizado_por_wo:
+                jogos_wo.append(jogo)
+            else:
+                jogos_ativos.append(jogo)
         context['jogos_ativos'] = jogos_ativos
         
         # Jogos encerrados (histórico)
-        jogos_encerrados = Jogo.objects.filter(
+        jogos_encerrados_raw = Jogo.objects.filter(
             Q(time_a=delegacao) | Q(time_b=delegacao),
             finalizado=True
         ).order_by('-data_jogo', '-horario_jogo', '-id')
+        
+        recursos_delegacao = {r.jogo_id: r for r in Recurso.objects.filter(requerente=delegacao)}
+        
+        jogos_encerrados = list(jogos_encerrados_raw)
         for jogo in jogos_encerrados:
             jogo.minha_presumula = ps_dict.get(jogo.id)
+            jogo.meu_recurso = recursos_delegacao.get(jogo.id)
+            
+        for jogo in jogos_wo:
+            jogo.meu_recurso = recursos_delegacao.get(jogo.id)
+            
+        jogos_encerrados.extend(jogos_wo)
+        import datetime
+        jogos_encerrados.sort(key=lambda j: (j.data_jogo or datetime.date.min, j.horario_jogo or datetime.time.min, j.id), reverse=True)
         context['jogos_encerrados'] = jogos_encerrados
         
         from django.utils import timezone
@@ -161,6 +181,8 @@ def finalizar_jogo(request, pk):
     if request.method == 'POST':
         jogo = get_object_or_404(Jogo, pk=pk)
         jogo.finalizado = True
+        from django.utils import timezone
+        jogo.data_hora_fim = timezone.now()
         jogo.save()
         messages.success(request, f"O jogo {jogo.modalidade.nome} ({jogo.time_a.nome_delegacao or jogo.time_a.email} vs {jogo.time_b.nome_delegacao or jogo.time_b.email}) foi encerrado com sucesso!")
     return redirect('presumula_list')
@@ -450,6 +472,11 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         if not request.user.is_staff and jogo.time_a != delegacao and jogo.time_b != delegacao:
             messages.error(request, "Você não tem permissão para preencher a pré-súmula para este jogo.")
             return redirect('presumula_list')
+
+        # Verifica limite de 1h antes do jogo
+        if not request.user.is_staff and jogo.is_presumula_deadline_passed:
+            messages.error(request, "Prazo encerrado: A pré-súmula deve ser preenchida em até 1h antes do jogo. WO foi aplicado.")
+            return redirect('presumula_list')
             
         # Verifica se já existe pré-súmula cadastrada por este representante para este jogo
         if PreSumula.objects.filter(jogo=jogo, representante=delegacao).exists():
@@ -467,7 +494,9 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         return render(request, 'core/presumula_form.html', {
             'jogo': jogo,
             'atletas': atletas,
-            'is_create': True
+            'is_create': True,
+            'presumula': None,
+            'tecnico': ''
         })
 
     def post(self, request):
@@ -482,16 +511,50 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         if not request.user.is_staff and jogo.time_a != delegacao and jogo.time_b != delegacao:
             messages.error(request, "Acesso negado.")
             return redirect('presumula_list')
+
+        # Verifica limite de 1h antes do jogo
+        if not request.user.is_staff and jogo.is_presumula_deadline_passed:
+            messages.error(request, "Prazo encerrado: A pré-súmula deve ser preenchida em até 1h antes do jogo. WO foi aplicado.")
+            return redirect('presumula_list')
             
         if PreSumula.objects.filter(jogo=jogo, representante=delegacao).exists():
             messages.error(request, "Você já preencheu a pré-súmula para este jogo.")
             return redirect('presumula_list')
             
         atleta_ids = request.POST.getlist('atletas')
-        
+        tecnico = request.POST.get('tecnico', '').strip()
+
+        # Validar número de atletas contra limites da modalidade
+        min_atletas = jogo.modalidade.limite_minimo_jogadores
+        max_atletas = jogo.modalidade.limite_maximo_jogadores
+        num_selecionados = len(atleta_ids)
+
+        if num_selecionados < min_atletas or num_selecionados > max_atletas:
+            limit_msg = f"no mínimo {min_atletas}" if num_selecionados < min_atletas else f"no máximo {max_atletas}"
+            messages.error(request, f"Erro: A escalação deve conter {limit_msg} atleta(s) para a modalidade {jogo.modalidade.nome}. (Selecionados: {num_selecionados})")
+            
+            genero_modalidade = jogo.modalidade.genero
+            atletas = Atleta.objects.filter(cadastrado_por=delegacao, em_conformidade=True)
+            if genero_modalidade == 'M':
+                atletas = atletas.filter(genero__in=['M', 'N'])
+            elif genero_modalidade == 'F':
+                atletas = atletas.filter(genero__in=['F', 'N'])
+                
+            for a in atletas:
+                a.is_escalado = str(a.id) in atleta_ids
+                a.camisa = request.POST.get(f'camisa_{a.id}', '')
+                
+            return render(request, 'core/presumula_form.html', {
+                'jogo': jogo,
+                'atletas': atletas,
+                'is_create': True,
+                'tecnico': tecnico
+            })
+
         presumula = PreSumula.objects.create(
             jogo=jogo,
-            representante=delegacao
+            representante=delegacao,
+            tecnico=tecnico
         )
         
         for atleta_id in atleta_ids:
@@ -522,6 +585,11 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
             messages.error(request, "Você não tem permissão para editar esta pré-súmula.")
             return redirect('presumula_list')
 
+        # Verifica limite de 1h antes do jogo
+        if not request.user.is_staff and presumula.jogo.is_presumula_deadline_passed:
+            messages.error(request, "Prazo encerrado: A pré-súmula não pode mais ser editada (limite de 1h antes do jogo).")
+            return redirect('presumula_list')
+
         jogo = presumula.jogo
         genero_modalidade = jogo.modalidade.genero
         
@@ -549,7 +617,8 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
             'presumula': presumula,
             'jogo': jogo,
             'atletas': atletas,
-            'is_create': False
+            'is_create': False,
+            'tecnico': presumula.tecnico
         })
 
     def post(self, request, pk):
@@ -563,7 +632,42 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
             messages.error(request, "Sem permissão.")
             return redirect('presumula_list')
 
+        # Verifica limite de 1h antes do jogo
+        if not request.user.is_staff and presumula.jogo.is_presumula_deadline_passed:
+            messages.error(request, "Prazo encerrado: A pré-súmula não pode mais ser editada (limite de 1h antes do jogo).")
+            return redirect('presumula_list')
+
         atleta_ids = request.POST.getlist('atletas')
+        tecnico = request.POST.get('tecnico', '').strip()
+
+        # Validar número de atletas contra limites da modalidade
+        min_atletas = presumula.jogo.modalidade.limite_minimo_jogadores
+        max_atletas = presumula.jogo.modalidade.limite_maximo_jogadores
+        num_selecionados = len(atleta_ids)
+
+        if num_selecionados < min_atletas or num_selecionados > max_atletas:
+            limit_msg = f"no mínimo {min_atletas}" if num_selecionados < min_atletas else f"no máximo {max_atletas}"
+            messages.error(request, f"Erro: A escalação deve conter {limit_msg} atleta(s) para a modalidade {presumula.jogo.modalidade.nome}. (Selecionados: {num_selecionados})")
+            
+            jogo = presumula.jogo
+            genero_modalidade = jogo.modalidade.genero
+            atletas = Atleta.objects.filter(cadastrado_por=presumula.representante, em_conformidade=True)
+            if genero_modalidade == 'M':
+                atletas = atletas.filter(genero__in=['M', 'N'])
+            elif genero_modalidade == 'F':
+                atletas = atletas.filter(genero__in=['F', 'N'])
+                
+            for a in atletas:
+                a.is_escalado = str(a.id) in atleta_ids
+                a.camisa = request.POST.get(f'camisa_{a.id}', '')
+                
+            return render(request, 'core/presumula_form.html', {
+                'presumula': presumula,
+                'jogo': jogo,
+                'atletas': atletas,
+                'is_create': False,
+                'tecnico': tecnico
+            })
 
         # Limpa escalações antigas
         PreSumulaAtleta.objects.filter(presumula=presumula).delete()
@@ -577,6 +681,9 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
                     atleta_id=atleta_id,
                     numero_camisa=int(numero_camisa)
                 )
+
+        presumula.tecnico = tecnico
+        presumula.save()
         
         messages.success(request, "Pré-súmula atualizada com sucesso!")
         return redirect('presumula_list')
@@ -831,4 +938,232 @@ def membro_delegacao_delete(request, pk):
     membro.delete()
     messages.success(request, f"E-mail {email} removido da sua delegação.")
     return redirect('membros_delegacao')
+
+
+# --- SISTEMA DE RECURSOS E NOTIFICAÇÕES ---
+
+class RecursoListView(LoginRequiredMixin, ListView):
+    model = Recurso
+    template_name = 'core/recurso_list.html'
+    context_object_name = 'recursos_andamento'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        
+        if user.is_comissao:
+            context['recursos_andamento'] = Recurso.objects.filter(status__in=['aberto', 'parecer_emitido']).order_by('-data_criacao')
+            context['recursos_encerrados'] = Recurso.objects.filter(status='encerrado').order_by('-data_criacao')
+        else:
+            delegacao = user.delegacao_ativa
+            context['recursos_andamento'] = Recurso.objects.filter(requerente=delegacao, status__in=['aberto', 'parecer_emitido']).order_by('-data_criacao')
+            context['recursos_encerrados'] = Recurso.objects.filter(requerente=delegacao, status='encerrado').order_by('-data_criacao')
+            
+            # Jogos do time finalizados a menos de 1 hora e sem recurso
+            from django.utils import timezone
+            import datetime
+            one_hour_ago = timezone.now() - datetime.timedelta(hours=1)
+            
+            jogos_possiveis = Jogo.objects.filter(
+                Q(time_a=delegacao) | Q(time_b=delegacao),
+                finalizado=True,
+                data_hora_fim__gte=one_hour_ago
+            ).exclude(recursos__requerente=delegacao).distinct().order_by('-data_hora_fim')
+            
+            context['jogos_possiveis'] = jogos_possiveis
+            
+        return context
+
+
+class RecursoCreateView(LoginRequiredMixin, View):
+    def get(self, request, jogo_id):
+        delegacao = request.user.delegacao_ativa
+        if request.user.is_comissao:
+            messages.error(request, "A comissão não pode abrir recursos.")
+            return redirect('recurso_list')
+
+        jogo = get_object_or_404(Jogo, pk=jogo_id)
+
+        # Valida se o jogo é do time e se está no prazo de 1h
+        if jogo.time_a != delegacao and jogo.time_b != delegacao:
+            messages.error(request, "Você não tem permissão para interpor recurso para esta partida.")
+            return redirect('recurso_list')
+
+        if not jogo.can_file_recurso:
+            messages.error(request, "Prazo expirado: Recursos só podem ser interpostos em até 1h após a finalização da partida.")
+            return redirect('recurso_list')
+
+        if Recurso.objects.filter(jogo=jogo, requerente=delegacao).exists():
+            messages.error(request, "Você já abriu um recurso para esta partida.")
+            return redirect('recurso_list')
+
+        return render(request, 'core/recurso_form.html', {'jogo': jogo})
+
+    def post(self, request, jogo_id):
+        delegacao = request.user.delegacao_ativa
+        if request.user.is_comissao:
+            messages.error(request, "A comissão não pode abrir recursos.")
+            return redirect('recurso_list')
+
+        jogo = get_object_or_404(Jogo, pk=jogo_id)
+
+        if jogo.time_a != delegacao and jogo.time_b != delegacao:
+            messages.error(request, "Acesso negado.")
+            return redirect('recurso_list')
+
+        if not jogo.can_file_recurso:
+            messages.error(request, "Prazo expirado para interposição de recurso.")
+            return redirect('recurso_list')
+
+        if Recurso.objects.filter(jogo=jogo, requerente=delegacao).exists():
+            messages.error(request, "Recurso já interposto.")
+            return redirect('recurso_list')
+
+        titulo = request.POST.get('titulo', '').strip()
+        corpo = request.POST.get('corpo', '').strip()
+        link_anexo = request.POST.get('link_anexo', '').strip()
+
+        if not titulo or not corpo:
+            messages.error(request, "Título e corpo são obrigatórios.")
+            return render(request, 'core/recurso_form.html', {'jogo': jogo, 'titulo': titulo, 'corpo': corpo, 'link_anexo': link_anexo})
+
+        recurso = Recurso.objects.create(
+            jogo=jogo,
+            requerente=delegacao,
+            titulo=titulo,
+            corpo=corpo,
+            link_anexo=link_anexo if link_anexo else None
+        )
+
+        # Notifica Comissão
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        comissao = User.objects.filter(role='COMISSAO')
+        for admin in comissao:
+            Notificacao.objects.create(
+                usuario=admin,
+                mensagem=f"Novo recurso interposto pela delegação {delegacao.nome_delegacao or delegacao.email} para a partida {jogo.modalidade.nome}.",
+                link=f"/recurso/{recurso.id}/"
+            )
+
+        messages.success(request, "Recurso enviado com sucesso!")
+        return redirect('recurso_detail', pk=recurso.id)
+
+
+class RecursoDetailView(LoginRequiredMixin, DetailView):
+    model = Recurso
+    template_name = 'core/recurso_detail.html'
+    context_object_name = 'recurso'
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_comissao:
+            return Recurso.objects.all()
+        return Recurso.objects.filter(requerente=user.delegacao_ativa)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Verifica se o banner de sucesso deve ser exibido
+        recurso = self.get_object()
+        has_comissao_replies = recurso.mensagens.filter(remetente__role='COMISSAO').exists()
+        context['exibir_banner_sucesso'] = (
+            not self.request.user.is_comissao and 
+            recurso.status == 'aberto' and 
+            not has_comissao_replies
+        )
+        return context
+
+
+@login_required
+def enviar_mensagem_recurso(request, pk):
+    if request.method == 'POST':
+        recurso = get_object_or_404(Recurso, pk=pk)
+        user = request.user
+        
+        # Validação de permissão
+        if not user.is_comissao and recurso.requerente != user.delegacao_ativa:
+            messages.error(request, "Você não tem permissão para interagir com este recurso.")
+            return redirect('recurso_list')
+
+        if recurso.status == 'encerrado' and not user.is_comissao:
+            messages.error(request, "Este recurso está encerrado e não aceita novos comentários.")
+            return redirect('recurso_detail', pk=recurso.id)
+
+        texto = request.POST.get('texto', '').strip()
+        if not texto:
+            messages.error(request, "A mensagem não pode estar vazia.")
+            return redirect('recurso_detail', pk=recurso.id)
+
+        # Salva a mensagem
+        RecursoComent = RecursoMensagem.objects.create(
+            recurso=recurso,
+            remetente=user,
+            texto=texto
+        )
+
+        # Se for Comissão, atualiza o status ou encerra
+        if user.is_comissao:
+            novo_status = request.POST.get('novo_status', 'parecer_emitido')
+            if novo_status == 'encerrado':
+                recurso.status = 'encerrado'
+                msg_notif = f"Seu recurso sobre a partida de {recurso.jogo.modalidade.nome} foi respondido e encerrado pela comissão."
+            else:
+                recurso.status = 'parecer_emitido'
+                msg_notif = f"Novo parecer emitido pela comissão no seu recurso da partida de {recurso.jogo.modalidade.nome}."
+            
+            recurso.save()
+
+            # Notifica o requerente
+            Notificacao.objects.create(
+                usuario=recurso.requerente,
+                mensagem=msg_notif,
+                link=f"/recurso/{recurso.id}/"
+            )
+        else:
+            # Reabre recurso se estivesse com parecer
+            if recurso.status == 'parecer_emitido':
+                recurso.status = 'aberto'
+                recurso.save()
+
+            # Notifica comissão
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            comissao = User.objects.filter(role='COMISSAO')
+            for admin in comissao:
+                Notificacao.objects.create(
+                    usuario=admin,
+                    mensagem=f"Novo comentário da delegação {recurso.requerente.nome_delegacao or recurso.requerente.email} no recurso #{recurso.id}.",
+                    link=f"/recurso/{recurso.id}/"
+                )
+
+        messages.success(request, "Comentário enviado com sucesso!")
+        return redirect('recurso_detail', pk=recurso.id)
+
+    return redirect('recurso_list')
+
+
+class NotificacaoListView(LoginRequiredMixin, ListView):
+    model = Notificacao
+    template_name = 'core/notificacao_list.html'
+    context_object_name = 'notificacoes'
+
+    def get_queryset(self):
+        return Notificacao.objects.filter(usuario=self.request.user).order_by('-data_criacao')
+
+
+@login_required
+def notificacao_ler(request, pk):
+    notif = get_object_or_404(Notificacao, pk=pk, usuario=request.user)
+    notif.lida = True
+    notif.save()
+    if notif.link:
+        return redirect(notif.link)
+    return redirect('dashboard')
+
+
+@login_required
+def notificacoes_limpar(request):
+    Notificacao.objects.filter(usuario=request.user, lida=False).update(lida=True)
+    messages.success(request, "Todas as notificações foram marcadas como lidas.")
+    return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 

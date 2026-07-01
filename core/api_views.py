@@ -83,7 +83,9 @@ def jogo_to_dict(jogo):
             'nome_completo': jogo.time_b.nome_completo
         },
         'local': jogo.local,
-        'finalizado': jogo.finalizado
+        'arbitro': jogo.arbitro,
+        'finalizado': jogo.finalizado,
+        'is_finalizado_por_wo': jogo.is_finalizado_por_wo
     }
 
 
@@ -675,6 +677,7 @@ class APIPreSumulasView(View):
                     'id': ps.id,
                     'representante_id': ps.representante_id,
                     'representante_nome': ps.representante.nome_delegacao or ps.representante.email,
+                    'tecnico': ps.tecnico,
                     'escalacao': escalacao,
                     'data_criacao': ps.data_criacao.isoformat()
                 })
@@ -699,17 +702,23 @@ class APIPreSumulasView(View):
             data = json.loads(request.body)
             jogo_id = data.get('jogo_id')
             atletas_escalados = data.get('atletas', []) # lista de objetos { atleta_id: ..., camisa: ... }
+            tecnico = data.get('tecnico', '').strip()
             
             jogo = get_object_or_404(Jogo, pk=jogo_id)
             if not user.is_comissao and jogo.time_a != delegacao and jogo.time_b != delegacao:
                 return JsonResponse({'error': 'Você não tem permissão para preencher a pré-súmula para este jogo.'}, status=403)
+
+            # Verifica limite de 1h antes do jogo
+            if not user.is_comissao and jogo.is_presumula_deadline_passed:
+                return JsonResponse({'error': 'Prazo encerrado: A pré-súmula deve ser preenchida em até 1h antes do jogo. WO foi aplicado.'}, status=400)
                 
             if PreSumula.objects.filter(jogo=jogo, representante=delegacao).exists():
                 return JsonResponse({'error': 'Você já enviou uma pré-súmula para este jogo.'}, status=400)
                 
             presumula = PreSumula.objects.create(
                 jogo=jogo,
-                representante=delegacao
+                representante=delegacao,
+                tecnico=tecnico
             )
             
             for item in atletas_escalados:
@@ -747,6 +756,7 @@ class APIPreSumulaDetailView(View):
             'id': presumula.id,
             'jogo': jogo_to_dict(presumula.jogo),
             'representante': user_to_dict(presumula.representante),
+            'tecnico': presumula.tecnico,
             'escalacao': escalacao,
             'data_criacao': presumula.data_criacao.isoformat()
         })
@@ -758,10 +768,15 @@ class APIPreSumulaDetailView(View):
         presumula = get_object_or_404(PreSumula, pk=pk)
         if not request.user.is_comissao and presumula.representante != request.user.delegacao_ativa:
             return JsonResponse({'error': 'Não autorizado'}, status=403)
+
+        # Verifica limite de 1h antes do jogo
+        if not request.user.is_comissao and presumula.jogo.is_presumula_deadline_passed:
+            return JsonResponse({'error': 'Prazo encerrado: A pré-súmula não pode mais ser editada (limite de 1h antes do jogo).'}, status=400)
             
         try:
             data = json.loads(request.body)
             atletas_escalados = data.get('atletas', []) # lista de objetos { atleta_id: ..., camisa: ... }
+            tecnico = data.get('tecnico', '')
             
             # Limpa escalações antigas
             PreSumulaAtleta.objects.filter(presumula=presumula).delete()
@@ -775,6 +790,11 @@ class APIPreSumulaDetailView(View):
                         atleta_id=atleta_id,
                         numero_camisa=int(numero_camisa)
                     )
+            
+            if tecnico is not None:
+                presumula.tecnico = tecnico.strip()
+                presumula.save()
+                
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)

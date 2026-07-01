@@ -144,11 +144,20 @@
                                     <i class="fas fa-map-marker-alt text-slate-400 mr-1.5"></i>{{ jogo.local }}
                                 </p>
                             {% endif %}
+                            {% if jogo.arbitro %}
+                                <p class="text-[10px] text-slate-550 font-semibold">
+                                    <i class="fas fa-user-shield text-slate-400 mr-1.5"></i>Árbitro: {{ jogo.arbitro }}
+                                </p>
+                            {% endif %}
                         </td>
 
                         <!-- Status -->
                         <td class="px-6 py-4 align-middle">
-                            {% if jogo.finalizado %}
+                            {% if jogo.is_finalizado_por_wo %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-750 border border-red-100 uppercase tracking-wide">
+                                    <i class="fas fa-exclamation-triangle mr-1 text-red-500"></i> Finalizado por WO
+                                </span>
+                            {% elif jogo.finalizado %}
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-100 uppercase tracking-wide">
                                     <i class="fas fa-flag-checkered mr-1 text-slate-400"></i> Finalizado
                                 </span>
@@ -200,7 +209,17 @@
                             {% else %}
                                 <!-- REPRESENTATIVE ACTIONS -->
                                 <div class="flex items-center justify-end gap-2">
-                                    {% if jogo.minha_presumula %}
+                                    {% if jogo.is_finalizado_por_wo %}
+                                        {% if jogo.minha_presumula %}
+                                            <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" 
+                                               class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1">
+                                                <i class="far fa-eye"></i> Ver
+                                            </a>
+                                            <span class="text-[10px] text-red-650 font-semibold italic">WO Aplicado</span>
+                                        {% else %}
+                                            <span class="text-[10px] text-red-650 font-semibold italic">WO Aplicado</span>
+                                        {% endif %}
+                                    {% elif jogo.minha_presumula %}
                                         <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" 
                                            class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1">
                                             <i class="far fa-eye"></i> Ver

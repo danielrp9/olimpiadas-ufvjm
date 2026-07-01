@@ -37,19 +37,54 @@
             <p class="text-slate-400 text-xs mt-1">Visão consolidada das inscrições e andamento das Olimpíadas.</p>
         </div>
         
-        <!-- Perfil Logado Minimalista e Integrado (Absolute Top-Right) -->
-        <div class="absolute top-8 right-8 sm:top-10 sm:right-10 z-10 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-1.5 pl-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
-            <div class="text-right hidden sm:block">
-                <span class="text-xs font-bold text-white block leading-tight">{{ user.nome_completo|default:user.email }}</span>
-                <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">{{ user.get_role_display }}</span>
-            </div>
-            {% if user.foto_url %}
-                <img src="{{ user.foto_url }}" alt="Perfil" class="w-8 h-8 rounded-xl object-cover border border-white/10 shadow-sm shrink-0">
-            {% else %}
-                <div class="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
-                    {{ user.nome_completo|slice:":1"|default:user.email|slice:":1" }}
+        <!-- Header Right Area (Absolute Top-Right) -->
+        <div class="absolute top-8 right-8 sm:top-10 sm:right-10 z-15 flex items-center gap-4">
+            <!-- Ícone de Notificação com Dropdown -->
+            <div class="relative" id="notification-dropdown-container-admin">
+                <button type="button" onclick="toggleNotificationDropdown('notification-dropdown-admin')" class="relative rounded-xl bg-white/5 border border-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition focus:outline-none flex items-center justify-center w-9 h-9 shadow-inner select-none backdrop-blur-sm">
+                    <i class="far fa-bell text-lg h-5 w-5 flex items-center justify-center"></i>
+                    {% if unread_notifications.count > 0 %}
+                        <span class="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold shadow-sm leading-none">
+                            {{ unread_notifications.count }}
+                        </span>
+                    {% endif %}
+                </button>
+                <!-- Dropdown Content -->
+                <div id="notification-dropdown-admin" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200/80 z-50 overflow-hidden py-1 text-slate-800">
+                    <div class="px-4 py-2 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <span class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">Notificações</span>
+                        <a href="{% url 'notificacao_list' %}" class="text-[9px] font-bold text-blue-600 hover:text-blue-700">Ver todas</a>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                        {% for notif in unread_notifications %}
+                            <a href="{% url 'notificacao_ler' notif.id %}" class="block px-4 py-2.5 hover:bg-slate-50 text-[10px] text-slate-655 font-semibold transition leading-snug">
+                                {{ notif.mensagem }}
+                                <span class="block text-[8px] text-slate-400 font-normal mt-0.5">{{ notif.data_criacao|date:"d/m/Y H:i" }}</span>
+                            </a>
+                        {% empty %}
+                            <div class="px-4 py-6 text-center text-slate-400">
+                                <i class="far fa-bell-slash text-base mb-1 block"></i>
+                                <span class="text-[10px] font-medium">Nenhuma notificação</span>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
-            {% endif %}
+            </div>
+
+            <!-- Perfil Logado Minimalista e Integrado -->
+            <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-1.5 pl-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
+                <div class="text-right hidden sm:block">
+                    <span class="text-xs font-bold text-white block leading-tight">{{ user.nome_completo|default:user.email }}</span>
+                    <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">{{ user.get_role_display }}</span>
+                </div>
+                {% if user.foto_url %}
+                    <img src="{{ user.foto_url }}" alt="Perfil" class="w-8 h-8 rounded-xl object-cover border border-white/10 shadow-sm shrink-0">
+                {% else %}
+                    <div class="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
+                        {{ user.nome_completo|slice:":1"|default:user.email|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -221,19 +256,54 @@
             <p class="text-slate-400 text-xs mt-1">Bem-vindo ao portal. Cadastre seus atletas e envie as escalas diárias.</p>
         </div>
         
-        <!-- Perfil Logado Minimalista e Integrado (Absolute Top-Right) -->
-        <div class="absolute top-8 right-8 sm:top-10 sm:right-10 z-10 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-1.5 pl-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
-            <div class="text-right hidden sm:block">
-                <span class="text-xs font-bold text-white block leading-tight">{{ user.nome_completo|default:user.email }}</span>
-                <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">{{ user.get_role_display }}</span>
-            </div>
-            {% if user.foto_url %}
-                <img src="{{ user.foto_url }}" alt="Perfil" class="w-8 h-8 rounded-xl object-cover border border-white/10 shadow-sm shrink-0">
-            {% else %}
-                <div class="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
-                    {{ user.nome_completo|slice:":1"|default:user.email|slice:":1" }}
+        <!-- Header Right Area (Absolute Top-Right) -->
+        <div class="absolute top-8 right-8 sm:top-10 sm:right-10 z-15 flex items-center gap-4">
+            <!-- Ícone de Notificação com Dropdown -->
+            <div class="relative" id="notification-dropdown-container-rep">
+                <button type="button" onclick="toggleNotificationDropdown('notification-dropdown-rep')" class="relative rounded-xl bg-white/5 border border-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition focus:outline-none flex items-center justify-center w-9 h-9 shadow-inner select-none backdrop-blur-sm">
+                    <i class="far fa-bell text-lg h-5 w-5 flex items-center justify-center"></i>
+                    {% if unread_notifications.count > 0 %}
+                        <span class="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold shadow-sm leading-none">
+                            {{ unread_notifications.count }}
+                        </span>
+                    {% endif %}
+                </button>
+                <!-- Dropdown Content -->
+                <div id="notification-dropdown-rep" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200/80 z-50 overflow-hidden py-1 text-slate-800">
+                    <div class="px-4 py-2 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                        <span class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">Notificações</span>
+                        <a href="{% url 'notificacao_list' %}" class="text-[9px] font-bold text-blue-600 hover:text-blue-700">Ver todas</a>
+                    </div>
+                    <div class="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                        {% for notif in unread_notifications %}
+                            <a href="{% url 'notificacao_ler' notif.id %}" class="block px-4 py-2.5 hover:bg-slate-50 text-[10px] text-slate-655 font-semibold transition leading-snug">
+                                {{ notif.mensagem }}
+                                <span class="block text-[8px] text-slate-400 font-normal mt-0.5">{{ notif.data_criacao|date:"d/m/Y H:i" }}</span>
+                            </a>
+                        {% empty %}
+                            <div class="px-4 py-6 text-center text-slate-400">
+                                <i class="far fa-bell-slash text-base mb-1 block"></i>
+                                <span class="text-[10px] font-medium">Nenhuma notificação</span>
+                            </div>
+                        {% endfor %}
+                    </div>
                 </div>
-            {% endif %}
+            </div>
+
+            <!-- Perfil Logado Minimalista e Integrado -->
+            <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-1.5 pl-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
+                <div class="text-right hidden sm:block">
+                    <span class="text-xs font-bold text-white block leading-tight">{{ user.nome_completo|default:user.email }}</span>
+                    <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">{{ user.get_role_display }}</span>
+                </div>
+                {% if user.foto_url %}
+                    <img src="{{ user.foto_url }}" alt="Perfil" class="w-8 h-8 rounded-xl object-cover border border-white/10 shadow-sm shrink-0">
+                {% else %}
+                    <div class="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
+                        {{ user.nome_completo|slice:":1"|default:user.email|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -294,21 +364,18 @@
         </a>
     </div>
 
-
-
-    <!-- 3. Grid de Conteúdo Secundário (Tabela + Detalhes Delegação) -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Coluna da Esquerda (2/3) - Tabelas de Jogos -->
-        <div class="lg:col-span-2 space-y-6">
-            <!-- Jogos e Pré-Súmulas Ativas -->
-            <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden">
+    <!-- 3. Grid Superior (Jogos Ativos + Detalhes Delegação) -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Jogos e Pré-Súmulas Ativas (2/3 colunas) -->
+        <div class="lg:col-span-2 flex flex-col">
+            <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden flex-grow flex flex-col justify-between">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
                     <div>
                         <h3 class="text-base font-bold text-slate-800">Jogos e Pré-Súmulas Ativas</h3>
                         <p class="text-xs text-slate-400 mt-0.5">Jogos programados e abertos para escalação da sua delegação.</p>
                     </div>
                 </div>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto flex-grow">
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
@@ -341,6 +408,11 @@
                                             <i class="fas fa-map-marker-alt text-slate-400 mr-1"></i> {{ jogo.local }}
                                         </span>
                                     {% endif %}
+                                    {% if jogo.arbitro %}
+                                        <span class="block text-[9px] text-slate-550 mt-1 font-semibold">
+                                            <i class="fas fa-user-shield text-slate-400 mr-1"></i> Árbitro: {{ jogo.arbitro }}
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td class="px-6 py-4">
                                     {% if jogo.minha_presumula %}
@@ -362,7 +434,7 @@
                                 <td class="px-6 py-4 text-right">
                                     {% if jogo.minha_presumula %}
                                         <div class="flex items-center justify-end gap-2">
-                                            <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" class="inline-flex items-center px-2.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-550 bg-white transition shadow-sm gap-1">
+                                            <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" class="inline-flex items-center px-2.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-555 bg-white transition shadow-sm gap-1">
                                                 Ver
                                             </a>
                                             <a href="{% url 'presumula_update' jogo.minha_presumula.id %}" class="inline-flex items-center px-2.5 py-1.5 border border-blue-200 text-blue-600 hover:bg-blue-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1">
@@ -393,110 +465,37 @@
                     </table>
                 </div>
             </div>
-
-            <!-- Histórico de Partidas (Jogos Encerrados) -->
-            <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-                    <div>
-                        <h3 class="text-base font-bold text-slate-800">Histórico de Partidas</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">Jogos encerrados em que a sua delegação esteve envolvida.</p>
-                    </div>
-                </div>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                                <th class="px-6 py-4">Modalidade & Confronto</th>
-                                <th class="px-6 py-3">Data do Jogo</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3 text-right">Ação</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
-                            {% for jogo in jogos_encerrados %}
-                            <tr class="hover:bg-slate-50/30 transition">
-                                <td class="px-6 py-4 font-bold text-slate-800">
-                                    <span class="flex items-center gap-1.5">
-                                        <i class="fas fa-running text-slate-400"></i> {{ jogo.modalidade.nome }}
-                                    </span>
-                                    <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
-                                        {{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }} vs {{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-100 text-[10px]">
-                                        {{ jogo.data_jogo|date:"d/m/Y" }}
-                                        {% if jogo.horario_jogo %}
-                                            <span class="text-slate-400 font-medium ml-1">às {{ jogo.horario_jogo|time:"H:i" }}</span>
-                                        {% endif %}
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-100 uppercase tracking-wide">
-                                        <i class="fas fa-flag-checkered mr-1 text-slate-400"></i> Finalizado
-                                    </span>
-                                    {% if jogo.minha_presumula %}
-                                        <span class="block text-[9px] text-emerald-600 mt-1 font-semibold">
-                                            Escalação: {{ jogo.minha_presumula.atletas.count }} atletas
-                                        </span>
-                                    {% else %}
-                                        <span class="block text-[9px] text-slate-400 mt-1 italic">
-                                            Não escalado
-                                        </span>
-                                    {% endif %}
-                                </td>
-                                <td class="px-6 py-4 text-right">
-                                    {% if jogo.minha_presumula %}
-                                        <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1">
-                                            Ver Súmula
-                                        </a>
-                                    {% else %}
-                                        <span class="text-[10px] text-slate-400 italic">Sem registro</span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="4" class="px-6 py-12 text-center text-slate-400">
-                                    <i class="fas fa-history text-3xl mb-2 text-slate-300"></i>
-                                    <p class="font-bold text-slate-700 text-sm">Nenhum histórico</p>
-                                    <p class="text-[11px] text-slate-400 mt-1">Nenhum jogo encerrado registrado até o momento.</p>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </div>
 
-        <!-- Coluna da Direita (1/3) - Dados da Delegação -->
-        <div class="space-y-6">
-            <div class="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
+        <!-- Minha Delegação (1/3 coluna) -->
+        <div class="lg:col-span-1 flex flex-col">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex-grow flex flex-col justify-between">
                 <h3 class="text-sm font-bold text-slate-800 mb-4">Minha Delegação</h3>
                 
-                <div class="space-y-4">
-                    <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nome da Delegação</span>
-                        <span class="text-sm font-bold text-slate-700 block mt-0.5">{{ user.delegacao_ativa.nome_delegacao|default:"Não cadastrado" }}</span>
-                    </div>
-
-                    <div>
-                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Representante Legal</span>
-                        <span class="text-xs text-slate-600 block mt-0.5">{{ user.delegacao_ativa.nome_completo }}</span>
-                        <span class="text-[10px] text-slate-400 block mt-0.5">{{ user.delegacao_ativa.email }}</span>
-                    </div>
-
-                    {% if user.delegacao_ativa.justificativa_delegacao %}
-                        <div class="p-3 bg-red-50/60 border border-red-100/50 rounded-2xl text-[11px] text-red-700">
-                            <p class="font-bold flex items-center gap-1">
-                                <i class="fas fa-comment-dots text-xs"></i> Feedback da Comissão:
-                            </p>
-                            <p class="mt-1 leading-relaxed">{{ user.delegacao_ativa.justificativa_delegacao }}</p>
+                <div class="space-y-4 flex-grow flex flex-col justify-between">
+                    <div class="space-y-4">
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Nome da Delegação</span>
+                            <span class="text-sm font-bold text-slate-700 block mt-0.5">{{ user.delegacao_ativa.nome_delegacao|default:"Não cadastrado" }}</span>
                         </div>
-                    {% endif %}
+
+                        <div>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Representante Legal</span>
+                            <span class="text-xs text-slate-600 block mt-0.5">{{ user.delegacao_ativa.nome_completo }}</span>
+                            <span class="text-[10px] text-slate-400 block mt-0.5">{{ user.delegacao_ativa.email }}</span>
+                        </div>
+
+                        {% if user.delegacao_ativa.justificativa_delegacao %}
+                            <div class="p-3 bg-red-50/60 border border-red-100/50 rounded-2xl text-[11px] text-red-700">
+                                <p class="font-bold flex items-center gap-1">
+                                    <i class="fas fa-comment-dots text-xs"></i> Feedback da Comissão:
+                                </p>
+                                <p class="mt-1 leading-relaxed">{{ user.delegacao_ativa.justificativa_delegacao }}</p>
+                            </div>
+                        {% endif %}
+                    </div>
                     
-                    <div class="pt-4 border-t border-slate-100 space-y-2">
+                    <div class="pt-4 border-t border-slate-100 space-y-2 mt-4">
                         <a href="{% url 'atleta_list' %}" class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 transition shadow-[0_2px_8px_rgba(0,0,0,0.02)]">
                             <span class="text-xs font-bold text-slate-700">Gerenciar Elenco (Atletas)</span>
                             <span class="p-1 bg-white rounded-lg text-slate-500 shadow-sm"><i class="fas fa-user-plus text-xs"></i></span>
@@ -512,5 +511,135 @@
             </div>
         </div>
     </div>
+
+    <!-- 4. Histórico de Partidas (Jogos Encerrados) - Largura Total na Base -->
+    <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden mt-6">
+        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
+            <div>
+                <h3 class="text-base font-bold text-slate-800">Histórico de Partidas</h3>
+                <p class="text-xs text-slate-400 mt-0.5">Jogos encerrados em que a sua delegação esteve envolvida.</p>
+            </div>
+            <div>
+                <a href="{% url 'react_app' 'jogos' %}" class="inline-flex items-center text-xs font-bold text-blue-600 hover:text-blue-700 transition gap-1">
+                    Visualizar tudo <i class="fas fa-arrow-right text-[10px]"></i>
+                </a>
+            </div>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                        <th class="px-6 py-4">Modalidade & Confronto</th>
+                        <th class="px-6 py-3">Data do Jogo</th>
+                        <th class="px-6 py-3">Status</th>
+                        <th class="px-6 py-3 text-right">Ação</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                    {% for jogo in jogos_encerrados|slice:":5" %}
+                    <tr class="hover:bg-slate-50/30 transition">
+                        <td class="px-6 py-4 font-bold text-slate-800">
+                            <span class="flex items-center gap-1.5">
+                                <i class="fas fa-running text-slate-400"></i> {{ jogo.modalidade.nome }}
+                            </span>
+                            <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
+                                {{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }} vs {{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-500 border border-slate-100 text-[10px]">
+                                {{ jogo.data_jogo|date:"d/m/Y" }}
+                                {% if jogo.horario_jogo %}
+                                    <span class="text-slate-400 font-medium ml-1">às {{ jogo.horario_jogo|time:"H:i" }}</span>
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if jogo.is_finalizado_por_wo %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-750 border border-red-100 uppercase tracking-wide">
+                                    <i class="fas fa-exclamation-triangle mr-1 text-red-500"></i> Finalizado por WO
+                                </span>
+                            {% else %}
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-50 text-slate-500 border border-slate-100 uppercase tracking-wide">
+                                    <i class="fas fa-flag-checkered mr-1 text-slate-400"></i> Finalizado
+                                </span>
+                            {% endif %}
+                            {% if jogo.minha_presumula %}
+                                <span class="block text-[9px] text-emerald-600 mt-1 font-semibold">
+                                    Escalação: {{ jogo.minha_presumula.atletas.count }} atletas
+                                </span>
+                            {% else %}
+                                <span class="block text-[9px] text-slate-400 mt-1 italic">
+                                    {% if jogo.is_finalizado_por_wo %}
+                                        Sem escalação (WO)
+                                    {% else %}
+                                        Não escalado
+                                    {% endif %}
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 text-right flex items-center justify-end gap-2">
+                            {% if jogo.minha_presumula %}
+                                <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1">
+                                    Ver Súmula
+                                </a>
+                            {% else %}
+                                <span class="text-[10px] text-slate-400 italic mr-2">Sem registro</span>
+                            {% endif %}
+
+                            {% if jogo.meu_recurso %}
+                                <a href="{% url 'recurso_detail' jogo.meu_recurso.id %}" class="inline-flex items-center px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-95">
+                                    <i class="fas fa-balance-scale text-slate-500"></i> Ver Recurso
+                                </a>
+                            {% else %}
+                                {% if jogo.can_file_recurso %}
+                                    <a href="{% url 'recurso_create' jogo.id %}" class="inline-flex items-center px-3 py-1.5 bg-red-650 hover:bg-red-750 text-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-95">
+                                        <i class="fas fa-balance-scale"></i> Recurso
+                                    </a>
+                                {% else %}
+                                    <button disabled class="inline-flex items-center px-3 py-1.5 border border-slate-200 text-slate-350 bg-slate-50 rounded-xl text-[10px] font-bold cursor-not-allowed transition shadow-sm gap-1.5" title="Prazo de 1h expirado">
+                                        <i class="fas fa-balance-scale text-slate-300"></i> Recurso
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                            <i class="fas fa-history text-3xl mb-2 text-slate-300"></i>
+                            <p class="font-bold text-slate-700 text-sm">Nenhum histórico</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Nenhum jogo encerrado registrado até o momento.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endif %}
+
+<script>
+    function toggleNotificationDropdown(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.classList.toggle('hidden');
+    }
+
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(event) {
+        // Admin dropdown container
+        const adminContainer = document.getElementById('notification-dropdown-container-admin');
+        const adminDropdown = document.getElementById('notification-dropdown-admin');
+        if (adminContainer && adminDropdown && !adminContainer.contains(event.target)) {
+            adminDropdown.classList.add('hidden');
+        }
+
+        // Rep dropdown container
+        const repContainer = document.getElementById('notification-dropdown-container-rep');
+        const repDropdown = document.getElementById('notification-dropdown-rep');
+        if (repContainer && repDropdown && !repContainer.contains(event.target)) {
+            repDropdown.classList.add('hidden');
+        }
+    });
+</script>
 {% endblock %}
