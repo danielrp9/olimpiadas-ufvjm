@@ -147,32 +147,35 @@
     </div>
 
     <!-- Formulário Final para Envio de Lote ao Backend -->
-    <form method="post" id="bulk-form" class="space-y-4">
+    <form method="post" id="bulk-form">
         {% csrf_token %}
         
         <!-- Inputs Ocultos Gerados Dinamicamente -->
         <div id="hidden-inputs-container"></div>
 
-        <!-- Banner de Estado Não Finalizado -->
-        <div class="bg-amber-55 text-amber-800 border border-amber-100/50 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
-            <i class="fas fa-exclamation-triangle text-amber-600 text-sm mt-0.5 shrink-0"></i>
-            <div>
-                <span class="font-bold">Ação Pendente de Finalização:</span>
-                <p class="text-amber-700 mt-0.5">
-                    Os atletas inseridos acima ficam retidos apenas temporariamente na memória do navegador. Você deve clicar no botão **"Salvar Todos os Atletas"** abaixo para persistir os registros de forma definitiva no sistema.
-                </p>
+        <!-- Contêiner de Fechamento Base (Card Branco Unificado) -->
+        <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-5 w-full mt-6">
+            <!-- Banner de Estado Não Finalizado (Alerta Laranja) -->
+            <div class="bg-amber-50 text-amber-805 border border-amber-100/50 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
+                <i class="fas fa-exclamation-triangle text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                <div>
+                    <span class="font-bold text-amber-800">Ação Pendente de Finalização</span>
+                    <p class="text-amber-700 mt-1">
+                        Os atletas inseridos acima ficam retidos apenas temporariamente na memória do navegador. Você deve clicar no botão **"Salvar Todos os Atletas"** abaixo para persistir os registros de forma definitiva no sistema.
+                    </p>
+                </div>
             </div>
-        </div>
 
-        <!-- Rodapé de Ações Finais -->
-        <div class="flex justify-end gap-3 text-xs">
-            <a href="{% url 'atleta_list' %}" id="btn-cancel-link" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition focus:outline-none">
-                Cancelar
-            </a>
-            <button type="submit" id="btn-submit-lote" disabled
-                    class="px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed focus:outline-none">
-                Salvar Todos os Atletas
-            </button>
+            <!-- Rodapé de Ações Finais (Barra de Ações) -->
+            <div class="flex justify-end gap-3 text-xs pt-4 border-t border-slate-100">
+                <a href="{% url 'atleta_list' %}" id="btn-cancel-link" class="px-4 py-2.5 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition focus:outline-none">
+                    Cancelar
+                </a>
+                <button type="submit" id="btn-submit-lote" disabled
+                        class="px-5 py-2.5 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed focus:outline-none">
+                    Salvar Todos os Atletas
+                </button>
+            </div>
         </div>
     </form>
 </div>
@@ -466,14 +469,14 @@
             viewLink.classList.remove('hidden');
 
             submitBtn.disabled = false;
-            submitBtn.className = "px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] cursor-pointer focus:outline-none";
+            submitBtn.className = "px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] cursor-pointer focus:outline-none";
         } else {
             circle.className = "w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm";
             helperText.textContent = "Nenhum atleta adicionado ao lote ainda.";
             viewLink.classList.add('hidden');
 
             submitBtn.disabled = true;
-            submitBtn.className = "px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed focus:outline-none";
+            submitBtn.className = "px-5 py-2.5 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed focus:outline-none";
         }
     }
 
@@ -497,12 +500,12 @@
                     <li class="py-3.5 flex justify-between items-center gap-4 text-xs">
                         <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 flex-grow min-w-0">
                             <div class="font-bold text-slate-800 truncate min-w-0" title="${escapeHtml(atleta.nome)}">${escapeHtml(atleta.nome)}</div>
-                            <div class="text-slate-500 truncate min-w-0" title="${escapeHtml(atleta.email)}">${escapeHtml(atleta.email)}</div>
+                            <div class="text-slate-550 truncate min-w-0" title="${escapeHtml(atleta.email)}">${escapeHtml(atleta.email)}</div>
                             <div class="text-slate-500 font-semibold truncate min-w-0">Matrícula/SIAPE: ${escapeHtml(atleta.matricula)}</div>
-                            <div class="text-slate-450 truncate min-w-0">${escapeHtml(atleta.curso)} (${escapeHtml(atleta.campusNome)}) - <span class="font-semibold text-indigo-650">${escapeHtml(atleta.tipo_atleta_display)}</span></div>
+                            <div class="text-slate-455 truncate min-w-0">${escapeHtml(atleta.curso)} (${escapeHtml(atleta.campusNome)}) - <span class="font-semibold text-indigo-650">${escapeHtml(atleta.tipo_atleta_display)}</span></div>
                         </div>
                         <button type="button" onclick="removeAtletaFromLote(${atleta.id})"
-                                class="text-slate-450 hover:text-red-650 transition p-1.5 rounded-lg hover:bg-red-50 shrink-0 focus:outline-none" title="Remover do Lote">
+                                class="text-slate-450 hover:text-red-655 transition p-1.5 rounded-lg hover:bg-red-50 shrink-0 focus:outline-none" title="Remover do Lote">
                             <i class="far fa-trash-alt text-sm"></i>
                         </button>
                     </li>
@@ -521,6 +524,7 @@
         document.body.classList.add('overflow-hidden');
     }
 
+    // Fechar Modal
     function closeAddedModal() {
         const modal = document.getElementById('added-athletes-modal');
         modal.classList.add('hidden');

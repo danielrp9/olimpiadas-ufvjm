@@ -51,7 +51,7 @@
                 <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
                 Recursos em Andamento
             </h3>
-            <p class="text-xs text-slate-400 mt-0.5">Processos que ainda estão em análise or aguardando resposta.</p>
+            <p class="text-xs text-slate-400 mt-0.5">Processos que ainda estão em análise ou aguardando resposta.</p>
         </div>
         <div class="overflow-x-auto">
             <table class="w-full text-left border-collapse">
@@ -224,7 +224,7 @@
                             </td>
                         {% endif %}
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">
                                 Encerrado
                             </span>
                         </td>
@@ -300,6 +300,7 @@
         document.getElementById('info-modal').classList.add('hidden');
         document.body.classList.remove('overflow-hidden');
     }
+
     function switchTab(tabId) {
         // Oculta todas as seções
         document.getElementById('section-andamento').classList.add('hidden');
