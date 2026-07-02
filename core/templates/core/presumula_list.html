@@ -12,6 +12,9 @@
                     <i class="fas fa-file-signature"></i>
                 </span>
                 Jogos e Pré-Súmulas
+                <button type="button" onclick="openInfoModal()" class="text-slate-400 hover:text-blue-600 transition-colors ml-1 animate-pulse focus:outline-none" title="Informações sobre pré-súmulas">
+                    <i class="fas fa-info-circle text-lg"></i>
+                </button>
             </h1>
             <p class="text-slate-400 mt-1.5 text-xs">
                 {% if user.is_staff %}
@@ -23,7 +26,7 @@
         </div>
         <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto shrink-0 justify-end">
             <!-- Botão de Filtro Expandível -->
-            <button type="button" onclick="toggleFilterPanel()" class="relative inline-flex items-center px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-655 bg-white hover:bg-slate-50 transition shadow-sm gap-1.5 active:scale-95">
+            <button type="button" onclick="toggleFilterPanel()" class="relative inline-flex items-center px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-655 bg-white hover:bg-slate-50 transition shadow-sm gap-1.5 active:scale-95 focus:outline-none">
                 <i class="fas fa-filter text-blue-600"></i> Filtrar
                 {% if filtros_ativos > 0 %}
                     <span class="absolute -top-1.5 -right-1.5 bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold border-2 border-white shadow-sm">
@@ -33,10 +36,10 @@
             </button>
 
             {% if user.is_staff %}
-                <a href="{% url 'admin_modalidades' %}" class="inline-flex items-center px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-500 bg-white hover:bg-slate-50 transition shadow-sm gap-1.5">
+                <a href="{% url 'admin_modalidades' %}" class="inline-flex items-center px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-500 bg-white hover:bg-slate-50 transition shadow-sm gap-1.5 focus:outline-none">
                     <i class="fas fa-running text-blue-550"></i> Modalidades
                 </a>
-                <a href="{% url 'jogo_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition shadow-sm gap-1.5 active:scale-95">
+                <a href="{% url 'jogo_create' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition shadow-sm gap-1.5 active:scale-95 focus:outline-none">
                     <i class="fas fa-plus"></i> Lançar Jogo
                 </a>
             {% endif %}
@@ -79,11 +82,11 @@
             <!-- Ações do Filtro -->
             <div class="sm:col-span-3 flex justify-end items-center gap-2 pt-4 border-t border-slate-100">
                 {% if filtros_ativos > 0 %}
-                    <a href="{% url 'presumula_list' %}" class="inline-flex items-center px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-500 transition whitespace-nowrap">
+                    <a href="{% url 'presumula_list' %}" class="inline-flex items-center px-4 py-2 border border-slate-200 hover:bg-slate-50 rounded-xl text-xs font-semibold text-slate-500 transition whitespace-nowrap focus:outline-none">
                         Limpar Filtros
                     </a>
                 {% endif %}
-                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition whitespace-nowrap shadow-sm">
+                <button type="submit" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition whitespace-nowrap shadow-sm focus:outline-none">
                     Aplicar Filtros
                 </button>
             </div>
@@ -179,17 +182,16 @@
                                 <div class="flex items-center justify-end gap-3.5">
                                     <!-- Pré-súmulas enviadas (Olho / Ver) -->
                                     <button type="button" 
-                                            class="text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0" 
+                                            class="text-slate-500 hover:text-blue-600 hover:bg-blue-50/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0 focus:outline-none" 
                                             title="Visualizar Pré-Súmulas da Partida"
                                             onclick="openPresumulaModal('{{ jogo.time_a.nome_delegacao|default:jogo.time_a.email|escapejs }}', '{{ jogo.time_b.nome_delegacao|default:jogo.time_b.email|escapejs }}', '{% if jogo.presumula_a %}{% url 'presumula_detail' jogo.presumula_a.id %}{% endif %}', '{% if jogo.presumula_b %}{% url 'presumula_detail' jogo.presumula_b.id %}{% endif %}')">
                                         <i class="far fa-eye text-sm"></i>
                                     </button>
                                     
-                                    <!-- Encerrar Jogo (Bandeira) -->
                                     <!-- Encerrar Jogo (Check Circle) -->
                                     {% if not jogo.finalizado %}
                                         <button type="button" 
-                                                class="text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0" 
+                                                class="text-emerald-500 hover:text-emerald-700 hover:bg-emerald-50/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0 focus:outline-none" 
                                                 title="Encerrar Jogo" 
                                                 onclick="triggerFinalizarJogo('{% url 'jogo_finalizar' jogo.id %}')">
                                             <i class="fas fa-check-circle text-sm"></i>
@@ -197,12 +199,12 @@
                                     {% endif %}
                                     
                                     <!-- Editar Jogo (Lápis) -->
-                                    <a href="{% url 'jogo_update' jogo.id %}" class="text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0" title="Editar Jogo">
+                                    <a href="{% url 'jogo_update' jogo.id %}" class="text-slate-500 hover:text-slate-700 hover:bg-slate-100/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0 focus:outline-none" title="Editar Jogo">
                                         <i class="far fa-edit text-sm"></i>
                                     </a>
                                     
                                     <!-- Excluir Jogo (Lixeira) -->
-                                    <a href="{% url 'jogo_delete' jogo.id %}" class="text-red-500 hover:text-red-700 hover:bg-red-50/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0" title="Excluir Jogo">
+                                    <a href="{% url 'jogo_delete' jogo.id %}" class="text-red-500 hover:text-red-700 hover:bg-red-50/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0 focus:outline-none" title="Excluir Jogo">
                                         <i class="far fa-trash-alt text-sm"></i>
                                     </a>
                                 </div>
@@ -212,21 +214,21 @@
                                     {% if jogo.is_finalizado_por_wo %}
                                         {% if jogo.minha_presumula %}
                                             <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" 
-                                               class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1">
+                                               class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1 focus:outline-none">
                                                 <i class="far fa-eye"></i> Ver
                                             </a>
-                                            <span class="text-[10px] text-red-650 font-semibold italic">WO Aplicado</span>
+                                            <span class="text-[10px] text-red-655 font-semibold italic">WO Aplicado</span>
                                         {% else %}
-                                            <span class="text-[10px] text-red-650 font-semibold italic">WO Aplicado</span>
+                                            <span class="text-[10px] text-red-655 font-semibold italic">WO Aplicado</span>
                                         {% endif %}
                                     {% elif jogo.minha_presumula %}
                                         <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" 
-                                           class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1">
+                                           class="inline-flex items-center px-3.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-500 bg-white transition shadow-sm gap-1 focus:outline-none">
                                             <i class="far fa-eye"></i> Ver
                                         </a>
                                         {% if not jogo.finalizado %}
                                             <a href="{% url 'presumula_update' jogo.minha_presumula.id %}" 
-                                               class="inline-flex items-center px-3.5 py-1.5 border border-blue-200 text-blue-600 hover:bg-blue-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1">
+                                               class="inline-flex items-center px-3.5 py-1.5 border border-blue-200 text-blue-600 hover:bg-blue-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1 focus:outline-none">
                                                 <i class="far fa-edit"></i> Editar
                                             </a>
                                         {% endif %}
@@ -236,7 +238,7 @@
                                         {% else %}
                                             {% if user.status_delegacao == 'deferido' %}
                                                 <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" 
-                                                   class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
+                                                   class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95 focus:outline-none">
                                                     <i class="fas fa-plus"></i> Escalar Atletas
                                                 </a>
                                             {% else %}
@@ -268,12 +270,9 @@
 </div>
 
 <!-- Modal de Visualização de Pré-Súmulas (Glassmorphism Backdrop) -->
-<div id="presumula-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <!-- Backdrop com blur e escurecido -->
-    <div class="absolute inset-0 bg-slate-900/65 backdrop-blur-md transition-opacity" onclick="closePresumulaModal()"></div>
-    
-    <!-- Modal Content Card -->
-    <div class="relative bg-white border border-slate-200/80 rounded-3xl w-full max-w-xl p-6 sm:p-8 shadow-2xl transition-all transform scale-100 space-y-6">
+<div id="presumula-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closePresumulaModal()">
+    <!-- Card Interno -->
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-2xl border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto mx-auto" onclick="event.stopPropagation()">
         <!-- Header -->
         <div class="flex justify-between items-center pb-4 border-b border-slate-100">
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
@@ -282,7 +281,7 @@
                 </span>
                 Visualizar Pré-Súmulas da Partida
             </h3>
-            <button type="button" onclick="closePresumulaModal()" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-xl transition">
+            <button type="button" onclick="closePresumulaModal()" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-xl transition focus:outline-none">
                 <i class="fas fa-times text-sm"></i>
             </button>
         </div>
@@ -317,6 +316,88 @@
     </div>
 </div>
 
+<!-- Modal de Informação (Pré-súmulas) -->
+<div id="info-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closeInfoModal()">
+    <!-- Card Interno -->
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto mx-auto" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2" id="modal-title">
+                <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl">
+                    <i class="fas fa-info-circle"></i>
+                </span>
+                Informações sobre Pré-Súmulas
+            </h3>
+            <button type="button" onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-655 transition p-1 rounded-lg hover:bg-slate-50 focus:outline-none">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <div class="space-y-3.5 text-xs text-slate-600 leading-relaxed">
+            <p class="font-semibold text-slate-800">Como funcionam as Pré-Súmulas?</p>
+            <p>As pré-súmulas servem para que as delegações escalem suas equipes baseadas nas partidas que irão disputar. Fique muito atento às seguintes regras:</p>
+            <ul class="space-y-3 mt-2">
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-0.5 w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 text-[10px] font-bold">1</span>
+                    <div>
+                        <strong class="text-slate-700 block">Objetivo da Pré-Súmula</strong>
+                        As pré-súmulas servem para as delegações escalarem suas equipes baseadas nas partidas que irão aparecer. É a partir delas que a comissão e os mesários irão utilizar para passar as informações para as súmulas oficiais durante as partidas.
+                    </div>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-0.5 w-5 h-5 rounded-full bg-red-50 text-red-600 flex items-center justify-center shrink-0 text-[10px] font-bold">!</span>
+                    <div>
+                        <strong class="text-red-700 block">Prazo Limite e WO</strong>
+                        Toda pré-súmula deve ser enviada com no máximo <span class="font-bold text-red-655">1 hora de antecedência</span> do início do jogo. Após isso, o sistema irá considerar automaticamente <span class="font-bold text-red-655">WO</span>.
+                    </div>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-0.5 w-5 h-5 rounded-full bg-yellow-50 text-yellow-600 flex items-center justify-center shrink-0 text-[10px] font-bold"><i class="fas fa-exclamation-triangle text-[8px]"></i></span>
+                    <div>
+                        <strong class="text-slate-700 block">Importância do Cumprimento</strong>
+                        Os atrasos podem influenciar negativamente na condução das modalidades e impactar nas Olimpíadas como um todo.
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="flex justify-end pt-3 border-t border-slate-100 mt-2">
+            <button type="button" onclick="closeInfoModal()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95 focus:outline-none">
+                Entendi
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Encerramento (Glassmorphism Backdrop) -->
+<div id="confirm-finalizar-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closeConfirmFinalizarModal()">
+    <!-- Card Interno -->
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto text-center mx-auto" onclick="event.stopPropagation()">
+        <!-- Icon Circle -->
+        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100 shadow-sm shrink-0">
+            <i class="fas fa-check-circle text-lg"></i>
+        </div>
+        
+        <!-- Content -->
+        <div class="space-y-2">
+            <h3 class="text-base font-bold text-slate-800">Encerrar Partida</h3>
+            <p class="text-xs text-slate-550 leading-relaxed">
+                Deseja realmente encerrar esta partida? Esta ação consolidará os dados e não poderá ser desfeita.
+            </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-3 justify-center pt-2 border-t border-slate-100 mt-2">
+            <button type="button" onclick="closeConfirmFinalizarModal()" class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs rounded-xl transition focus:outline-none">
+                Cancelar
+            </button>
+            <form id="confirm-finalizar-form" action="" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm focus:outline-none">
+                    Confirmar Encerramento
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 function toggleFilterPanel() {
     const panel = document.getElementById('filter-panel');
@@ -342,7 +423,7 @@ function openPresumulaModal(nameA, nameB, urlA, urlB) {
     const actionA = document.getElementById('modal-action-a');
     if (urlA) {
         cardA.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-2xl border border-blue-100 bg-blue-50/20 transition gap-3";
-        actionA.innerHTML = `<a href="${urlA}" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm gap-1.5">
+        actionA.innerHTML = `<a href="${urlA}" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm gap-1.5 focus:outline-none">
             <i class="far fa-eye text-xs"></i> Visualizar Súmula
         </a>`;
     } else {
@@ -357,7 +438,7 @@ function openPresumulaModal(nameA, nameB, urlA, urlB) {
     const actionB = document.getElementById('modal-action-b');
     if (urlB) {
         cardB.className = "flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-2xl border border-blue-100 bg-blue-50/20 transition gap-3";
-        actionB.innerHTML = `<a href="${urlB}" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm gap-1.5">
+        actionB.innerHTML = `<a href="${urlB}" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm gap-1.5 focus:outline-none">
             <i class="far fa-eye text-xs"></i> Visualizar Súmula
         </a>`;
     } else {
@@ -388,40 +469,15 @@ function closeConfirmFinalizarModal() {
     document.getElementById('confirm-finalizar-modal').classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
 }
-</script>
 
-<!-- Modal de Confirmação de Encerramento (Glassmorphism Backdrop) -->
-<div id="confirm-finalizar-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
-    <!-- Backdrop com blur e escurecido -->
-    <div class="absolute inset-0 bg-slate-900/65 backdrop-blur-md transition-opacity" onclick="closeConfirmFinalizarModal()"></div>
-    
-    <!-- Modal Content Card -->
-    <div class="relative bg-white border border-slate-200/80 rounded-3xl w-full max-w-md p-6 shadow-2xl transition-all transform scale-100 space-y-6 text-center">
-        <!-- Icon Circle -->
-        <div class="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto border border-emerald-100 shadow-sm">
-            <i class="fas fa-check-circle text-lg"></i>
-        </div>
-        
-        <!-- Content -->
-        <div class="space-y-2">
-            <h3 class="text-base font-bold text-slate-800">Encerrar Partida</h3>
-            <p class="text-xs text-slate-500 leading-relaxed">
-                Deseja realmente encerrar esta partida? Esta ação consolidará os dados e não poderá ser desfeita.
-            </p>
-        </div>
-        
-        <!-- Action Buttons -->
-        <div class="flex items-center gap-3 justify-center pt-2">
-            <button type="button" onclick="closeConfirmFinalizarModal()" class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs rounded-xl transition">
-                Cancelar
-            </button>
-            <form id="confirm-finalizar-form" action="" method="post" class="inline">
-                {% csrf_token %}
-                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition shadow-sm">
-                    Confirmar Encerramento
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+function openInfoModal() {
+    document.getElementById('info-modal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeInfoModal() {
+    document.getElementById('info-modal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+</script>
 {% endblock %}

@@ -6,14 +6,19 @@
 <div class="space-y-6">
     <!-- Header do Cadastro com Seta de Voltar Integrada -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
-        <a href="{% url 'atleta_list' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" id="btn-back-link" title="Voltar para a Lista">
+        <a href="{% url 'atleta_list' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1 focus:outline-none" id="btn-back-link" title="Voltar para a Lista">
             <i class="fas fa-arrow-left text-lg"></i>
         </a>
         <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
             <i class="fas fa-user-plus text-base"></i>
         </span>
         <div>
-            <h1 class="text-xl font-bold text-slate-800 tracking-tight">Cadastro em Lote</h1>
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
+                Cadastro em Lote
+                <button type="button" onclick="openInfoModal()" class="text-slate-400 hover:text-blue-600 transition-colors animate-pulse focus:outline-none" title="Informações sobre cadastro em lote">
+                    <i class="fas fa-info-circle text-base"></i>
+                </button>
+            </h1>
             <p class="text-slate-400 mt-1 text-xs">Insira os dados dos atletas para empilhá-los no lote temporário.</p>
         </div>
     </div>
@@ -135,7 +140,7 @@
 
         <div class="pt-4 border-t border-slate-100 flex justify-start">
             <button type="button" onclick="addAtletaToLote()"
-                    class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition shadow-sm hover:scale-[1.02] active:scale-95 text-xs flex items-center gap-1.5">
+                    class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition shadow-sm hover:scale-[1.02] active:scale-95 text-xs flex items-center gap-1.5 focus:outline-none">
                 <i class="fas fa-plus text-[10px]"></i> Adicionar Atleta ao Lote
             </button>
         </div>
@@ -161,11 +166,11 @@
 
         <!-- Rodapé de Ações Finais -->
         <div class="flex justify-end gap-3 text-xs">
-            <a href="{% url 'atleta_list' %}" id="btn-cancel-link" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition">
+            <a href="{% url 'atleta_list' %}" id="btn-cancel-link" class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition focus:outline-none">
                 Cancelar
             </a>
             <button type="submit" id="btn-submit-lote" disabled
-                    class="px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed">
+                    class="px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed focus:outline-none">
                 Salvar Todos os Atletas
             </button>
         </div>
@@ -173,21 +178,22 @@
 </div>
 
 <!-- Modal para Visualização de Atletas no Lote -->
-<div id="added-athletes-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-3xl w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+<div id="added-athletes-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closeAddedModal()">
+    <!-- Card Interno -->
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-3xl border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto mx-auto" onclick="event.stopPropagation()">
         <!-- Header -->
-        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-100">
             <div>
                 <span class="text-[9px] text-blue-700 font-bold uppercase tracking-wider block">Revisão do Lote</span>
                 <h4 class="font-bold text-slate-800 text-sm mt-0.5">Atletas no Lote</h4>
             </div>
-            <button type="button" onclick="closeAddedModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100">
+            <button type="button" onclick="closeAddedModal()" class="text-slate-400 hover:text-slate-600 transition p-1.5 rounded-xl hover:bg-slate-100 focus:outline-none">
                 <i class="fas fa-times text-base"></i>
             </button>
         </div>
 
         <!-- Body -->
-        <div class="p-6 overflow-y-auto text-xs text-slate-650 max-h-[60vh]">
+        <div class="overflow-y-auto text-xs text-slate-655 max-h-[60vh] pr-1">
             <div id="modal-empty-state" class="text-center py-8 text-slate-400 space-y-2">
                 <i class="fas fa-users text-2xl text-slate-350 block"></i>
                 <p class="font-semibold text-slate-600">Nenhum atleta no lote</p>
@@ -200,9 +206,81 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-end">
-            <button type="button" onclick="closeAddedModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-500 transition">
+        <div class="pt-4 border-t border-slate-100 flex justify-end gap-2">
+            <button type="button" onclick="closeAddedModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-500 transition focus:outline-none">
                 Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Informação (Cadastro em Lote) -->
+<div id="info-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closeInfoModal()">
+    <!-- Card Interno -->
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-xl border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto mx-auto" onclick="event.stopPropagation()">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2" id="modal-title">
+                <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl">
+                    <i class="fas fa-info-circle"></i>
+                </span>
+                Informações sobre Cadastro em Lote
+            </h3>
+            <button type="button" onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-655 transition p-1 rounded-lg hover:bg-slate-50 focus:outline-none">
+                <i class="fas fa-times text-sm"></i>
+            </button>
+        </div>
+        <div class="space-y-3.5 text-xs text-slate-600 leading-relaxed">
+            <p class="font-semibold text-slate-800">Como funciona o Cadastro em Lote?</p>
+            <p>O cadastro em lote permite que você adicione múltiplos atletas de forma rápida. Fique atento às orientações a seguir:</p>
+            <ul class="space-y-3 mt-2">
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-0.5 w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 text-[10px] font-bold">1</span>
+                    <div>
+                        <strong class="text-slate-700 block">Atletas cadastrados previamente</strong>
+                        Para se inscrever nas modalidades é necessário ter os atletas inseridos ao sistema. Garanta que todos os atletas que farão parte das equipes já estejam cadastrados no sistema.
+                    </div>
+                </li>
+                <li class="flex items-start gap-2.5">
+                    <span class="mt-0.5 w-5 h-5 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 text-[10px] font-bold">2</span>
+                    <div>
+                        <strong class="text-slate-700 block">Link de Documento Individual</strong>
+                        No local de inserir o link de documentos deverá ser anexado um <span class="font-bold text-blue-650">link único</span> referente ao documento daquele respectivo atleta que está sendo lançado. Não utilize o mesmo link para múltiplos atletas.
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="flex justify-end pt-3 border-t border-slate-100 mt-2">
+            <button type="button" onclick="closeInfoModal()" class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-95 focus:outline-none">
+                Entendi
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmação de Saída com Alterações Pendentes -->
+<div id="confirm-leave-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closeLeaveModal()">
+    <!-- Card Interno -->
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto text-center mx-auto" onclick="event.stopPropagation()">
+        <!-- Icon Circle -->
+        <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto border border-amber-100 shadow-sm shrink-0">
+            <i class="fas fa-exclamation-triangle text-lg"></i>
+        </div>
+        
+        <!-- Content -->
+        <div class="space-y-2">
+            <h3 class="text-base font-bold text-slate-800">Inscrições Pendentes</h3>
+            <p class="text-xs text-slate-550 leading-relaxed">
+                Você tem atletas adicionados ao lote que ainda não foram salvos de forma definitiva. Se você sair agora, esses registros serão perdidos permanentemente. Deseja mesmo sair?
+            </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-3 justify-center pt-2 border-t border-slate-100 mt-2">
+            <button type="button" onclick="closeLeaveModal()" class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs rounded-xl transition focus:outline-none">
+                Continuar Editando
+            </button>
+            <button type="button" id="confirm-leave-btn" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl transition shadow-sm focus:outline-none">
+                Sair sem Salvar
             </button>
         </div>
     </div>
@@ -210,6 +288,7 @@
 
 <script>
     let atletasLote = [];
+    let targetNavigationUrl = null;
     const hiddenContainer = document.getElementById('hidden-inputs-container');
 
     // Interceptadores de Saída de Rota
@@ -217,6 +296,7 @@
         return atletasLote.length > 0;
     }
 
+    // Native beforeunload dialog ONLY for tab closure or full page reload
     window.addEventListener('beforeunload', function(e) {
         if (hasPendingData()) {
             e.preventDefault();
@@ -225,29 +305,49 @@
         }
     });
 
-    // Interceptar cliques em Cancelar e Voltar
-    document.getElementById('btn-cancel-link').addEventListener('click', function(e) {
-        if (hasPendingData()) {
-            const confirmLeave = confirm("Você tem inscrições pendentes que não foram salvas. Se você sair agora, esses dados serão perdidos de forma permanente. Deseja mesmo sair?");
-            if (!confirmLeave) {
-                e.preventDefault();
+    // Custom stylized leave modal interceptor for any link navigation within the app
+    document.addEventListener('click', function(e) {
+        let target = e.target;
+        while (target && target.tagName !== 'A') {
+            target = target.parentNode;
+        }
+        
+        if (target && target.tagName === 'A') {
+            const href = target.getAttribute('href');
+            // If it is a valid link that redirects away
+            if (href && href !== '#' && !href.startsWith('javascript:') && !target.hasAttribute('download') && target.target !== '_blank') {
+                if (hasPendingData()) {
+                    e.preventDefault();
+                    targetNavigationUrl = href;
+                    openLeaveModal();
+                }
             }
         }
     });
 
-    document.getElementById('btn-back-link').addEventListener('click', function(e) {
-        if (hasPendingData()) {
-            const confirmLeave = confirm("Você tem inscrições pendentes que não foram salvas. Se você sair agora, esses dados serão perdidos de forma permanente. Deseja mesmo sair?");
-            if (!confirmLeave) {
-                e.preventDefault();
-            }
+    function openLeaveModal() {
+        document.getElementById('confirm-leave-modal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeLeaveModal() {
+        document.getElementById('confirm-leave-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+        targetNavigationUrl = null;
+    }
+
+    document.getElementById('confirm-leave-btn').addEventListener('click', function() {
+        atletasLote = []; // Clear pending data array so isPendingData checks pass
+        if (targetNavigationUrl) {
+            window.location.href = targetNavigationUrl;
+        } else {
+            closeLeaveModal();
         }
     });
 
     // Interceptar envio do formulário para desativar interceptador beforeunload
     document.getElementById('bulk-form').addEventListener('submit', function() {
-        window.addEventListener('beforeunload', function(e) {});
-        atletasLote = []; // Limpa o estado local
+        atletasLote = []; // Limpa o estado local para permitir o submit sem interceptação
     });
 
     function addAtletaToLote() {
@@ -258,7 +358,7 @@
         const generoInput = document.getElementById('temp-genero');
         const tipoAtletaInput = document.getElementById('temp-tipo-atleta');
         const matriculaInput = document.getElementById('temp-matricula');
-        const cursoInput = document.getElementById('temp-curso');
+        const cursorInput = document.getElementById('temp-curso');
         const campusInput = document.getElementById('temp-campus');
         const docInput = document.getElementById('temp-documento');
         const egressoInput = document.getElementById('temp-egresso');
@@ -276,8 +376,8 @@
             matriculaInput.focus();
             return;
         }
-        if (!cursoInput.value.trim()) {
-            cursoInput.focus();
+        if (!cursorInput.value.trim()) {
+            cursorInput.focus();
             return;
         }
         if (!campusInput.value) {
@@ -298,7 +398,7 @@
             tipo_atleta: tipoAtletaInput.value,
             tipo_atleta_display: tipoAtletaInput.options[tipoAtletaInput.selectedIndex].text,
             matricula: matriculaInput.value.trim(),
-            curso: cursoInput.value.trim(),
+            curso: cursorInput.value.trim(),
             campus: campusInput.value,
             campusNome: campusInput.options[campusInput.selectedIndex].text,
             link_documento: docInput.value.trim(),
@@ -315,7 +415,7 @@
         generoInput.value = 'M';
         tipoAtletaInput.value = 'estudante';
         matriculaInput.value = '';
-        cursoInput.value = '';
+        cursorInput.value = '';
         campusInput.value = '';
         docInput.value = '';
         egressoInput.checked = false;
@@ -366,14 +466,14 @@
             viewLink.classList.remove('hidden');
 
             submitBtn.disabled = false;
-            submitBtn.className = "px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] cursor-pointer";
+            submitBtn.className = "px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] cursor-pointer focus:outline-none";
         } else {
             circle.className = "w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm";
             helperText.textContent = "Nenhum atleta adicionado ao lote ainda.";
             viewLink.classList.add('hidden');
 
             submitBtn.disabled = true;
-            submitBtn.className = "px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed";
+            submitBtn.className = "px-5 py-2 bg-slate-300 text-slate-500 rounded-xl font-bold transition shadow-sm cursor-not-allowed focus:outline-none";
         }
     }
 
@@ -402,7 +502,7 @@
                             <div class="text-slate-450 truncate min-w-0">${escapeHtml(atleta.curso)} (${escapeHtml(atleta.campusNome)}) - <span class="font-semibold text-indigo-650">${escapeHtml(atleta.tipo_atleta_display)}</span></div>
                         </div>
                         <button type="button" onclick="removeAtletaFromLote(${atleta.id})"
-                                class="text-slate-450 hover:text-red-650 transition p-1.5 rounded-lg hover:bg-red-50 shrink-0" title="Remover do Lote">
+                                class="text-slate-450 hover:text-red-650 transition p-1.5 rounded-lg hover:bg-red-50 shrink-0 focus:outline-none" title="Remover do Lote">
                             <i class="far fa-trash-alt text-sm"></i>
                         </button>
                     </li>
@@ -413,17 +513,18 @@
         }
     }
 
+    // Modal triggers
     function openAddedModal() {
         renderModalList();
         const modal = document.getElementById('added-athletes-modal');
         modal.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
+        document.body.classList.add('overflow-hidden');
     }
 
     function closeAddedModal() {
         const modal = document.getElementById('added-athletes-modal');
         modal.classList.add('hidden');
-        document.body.style.overflow = '';
+        document.body.classList.remove('overflow-hidden');
     }
 
     function escapeHtml(str) {
@@ -434,6 +535,16 @@
             .replace(/>/g, "&gt;")
             .replace(/"/g, "&quot;")
             .replace(/'/g, "&#039;");
+    }
+
+    function openInfoModal() {
+        document.getElementById('info-modal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closeInfoModal() {
+        document.getElementById('info-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
     }
 </script>
 {% endblock %}
