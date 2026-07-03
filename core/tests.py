@@ -437,7 +437,8 @@ class InscricaoNotificacoesTestCase(TestCase):
             nome_completo='Delegado Teste',
             role='REPRESENTANTE',
             cpf='366.146.971-10',
-            nome_delegacao='Delegação Teste'
+            nome_delegacao='Delegação Teste',
+            link_comprovante_pagamento='https://example.com/payment.pdf'
         )
         # 3. Sub delegate / Member
         self.sub_delegate = User.objects.create_user(
@@ -482,6 +483,25 @@ class InscricaoNotificacoesTestCase(TestCase):
         self.assertIn("Nova inscrição pendente de avaliação", notifs.first().mensagem)
         self.assertEqual(notifs.first().link, '/comissao/delegacoes/')
 
+    def test_inscription_succeeds_without_comprovante(self):
+        from django.urls import reverse
+        # Clear the payment receipt
+        self.delegacao.link_comprovante_pagamento = ''
+        self.delegacao.save()
+
+        # Force session data for selected modalities
+        session = self.client.session
+        session['inscricao_modalidades_ids'] = [self.modalidade.id]
+        session.save()
+
+        self.client.force_login(self.delegacao)
+        url = reverse('inscricao_passo2')
+        response = self.client.post(url, data={
+            'atletas': [self.atleta.id]
+        })
+        # Should succeed and redirect to details page (status 302)
+        self.assertEqual(response.status_code, 302)
+
     def test_inscription_evaluation_notifies_delegation(self):
         from django.urls import reverse
         from core.models import Inscricao, Notificacao
@@ -520,6 +540,88 @@ class InscricaoNotificacoesTestCase(TestCase):
         notif_main = Notificacao.objects.filter(usuario=self.delegacao).order_by('-id')
         self.assertIn("INDEFERIDA", notif_main.first().mensagem)
         self.assertIn("Assinatura inválida", notif_main.first().mensagem)
+
+
+class PaymentReceiptTestCase(TestCase):
+    def setUp(self):
+        self.staff_user = User.objects.create_superuser(
+            email='admin@example.com',
+            nome_completo='Admin Comissão',
+            role='COMISSAO',
+            is_staff=True
+        )
+        self.delegacao = User.objects.create_user(
+            email='delegado@example.com',
+            nome_completo='Delegado Teste',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            nome_delegacao='Delegação Teste'
+        )
+
+    def test_upload_payment_receipt(self):
+        from django.urls import reverse
+        self.client.force_login(self.delegacao)
+        url = reverse('enviar_comprovante_pagamento')
+        response = self.client.post(url, data={
+            'link_comprovante_pagamento': 'https://drive.google.com/file/d/receipt'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify stored data
+        self.delegacao.refresh_from_db()
+        self.assertEqual(self.delegacao.link_comprovante_pagamento, 'https://drive.google.com/file/d/receipt')
+        self.assertEqual(self.delegacao.status_pagamento, 'nao_avaliado')
+
+    def test_evaluate_payment_receipt(self):
+        from django.urls import reverse
+        # Assign receipt link first
+        self.delegacao.link_comprovante_pagamento = 'https://drive.google.com/file/d/receipt'
+        self.delegacao.save()
+
+        self.client.force_login(self.staff_user)
+        url = reverse('avaliar_pagamento', kwargs={'pk': self.delegacao.id})
+        
+        # Defer receipt
+        response = self.client.post(url, data={
+            'status': 'deferido',
+            'justificativa': ''
+        })
+        self.assertEqual(response.status_code, 302)
+        self.delegacao.refresh_from_db()
+        self.assertEqual(self.delegacao.status_pagamento, 'deferido')
+
+        # Indefer receipt
+        response = self.client.post(url, data={
+            'status': 'indeferido',
+            'justificativa': 'Recibo ilegível'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.delegacao.refresh_from_db()
+        self.assertEqual(self.delegacao.status_pagamento, 'indeferido')
+        self.assertEqual(self.delegacao.justificativa_pagamento, 'Recibo ilegível')
+
+    def test_upload_payment_receipt_resets_status(self):
+        from django.urls import reverse
+        # Set evaluated to indeferido
+        self.delegacao.link_comprovante_pagamento = 'https://drive.google.com/file/d/receipt1'
+        self.delegacao.status_pagamento = 'indeferido'
+        self.delegacao.justificativa_pagamento = 'Recibo antigo'
+        self.delegacao.save()
+
+        # Upload new receipt
+        self.client.force_login(self.delegacao)
+        url = reverse('enviar_comprovante_pagamento')
+        response = self.client.post(url, data={
+            'link_comprovante_pagamento': 'https://drive.google.com/file/d/receipt2'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify reset status
+        self.delegacao.refresh_from_db()
+        self.assertEqual(self.delegacao.link_comprovante_pagamento, 'https://drive.google.com/file/d/receipt2')
+        self.assertEqual(self.delegacao.status_pagamento, 'nao_avaliado')
+        self.assertEqual(self.delegacao.justificativa_pagamento, '')
+
 
 
 

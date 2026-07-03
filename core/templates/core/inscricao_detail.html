@@ -51,8 +51,8 @@
 
             <!-- Action Button -->
             <div class="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3">
-                <button onclick="toggleInscricaoDetails()" id="btn-toggle-detalhes" class="w-full sm:w-auto px-6 py-3 bg-blue-750 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition shadow-sm hover:shadow-md hover:shadow-blue-700/10 active:scale-98 flex items-center justify-center gap-1.5">
-                    <i class="fas fa-eye text-xs"></i> Ver esportes e atletas inscritos
+                <button onclick="toggleInscricaoDetails()" id="btn-toggle-detalhes" class="w-full sm:w-auto px-6 py-3 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl text-xs transition shadow-sm hover:shadow-md hover:shadow-blue-700/10 active:scale-98 flex items-center justify-center gap-1.5">
+                    <i class="fas fa-eye text-xs"></i> Ver modalidades e atletas inscritos
                 </button>
                 <a href="{% url 'dashboard' %}" class="w-full sm:w-auto px-6 py-3 border border-slate-200 text-slate-550 hover:bg-slate-50 font-bold rounded-xl text-xs transition active:scale-98 flex items-center justify-center gap-1.5">
                     <i class="fas fa-chart-pie text-xs"></i> Voltar ao Dashboard
@@ -113,6 +113,66 @@
                 </p>
             </div>
         {% endif %}
+
+        <!-- Comprovante de Pagamento Geral da Delegação -->
+        <div class="rounded-3xl p-6 shadow-md space-y-4 {% if not request.user.delegacao_ativa.link_comprovante_pagamento %}bg-red-50 border-2 border-red-300{% else %}bg-white border border-slate-200/60{% endif %}">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="p-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs"><i class="fas fa-file-invoice-dollar"></i></span>
+                    <h3 class="font-bold text-slate-800 text-sm">Comprovante de Pagamento Geral da Delegação</h3>
+                </div>
+                {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
+                    {% if request.user.delegacao_ativa.status_pagamento == 'deferido' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
+                            <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido
+                        </span>
+                    {% elif request.user.delegacao_ativa.status_pagamento == 'indeferido' %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 uppercase tracking-wide">
+                            <i class="fas fa-times-circle mr-1 text-red-600"></i> Indeferido
+                        </span>
+                    {% else %}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 uppercase tracking-wide animate-pulse">
+                            <i class="fas fa-clock mr-1 text-blue-600"></i> Enviado: Aguardando Análise
+                        </span>
+                    {% endif %}
+                {% else %}
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 uppercase tracking-wide animate-pulse">
+                        <i class="fas fa-clock mr-1 text-amber-600"></i> Pendente
+                    </span>
+                {% endif %}
+            </div>
+            
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100 text-xs">
+                <div class="text-slate-600 leading-relaxed">
+                    {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
+                        <p class="font-semibold text-slate-700">Comprovante de pagamento integral da delegação.</p>
+                        {% if request.user.delegacao_ativa.status_pagamento == 'indeferido' and request.user.delegacao_ativa.justificativa_pagamento %}
+                            <p class="mt-1.5 text-red-655 font-bold">Motivo do Indeferimento: <span class="font-normal text-slate-600 ml-1">{{ request.user.delegacao_ativa.justificativa_pagamento }}</span></p>
+                        {% endif %}
+                    {% else %}
+                        <p class="font-semibold text-slate-700">O comprovante de pagamento geral da delegação ainda não foi enviado.</p>
+                        <p class="text-slate-500 mt-1">Realize o upload do comprovante de pagamento integral para homologação da sua delegação.</p>
+                    {% endif %}
+                </div>
+                <div class="flex gap-2 shrink-0">
+                    {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
+                        <a href="{{ request.user.delegacao_ativa.link_comprovante_pagamento }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition gap-1.5 shadow-sm">
+                            <i class="fas fa-external-link-alt"></i> Visualizar Comprovante
+                        </a>
+                        
+                        {% if request.user.delegacao_ativa.status_pagamento == 'indeferido' %}
+                            <button type="button" onclick="openPaymentModal()" class="inline-flex items-center px-4 py-2 bg-red-650 hover:bg-red-750 text-white rounded-xl text-xs font-bold transition gap-1.5 shadow-sm active:scale-95 focus:outline-none">
+                                <i class="fas fa-edit"></i> Corrigir Comprovante
+                            </button>
+                        {% endif %}
+                    {% else %}
+                        <button type="button" onclick="openPaymentModal()" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition gap-1.5 shadow-sm active:scale-95 focus:outline-none">
+                            <i class="fas fa-upload"></i> Enviar Comprovante
+                        </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 
         <!-- Modalidades Selecionadas -->
         <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-md space-y-4">
@@ -325,7 +385,7 @@
             container.scrollIntoView({ behavior: 'smooth' });
         } else {
             container.classList.add('hidden');
-            btn.innerHTML = '<i class="fas fa-eye text-xs"></i> Ver esportes e atletas inscritos';
+            btn.innerHTML = '<i class="fas fa-eye text-xs"></i> Ver modalidades e atletas inscritos';
         }
     }
     {% endif %}
@@ -358,5 +418,115 @@
             closeRejeicaoModal();
         }
     });
+
+    function openPaymentModal() {
+        const modal = document.getElementById('payment-modal');
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+
+    function closePaymentModal() {
+        const modal = document.getElementById('payment-modal');
+        modal.classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
 </script>
+
+<!-- Modal de Comprovante de Pagamento Geral -->
+<div id="payment-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
+            <div>
+                <span class="text-[9px] text-emerald-700 font-bold uppercase tracking-wider block">Pagamento Integral</span>
+                <h4 class="font-bold text-slate-800 text-sm mt-0.5">Comprovante de Pagamento Geral da Delegação</h4>
+            </div>
+            <button type="button" onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100 focus:outline-none">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <form action="{% url 'enviar_comprovante_pagamento' %}" method="post" class="p-6 space-y-4 text-xs text-slate-655">
+            {% csrf_token %}
+            {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
+                <div class="bg-emerald-50 text-emerald-805 border border-emerald-100/50 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
+                    <i class="fas fa-check-circle text-emerald-600 text-sm shrink-0 mt-0.5 animate-bounce-once"></i>
+                    <div>
+                        <span class="font-bold text-emerald-800">Comprovante anexado com sucesso!</span>
+                        <p class="text-emerald-700 mt-1">
+                            Seu comprovante de pagamento geral já foi registrado. Veja abaixo o status da análise.
+                        </p>
+                    </div>
+                </div>
+            {% else %}
+                <p class="leading-relaxed text-slate-500">
+                    Conforme definido em reunião, o delegado deve realizar o pagamento integral das taxas de inscrição da delegação e enviar um **comprovante de pagamento geral** para todos os atletas.
+                </p>
+            {% endif %}
+
+            <!-- Status de Validação do Pagamento -->
+            {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
+                <div class="p-3.5 rounded-2xl border text-[11px] leading-relaxed
+                    {% if request.user.delegacao_ativa.status_pagamento == 'deferido' %}
+                        bg-green-50/50 border-green-100 text-green-800
+                    {% elif request.user.delegacao_ativa.status_pagamento == 'indeferido' %}
+                        bg-red-50/50 border-red-150 text-red-800
+                    {% else %}
+                        bg-blue-50/50 border-blue-100 text-blue-800
+                    {% endif %}">
+                    
+                    <div class="font-bold flex items-center gap-1.5 mb-1 text-xs">
+                        {% if request.user.delegacao_ativa.status_pagamento == 'deferido' %}
+                            <i class="fas fa-check-circle text-green-600"></i> Comprovante Deferido (Aprovado)
+                        {% elif request.user.delegacao_ativa.status_pagamento == 'indeferido' %}
+                            <i class="fas fa-times-circle text-red-655 font-bold"></i> Comprovante Indeferido (Recusado)
+                        {% else %}
+                            <i class="fas fa-clock text-blue-600 animate-pulse"></i> Aguardando Avaliação da Comissão
+                        {% endif %}
+                    </div>
+
+                    {% if request.user.delegacao_ativa.status_pagamento == 'indeferido' and request.user.delegacao_ativa.justificativa_pagamento %}
+                        <p class="mt-1.5 p-2.5 bg-white/75 rounded-xl border border-red-100/50 text-slate-700 font-medium">
+                            <strong>Motivo do indeferimento:</strong> {{ request.user.delegacao_ativa.justificativa_pagamento }}
+                        </p>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="space-y-1.5">
+                <label for="link_comprovante_pagamento" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Link do Comprovante de Pagamento (Drive, PDF, etc.)</label>
+                <input type="url" name="link_comprovante_pagamento" id="link_comprovante_pagamento" required 
+                       value="{{ request.user.delegacao_ativa.link_comprovante_pagamento|default:'' }}" 
+                       placeholder="https://drive.google.com/file/d/..." 
+                       class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-emerald-100 focus:border-emerald-500 transition text-xs bg-slate-50/30 focus:bg-white">
+            </div>
+
+            <!-- Alerta para evitar confusão -->
+            <div class="bg-amber-50 text-amber-805 border border-amber-100/50 rounded-2xl p-4 flex gap-3 leading-relaxed">
+                <i class="fas fa-info-circle text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                <div>
+                    <span class="font-bold text-amber-800 text-[11px]">Atenção: Comprovante de Pagamento Geral</span>
+                    <p class="text-amber-700 text-[10px] mt-0.5">
+                        Este comprovante refere-se ao **pagamento integral da delegação**. A documentação de cada atleta (como RG, CNH, comprovante de matrícula) deve continuar sendo enviada individualmente no momento do cadastro de cada atleta.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="pt-4 border-t border-slate-100 flex justify-end gap-2.5">
+                <button type="button" onclick="closePaymentModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-500 transition focus:outline-none">
+                    Fechar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition shadow-sm active:scale-95 focus:outline-none">
+                    {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
+                        Atualizar Comprovante
+                    {% else %}
+                        Salvar Comprovante
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}

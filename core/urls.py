@@ -20,6 +20,7 @@ urlpatterns = [
     # Atletas
     path('atletas/', views.AtletaListView.as_view(), name='atleta_list'),
     path('atletas/adicionar/', views.AtletaBulkCreateView.as_view(), name='atleta_bulk_create'),
+    path('atletas/comprovante/', views.enviar_comprovante_pagamento, name='enviar_comprovante_pagamento'),
     path('atleta/<int:pk>/editar/', views.AtletaUpdateView.as_view(), name='atleta_update'),
     path('atleta/<int:pk>/remover/', views.AtletaDeleteView.as_view(), name='atleta_delete'),
     
@@ -43,6 +44,7 @@ urlpatterns = [
     # Rotas de Gestão de Delegações (COMISSAO)
     path('comissao/delegacoes/', views.AdminDelegacaoListView.as_view(), name='admin_delegacoes'),
     path('comissao/delegacao/<int:pk>/avaliar/', views.avaliar_delegacao, name='avaliar_delegacao'),
+    path('comissao/delegacao/<int:pk>/avaliar-pagamento/', views.avaliar_pagamento, name='avaliar_pagamento'),
     path('comissao/atleta/<int:pk>/avaliar/', views.avaliar_atleta, name='avaliar_atleta'),
 
     # Rotas de Pré-Súmulas (REPRESENTANTE e COMISSAO)

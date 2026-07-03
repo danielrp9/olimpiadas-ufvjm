@@ -439,6 +439,46 @@ def avaliar_atleta(request, pk):
     return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
 
 
+@login_required
+def enviar_comprovante_pagamento(request):
+    """
+    Permite ao delegado enviar ou atualizar o comprovante de pagamento único da delegação.
+    """
+    if request.method == 'POST':
+        link = request.POST.get('link_comprovante_pagamento', '').strip()
+        delegado = request.user.delegacao_ativa
+        delegado.link_comprovante_pagamento = link
+        delegado.status_pagamento = 'nao_avaliado'
+        delegado.justificativa_pagamento = ''
+        delegado.save()
+        messages.success(request, "Comprovante de pagamento único enviado com sucesso!")
+    return redirect(request.META.get('HTTP_REFERER', 'atleta_list'))
+
+
+@user_passes_test(lambda u: u.is_staff)
+def avaliar_pagamento(request, pk):
+    """
+    Permite à comissão deferir ou indeferir o comprovante de pagamento único da delegação.
+    """
+    delegado = get_object_or_404(User, pk=pk)
+    if request.method == 'POST':
+        status = request.POST.get('status')
+        justificativa = request.POST.get('justificativa', '')
+
+        if status == 'deferido':
+            delegado.status_pagamento = 'deferido'
+            delegado.justificativa_pagamento = ''
+        elif status == 'indeferido':
+            delegado.status_pagamento = 'indeferido'
+            delegado.justificativa_pagamento = justificativa
+        delegado.save()
+        messages.success(request, f"Pagamento da delegação {delegado.nome_delegacao} avaliado com sucesso!")
+    return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
+
+
+
+
+
 
 class PreSumulaListView(LoginRequiredMixin, ListView):
     """

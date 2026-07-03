@@ -120,6 +120,31 @@ class User(AbstractUser):
         verbose_name="Justificativa da Delegação"
     )
     
+    # Comprovante de Pagamento Único
+    link_comprovante_pagamento = models.URLField(
+        max_length=1000, 
+        null=True, 
+        blank=True, 
+        verbose_name="Link do Comprovante de Pagamento Único"
+    )
+    
+    STATUS_PAGAMENTO_CHOICES = [
+        ('nao_avaliado', 'Não avaliado'),
+        ('deferido', 'Deferido (Aprovado)'),
+        ('indeferido', 'Indeferido (Recusado)'),
+    ]
+    status_pagamento = models.CharField(
+        max_length=20,
+        choices=STATUS_PAGAMENTO_CHOICES,
+        default='nao_avaliado',
+        verbose_name="Status do Pagamento"
+    )
+    justificativa_pagamento = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Justificativa do Pagamento"
+    )
+
     # Controle de fluxo de cadastro em duas etapas
     perfil_completo = models.BooleanField(
         default=False, 

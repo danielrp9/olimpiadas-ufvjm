@@ -115,6 +115,64 @@
                             <!-- Lista de Atletas por Modalidade -->
                             {% if del.inscricao %}
                             <div class="p-5 space-y-6">
+                                <!-- Seção do Comprovante de Pagamento Geral -->
+                                <div class="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-3">
+                                    <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center justify-between">
+                                        <span class="flex items-center gap-1.5">
+                                            <i class="fas fa-file-invoice-dollar text-emerald-600"></i> Comprovante de Pagamento Geral da Delegação
+                                        </span>
+                                        {% if del.link_comprovante_pagamento %}
+                                            {% if del.status_pagamento == 'deferido' %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-green-700 border border-green-150 uppercase tracking-wide">
+                                                    <i class="fas fa-check-circle mr-1"></i> Deferido
+                                                </span>
+                                            {% elif del.status_pagamento == 'indeferido' %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 border border-red-150 uppercase tracking-wide">
+                                                    <i class="fas fa-times-circle mr-1"></i> Indeferido
+                                                </span>
+                                            {% else %}
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-150 uppercase tracking-wide animate-pulse">
+                                                    <i class="fas fa-clock mr-1"></i> Pendente
+                                                </span>
+                                            {% endif %}
+                                        {% else %}
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wide">
+                                                Não enviado
+                                            </span>
+                                        {% endif %}
+                                    </h5>
+                                    
+                                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                                        <div class="text-[11px] leading-relaxed text-slate-605">
+                                            {% if del.link_comprovante_pagamento %}
+                                                <p class="font-semibold text-slate-700">O delegado anexou o comprovante de pagamento integral desta delegação.</p>
+                                                {% if del.status_pagamento == 'indeferido' and del.justificativa_pagamento %}
+                                                    <p class="mt-1.5 text-red-655 font-bold">Motivo do Indeferimento: <span class="font-medium text-slate-600 bg-white/70 px-2 py-0.5 rounded border border-red-100/50 ml-1">{{ del.justificativa_pagamento }}</span></p>
+                                                {% endif %}
+                                            {% else %}
+                                                <p class="italic text-slate-400">Esta delegação ainda não enviou o comprovante de pagamento geral.</p>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex gap-2 shrink-0">
+                                            {% if del.link_comprovante_pagamento %}
+                                                <a href="{{ del.link_comprovante_pagamento }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-[10px] font-bold transition gap-1 shadow-sm">
+                                                    <i class="fas fa-external-link-alt"></i> Visualizar Comprovante
+                                                </a>
+                                                <button type="button" onclick="openPaymentEvalModal(this)"
+                                                        data-id="{{ del.id }}"
+                                                        data-nome="{{ del.nome_delegacao|default:'Sem Nome' }}"
+                                                        data-representante="{{ del.nome_completo }} ({{ del.email }})"
+                                                        data-link="{{ del.link_comprovante_pagamento }}"
+                                                        data-status="{{ del.status_pagamento }}"
+                                                        data-justificativa="{{ del.justificativa_pagamento|default:'' }}"
+                                                        class="inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1 active:scale-95">
+                                                    <i class="fas fa-gavel"></i> Avaliar Pagamento
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <!-- Modalidades Selecionadas -->
                                 <div class="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-3">
                                     <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
@@ -341,6 +399,86 @@
                 </button>
                 <button type="submit" 
                         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition shadow-sm active:scale-[0.98]">
+                    Salvar Avaliação
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de Avaliação de Pagamento Único -->
+<div id="payment-eval-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]">
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
+            <div>
+                <span class="text-[9px] text-slate-455 font-bold uppercase tracking-wider block">Avaliação de Pagamento</span>
+                <h4 id="modal-payment-title" class="font-bold text-slate-800 text-sm mt-0.5">Comprovante de Pagamento Geral</h4>
+            </div>
+            <button type="button" onclick="closePaymentEvalModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100 focus:outline-none">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <!-- Body / Form -->
+        <form id="modal-payment-form" method="post" action="" class="p-6 space-y-5 overflow-y-auto">
+            {% csrf_token %}
+            
+            <div class="space-y-4">
+                <div class="bg-slate-50/60 rounded-2xl p-4 text-xs space-y-3" style="border: 1px solid #e2e8f0;">
+                    <div>
+                        <span class="text-[9px] text-slate-405 font-bold uppercase tracking-wider block mb-0.5">Delegação</span>
+                        <span id="modal-payment-delegacao-nome" class="font-bold text-slate-800 text-sm"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] text-slate-405 font-bold uppercase tracking-wider block mb-0.5">Representante</span>
+                        <span id="modal-payment-delegacao-rep" class="font-medium text-slate-650"></span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-50/60 rounded-2xl p-4 text-xs" style="border: 1px solid #e2e8f0;">
+                    <span class="text-[9px] text-slate-405 font-bold uppercase tracking-wider block">Comprovante Anexado</span>
+                    <div id="modal-payment-docs" class="mt-2.5">
+                        <a id="modal-payment-link-btn" href="" target="_blank" class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition text-xs gap-2 shadow-sm">
+                            <i class="fas fa-external-link-alt"></i> Acessar Comprovante de Pagamento
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radio choices -->
+            <div class="space-y-1.5">
+                <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">Conformidade do Pagamento</label>
+                <div class="flex gap-6">
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                        <input type="radio" name="status" value="deferido" id="modal-payment-radio-deferido" class="accent-green-600" onchange="togglePaymentModalJustificativa(false)" required>
+                        <span class="inline-flex items-center text-green-700"><i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
+                        <input type="radio" name="status" value="indeferido" id="modal-payment-radio-indeferido" class="accent-red-600" onchange="togglePaymentModalJustificativa(true)" required>
+                        <span class="inline-flex items-center text-red-700"><i class="fas fa-times-circle mr-1 text-red-655"></i> Indeferido</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Justification details -->
+            <div id="modal-payment-just-container" class="space-y-3 hidden">
+                <div>
+                    <label for="modal-payment-justificativa" class="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Motivo do Indeferimento</label>
+                    <textarea name="justificativa" id="modal-payment-justificativa" rows="2" 
+                              placeholder="Descreva o motivo pelo qual o comprovante foi rejeitado..."
+                              class="w-full px-3 py-2 text-xs border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition bg-slate-50/50 focus:bg-white"></textarea>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="flex gap-2 pt-2 justify-end text-xs">
+                <button type="button" onclick="closePaymentEvalModal()" 
+                        class="px-4 py-2 border border-slate-200 rounded-xl font-semibold text-slate-500 hover:bg-slate-50 transition focus:outline-none">
+                    Cancelar
+                </button>
+                <button type="submit" 
+                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-xl font-bold text-white transition shadow-sm active:scale-[0.98] focus:outline-none">
                     Salvar Avaliação
                 </button>
             </div>
@@ -795,6 +933,61 @@ function toggleModalJustificativa(show) {
         textarea.required = false;
     }
 }
+
+function openPaymentEvalModal(btn) {
+    const id = btn.dataset.id;
+    const nome = btn.dataset.nome;
+    const representante = btn.dataset.representante;
+    const link = btn.dataset.link;
+    const status = btn.dataset.status;
+    const justificativa = btn.dataset.justificativa;
+
+    // Set action URL
+    const actionUrl = "{% url 'avaliar_pagamento' 999999 %}".replace('999999', id);
+    document.getElementById('modal-payment-form').action = actionUrl;
+
+    // Populate data
+    document.getElementById('modal-payment-delegacao-nome').innerText = nome;
+    document.getElementById('modal-payment-delegacao-rep').innerText = representante;
+    document.getElementById('modal-payment-link-btn').href = link;
+
+    const radioDeferido = document.getElementById('modal-payment-radio-deferido');
+    const radioIndeferido = document.getElementById('modal-payment-radio-indeferido');
+
+    if (status === 'deferido') {
+        radioDeferido.checked = true;
+        togglePaymentModalJustificativa(false);
+    } else if (status === 'indeferido') {
+        radioIndeferido.checked = true;
+        togglePaymentModalJustificativa(true);
+    } else {
+        radioDeferido.checked = false;
+        radioIndeferido.checked = false;
+        togglePaymentModalJustificativa(false);
+    }
+
+    document.getElementById('modal-payment-justificativa').value = justificativa || '';
+
+    // Show modal
+    document.getElementById('payment-eval-modal').classList.remove('hidden');
+}
+
+function closePaymentEvalModal() {
+    document.getElementById('payment-eval-modal').classList.add('hidden');
+}
+
+function togglePaymentModalJustificativa(show) {
+    const container = document.getElementById('modal-payment-just-container');
+    const textarea = document.getElementById('modal-payment-justificativa');
+    if (show) {
+        container.classList.remove('hidden');
+        textarea.required = true;
+    } else {
+        container.classList.add('hidden');
+        textarea.required = false;
+    }
+}
+
 
 // Restaurar estados salvos e posição do scroll ao carregar a página
 document.addEventListener('DOMContentLoaded', () => {
