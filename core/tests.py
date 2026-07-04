@@ -622,6 +622,38 @@ class PaymentReceiptTestCase(TestCase):
         self.assertEqual(self.delegacao.status_pagamento, 'nao_avaliado')
         self.assertEqual(self.delegacao.justificativa_pagamento, '')
 
+    def test_views_path_rendering(self):
+        from django.urls import reverse
+        from core.models import Inscricao
+
+        # Create inscription so details page doesn't redirect
+        Inscricao.objects.create(
+            delegacao=self.delegacao,
+            status='pendente'
+        )
+
+        self.client.force_login(self.delegacao)
+
+        # 1. Test Athlete List View (Meus Atletas)
+        response = self.client.get(reverse('atleta_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Meus Atletas")
+        self.assertContains(response, "Comprovante de Pagamento Geral da Delegação")
+
+        # 2. Test Bulk Create View (Cadastro de Atletas)
+        response = self.client.get(reverse('atleta_bulk_create'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Cadastro de Atletas")
+        # Ensure the payment button was indeed moved (removed from here)
+        self.assertNotContains(response, "Comprovante de Pagamento Geral da Delegação")
+
+        # 3. Test Inscription Detail View (Status da Inscrição)
+        response = self.client.get(reverse('inscricao_detail'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Comprovante de Pagamento Geral da Delegação")
+        self.assertContains(response, "Modalidades de Interesse Selecionadas")
+        self.assertContains(response, "Ver modalidades e atletas inscritos")
+
 
 
 
