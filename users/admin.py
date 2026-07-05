@@ -11,9 +11,9 @@ class UserAdmin(BaseUserAdmin):
     model = User
     
     # Define as colunas mostradas na lista do admin
-    list_display = ('email', 'nome_completo', 'role', 'parent_delegate', 'cpf', 'perfil_completo', 'is_staff', 'date_joined')
+    list_display = ('email', 'nome_completo', 'role', 'get_delegacao', 'parent_delegate', 'cpf', 'perfil_completo', 'is_staff', 'date_joined')
     list_filter = ('role', 'perfil_completo', 'is_staff', 'is_superuser')
-    search_fields = ('email', 'nome_completo', 'cpf')
+    search_fields = ('email', 'nome_completo', 'cpf', 'nome_delegacao', 'parent_delegate__nome_delegacao')
     ordering = ('email',)
     
     # Agrupa os campos na página de detalhe/edição
@@ -34,6 +34,15 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('email', 'nome_completo', 'role', 'parent_delegate', 'cpf', 'is_staff', 'is_superuser'),
         }),
     )
+
+    def get_delegacao(self, obj):
+        delegacao = obj.delegacao_ativa.nome_delegacao
+        if delegacao:
+            if obj.parent_delegate:
+                return f"{delegacao} (Membro)"
+            return delegacao
+        return "-"
+    get_delegacao.short_description = 'Delegação'
 
 
 @admin.register(ComissaoWhitelist)

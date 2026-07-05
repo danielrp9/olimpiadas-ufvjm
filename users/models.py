@@ -207,7 +207,12 @@ class User(AbstractUser):
         return self.role == 'REPRESENTANTE'
 
     def __str__(self):
-        return f"{self.nome_completo or self.email} ({self.get_role_display()})"
+        role_str = self.get_role_display()
+        delegacao = self.delegacao_ativa.nome_delegacao
+        if delegacao:
+            suffix = " (Membro)" if self.parent_delegate else ""
+            return f"{self.nome_completo or self.email} ({role_str} - {delegacao}{suffix})"
+        return f"{self.nome_completo or self.email} ({role_str})"
 
 
 class MembroDelegacao(models.Model):
