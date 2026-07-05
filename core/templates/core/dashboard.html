@@ -217,12 +217,12 @@
                     <div class="mt-4">
                         {% if stat.total_membros > 0 %}
                             <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden flex">
-                                <div class="bg-blue-500 h-full" style="width: {% widthratio stat.atletas stat.total_membros 100 %}%"></div>
-                                <div class="bg-indigo-500 h-full" style="width: {% widthratio stat.servidores stat.total_membros 100 %}%"></div>
+                                <div class="h-full" style="width: {% widthratio stat.atletas stat.total_membros 100 %}%; background-color: #3b82f6;"></div>
+                                <div class="h-full" style="width: {% widthratio stat.servidores stat.total_membros 100 %}%; background-color: #6366f1;"></div>
                             </div>
                             <div class="flex justify-between items-center text-[9px] text-slate-400 mt-2 font-semibold">
-                                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span> Estudantes ({% widthratio stat.atletas stat.total_membros 100 %}%)</span>
-                                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500 inline-block"></span> Servidores ({% widthratio stat.servidores stat.total_membros 100 %}%)</span>
+                                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full inline-block" style="background-color: #3b82f6;"></span> Estudantes ({% widthratio stat.atletas stat.total_membros 100 %}%)</span>
+                                <span class="flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full inline-block" style="background-color: #6366f1;"></span> Servidores ({% widthratio stat.servidores stat.total_membros 100 %}%)</span>
                             </div>
                         {% else %}
                             <div class="w-full bg-slate-100 rounded-full h-2"></div>
@@ -249,9 +249,9 @@
                                 </div>
                                 <div class="w-full bg-slate-950/40 rounded-full h-3.5 overflow-hidden relative">
                                     {% if max_members > 0 %}
-                                        <div class="bg-gradient-to-r from-blue-500 to-indigo-500 h-full rounded-full transition-all duration-500" style="width: {% widthratio stat.total_membros max_members 100 %}%"></div>
+                                        <div class="h-full rounded-full transition-all duration-500" style="width: {% widthratio stat.total_membros max_members 100 %}%; background: linear-gradient(to right, #3b82f6, #6366f1);"></div>
                                     {% else %}
-                                        <div class="bg-slate-200 h-full rounded-full w-0"></div>
+                                        <div class="bg-slate-200 h-full rounded-full w-0" style="background-color: #e2e8f0;"></div>
                                     {% endif %}
                                 </div>
                             </div>
