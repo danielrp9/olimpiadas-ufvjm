@@ -9,6 +9,8 @@ class UserAdmin(BaseUserAdmin):
     Como não usamos senhas locais, removemos os campos de senha da visualização.
     """
     model = User
+    actions = ['resetar_inscricao_delegados']
+
     
     # Define as colunas mostradas na lista do admin
     list_display = ('email', 'nome_completo', 'role', 'get_delegacao', 'parent_delegate', 'cpf', 'perfil_completo', 'is_staff', 'date_joined')
@@ -43,6 +45,20 @@ class UserAdmin(BaseUserAdmin):
             return delegacao
         return "-"
     get_delegacao.short_description = 'Delegação'
+
+    @admin.action(description="Resetar/Excluir inscrição e liberar representante(s)")
+    def resetar_inscricao_delegados(self, request, queryset):
+        count = 0
+        for user in queryset:
+            delegacao = user.delegacao_ativa
+            if delegacao.role == 'REPRESENTANTE':
+                if hasattr(delegacao, 'inscricao'):
+                    delegacao.inscricao.delete()
+                delegacao.status_delegacao = 'pendente'
+                delegacao.save()
+                count += 1
+        self.message_user(request, f"{count} representante(s) teve(ram) a inscrição resetada e acesso liberado.")
+
 
 
 @admin.register(ComissaoWhitelist)

@@ -655,5 +655,139 @@ class PaymentReceiptTestCase(TestCase):
         self.assertContains(response, "Ver modalidades e atletas inscritos")
 
 
+from django.core.management import call_command
+from django.core.management.base import CommandError
+from io import StringIO
+
+class ResetInscricaoCommandTestCase(TestCase):
+    def setUp(self):
+        self.delegate = User.objects.create_user(
+            email='delegate@example.com',
+            nome_completo='Delegate Test',
+            role='REPRESENTANTE',
+            cpf='111.444.777-35',
+            nome_delegacao='Delegação Teste'
+        )
+        # Create an inscription for the delegate
+        from core.models import Inscricao
+        self.inscricao = Inscricao.objects.create(
+            delegacao=self.delegate,
+            status='pendente'
+        )
+        self.delegate.status_delegacao = 'deferido'
+        self.delegate.save()
+
+    def test_reset_inscricao_success(self):
+        from core.models import Inscricao
+        out = StringIO()
+        # Call the command to reset the inscription
+        call_command('reset_inscricao', 'delegate@example.com', stdout=out)
+        
+        # Verify inscription is deleted
+        self.assertFalse(Inscricao.objects.filter(delegacao=self.delegate).exists())
+        
+        # Verify status of delegation is reset to pendente
+        self.delegate.refresh_from_db()
+        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+        
+        output = out.getvalue()
+        self.assertIn('removida com sucesso', output)
+        self.assertIn('resetado para "Pendente de Análise"', output)
+
+    def test_reset_inscricao_no_inscricao(self):
+        from core.models import Inscricao
+        # Delete inscription first
+        self.inscricao.delete()
+        
+        out = StringIO()
+        call_command('reset_inscricao', 'delegate@example.com', stdout=out)
+        
+        # Verify status of delegation is still pendente
+        self.delegate.refresh_from_db()
+        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+        
+        output = out.getvalue()
+        self.assertIn('não possui nenhuma inscrição enviada', output)
+        self.assertIn('resetado para "Pendente de Análise"', output)
+
+    def test_reset_inscricao_non_existent_user(self):
+        with self.assertRaises(CommandError) as context:
+            call_command('reset_inscricao', 'nonexistent@example.com')
+        self.assertIn('não foi encontrado', str(context.exception))
+
+    def test_reset_inscricao_non_representative(self):
+        # Create a non-representative user
+        non_rep = User.objects.create_user(
+            email='nonrep@example.com',
+            nome_completo='Non Rep',
+            role='COMISSAO'
+        )
+        with self.assertRaises(CommandError) as context:
+            call_command('reset_inscricao', 'nonrep@example.com')
+        self.assertIn('não é um Representante de Delegação', str(context.exception))
+
+
+class AdminActionsTestCase(TestCase):
+    def setUp(self):
+        self.delegate = User.objects.create_user(
+            email='delegate_admin@example.com',
+            nome_completo='Delegate Admin Test',
+            role='REPRESENTANTE',
+            cpf='111.444.777-35',
+            nome_delegacao='Delegação Admin Teste'
+        )
+        from core.models import Inscricao
+        self.inscricao = Inscricao.objects.create(
+            delegacao=self.delegate,
+            status='pendente'
+        )
+        self.delegate.status_delegacao = 'deferido'
+        self.delegate.save()
+
+    def test_inscricao_admin_action(self):
+        from core.admin import InscricaoAdmin
+        from core.models import Inscricao
+        from django.contrib.admin.sites import AdminSite
+        
+        site = AdminSite()
+        admin_instance = InscricaoAdmin(Inscricao, site)
+        
+        queryset = Inscricao.objects.filter(delegacao=self.delegate)
+        
+        class MockRequest:
+            pass
+        request = MockRequest()
+        admin_instance.message_user = lambda req, msg: None
+        
+        admin_instance.deletar_e_resetar_delegacao(request, queryset)
+        
+        self.assertFalse(Inscricao.objects.filter(delegacao=self.delegate).exists())
+        self.delegate.refresh_from_db()
+        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+
+    def test_user_admin_action(self):
+        from users.admin import UserAdmin
+        from django.contrib.admin.sites import AdminSite
+        
+        site = AdminSite()
+        admin_instance = UserAdmin(User, site)
+        
+        queryset = User.objects.filter(id=self.delegate.id)
+        
+        class MockRequest:
+            pass
+        request = MockRequest()
+        admin_instance.message_user = lambda req, msg: None
+        
+        admin_instance.resetar_inscricao_delegados(request, queryset)
+        
+        from core.models import Inscricao
+        self.assertFalse(Inscricao.objects.filter(delegacao=self.delegate).exists())
+        self.delegate.refresh_from_db()
+        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+
+
+
+
 
 

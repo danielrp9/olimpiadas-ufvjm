@@ -1,5 +1,6 @@
 from django.contrib import admin
-from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao
+from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao, Inscricao, InscricaoModalidade
+
 
 @admin.register(Campus)
 class CampusAdmin(admin.ModelAdmin):
@@ -49,3 +50,30 @@ class RecursoMensagemAdmin(admin.ModelAdmin):
 class NotificacaoAdmin(admin.ModelAdmin):
     list_display = ('usuario', 'mensagem', 'lida', 'data_criacao')
     list_filter = ('lida', 'data_criacao')
+
+
+@admin.register(Inscricao)
+class InscricaoAdmin(admin.ModelAdmin):
+    list_display = ('delegacao', 'status', 'data_envio')
+    list_filter = ('status', 'data_envio')
+    search_fields = ('delegacao__email', 'delegacao__nome_completo', 'delegacao__nome_delegacao')
+    actions = ['deletar_e_resetar_delegacao']
+
+    @admin.action(description="Excluir inscrições selecionadas e liberar representantes")
+    def deletar_e_resetar_delegacao(self, request, queryset):
+        count = 0
+        for inscricao in queryset:
+            delegacao = inscricao.delegacao
+            inscricao.delete()
+            delegacao.status_delegacao = 'pendente'
+            delegacao.save()
+            count += 1
+        self.message_user(request, f"{count} inscrição(ões) excluída(s) e representante(s) correspondente(s) liberado(s) para refazer.")
+
+
+@admin.register(InscricaoModalidade)
+class InscricaoModalidadeAdmin(admin.ModelAdmin):
+    list_display = ('inscricao', 'modalidade')
+    list_filter = ('modalidade',)
+    search_fields = ('inscricao__delegacao__email', 'modalidade__nome')
+
