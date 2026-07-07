@@ -261,3 +261,14 @@ class MembroDelegacao(models.Model):
             existing_user.parent_delegate = None
             existing_user.save()
 
+
+class InscritosPorDelegacao(User):
+    """
+    Proxy model para exibir o relatório de inscritos por delegação no Django Admin.
+    """
+    class Meta:
+        proxy = True
+        verbose_name = "Inscritos por Delegação"
+        verbose_name_plural = "Inscritos por Delegações"
+
+
