@@ -381,6 +381,9 @@ def avaliar_delegacao(request, pk):
         justificativa = request.POST.get('justificativa', '')
         
         if status in ['deferido', 'indeferido', 'pendente']:
+            if status != 'indeferido':
+                justificativa = ''
+            
             # Salva o status na Inscrição
             inscricao.status = status
             inscricao.justificativa = justificativa

@@ -580,7 +580,7 @@
                             <span class="text-[10px] text-slate-400 block mt-0.5">{{ user.delegacao_ativa.email }}</span>
                         </div>
 
-                        {% if user.delegacao_ativa.justificativa_delegacao %}
+                        {% if user.delegacao_ativa.status_delegacao == 'indeferido' and user.delegacao_ativa.justificativa_delegacao %}
                             <div class="p-3 bg-red-50/60 border border-red-100/50 rounded-2xl text-[11px] text-red-700">
                                 <p class="font-bold flex items-center gap-1">
                                     <i class="fas fa-comment-dots text-xs"></i> Feedback da Comissão:

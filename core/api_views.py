@@ -645,6 +645,9 @@ class APIDelegacaoAvaliarView(View):
             justificativa = data.get('justificativa', '')
             
             if status in ['deferido', 'indeferido', 'pendente']:
+                if status != 'indeferido':
+                    justificativa = ''
+                
                 inscricao.status = status
                 inscricao.justificativa = justificativa
                 inscricao.save()

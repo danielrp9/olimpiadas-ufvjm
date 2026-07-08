@@ -541,6 +541,46 @@ class InscricaoNotificacoesTestCase(TestCase):
         self.assertIn("INDEFERIDA", notif_main.first().mensagem)
         self.assertIn("Assinatura inválida", notif_main.first().mensagem)
 
+    def test_inscription_evaluation_clears_justification_when_deferido(self):
+        from django.urls import reverse
+        from core.models import Inscricao
+
+        inscricao = Inscricao.objects.create(
+            delegacao=self.delegacao,
+            status='pendente'
+        )
+
+        self.client.force_login(self.staff_user)
+        url = reverse('avaliar_delegacao', kwargs={'pk': self.delegacao.id})
+        
+        # 1. Reject first
+        response = self.client.post(url, data={
+            'status': 'indeferido',
+            'justificativa': 'Assinatura inválida'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        inscricao.refresh_from_db()
+        self.delegacao.refresh_from_db()
+        self.assertEqual(inscricao.status, 'indeferido')
+        self.assertEqual(inscricao.justificativa, 'Assinatura inválida')
+        self.assertEqual(self.delegacao.status_delegacao, 'indeferido')
+        self.assertEqual(self.delegacao.justificativa_delegacao, 'Assinatura inválida')
+
+        # 2. Defer (Approve)
+        response = self.client.post(url, data={
+            'status': 'deferido',
+            'justificativa': 'Assinatura inválida' # Pass old value as might happen in DOM
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        inscricao.refresh_from_db()
+        self.delegacao.refresh_from_db()
+        self.assertEqual(inscricao.status, 'deferido')
+        self.assertEqual(inscricao.justificativa, '')
+        self.assertEqual(self.delegacao.status_delegacao, 'deferido')
+        self.assertEqual(self.delegacao.justificativa_delegacao, '')
+
 
 class PaymentReceiptTestCase(TestCase):
     def setUp(self):
