@@ -39,8 +39,8 @@
     <!-- Header Right Area (Absolute Top-Right) -->
     <div class="absolute top-8 right-8 sm:top-10 sm:right-10 z-15 flex items-center gap-4">
         <!-- Botão Exportar / Imprimir -->
-        <button onclick="window.print()" class="print:hidden inline-flex items-center px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-2xl transition gap-2 select-none backdrop-blur-sm active:scale-95 shadow-inner">
-            <i class="fas fa-print"></i> <span class="hidden md:inline">Imprimir</span>
+        <button onclick="openPrintModal()" class="print:hidden inline-flex items-center px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-2xl transition gap-2 select-none backdrop-blur-sm active:scale-95 shadow-inner">
+            <i class="fas fa-print"></i> <span class="hidden md:inline">Imprimir Relatório</span>
         </button>
 
         <!-- Ícone de Notificação com Dropdown -->
@@ -351,70 +351,341 @@
 </div>
 
 
-<!-- Layout Exclusivo para Impressão / Exportação (PDF format) -->
-<div class="hidden print:block mt-8 text-xs font-sans">
-    <div class="border-t-2 border-slate-800 pt-4 mb-6">
-        <h2 class="text-base font-bold uppercase tracking-wide text-slate-800">Relatório Consolidado de Inscrições</h2>
-        <p class="text-[10px] text-slate-500">Documento gerado dinamicamente para fins de planejamento e alocação.</p>
-    </div>
-    
-    <h3 class="font-bold text-slate-750 uppercase text-[11px] mb-2">1. Resumo por Campus</h3>
-    <table class="w-full text-left border-collapse border border-slate-300 mb-6">
-        <thead>
-            <tr class="bg-slate-100 text-[9px] uppercase font-bold border-b border-slate-300">
-                <th class="p-2 border border-slate-300">Campus</th>
-                <th class="p-2 border border-slate-300 text-center">Delegações</th>
-                <th class="p-2 border border-slate-300 text-center">Modalidades</th>
-                <th class="p-2 border border-slate-300 text-center">Atletas</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for stat in campus_summary %}
-            <tr class="border-b border-slate-200">
-                <td class="p-2 border border-slate-300 font-semibold">{{ stat.nome }}</td>
-                <td class="p-2 border border-slate-300 text-center">{{ stat.delegacoes }}</td>
-                <td class="p-2 border border-slate-300 text-center">{{ stat.modalidades }}</td>
-                <td class="p-2 border border-slate-300 text-center">{{ stat.atletas }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<style>
+/* CSS Exclusivo de Impressão */
+@media print {
+    /* Oculta tudo que pertence ao layout da interface */
+    body * {
+        visibility: hidden !important;
+    }
+    /* Torna visível apenas a área de impressão */
+    #print-area, #print-area * {
+        visibility: visible !important;
+    }
+    #print-area {
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        display: block !important;
+        background: white !important;
+        color: black !important;
+        font-family: Arial, Helvetica, sans-serif !important;
+        font-size: 10pt !important;
+        line-height: 1.4 !important;
+    }
+    /* Estilos do Cabeçalho Institucional */
+    .print-header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    .print-title {
+        font-size: 14pt;
+        font-weight: bold;
+        margin: 0;
+        color: #0f172a;
+    }
+    .print-subtitle {
+        font-size: 9pt;
+        font-weight: bold;
+        margin: 4px 0 0 0;
+        color: #334155;
+        letter-spacing: 0.5px;
+    }
+    .print-doc-name {
+        font-size: 11pt;
+        font-weight: bold;
+        margin: 15px 0 0 0;
+        color: #0f172a;
+        text-decoration: underline;
+    }
+    .print-divider {
+        border-bottom: 1.5px solid #000;
+        margin: 10px auto;
+        width: 100%;
+    }
+    /* Tabela de Metadados do Relatório */
+    .print-meta-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        margin-bottom: 20px;
+        font-size: 8.5pt;
+    }
+    .print-meta-table td {
+        padding: 4px 8px;
+        border: 1px solid #94a3b8;
+        width: 50%;
+    }
+    /* Seções */
+    .print-section {
+        margin-bottom: 20px;
+        page-break-inside: avoid;
+    }
+    .print-section-title {
+        font-size: 10pt;
+        font-weight: bold;
+        margin: 0 0 8px 0;
+        padding-bottom: 3px;
+        border-bottom: 1px solid #000;
+        color: #0f172a;
+    }
+    /* Tabelas de Dados */
+    .print-data-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+        font-size: 8.5pt;
+    }
+    .print-data-table th {
+        background-color: #f1f5f9 !important;
+        border: 1px solid #475569;
+        padding: 5px 8px;
+        font-weight: bold;
+        text-align: left;
+        color: #0f172a;
+    }
+    .print-data-table td {
+        border: 1px solid #cbd5e1;
+        padding: 5px 8px;
+        color: #0f172a;
+    }
+    .print-data-table tr.bg-light {
+        background-color: #f8fafc !important;
+    }
+    .text-center {
+        text-align: center !important;
+    }
+    .text-left {
+        text-align: left !important;
+    }
+    .font-bold {
+        font-weight: bold !important;
+    }
+    .valign-middle {
+        vertical-align: middle !important;
+    }
+    /* Rodapé do PDF */
+    .print-footer {
+        margin-top: 30px;
+        text-align: center;
+        font-size: 8pt;
+        color: #475569;
+        page-break-inside: avoid;
+    }
+    .print-page-number {
+        margin-top: 4px;
+        font-style: italic;
+    }
+}
+</style>
 
-    <h3 class="font-bold text-slate-750 uppercase text-[11px] mb-2">2. Resumo por Modalidade</h3>
-    <table class="w-full text-left border-collapse border border-slate-300">
-        <thead>
-            <tr class="bg-slate-100 text-[9px] uppercase font-bold border-b border-slate-300">
-                <th class="p-2 border border-slate-300">Modalidade</th>
-                <th class="p-2 border border-slate-300 text-center">Equipes</th>
-                {% for campus in campi %}
-                <th class="p-2 border border-slate-300 text-center">{{ campus.nome_curto }}</th>
-                {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for stat in modalidade_summary %}
-            <tr class="border-b border-slate-200">
-                <td class="p-2 border border-slate-300 font-semibold">{{ stat.nome }} ({{ stat.genero }})</td>
-                <td class="p-2 border border-slate-300 text-center">{{ stat.inscricoes }}</td>
-                {% for count in stat.campi_counts %}
-                <td class="p-2 border border-slate-300 text-center">
-                    {% if count > 0 %}
-                        {{ count }}
-                    {% else %}
-                        -
-                    {% endif %}
-                </td>
-                {% endfor %}
-            </tr>
-            {% empty %}
+<!-- Modal de Seleção de Impressão (Apenas Visual) -->
+<div id="print-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm transition-all duration-350 print:hidden">
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-2xl max-w-md w-full overflow-hidden transform transition-all duration-300 scale-95 opacity-0" id="print-modal-content">
+        <!-- Header -->
+        <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl"><i class="fas fa-print"></i></span>
+                Opções de Impressão
+            </h3>
+            <button onclick="closePrintModal()" class="text-slate-400 hover:text-slate-600 transition text-xl font-bold leading-none">&times;</button>
+        </div>
+        <!-- Body -->
+        <div class="px-6 py-6 space-y-4">
+            <p class="text-xs text-slate-400">Selecione quais seções e dados você deseja incluir no relatório final para os avaliadores:</p>
+            
+            <div class="space-y-3">
+                <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-100 hover:bg-slate-50/50 transition cursor-pointer select-none">
+                    <input type="checkbox" id="print-opt-indicators" checked class="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-700 block">Quadro Resumo / Indicadores</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">Quantitativo de atletas, divisão por gênero, categoria (estudantes e servidores) e destaques.</span>
+                    </div>
+                </label>
+                
+                <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-100 hover:bg-slate-50/50 transition cursor-pointer select-none">
+                    <input type="checkbox" id="print-opt-campus" checked class="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-700 block">Resumo por Campus</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">Tabela quantitativa consolidada detalhando delegações, atletas e modalidades inscritas de cada campus.</span>
+                    </div>
+                </label>
+                
+                <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-100 hover:bg-slate-50/50 transition cursor-pointer select-none">
+                    <input type="checkbox" id="print-opt-modalidade" checked class="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-700 block">Resumo por Modalidade</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">Tabela de equipes e delegações participantes por modalidade esportiva, separada por campus.</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3">
+            <button onclick="closePrintModal()" class="px-4 py-2.5 text-xs font-bold rounded-2xl border border-slate-200 text-slate-655 hover:bg-slate-100 transition active:scale-95">
+                Cancelar
+            </button>
+            <button onclick="executePrint()" class="px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-md transition active:scale-95 flex items-center gap-1.5">
+                <i class="fas fa-file-pdf"></i> Gerar Documento
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Área de Impressão Exclusiva (PDF/Impressora) -->
+<div id="print-area" class="hidden">
+    <!-- Cabeçalho Institucional -->
+    <div class="print-header">
+        <div class="print-logo-section">
+            <h1 class="print-title">OLIMPÍADAS UNIVERSITÁRIAS - UFVJM</h1>
+            <h2 class="print-subtitle">SISTEMA DE GERENCIAMENTO DAS OLIMPÍADAS UNIVERSITÁRIAS</h2>
+            <div class="print-divider"></div>
+            <h3 class="print-doc-name">RELATÓRIO CONSOLIDADO DE INSCRIÇÕES</h3>
+        </div>
+        
+        <table class="print-meta-table">
             <tr>
-                <td colspan="{{ campi|length|add:2 }}" class="p-2 border border-slate-300 text-center text-slate-400">
-                    Nenhuma modalidade registrada.
-                </td>
+                <td><strong>Data de Emissão:</strong> <span id="print-date"></span></td>
+                <td><strong>Horário de Emissão:</strong> <span id="print-time"></span></td>
             </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            <tr>
+                <td><strong>Emitido por:</strong> {{ request.user.nome_completo|default:request.user.email }}</td>
+                <td><strong>Documento Oficial:</strong> Planejamento e Alocação</td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Seção 1: Indicadores Gerais -->
+    <div id="print-section-indicators" class="print-section">
+        <h4 class="print-section-title">1. QUADRO RESUMO E INDICADORES GERAIS</h4>
+        <table class="print-data-table">
+            <thead>
+                <tr>
+                    <th colspan="2" class="text-left">Indicador Geral</th>
+                    <th class="text-center">Quantitativo / Percentual</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td colspan="2"><strong>Total de Delegações Homologadas</strong></td>
+                    <td class="text-center font-bold">{{ total_delegacoes }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Total de Inscrições em Modalidades</strong></td>
+                    <td class="text-center font-bold">{{ total_inscricoes }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Total de Atletas Participantes</strong></td>
+                    <td class="text-center font-bold">{{ total_atletas }}</td>
+                </tr>
+                <tr class="bg-light">
+                    <td rowspan="2" class="valign-middle"><strong>Categoria dos Atletas</strong></td>
+                    <td>Estudantes</td>
+                    <td class="text-center">{{ atletas_estudantes }} ({{ pct_estudantes }}%)</td>
+                </tr>
+                <tr class="bg-light">
+                    <td>Servidores (Docentes/Técnicos)</td>
+                    <td class="text-center">{{ atletas_servidores }} ({{ pct_servidores }}%)</td>
+                </tr>
+                <tr>
+                    <td rowspan="3" class="valign-middle"><strong>Perfil de Gênero</strong></td>
+                    <td>Masculino</td>
+                    <td class="text-center">{{ atletas_m }} ({{ pct_masculino }}%)</td>
+                </tr>
+                <tr>
+                    <td>Feminino</td>
+                    <td class="text-center">{{ atletas_f }} ({{ pct_feminino }}%)</td>
+                </tr>
+                <tr>
+                    <td>Não-Binário</td>
+                    <td class="text-center">{{ atletas_n }} ({{ pct_nb }}%)</td>
+                </tr>
+                <tr class="bg-light">
+                    <td colspan="2"><strong>Categoria Predominante</strong></td>
+                    <td class="text-center font-bold">{{ categoria_predominante }}</td>
+                </tr>
+                <tr class="bg-light">
+                    <td colspan="2"><strong>Campus com Maior Participação (Atletas)</strong></td>
+                    <td class="text-center font-bold">{{ campus_maior_participacao }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Seção 2: Resumo por Campus -->
+    <div id="print-section-campus" class="print-section">
+        <h4 class="print-section-title">2. PARTICIPAÇÃO POR CAMPUS</h4>
+        <table class="print-data-table">
+            <thead>
+                <tr>
+                    <th>Nome do Campus</th>
+                    <th class="text-center">Delegações</th>
+                    <th class="text-center">Modalidades Inscritas</th>
+                    <th class="text-center">Atletas Totais</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in campus_summary %}
+                <tr>
+                    <td><strong>{{ stat.nome }}</strong></td>
+                    <td class="text-center">{{ stat.delegacoes }}</td>
+                    <td class="text-center">{{ stat.modalidades }}</td>
+                    <td class="text-center">{{ stat.atletas }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center text-muted">Nenhum campus registrado.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Seção 3: Resumo por Modalidade -->
+    <div id="print-section-modalidade" class="print-section">
+        <h4 class="print-section-title">3. INSCRITOS POR MODALIDADE E CAMPUS</h4>
+        <table class="print-data-table">
+            <thead>
+                <tr>
+                    <th>Modalidade & Categoria</th>
+                    <th class="text-center font-bold">Total Equipes</th>
+                    {% for campus in campi %}
+                    <th class="text-center">{{ campus.nome_curto }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in modalidade_summary %}
+                <tr>
+                    <td><strong>{{ stat.nome }}</strong> <small>({{ stat.genero }})</small></td>
+                    <td class="text-center font-bold">{{ stat.inscricoes }}</td>
+                    {% for count in stat.campi_counts %}
+                    <td class="text-center">
+                        {% if count > 0 %}
+                            {{ count }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="{{ campi|length|add:2 }}" class="text-center text-muted">Nenhuma modalidade registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Rodapé de Autenticidade -->
+    <div class="print-footer">
+        <div class="print-divider"></div>
+        <p>Documento oficial gerado automaticamente pelo Sistema de Olimpíadas Universitárias - UFVJM.</p>
+    </div>
 </div>
 
 <!-- Scripts do Chart.js, DataLabels e Notificações -->
@@ -547,6 +818,63 @@
                 }
             }
         });
+    }
+
+    // Funções de Impressão e Modal de Configuração
+    function openPrintModal() {
+        const modal = document.getElementById('print-modal');
+        const content = document.getElementById('print-modal-content');
+        modal.classList.remove('hidden');
+        setTimeout(() => {
+            content.classList.remove('scale-95', 'opacity-0');
+            content.classList.add('scale-100', 'opacity-100');
+        }, 10);
+    }
+
+    function closePrintModal() {
+        const modal = document.getElementById('print-modal');
+        const content = document.getElementById('print-modal-content');
+        content.classList.remove('scale-100', 'opacity-100');
+        content.classList.add('scale-95', 'opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+        }, 300);
+    }
+
+    function executePrint() {
+        // Obter opções selecionadas
+        const showIndicators = document.getElementById('print-opt-indicators').checked;
+        const showCampus = document.getElementById('print-opt-campus').checked;
+        const showModalidade = document.getElementById('print-opt-modalidade').checked;
+        
+        // Exibir/ocultar seções na área de impressão
+        document.getElementById('print-section-indicators').style.display = showIndicators ? 'block' : 'none';
+        document.getElementById('print-section-campus').style.display = showCampus ? 'block' : 'none';
+        document.getElementById('print-section-modalidade').style.display = showModalidade ? 'block' : 'none';
+        
+        // Gerar data e hora da emissão
+        const now = new Date();
+        const formattedDate = now.toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric'
+        });
+        const formattedTime = now.toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+        
+        document.getElementById('print-date').innerText = formattedDate;
+        document.getElementById('print-time').innerText = formattedTime;
+        
+        // Fechar o modal
+        closePrintModal();
+        
+        // Acionar a impressão nativa do navegador
+        setTimeout(() => {
+            window.print();
+        }, 350);
     }
 </script>
 {% endblock %}
