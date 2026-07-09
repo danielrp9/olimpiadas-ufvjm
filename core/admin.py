@@ -52,12 +52,31 @@ class NotificacaoAdmin(admin.ModelAdmin):
     list_filter = ('lida', 'data_criacao')
 
 
+class InscricaoModalidadeInline(admin.StackedInline):
+    model = InscricaoModalidade
+    extra = 0
+    filter_horizontal = ('atletas',)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "atletas":
+            resolved = request.resolver_match
+            if resolved and 'object_id' in resolved.kwargs:
+                inscricao_id = resolved.kwargs['object_id']
+                try:
+                    inscricao = Inscricao.objects.get(pk=inscricao_id)
+                    kwargs["queryset"] = Atleta.objects.filter(cadastrado_por=inscricao.delegacao)
+                except Inscricao.DoesNotExist:
+                    pass
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
 @admin.register(Inscricao)
 class InscricaoAdmin(admin.ModelAdmin):
     list_display = ('delegacao', 'status', 'data_envio')
     list_filter = ('status', 'data_envio')
     search_fields = ('delegacao__email', 'delegacao__nome_completo', 'delegacao__nome_delegacao')
     actions = ['deletar_e_resetar_delegacao']
+    inlines = [InscricaoModalidadeInline]
 
     @admin.action(description="Excluir inscrições selecionadas e liberar representantes")
     def deletar_e_resetar_delegacao(self, request, queryset):
@@ -76,4 +95,16 @@ class InscricaoModalidadeAdmin(admin.ModelAdmin):
     list_display = ('inscricao', 'modalidade')
     list_filter = ('modalidade',)
     search_fields = ('inscricao__delegacao__email', 'modalidade__nome')
+    filter_horizontal = ('atletas',)
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == "atletas":
+            resolved = request.resolver_match
+            if resolved and 'object_id' in resolved.kwargs:
+                try:
+                    insc_mod = InscricaoModalidade.objects.get(pk=resolved.kwargs['object_id'])
+                    kwargs["queryset"] = Atleta.objects.filter(cadastrado_por=insc_mod.inscricao.delegacao)
+                except InscricaoModalidade.DoesNotExist:
+                    pass
+        return super().formfield_for_manytomany(db_field, request, **kwargs)
 

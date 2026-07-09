@@ -826,6 +826,60 @@ class AdminActionsTestCase(TestCase):
         self.delegate.refresh_from_db()
         self.assertEqual(self.delegate.status_delegacao, 'pendente')
 
+    def test_inscricao_modalidade_inline(self):
+        from core.admin import InscricaoAdmin, InscricaoModalidadeInline
+        from core.models import Inscricao, Atleta, InscricaoModalidade
+        from django.contrib.admin.sites import AdminSite
+        
+        site = AdminSite()
+        admin_instance = InscricaoAdmin(Inscricao, site)
+        
+        # Verify inline is present
+        self.assertIn(InscricaoModalidadeInline, admin_instance.inlines)
+        
+        # Create other delegate and athletes to test filtering
+        other_delegate = User.objects.create_user(
+            email='other_delegate@example.com',
+            nome_completo='Other Delegate',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10'
+        )
+        
+        # Athlete belonging to self.delegate
+        atleta_ok = Atleta.objects.create(
+            nome_completo="Atleta OK",
+            email="atleta_ok@example.com",
+            matricula="123",
+            curso="Educação Física",
+            cadastrado_por=self.delegate
+        )
+        
+        # Athlete belonging to other_delegate
+        atleta_other = Atleta.objects.create(
+            nome_completo="Atleta Other",
+            email="atleta_other@example.com",
+            matricula="456",
+            curso="Educação Física",
+            cadastrado_por=other_delegate
+        )
+        
+        # Test inline formfield filtering
+        inline_instance = InscricaoModalidadeInline(Inscricao, site)
+        
+        class MockResolverMatch:
+            kwargs = {'object_id': self.inscricao.pk}
+            
+        class MockRequest:
+            resolver_match = MockResolverMatch()
+            
+        db_field = InscricaoModalidade._meta.get_field('atletas')
+        formfield = inline_instance.formfield_for_manytomany(db_field, request=MockRequest())
+        
+        queryset = formfield.queryset
+        self.assertIn(atleta_ok, queryset)
+        self.assertNotIn(atleta_other, queryset)
+
+
 
 
 
