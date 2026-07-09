@@ -1306,7 +1306,7 @@ def resumo_inscricoes(request):
     unread_notifications = Notificacao.objects.filter(usuario=user, lida=False)
 
     # 1. Totais Gerais
-    total_delegacoes = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True).count()
+    total_delegacoes = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True, inscricao__isnull=False).count()
     total_inscricoes = Inscricao.objects.count()
     total_atletas = Atleta.objects.count()
     total_modalidades = Modalidade.objects.count()
@@ -1332,6 +1332,7 @@ def resumo_inscricoes(request):
         delegacoes_c = User.objects.filter(
             role='REPRESENTANTE',
             parent_delegate__isnull=True,
+            inscricao__isnull=False,
             atletas__campus=c
         ).distinct().count()
         
