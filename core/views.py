@@ -1294,3 +1294,169 @@ def notificacoes_limpar(request):
     messages.success(request, "Todas as notificações foram marcadas como lidas.")
     return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
 
+
+@login_required
+@user_passes_test(lambda u: u.is_staff)
+def resumo_inscricoes(request):
+    from core.models import Campus, Atleta, Modalidade, Inscricao, InscricaoModalidade
+    from django.db.models import Count, Q
+    import json
+
+    user = request.user
+    unread_notifications = Notificacao.objects.filter(usuario=user, lida=False)
+
+    # 1. Totais Gerais
+    total_delegacoes = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True).count()
+    total_inscricoes = Inscricao.objects.count()
+    total_atletas = Atleta.objects.count()
+    total_modalidades = Modalidade.objects.count()
+
+    # Atletas por Gênero
+    atletas_m = Atleta.objects.filter(genero='M').count()
+    atletas_f = Atleta.objects.filter(genero='F').count()
+    atletas_n = Atleta.objects.filter(genero='N').count()
+
+    # Atletas por Tipo
+    atletas_estudantes = Atleta.objects.filter(tipo_atleta='estudante').count()
+    atletas_servidores = Atleta.objects.filter(tipo_atleta='servidor').count()
+
+    # 2. Resumo por Campus
+    campi = Campus.objects.all().order_by('nome')
+    campus_summary = []
+    
+    chart_campus_labels = []
+    chart_delegacoes_data = []
+    chart_atletas_data = []
+    
+    for c in campi:
+        delegacoes_c = User.objects.filter(
+            role='REPRESENTANTE',
+            parent_delegate__isnull=True,
+            atletas__campus=c
+        ).distinct().count()
+        
+        atletas_c = Atleta.objects.filter(campus=c).count()
+        
+        modalidades_c = InscricaoModalidade.objects.filter(
+            inscricao__delegacao__atletas__campus=c
+        ).values('modalidade').distinct().count()
+        
+        campus_summary.append({
+            'nome': c.nome,
+            'delegacoes': delegacoes_c,
+            'atletas': atletas_c,
+            'modalidades': modalidades_c,
+        })
+        
+        chart_campus_labels.append(c.nome)
+        chart_delegacoes_data.append(delegacoes_c)
+        chart_atletas_data.append(atletas_c)
+
+    # Encontrar o campus com maior participação
+    campus_maior_participacao = "Nenhum"
+    if campus_summary:
+        maior_campus = max(campus_summary, key=lambda x: x['atletas'])
+        if maior_campus['atletas'] > 0:
+            campus_maior_participacao = maior_campus['nome'].replace("Campus ", "")
+
+    if atletas_estudantes > atletas_servidores:
+        categoria_predominante = "Estudantes"
+    elif atletas_servidores > atletas_estudantes:
+        categoria_predominante = "Servidores"
+    else:
+        categoria_predominante = "Equilibrada" if total_atletas > 0 else "Nenhuma"
+
+    pct_estudantes = round((atletas_estudantes / total_atletas) * 100) if total_atletas > 0 else 0
+    pct_servidores = round((atletas_servidores / total_atletas) * 100) if total_atletas > 0 else 0
+    
+    pct_masculino = round((atletas_m / total_atletas) * 100) if total_atletas > 0 else 0
+    pct_feminino = round((atletas_f / total_atletas) * 100) if total_atletas > 0 else 0
+    pct_nb = round((atletas_n / total_atletas) * 100) if total_atletas > 0 else 0
+
+    # 3. Resumo por Modalidade
+    modalidades = Modalidade.objects.all().order_by('nome')
+    modalidade_summary = []
+    for m in modalidades:
+        times_count = m.inscricoes.count()
+        atletas_count = Atleta.objects.filter(modalidades_inscritas__modalidade=m).distinct().count()
+        
+        campi_inscritos = Campus.objects.filter(
+            atleta__modalidades_inscritas__modalidade=m
+        ).distinct()
+        
+        modalidade_summary.append({
+            'nome': m.nome,
+            'genero': m.get_genero_display(),
+            'inscricoes': times_count,
+            'atletas': atletas_count,
+            'campi': ", ".join([c.nome for c in campi_inscritos]) if campi_inscritos.exists() else "Nenhum"
+        })
+
+    # 4. Dados para o gráfico de Modalidades por Campus (Y-axis: Modalidades, Datasets: Campi)
+    chart_modalidade_labels = []
+    campus_datasets_data = {c.id: [] for c in campi}
+
+    for m in modalidades:
+        # Só inclui modalidades com pelo menos uma inscrição para otimizar espaço
+        if m.inscricoes.exists():
+            chart_modalidade_labels.append(f"{m.nome} ({m.get_genero_display()})")
+            for c in campi:
+                count = InscricaoModalidade.objects.filter(
+                    modalidade=m,
+                    inscricao__delegacao__atletas__campus=c
+                ).distinct().count()
+                campus_datasets_data[c.id].append(count)
+
+    chart_datasets_modalidades = []
+    colors = [
+        'rgba(59, 130, 246, 0.8)',   # Azul
+        'rgba(139, 92, 246, 0.8)',   # Roxo
+        'rgba(249, 115, 22, 0.8)',   # Laranja
+        'rgba(16, 185, 129, 0.8)',   # Verde
+    ]
+    border_colors = [c.replace('0.8', '1') for c in colors]
+
+    for index, c in enumerate(campi):
+        color_index = index % len(colors)
+        chart_datasets_modalidades.append({
+            'label': c.nome,
+            'data': campus_datasets_data[c.id],
+            'backgroundColor': colors[color_index],
+            'borderColor': border_colors[color_index],
+            'borderWidth': 1.5,
+            'borderRadius': 4,
+        })
+
+    context = {
+        'unread_notifications': unread_notifications,
+        'total_delegacoes': total_delegacoes,
+        'total_inscricoes': total_inscricoes,
+        'total_atletas': total_atletas,
+        'total_modalidades': total_modalidades,
+        
+        'atletas_m': atletas_m,
+        'atletas_f': atletas_f,
+        'atletas_n': atletas_n,
+        'pct_masculino': pct_masculino,
+        'pct_feminino': pct_feminino,
+        'pct_nb': pct_nb,
+        
+        'atletas_estudantes': atletas_estudantes,
+        'atletas_servidores': atletas_servidores,
+        'pct_estudantes': pct_estudantes,
+        'pct_servidores': pct_servidores,
+        'categoria_predominante': categoria_predominante,
+        'campus_maior_participacao': campus_maior_participacao,
+        
+        'campus_summary': campus_summary,
+        'modalidade_summary': modalidade_summary,
+        
+        'chart_campus_labels_json': json.dumps(chart_campus_labels),
+        'chart_modalidade_labels_json': json.dumps(chart_modalidade_labels),
+        'chart_delegacoes_data_json': json.dumps(chart_delegacoes_data),
+        'chart_atletas_data_json': json.dumps(chart_atletas_data),
+        'chart_datasets_modalidades_json': json.dumps(chart_datasets_modalidades),
+    }
+    return render(request, 'core/resumo_inscricoes.html', context)
+
+

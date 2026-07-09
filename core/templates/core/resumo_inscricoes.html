@@ -1,0 +1,530 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Resumo de Inscrições - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<!-- Banner de Apresentação (Estilo Fincan.io - Idêntico ao da Home) -->
+<div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl pt-16 pb-24 px-8 sm:px-10 border border-slate-800 shadow-sm overflow-hidden mb-6 flex flex-col sm:flex-row justify-between items-start gap-6">
+    <!-- Abstract SVG Wave Grid -->
+    <div class="absolute inset-0 opacity-20 pointer-events-none">
+        <svg class="w-full h-full object-cover" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M-50,150 Q150,50 350,120 T750,70 T1150,100" stroke="url(#wave-gradient)" stroke-width="2" stroke-dasharray="10 15" />
+            <path d="M-50,120 Q150,20 350,90 T750,40 T1150,70" stroke="url(#wave-gradient)" stroke-width="1.5" stroke-dasharray="8 12" />
+            <path d="M-50,90 Q150,0 350,60 T750,20 T1150,40" stroke="url(#wave-gradient)" stroke-width="1" stroke-dasharray="6 10" />
+            <defs>
+                <linearGradient id="wave-gradient" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stop-color="#3b82f6" />
+                    <stop offset="50%" stop-color="#8b5cf6" />
+                    <stop offset="100%" stop-color="#ec4899" />
+                </linearGradient>
+            </defs>
+        </svg>
+    </div>
+    
+    <!-- Glowing Orbs -->
+    <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute left-1/3 -bottom-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+    <div class="relative z-10">
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30 uppercase tracking-wide">
+                Comissão Organizadora
+            </span>
+        </div>
+        <h1 class="text-2xl font-black mt-2 tracking-tight">Resumo Geral de Inscrições</h1>
+        <p class="text-slate-400 text-xs mt-1">Estatísticas consolidadas e relatórios quantitativos para planejamento das Olimpíadas.</p>
+    </div>
+    
+    <!-- Header Right Area (Absolute Top-Right) -->
+    <div class="absolute top-8 right-8 sm:top-10 sm:right-10 z-15 flex items-center gap-4">
+        <!-- Botão Exportar / Imprimir -->
+        <button onclick="window.print()" class="print:hidden inline-flex items-center px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-2xl transition gap-2 select-none backdrop-blur-sm active:scale-95 shadow-inner">
+            <i class="fas fa-print"></i> <span class="hidden md:inline">Imprimir</span>
+        </button>
+
+        <!-- Ícone de Notificação com Dropdown -->
+        <div class="relative" id="notification-dropdown-container-admin">
+            <button type="button" onclick="toggleNotificationDropdown('notification-dropdown-admin')" class="relative rounded-xl bg-white/5 border border-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition focus:outline-none flex items-center justify-center w-9 h-9 shadow-inner select-none backdrop-blur-sm">
+                <i class="far fa-bell text-lg h-5 w-5 flex items-center justify-center"></i>
+                {% if unread_notifications.count > 0 %}
+                    <span class="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold shadow-sm leading-none">
+                        {{ unread_notifications.count }}
+                    </span>
+                {% endif %}
+            </button>
+            <!-- Dropdown Content -->
+            <div id="notification-dropdown-admin" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200/80 z-50 overflow-hidden py-1 text-slate-800">
+                <div class="px-4 py-2 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                    <span class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">Notificações</span>
+                    <a href="{% url 'notificacao_list' %}" class="text-[9px] font-bold text-blue-600 hover:text-blue-700">Ver todas</a>
+                </div>
+                <div class="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                    {% for notif in unread_notifications %}
+                        <a href="{% url 'notificacao_ler' notif.id %}" class="block px-4 py-2.5 hover:bg-slate-50 text-[10px] text-slate-655 font-semibold transition leading-snug">
+                            {{ notif.mensagem }}
+                            <span class="block text-[8px] text-slate-400 font-normal mt-0.5">{{ notif.data_criacao|date:"d/m/Y H:i" }}</span>
+                        </a>
+                    {% empty %}
+                        <div class="px-4 py-6 text-center text-slate-400">
+                            <i class="far fa-bell-slash text-base mb-1 block"></i>
+                            <span class="text-[10px] font-medium">Nenhuma notificação</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Perfil Logado Minimalista e Integrado -->
+        <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-1.5 pl-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
+            <div class="text-right hidden sm:block">
+                <span class="text-xs font-bold text-white block leading-tight">{{ user.nome_completo|default:user.email }}</span>
+                <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">{{ user.get_role_display }}</span>
+            </div>
+            {% if user.foto_url %}
+                <img src="{{ user.foto_url }}" alt="Perfil" class="w-8 h-8 rounded-xl object-cover border border-white/10 shadow-sm shrink-0">
+            {% else %}
+                <div class="w-8 h-8 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
+                    {{ user.nome_completo|slice:":1"|default:user.email|slice:":1" }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 1. Linha de Métricas Compactas (4 Colunas) - Com Recuo para Sobreposição (Idêntico ao da Home) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8 -mt-12 relative z-10 px-4 sm:px-6">
+    <!-- Delegações -->
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-university text-base"></i>
+        </div>
+        <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delegações</span>
+            <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_delegacoes }}</span>
+        </div>
+    </div>
+    <!-- Inscrições Gerais -->
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-file-invoice text-base"></i>
+        </div>
+        <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Inscrições</span>
+            <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_inscricoes }}</span>
+        </div>
+    </div>
+    <!-- Total de Atletas -->
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-running text-base"></i>
+        </div>
+        <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Atletas</span>
+            <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_atletas }}</span>
+        </div>
+    </div>
+    <!-- Modalidades -->
+    <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
+        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
+            <i class="fas fa-trophy text-base"></i>
+        </div>
+        <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Modalidades</span>
+            <span class="text-xl font-bold text-slate-800 block mt-0.5">{{ total_modalidades }}</span>
+        </div>
+    </div>
+</div>
+
+<!-- 2. Tabelas Detalhadas com Abas (Movida para Primeiro) -->
+<div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden mb-8">
+    <!-- Menu de Abas -->
+    <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div class="flex gap-2">
+            <button onclick="switchTab('campus')" id="tab-btn-campus" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-map-marker-alt"></i> Resumo por Campus
+            </button>
+            <button onclick="switchTab('modalidade')" id="tab-btn-modalidade" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-running"></i> Resumo por Modalidade
+            </button>
+        </div>
+        
+        <!-- Campo de Pesquisa -->
+        <div class="relative w-full sm:w-40">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <i class="fas fa-search text-xs"></i>
+            </span>
+            <input type="text" id="search-input" onkeyup="filterTables()" placeholder="Buscar na tabela..." class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white" />
+        </div>
+    </div>
+
+    <!-- Aba 1: Resumo por Campus -->
+    <div id="section-campus" class="overflow-x-auto">
+        <table class="w-full text-left border-collapse table-filterable" id="table-campus">
+            <thead>
+                <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    <th class="px-6 py-4">Nome do Campus</th>
+                    <th class="px-6 py-4 text-center">Delegações</th>
+                    <th class="px-6 py-4 text-center">Modalidades Inscritas</th>
+                    <th class="px-6 py-4 text-center">Atletas Totais</th>
+                    <th class="px-6 py-4 text-right">Porcentagem Atletas</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                {% for stat in campus_summary %}
+                <tr class="hover:bg-slate-50/30 transition">
+                    <td class="px-6 py-4 font-bold text-slate-850 font-row-label">
+                        {{ stat.nome }}
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-100">
+                            {{ stat.delegacoes }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                            {{ stat.modalidades }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center font-semibold text-slate-700">
+                        {{ stat.atletas }}
+                    </td>
+                    <td class="px-6 py-4 text-right font-semibold text-slate-500">
+                        {% if total_atletas > 0 %}
+                            {% widthratio stat.atletas total_atletas 100 %}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="px-6 py-12 text-center text-slate-400">
+                        <i class="far fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
+                        Nenhum dado de campus registrado.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Aba 2: Resumo por Modalidade (Oculta por padrão) -->
+    <div id="section-modalidade" class="hidden overflow-x-auto">
+        <table class="w-full text-left border-collapse table-filterable" id="table-modalidade">
+            <thead>
+                <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
+                    <th class="px-6 py-4">Modalidade & Categoria</th>
+                    <th class="px-6 py-4 text-center">Equipes/Delegações</th>
+                    <th class="px-6 py-4 text-center">Atletas Escalados</th>
+                    <th class="px-6 py-4">Campi Participantes</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                {% for stat in modalidade_summary %}
+                <tr class="hover:bg-slate-50/30 transition">
+                    <td class="px-6 py-4 font-bold text-slate-850 font-row-label">
+                        {{ stat.nome }} <span class="text-[10px] font-normal text-slate-400">({{ stat.genero }})</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-100">
+                            {{ stat.inscricoes }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-center font-semibold text-slate-700">
+                        {{ stat.atletas }}
+                    </td>
+                    <td class="px-6 py-4 text-slate-500 font-medium font-row-campi">
+                        {{ stat.campi }}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                        <i class="far fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
+                        Nenhuma modalidade registrada.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 3. Dois Gráficos Pequenos (Abaixo da Tabela) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8 print:hidden">
+    <!-- Gráfico de Delegações por Campus (Doughnut mostrando Quantitativo) -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+        <div>
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-1">
+                <span class="p-1.5 bg-purple-50 text-purple-600 rounded-xl"><i class="fas fa-university text-xs"></i></span>
+                Delegações por Campus
+            </h3>
+            <p class="text-xs text-slate-400">Distribuição quantitativa das delegações registradas em cada campus.</p>
+        </div>
+        <div class="mt-6 flex items-center justify-center relative" style="height: 240px;">
+            <canvas id="chartDelegacoesCampi"></canvas>
+        </div>
+    </div>
+
+    <!-- Distribuição de Gênero e Categorias (Métricas Demográficas) -->
+    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex flex-col justify-between">
+        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
+            <span class="p-1.5 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fas fa-venus-mars text-xs"></i></span>
+            Perfil Demográfico de Atletas
+        </h3>
+        
+        <!-- Linha 1: Mini Cards de Indicadores -->
+        <div class="grid grid-cols-3 gap-3 mb-4">
+            <div class="bg-slate-50/50 p-2.5 rounded-2xl border border-slate-100 text-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Atletas</span>
+                <span class="text-base font-extrabold text-slate-800 block mt-0.5">{{ total_atletas }}</span>
+            </div>
+            <div class="bg-slate-50/50 p-2.5 rounded-2xl border border-slate-100 text-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Estud.</span>
+                <span class="text-base font-extrabold text-slate-800 block mt-0.5">{{ atletas_estudantes }}</span>
+            </div>
+            <div class="bg-slate-50/50 p-2.5 rounded-2xl border border-slate-100 text-center">
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Servid.</span>
+                <span class="text-base font-extrabold text-slate-800 block mt-0.5">{{ atletas_servidores }}</span>
+            </div>
+        </div>
+
+        <!-- Linha 2: Distribuição por Gênero com Barras Proporcionais -->
+        <div class="space-y-3 mb-4">
+            <span class="text-[10px] font-bold text-slate-450 uppercase tracking-wider block">Distribuição por gênero</span>
+            
+            <!-- Masculino -->
+            <div>
+                <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                    <span class="flex items-center gap-1.5"><i class="fas fa-mars text-blue-500"></i> Masculino</span>
+                    <span>{{ atletas_m }} <span class="text-slate-400 font-normal">({{ pct_masculino }}%)</span></span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-blue-500 h-full rounded-full" style="width: {{ pct_masculino }}%"></div>
+                </div>
+            </div>
+            
+            <!-- Feminino -->
+            <div>
+                <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                    <span class="flex items-center gap-1.5"><i class="fas fa-venus text-pink-500"></i> Feminino</span>
+                    <span>{{ atletas_f }} <span class="text-slate-400 font-normal">({{ pct_feminino }}%)</span></span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-pink-500 h-full rounded-full" style="width: {{ pct_feminino }}%"></div>
+                </div>
+            </div>
+            
+            <!-- NB -->
+            <div>
+                <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+                    <span class="flex items-center gap-1.5"><i class="fas fa-genderless text-purple-500"></i> NB</span>
+                    <span>{{ atletas_n }} <span class="text-slate-400 font-normal">({{ pct_nb }}%)</span></span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-2">
+                    <div class="bg-purple-500 h-full rounded-full" style="width: {{ pct_nb }}%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Linha 3: Estatísticas Resumidas -->
+        <div class="border-t border-slate-100 pt-4 grid grid-cols-2 gap-4">
+            <div>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Categoria Predominante</span>
+                <span class="text-xs font-bold text-slate-800 block mt-0.5">{{ categoria_predominante }}</span>
+            </div>
+            <div>
+                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Campus com Maior Participação</span>
+                <span class="text-xs font-bold text-slate-800 block mt-0.5">{{ campus_maior_participacao }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Layout Exclusivo para Impressão / Exportação (PDF format) -->
+<div class="hidden print:block mt-8 text-xs font-sans">
+    <div class="border-t-2 border-slate-800 pt-4 mb-6">
+        <h2 class="text-base font-bold uppercase tracking-wide text-slate-800">Relatório Consolidado de Inscrições</h2>
+        <p class="text-[10px] text-slate-500">Documento gerado dinamicamente para fins de planejamento e alocação.</p>
+    </div>
+    
+    <h3 class="font-bold text-slate-750 uppercase text-[11px] mb-2">1. Resumo por Campus</h3>
+    <table class="w-full text-left border-collapse border border-slate-300 mb-6">
+        <thead>
+            <tr class="bg-slate-100 text-[9px] uppercase font-bold border-b border-slate-300">
+                <th class="p-2 border border-slate-300">Campus</th>
+                <th class="p-2 border border-slate-300 text-center">Delegações</th>
+                <th class="p-2 border border-slate-300 text-center">Modalidades</th>
+                <th class="p-2 border border-slate-300 text-center">Atletas</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in campus_summary %}
+            <tr class="border-b border-slate-200">
+                <td class="p-2 border border-slate-300 font-semibold">{{ stat.nome }}</td>
+                <td class="p-2 border border-slate-300 text-center">{{ stat.delegacoes }}</td>
+                <td class="p-2 border border-slate-300 text-center">{{ stat.modalidades }}</td>
+                <td class="p-2 border border-slate-300 text-center">{{ stat.atletas }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h3 class="font-bold text-slate-750 uppercase text-[11px] mb-2">2. Resumo por Modalidade</h3>
+    <table class="w-full text-left border-collapse border border-slate-300">
+        <thead>
+            <tr class="bg-slate-100 text-[9px] uppercase font-bold border-b border-slate-300">
+                <th class="p-2 border border-slate-300">Modalidade</th>
+                <th class="p-2 border border-slate-300 text-center">Equipes</th>
+                <th class="p-2 border border-slate-300 text-center">Atletas</th>
+                <th class="p-2 border border-slate-300">Campi Participantes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stat in modalidade_summary %}
+            <tr class="border-b border-slate-200">
+                <td class="p-2 border border-slate-300 font-semibold">{{ stat.nome }} ({{ stat.genero }})</td>
+                <td class="p-2 border border-slate-300 text-center">{{ stat.inscricoes }}</td>
+                <td class="p-2 border border-slate-300 text-center">{{ stat.atletas }}</td>
+                <td class="p-2 border border-slate-300 text-slate-600">{{ stat.campi }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Scripts do Chart.js, DataLabels e Notificações -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script>
+    // Registra o plugin de DataLabels globalmente
+    Chart.register(ChartDataLabels);
+
+    function toggleNotificationDropdown(dropdownId) {
+        const dropdown = document.getElementById(dropdownId);
+        dropdown.classList.toggle('hidden');
+    }
+
+    document.addEventListener('click', function(event) {
+        const adminContainer = document.getElementById('notification-dropdown-container-admin');
+        const adminDropdown = document.getElementById('notification-dropdown-admin');
+        if (adminContainer && adminDropdown && !adminContainer.contains(event.target)) {
+            adminDropdown.classList.add('hidden');
+        }
+    });
+
+    const campusLabels = {{ chart_campus_labels_json|safe }};
+    const delegacoesData = {{ chart_delegacoes_data_json|safe }};
+
+    document.addEventListener("DOMContentLoaded", () => {
+
+        // 2. Gráfico de Delegações por Campus (Doughnut Chart mostrando valor absoluto)
+        const ctxDelegacoes = document.getElementById('chartDelegacoesCampi').getContext('2d');
+        new Chart(ctxDelegacoes, {
+            type: 'doughnut',
+            data: {
+                labels: campusLabels,
+                datasets: [{
+                    data: delegacoesData,
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(139, 92, 246, 0.8)',
+                        'rgba(249, 115, 22, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(234, 179, 8, 0.8)'
+                    ],
+                    borderColor: '#ffffff',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                animation: false,
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            boxWidth: 8,
+                            padding: 8,
+                            font: { size: 9, weight: '600' },
+                            color: '#475569'
+                        }
+                    },
+                    datalabels: {
+                        color: '#ffffff',
+                        font: {
+                            weight: 'bold',
+                            size: 11
+                        },
+                        formatter: (value, ctx) => {
+                            return value; // Mostra o valor absoluto quantitativo dentro de cada cor
+                        }
+                    }
+                },
+                cutout: '65%'
+            }
+        });
+    });
+
+    // Alternar abas
+    function switchTab(tabId) {
+        document.getElementById('section-campus').classList.add('hidden');
+        document.getElementById('section-modalidade').classList.add('hidden');
+        
+        document.getElementById('section-' + tabId).classList.remove('hidden');
+
+        const btnCampus = document.getElementById('tab-btn-campus');
+        const btnModalidade = document.getElementById('tab-btn-modalidade');
+
+        if (tabId === 'campus') {
+            btnCampus.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
+            btnModalidade.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap";
+        } else {
+            btnCampus.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap";
+            btnModalidade.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
+        }
+        
+        document.getElementById('search-input').value = '';
+        filterTables();
+    }
+
+    // Filtrar tabelas
+    function filterTables() {
+        const input = document.getElementById('search-input');
+        const filter = input.value.toLowerCase();
+        
+        const tables = document.querySelectorAll('.table-filterable');
+        tables.forEach(table => {
+            const tr = table.getElementsByTagName('tr');
+            for (let i = 1; i < tr.length; i++) {
+                let showRow = false;
+                const labelCell = tr[i].querySelector('.font-row-label');
+                if (labelCell) {
+                    const txtValue = labelCell.textContent || labelCell.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        showRow = true;
+                    }
+                }
+                
+                const campiCell = tr[i].querySelector('.font-row-campi');
+                if (campiCell) {
+                    const txtValue = campiCell.textContent || campiCell.innerText;
+                    if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                        showRow = true;
+                    }
+                }
+
+                if (showRow) {
+                    tr[i].style.display = '';
+                } else {
+                    tr[i].style.display = 'none';
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

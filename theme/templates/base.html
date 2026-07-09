@@ -35,9 +35,9 @@
                         Dashboard
                     </a>
                     {% if user.is_comissao %}
-                    <a href="{% url 'dashboard' %}#analytics-section" class="text-slate-500 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200">
+                    <a href="{% url 'resumo_inscricoes' %}" class="{% if 'comissao/resumo-inscricoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition-all duration-200">
                         <i class="fas fa-chart-bar mr-3 text-base"></i>
-                        Estatísticas
+                        Resumo Inscrições
                     </a>
                     {% endif %}
                     {% endif %}
@@ -151,9 +151,9 @@
                             Dashboard
                         </a>
                         {% if user.is_comissao %}
-                        <a href="{% url 'dashboard' %}#analytics-section" class="text-slate-500 hover:bg-slate-50 hover:text-slate-900 group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
+                        <a href="{% url 'resumo_inscricoes' %}" class="{% if 'comissao/resumo-inscricoes' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-3 text-sm font-semibold rounded-2xl transition">
                             <i class="fas fa-chart-bar mr-3 text-base"></i>
-                            Estatísticas
+                            Resumo Inscrições
                         </a>
                         {% endif %}
                         {% endif %}

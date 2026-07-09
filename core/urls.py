@@ -40,6 +40,7 @@ urlpatterns = [
     path('comissao/whitelist/<int:pk>/remover/', views.whitelist_delete, name='whitelist_delete'),
     path('comissao/atleta/<int:pk>/reset-conformidade/', views.reset_conformidade_atleta, name='atleta_reset_conformidade'),
     path('atleta/<int:pk>/enviar-correcao/', views.enviar_correcao_atleta, name='enviar_correcao_atleta'),
+    path('comissao/resumo-inscricoes/', views.resumo_inscricoes, name='resumo_inscricoes'),
 
     # Rotas de Gestão de Delegações (COMISSAO)
     path('comissao/delegacoes/', views.AdminDelegacaoListView.as_view(), name='admin_delegacoes'),

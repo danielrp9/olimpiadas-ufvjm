@@ -879,6 +879,51 @@ class AdminActionsTestCase(TestCase):
         self.assertIn(atleta_ok, queryset)
         self.assertNotIn(atleta_other, queryset)
 
+    def test_resumo_inscricoes_view(self):
+        from django.urls import reverse
+        from core.models import Campus, Atleta
+        
+        # Create a Campus
+        campus = Campus.objects.create(nome="Campus Teste")
+        
+        # Create an athlete
+        Atleta.objects.create(
+            nome_completo="Atleta Teste",
+            email="atleta@example.com",
+            matricula="789",
+            curso="Educação Física",
+            campus=campus,
+            cadastrado_por=self.delegate
+        )
+        
+        # 1. Test representing user (has no staff access)
+        self.client.force_login(self.delegate)
+        response = self.client.get(reverse('resumo_inscricoes'))
+        # user_passes_test redirects to login page by default
+        self.assertEqual(response.status_code, 302)
+        
+        # 2. Create and login as COMISSAO user
+        comissao_user = User.objects.create_user(
+            email='comissao_test@example.com',
+            nome_completo='Comissao Test',
+            role='COMISSAO',
+            cpf='181.498.521-23'
+        )
+        # Verify automatic is_staff=True on save
+        self.assertTrue(comissao_user.is_staff)
+        
+        self.client.force_login(comissao_user)
+        response = self.client.get(reverse('resumo_inscricoes'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'core/resumo_inscricoes.html')
+        
+        # Check context variables
+        self.assertEqual(response.context['total_delegacoes'], 1)
+        self.assertEqual(response.context['total_atletas'], 1)
+        self.assertIn('chart_campus_labels_json', response.context)
+        self.assertIn('chart_datasets_modalidades_json', response.context)
+
+
 
 
 
