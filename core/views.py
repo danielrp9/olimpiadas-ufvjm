@@ -1321,7 +1321,9 @@ def resumo_inscricoes(request):
     atletas_servidores = Atleta.objects.filter(tipo_atleta='servidor').count()
 
     # 2. Resumo por Campus
-    campi = Campus.objects.all().order_by('nome')
+    campi = list(Campus.objects.all().exclude(nome__icontains='Teófilo Otoni').order_by('nome'))
+    for c in campi:
+        c.nome_curto = c.nome.replace("Campus de ", "").replace("Campus ", "")
     campus_summary = []
     
     chart_campus_labels = []
@@ -1385,12 +1387,21 @@ def resumo_inscricoes(request):
             atleta__modalidades_inscritas__modalidade=m
         ).distinct()
         
+        campi_counts = []
+        for c in campi:
+            count = InscricaoModalidade.objects.filter(
+                modalidade=m,
+                inscricao__delegacao__atletas__campus=c
+            ).distinct().count()
+            campi_counts.append(count)
+        
         modalidade_summary.append({
             'nome': m.nome,
             'genero': m.get_genero_display(),
             'inscricoes': times_count,
             'atletas': atletas_count,
-            'campi': ", ".join([c.nome for c in campi_inscritos]) if campi_inscritos.exists() else "Nenhum"
+            'campi': ", ".join([c.nome for c in campi_inscritos]) if campi_inscritos.exists() else "Nenhum",
+            'campi_counts': campi_counts,
         })
 
     # 4. Dados para o gráfico de Modalidades por Campus (Y-axis: Modalidades, Datasets: Campi)
@@ -1449,6 +1460,7 @@ def resumo_inscricoes(request):
         'categoria_predominante': categoria_predominante,
         'campus_maior_participacao': campus_maior_participacao,
         
+        'campi': campi,
         'campus_summary': campus_summary,
         'modalidade_summary': modalidade_summary,
         

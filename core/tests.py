@@ -920,6 +920,7 @@ class AdminActionsTestCase(TestCase):
         # Check context variables
         self.assertEqual(response.context['total_delegacoes'], 1)
         self.assertEqual(response.context['total_atletas'], 1)
+        self.assertIn('campi', response.context)
         self.assertIn('chart_campus_labels_json', response.context)
         self.assertIn('chart_datasets_modalidades_json', response.context)
 

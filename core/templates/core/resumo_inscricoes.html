@@ -216,8 +216,9 @@
                 <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                     <th class="px-6 py-4">Modalidade & Categoria</th>
                     <th class="px-6 py-4 text-center">Equipes/Delegações</th>
-                    <th class="px-6 py-4 text-center">Atletas Escalados</th>
-                    <th class="px-6 py-4">Campi Participantes</th>
+                    {% for campus in campi %}
+                    <th class="px-6 py-4 text-center">{{ campus.nome_curto }}</th>
+                    {% endfor %}
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
@@ -225,22 +226,29 @@
                 <tr class="hover:bg-slate-50/30 transition">
                     <td class="px-6 py-4 font-bold text-slate-850 font-row-label">
                         {{ stat.nome }} <span class="text-[10px] font-normal text-slate-400">({{ stat.genero }})</span>
+                        <!-- Campo oculto para pesquisa/filtro por campus -->
+                        <span class="hidden font-row-campi">{{ stat.campi }}</span>
                     </td>
                     <td class="px-6 py-4 text-center">
                         <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-100">
                             {{ stat.inscricoes }}
                         </span>
                     </td>
-                    <td class="px-6 py-4 text-center font-semibold text-slate-700">
-                        {{ stat.atletas }}
+                    {% for count in stat.campi_counts %}
+                    <td class="px-6 py-4 text-center">
+                        {% if count > 0 %}
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100">
+                                {{ count }}
+                            </span>
+                        {% else %}
+                            <span class="text-slate-300">-</span>
+                        {% endif %}
                     </td>
-                    <td class="px-6 py-4 text-slate-500 font-medium font-row-campi">
-                        {{ stat.campi }}
-                    </td>
+                    {% endfor %}
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                    <td colspan="{{ campi|length|add:2 }}" class="px-6 py-12 text-center text-slate-400">
                         <i class="far fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
                         Nenhuma modalidade registrada.
                     </td>
@@ -378,8 +386,9 @@
             <tr class="bg-slate-100 text-[9px] uppercase font-bold border-b border-slate-300">
                 <th class="p-2 border border-slate-300">Modalidade</th>
                 <th class="p-2 border border-slate-300 text-center">Equipes</th>
-                <th class="p-2 border border-slate-300 text-center">Atletas</th>
-                <th class="p-2 border border-slate-300">Campi Participantes</th>
+                {% for campus in campi %}
+                <th class="p-2 border border-slate-300 text-center">{{ campus.nome_curto }}</th>
+                {% endfor %}
             </tr>
         </thead>
         <tbody>
@@ -387,8 +396,21 @@
             <tr class="border-b border-slate-200">
                 <td class="p-2 border border-slate-300 font-semibold">{{ stat.nome }} ({{ stat.genero }})</td>
                 <td class="p-2 border border-slate-300 text-center">{{ stat.inscricoes }}</td>
-                <td class="p-2 border border-slate-300 text-center">{{ stat.atletas }}</td>
-                <td class="p-2 border border-slate-300 text-slate-600">{{ stat.campi }}</td>
+                {% for count in stat.campi_counts %}
+                <td class="p-2 border border-slate-300 text-center">
+                    {% if count > 0 %}
+                        {{ count }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="{{ campi|length|add:2 }}" class="p-2 border border-slate-300 text-center text-slate-400">
+                    Nenhuma modalidade registrada.
+                </td>
             </tr>
             {% endfor %}
         </tbody>
