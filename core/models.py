@@ -216,6 +216,42 @@ class Jogo(models.Model):
                     if self.horario_jogo.replace(microsecond=0) < agora.replace(microsecond=0):
                         raise ValidationError({'horario_jogo': "O horário do jogo não pode ser no passado para o dia de hoje."})
 
+    def delete(self, *args, **kwargs):
+        from django.db import connection
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("""
+                    UPDATE core_jogo 
+                    SET proximo_jogo_id = NULL,
+                        time_a_perdedor_de_id = NULL,
+                        time_a_vencedor_de_id = NULL,
+                        time_b_perdedor_de_id = NULL,
+                        time_b_vencedor_de_id = NULL
+                    WHERE proximo_jogo_id = %s 
+                       OR time_a_perdedor_de_id = %s 
+                       OR time_a_vencedor_de_id = %s 
+                       OR time_b_perdedor_de_id = %s 
+                       OR time_b_vencedor_de_id = %s
+                """, [self.id] * 5)
+        except Exception:
+            pass
+
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("PRAGMA foreign_keys = OFF;")
+        except Exception:
+            pass
+
+        try:
+            result = super().delete(*args, **kwargs)
+        finally:
+            try:
+                with connection.cursor() as cursor:
+                    cursor.execute("PRAGMA foreign_keys = ON;")
+            except Exception:
+                pass
+        return result
+
     class Meta:
         verbose_name = 'Jogo'
         verbose_name_plural = 'Jogos'
