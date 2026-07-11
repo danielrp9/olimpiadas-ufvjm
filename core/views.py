@@ -31,6 +31,32 @@ from django.utils.decorators import method_decorator
 
 from django.db.models import Count, Q
 
+def check_and_delete_test_games():
+    from core.models import Jogo
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    
+    # 1. Purge orphans
+    try:
+        Jogo.objects.exclude(time_a__in=User.objects.all()).delete()
+        Jogo.objects.exclude(time_b__in=User.objects.all()).delete()
+    except Exception:
+        pass
+        
+    # 2. Purge the 4 specific test futsal games
+    try:
+        import datetime
+        target_date = datetime.date(2026, 7, 10)
+        temp_games = Jogo.objects.filter(data_jogo=target_date)
+        for tg in temp_games:
+            t_a = tg.time_a_display
+            t_b = tg.time_b_display
+            names = ["Butineros", "La Furia", "SPARTA", "SUPREMA", "Macabra", "Bárbaros", "Preguiça", "Flamejante"]
+            if any(name.lower() in t_a.lower() or name.lower() in t_b.lower() for name in names):
+                tg.delete()
+    except Exception:
+        pass
+
 class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = 'core/dashboard.html'
 
@@ -38,26 +64,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context = super().get_context_data(**kwargs)
         user = self.request.user
         
-        # Cleanup orphan games automatically
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        from core.models import Jogo
-        Jogo.objects.exclude(time_a__in=User.objects.all()).delete()
-        Jogo.objects.exclude(time_b__in=User.objects.all()).delete()
-        
-        # Delete the 4 specific test futsal games requested by the user
-        try:
-            temp_games = Jogo.objects.filter(data_jogo="2026-07-10")
-            for tg in temp_games:
-                t_a = tg.time_a_display
-                t_b = tg.time_b_display
-                if ("Butineros" in t_a or "La Furia" in t_a or
-                    "SPARTA" in t_a or "SUPREMA" in t_a or
-                    "Macabra" in t_a or "Bárbaros" in t_a or
-                    "Preguiça" in t_a or "Flamejante" in t_a):
-                    tg.delete()
-        except Exception:
-            pass
+        check_and_delete_test_games()
         
         context['unread_notifications'] = Notificacao.objects.filter(usuario=user, lida=False)
         
@@ -528,11 +535,7 @@ class PreSumulaListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         user = self.request.user
         
-        # Cleanup orphan games automatically
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        Jogo.objects.exclude(time_a__in=User.objects.all()).delete()
-        Jogo.objects.exclude(time_b__in=User.objects.all()).delete()
+        check_and_delete_test_games()
         
         # Captura parâmetros de filtros
         self.modalidade_id = self.request.GET.get('modalidade')
