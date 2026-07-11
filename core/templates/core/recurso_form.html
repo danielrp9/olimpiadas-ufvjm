@@ -21,7 +21,7 @@
         </h1>
         <p class="text-slate-400 mt-1.5 text-xs">
             Jogo: <strong>{{ jogo.modalidade.nome }}</strong> &bull; 
-            {{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }} vs {{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}
+            {{ jogo.time_a_display }} vs {{ jogo.time_b_display }}
         </p>
         <p class="text-slate-400 mt-0.5 text-xs">
             Local: {{ jogo.local|default:"(Local não definido)" }} &bull; Encerrado em {{ jogo.data_hora_fim|date:"d/m/Y H:i:s" }}

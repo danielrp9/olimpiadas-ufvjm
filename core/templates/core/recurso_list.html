@@ -78,7 +78,7 @@
                                 <i class="fas fa-running text-blue-500 mr-1"></i> {{ recurso.jogo.modalidade.nome }}
                             </span>
                             <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
-                                {{ recurso.jogo.time_a.nome_delegacao|default:recurso.jogo.time_a.email }} vs {{ recurso.jogo.time_b.nome_delegacao|default:recurso.jogo.time_b.email }}
+                                {{ recurso.jogo.time_a_display }} vs {{ recurso.jogo.time_b_display }}
                             </span>
                         </td>
                         {% if user.is_comissao %}
@@ -149,7 +149,7 @@
                                 <i class="fas fa-running text-slate-500"></i> {{ jogo.modalidade.nome }}
                             </span>
                             <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
-                                {{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }} vs {{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}
+                                {{ jogo.time_a_display }} vs {{ jogo.time_b_display }}
                             </span>
                         </td>
                         <td class="px-6 py-4">
@@ -215,7 +215,7 @@
                                 {{ recurso.jogo.modalidade.nome }}
                             </span>
                             <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
-                                {{ recurso.jogo.time_a.nome_delegacao|default:recurso.jogo.time_a.email }} vs {{ recurso.jogo.time_b.nome_delegacao|default:recurso.jogo.time_b.email }}
+                                {{ recurso.jogo.time_a_display }} vs {{ recurso.jogo.time_b_display }}
                             </span>
                         </td>
                         {% if user.is_comissao %}

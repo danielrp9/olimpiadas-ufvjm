@@ -123,13 +123,13 @@
                         <td class="px-6 py-4 align-middle">
                             <div class="flex items-center gap-4 flex-wrap font-medium">
                                 <div>
-                                    <p class="font-bold text-slate-700 leading-tight">{{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_a.nome_completo }}</p>
+                                    <p class="font-bold text-slate-700 leading-tight">{{ jogo.time_a_display }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_a_responsavel }}</p>
                                 </div>
                                 <span class="text-slate-400 text-[9px] px-1.5 py-0.5 rounded border border-slate-100 bg-slate-50 font-bold shrink-0 self-center">VS</span>
                                 <div>
-                                    <p class="font-bold text-slate-700 leading-tight">{{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_b.nome_completo }}</p>
+                                    <p class="font-bold text-slate-700 leading-tight">{{ jogo.time_b_display }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_b_responsavel }}</p>
                                 </div>
                             </div>
                         </td>
@@ -184,7 +184,7 @@
                                     <button type="button" 
                                             class="text-slate-550 hover:text-blue-650 hover:bg-blue-50/50 p-2 rounded-full transition inline-flex items-center justify-center shrink-0 focus:outline-none" 
                                             title="Visualizar Pré-Súmulas da Partida"
-                                            onclick="openPresumulaModal('{{ jogo.time_a.nome_delegacao|default:jogo.time_a.email|escapejs }}', '{{ jogo.time_b.nome_delegacao|default:jogo.time_b.email|escapejs }}', '{% if jogo.presumula_a %}{% url 'presumula_detail' jogo.presumula_a.id %}{% endif %}', '{% if jogo.presumula_b %}{% url 'presumula_detail' jogo.presumula_b.id %}{% endif %}')">
+                                            onclick="openPresumulaModal('{{ jogo.time_a_display|escapejs }}', '{{ jogo.time_b_display|escapejs }}', '{% if jogo.presumula_a %}{% url 'presumula_detail' jogo.presumula_a.id %}{% endif %}', '{% if jogo.presumula_b %}{% url 'presumula_detail' jogo.presumula_b.id %}{% endif %}')">
                                         <i class="far fa-eye text-sm"></i>
                                     </button>
                                     

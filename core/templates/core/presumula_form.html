@@ -55,13 +55,13 @@
                     <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Confronto</span>
                     <div class="flex items-center gap-3 mt-2 flex-wrap">
                         <div class="text-xs">
-                            <p class="font-bold text-slate-800 leading-tight">{{ jogo.time_a.nome_delegacao|default:jogo.time_a.email }}</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_a.nome_completo }}</p>
+                            <p class="font-bold text-slate-800 leading-tight">{{ jogo.time_a_display }}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_a_responsavel }}</p>
                         </div>
                         <span class="text-slate-450 text-[10px] px-1.5 py-0.5 rounded border border-slate-200 bg-slate-50 font-bold shrink-0">VS</span>
                         <div class="text-xs">
-                            <p class="font-bold text-slate-800 leading-tight">{{ jogo.time_b.nome_delegacao|default:jogo.time_b.email }}</p>
-                            <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_b.nome_completo }}</p>
+                            <p class="font-bold text-slate-800 leading-tight">{{ jogo.time_b_display }}</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ jogo.time_b_responsavel }}</p>
                         </div>
                     </div>
                 </div>

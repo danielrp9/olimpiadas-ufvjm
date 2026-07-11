@@ -154,20 +154,42 @@ class Jogo(models.Model):
     def is_finalizado_por_wo(self):
         return self.has_wo_time_a or self.has_wo_time_b
 
-    def __str__(self):
+    @property
+    def time_a_display(self):
         from django.core.exceptions import ObjectDoesNotExist
+        try:
+            return self.time_a.nome_delegacao or self.time_a.email
+        except ObjectDoesNotExist:
+            return "Time Inexistente"
+
+    @property
+    def time_a_responsavel(self):
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            return self.time_a.nome_completo
+        except ObjectDoesNotExist:
+            return "Inexistente"
+
+    @property
+    def time_b_display(self):
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            return self.time_b.nome_delegacao or self.time_b.email
+        except ObjectDoesNotExist:
+            return "Time Inexistente"
+
+    @property
+    def time_b_responsavel(self):
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            return self.time_b.nome_completo
+        except ObjectDoesNotExist:
+            return "Inexistente"
+
+    def __str__(self):
         horario_str = f" às {self.horario_jogo.strftime('%H:%M')}" if self.horario_jogo else ""
-        
-        try:
-            nome_a = f"{self.time_a.nome_delegacao or self.time_a.email} ({self.time_a.nome_completo})"
-        except ObjectDoesNotExist:
-            nome_a = "Time Inexistente"
-            
-        try:
-            nome_b = f"{self.time_b.nome_delegacao or self.time_b.email} ({self.time_b.nome_completo})"
-        except ObjectDoesNotExist:
-            nome_b = "Time Inexistente"
-            
+        nome_a = f"{self.time_a_display} ({self.time_a_responsavel})"
+        nome_b = f"{self.time_b_display} ({self.time_b_responsavel})"
         return f"{self.modalidade.nome} ({self.modalidade.get_genero_display()}): {nome_a} vs {nome_b} ({self.data_jogo.strftime('%d/%m/%Y')}{horario_str})"
 
     def clean(self):

@@ -58,13 +58,13 @@
                         <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Confronto</span>
                         <div class="flex items-center gap-4 mt-2.5 flex-wrap">
                             <div class="text-xs">
-                                <p class="font-extrabold text-sm text-white leading-tight">{{ presumula.jogo.time_a.nome_delegacao|default:presumula.jogo.time_a.email }}</p>
-                                <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ presumula.jogo.time_a.nome_completo }}</p>
+                                <p class="font-extrabold text-sm text-white leading-tight">{{ presumula.jogo.time_a_display }}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ presumula.jogo.time_a_responsavel }}</p>
                             </div>
                             <span class="text-blue-300 text-[10px] px-2 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 font-bold shrink-0">VS</span>
                             <div class="text-xs">
-                                <p class="font-extrabold text-sm text-white leading-tight">{{ presumula.jogo.time_b.nome_delegacao|default:presumula.jogo.time_b.email }}</p>
-                                <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ presumula.jogo.time_b.nome_completo }}</p>
+                                <p class="font-extrabold text-sm text-white leading-tight">{{ presumula.jogo.time_b_display }}</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">Responsável: {{ presumula.jogo.time_b_responsavel }}</p>
                             </div>
                         </div>
                     </div>
