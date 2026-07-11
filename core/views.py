@@ -227,7 +227,18 @@ def finalizar_jogo(request, pk):
         from django.utils import timezone
         jogo.data_hora_fim = timezone.now()
         jogo.save()
-        messages.success(request, f"O jogo {jogo.modalidade.nome} ({jogo.time_a.nome_delegacao or jogo.time_a.email} vs {jogo.time_b.nome_delegacao or jogo.time_b.email}) foi encerrado com sucesso!")
+        
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            nome_a = jogo.time_a.nome_delegacao or jogo.time_a.email
+        except ObjectDoesNotExist:
+            nome_a = "Time Inexistente"
+        try:
+            nome_b = jogo.time_b.nome_delegacao or jogo.time_b.email
+        except ObjectDoesNotExist:
+            nome_b = "Time Inexistente"
+            
+        messages.success(request, f"O jogo {jogo.modalidade.nome} ({nome_a} vs {nome_b}) foi encerrado com sucesso!")
     return redirect('presumula_list')
 
 
@@ -587,7 +598,7 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         jogo = get_object_or_404(Jogo, pk=jogo_id)
         
         # Verifica se o jogo é da delegação do usuário (ou se é staff)
-        if not request.user.is_staff and jogo.time_a != delegacao and jogo.time_b != delegacao:
+        if not request.user.is_staff and jogo.time_a_id != delegacao.id and jogo.time_b_id != delegacao.id:
             messages.error(request, "Você não tem permissão para preencher a pré-súmula para este jogo.")
             return redirect('presumula_list')
 
@@ -626,7 +637,7 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         jogo_id = request.POST.get('jogo_id')
         jogo = get_object_or_404(Jogo, pk=jogo_id)
         
-        if not request.user.is_staff and jogo.time_a != delegacao and jogo.time_b != delegacao:
+        if not request.user.is_staff and jogo.time_a_id != delegacao.id and jogo.time_b_id != delegacao.id:
             messages.error(request, "Acesso negado.")
             return redirect('presumula_list')
 
@@ -1112,7 +1123,7 @@ class RecursoCreateView(LoginRequiredMixin, View):
         jogo = get_object_or_404(Jogo, pk=jogo_id)
 
         # Valida se o jogo é do time e se está no prazo de 1h
-        if jogo.time_a != delegacao and jogo.time_b != delegacao:
+        if jogo.time_a_id != delegacao.id and jogo.time_b_id != delegacao.id:
             messages.error(request, "Você não tem permissão para interpor recurso para esta partida.")
             return redirect('recurso_list')
 
@@ -1134,7 +1145,7 @@ class RecursoCreateView(LoginRequiredMixin, View):
 
         jogo = get_object_or_404(Jogo, pk=jogo_id)
 
-        if jogo.time_a != delegacao and jogo.time_b != delegacao:
+        if jogo.time_a_id != delegacao.id and jogo.time_b_id != delegacao.id:
             messages.error(request, "Acesso negado.")
             return redirect('recurso_list')
 

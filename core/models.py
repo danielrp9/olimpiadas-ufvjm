@@ -132,14 +132,22 @@ class Jogo(models.Model):
 
     @property
     def has_wo_time_a(self):
+        from django.core.exceptions import ObjectDoesNotExist
         if self.is_presumula_deadline_passed:
-            return not self.presumulas.filter(representante=self.time_a).exists()
+            try:
+                return not self.presumulas.filter(representante=self.time_a).exists()
+            except ObjectDoesNotExist:
+                return True
         return False
 
     @property
     def has_wo_time_b(self):
+        from django.core.exceptions import ObjectDoesNotExist
         if self.is_presumula_deadline_passed:
-            return not self.presumulas.filter(representante=self.time_b).exists()
+            try:
+                return not self.presumulas.filter(representante=self.time_b).exists()
+            except ObjectDoesNotExist:
+                return True
         return False
 
     @property
@@ -147,9 +155,19 @@ class Jogo(models.Model):
         return self.has_wo_time_a or self.has_wo_time_b
 
     def __str__(self):
+        from django.core.exceptions import ObjectDoesNotExist
         horario_str = f" às {self.horario_jogo.strftime('%H:%M')}" if self.horario_jogo else ""
-        nome_a = f"{self.time_a.nome_delegacao or self.time_a.email} ({self.time_a.nome_completo})"
-        nome_b = f"{self.time_b.nome_delegacao or self.time_b.email} ({self.time_b.nome_completo})"
+        
+        try:
+            nome_a = f"{self.time_a.nome_delegacao or self.time_a.email} ({self.time_a.nome_completo})"
+        except ObjectDoesNotExist:
+            nome_a = "Time Inexistente"
+            
+        try:
+            nome_b = f"{self.time_b.nome_delegacao or self.time_b.email} ({self.time_b.nome_completo})"
+        except ObjectDoesNotExist:
+            nome_b = "Time Inexistente"
+            
         return f"{self.modalidade.nome} ({self.modalidade.get_genero_display()}): {nome_a} vs {nome_b} ({self.data_jogo.strftime('%d/%m/%Y')}{horario_str})"
 
     def clean(self):
