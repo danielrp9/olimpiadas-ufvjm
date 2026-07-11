@@ -45,6 +45,20 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         Jogo.objects.exclude(time_a__in=User.objects.all()).delete()
         Jogo.objects.exclude(time_b__in=User.objects.all()).delete()
         
+        # Delete the 4 specific test futsal games requested by the user
+        try:
+            temp_games = Jogo.objects.filter(data_jogo="2026-07-10")
+            for tg in temp_games:
+                t_a = tg.time_a_display
+                t_b = tg.time_b_display
+                if ("Butineros" in t_a or "La Furia" in t_a or
+                    "SPARTA" in t_a or "SUPREMA" in t_a or
+                    "Macabra" in t_a or "Bárbaros" in t_a or
+                    "Preguiça" in t_a or "Flamejante" in t_a):
+                    tg.delete()
+        except Exception:
+            pass
+        
         context['unread_notifications'] = Notificacao.objects.filter(usuario=user, lida=False)
         
         if user.is_comissao:
