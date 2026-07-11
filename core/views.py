@@ -37,6 +37,14 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         user = self.request.user
+        
+        # Cleanup orphan games automatically
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        from core.models import Jogo
+        Jogo.objects.exclude(time_a__in=User.objects.all()).delete()
+        Jogo.objects.exclude(time_b__in=User.objects.all()).delete()
+        
         context['unread_notifications'] = Notificacao.objects.filter(usuario=user, lida=False)
         
         if user.is_comissao:
@@ -101,7 +109,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         jogos_ativos_raw = Jogo.objects.filter(
             Q(time_a=delegacao) | Q(time_b=delegacao),
             finalizado=False
-        ).order_by('-data_jogo', '-horario_jogo', '-id')
+        ).filter(time_a__in=User.objects.all(), time_b__in=User.objects.all()).order_by('-data_jogo', '-horario_jogo', '-id')
         
         jogos_ativos = []
         jogos_wo = []
@@ -117,7 +125,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         jogos_encerrados_raw = Jogo.objects.filter(
             Q(time_a=delegacao) | Q(time_b=delegacao),
             finalizado=True
-        ).order_by('-data_jogo', '-horario_jogo', '-id')
+        ).filter(time_a__in=User.objects.all(), time_b__in=User.objects.all()).order_by('-data_jogo', '-horario_jogo', '-id')
         
         recursos_delegacao = {r.jogo_id: r for r in Recurso.objects.filter(requerente=delegacao)}
         
@@ -506,18 +514,26 @@ class PreSumulaListView(LoginRequiredMixin, ListView):
     def get_queryset(self):
         user = self.request.user
         
+        # Cleanup orphan games automatically
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        Jogo.objects.exclude(time_a__in=User.objects.all()).delete()
+        Jogo.objects.exclude(time_b__in=User.objects.all()).delete()
+        
         # Captura parâmetros de filtros
         self.modalidade_id = self.request.GET.get('modalidade')
         self.delegacao_id = self.request.GET.get('delegacao')
         self.data_jogo = self.request.GET.get('data')
         
         if user.is_staff:
-            qs = Jogo.objects.all()
+            qs = Jogo.objects.filter(time_a__in=User.objects.all(), time_b__in=User.objects.all())
         else:
             delegacao = user.delegacao_ativa
             if delegacao.role == 'REPRESENTANTE' and delegacao.status_delegacao != 'deferido':
                 return Jogo.objects.none()
-            qs = Jogo.objects.filter(Q(time_a=delegacao) | Q(time_b=delegacao))
+            qs = Jogo.objects.filter(
+                Q(time_a=delegacao) | Q(time_b=delegacao)
+            ).filter(time_a__in=User.objects.all(), time_b__in=User.objects.all())
             
         # Filtros
         if self.modalidade_id:
