@@ -1445,6 +1445,13 @@ def resumo_inscricoes(request):
         'modalidades__atletas__campus'
     ).order_by('delegacao__nome_delegacao', 'delegacao__email')
 
+    # 6. Resumo de Delegações por Modalidade
+    modalidades_com_delegacoes = Modalidade.objects.prefetch_related(
+        'inscricoes__inscricao__delegacao',
+        'inscricoes__atletas',
+        'inscricoes__inscricao__delegacao__atletas__campus'
+    ).order_by('nome')
+
     context = {
         'unread_notifications': unread_notifications,
         'total_delegacoes': total_delegacoes,
@@ -1470,6 +1477,7 @@ def resumo_inscricoes(request):
         'campus_summary': campus_summary,
         'modalidade_summary': modalidade_summary,
         'inscricoes_list': inscricoes_list,
+        'modalidades_com_delegacoes': modalidades_com_delegacoes,
         
         'chart_campus_labels_json': json.dumps(chart_campus_labels),
         'chart_modalidade_labels_json': json.dumps(chart_modalidade_labels),

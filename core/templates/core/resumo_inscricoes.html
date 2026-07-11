@@ -150,6 +150,9 @@
             <button onclick="switchTab('modalidade-delegacao')" id="tab-btn-modalidade-delegacao" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fas fa-users"></i> Modalidade por Delegação
             </button>
+            <button onclick="switchTab('delegacoes-modalidade')" id="tab-btn-delegacoes-modalidade" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-flag"></i> Delegações por Modalidade
+            </button>
         </div>
         
         <!-- Campo de Pesquisa -->
@@ -330,6 +333,97 @@
                                         <tr>
                                             <td colspan="3" class="py-6 text-center text-slate-400">
                                                 Nenhuma modalidade selecionada por esta delegação.
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Aba 4: Delegações por Modalidade (Oculta por padrão) -->
+    <div id="section-delegacoes-modalidade" class="hidden p-6">
+        <!-- Filtros da Modalidade -->
+        <div class="flex gap-4 mb-6">
+            <div class="flex-1">
+                <label for="filter-modalidade" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Modalidade</label>
+                <select id="filter-modalidade" onchange="updateDelegacoesFilter()" class="w-full px-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white text-slate-700 font-medium">
+                    <option value="">Selecione uma Modalidade</option>
+                    {% for m in modalidades_com_delegacoes %}
+                        <option value="modalidade-{{ m.id }}">{{ m.nome }} ({{ m.get_genero_display }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Conteúdo das Delegações / Detalhes de Atletas -->
+        <div id="delegacoes-modalidade-content" class="space-y-6">
+            <!-- Estado Inicial: Nenhuma Modalidade Selecionada -->
+            <div id="dm-empty-state" class="text-center py-12 text-slate-400">
+                <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
+                Selecione uma modalidade para visualizar as delegações que manifestaram interesse de participação nela.
+            </div>
+
+            {% for m in modalidades_com_delegacoes %}
+                <div id="modalidade-container-{{ m.id }}" class="modalidade-container hidden">
+                    <div class="bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5">
+                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200/60">
+                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-flag text-xs"></i></span>
+                                Delegações Inscritas em {{ m.nome }} ({{ m.get_genero_display }})
+                            </h4>
+                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                {{ m.inscricoes.count }} delegação(ões) inscrita(s)
+                            </span>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
+                                        <th class="pb-3 pr-4 text-left">#</th>
+                                        <th class="pb-3 px-4 text-left">Delegação</th>
+                                        <th class="pb-3 px-4 text-left">Campus Principal</th>
+                                        <th class="pb-3 px-4 text-center">Atletas Inscritos</th>
+                                        <th class="pb-3 pl-4 text-right">Elenco de Atletas</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                                    {% for im in m.inscricoes.all %}
+                                        <tr class="hover:bg-slate-50/30 transition">
+                                            <td class="py-3 pr-4 font-semibold text-slate-500 text-left">{{ forloop.counter }}</td>
+                                            <td class="py-3 px-4 font-semibold text-slate-800 text-left">
+                                                <span class="inline-flex items-center gap-2">
+                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                    {{ im.inscricao.delegacao.nome_delegacao|default:im.inscricao.delegacao.nome_completo|default:im.inscricao.delegacao.email }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3 px-4 text-left text-slate-600 font-medium">
+                                                {% with first_atleta=im.inscricao.delegacao.atletas.all.first %}
+                                                    {{ first_atleta.campus.nome|default:"-" }}
+                                                {% endwith %}
+                                            </td>
+                                            <td class="py-3 px-4 text-center font-bold text-blue-600">
+                                                {{ im.atletas.count }}
+                                            </td>
+                                            <td class="py-3 pl-4 text-right text-slate-500 font-medium">
+                                                {% for atleta in im.atletas.all %}
+                                                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] bg-slate-100 text-slate-700 border border-slate-200 mr-1 mb-1 font-semibold">
+                                                        {{ atleta.nome_completo }}
+                                                    </span>
+                                                {% empty %}
+                                                    <span class="text-slate-400 italic">Sem atletas escalados</span>
+                                                {% endfor %}
+                                            </td>
+                                        </tr>
+                                    {% empty %}
+                                        <tr>
+                                            <td colspan="5" class="py-6 text-center text-slate-400">
+                                                Nenhuma delegação inscrita nesta modalidade.
                                             </td>
                                         </tr>
                                     {% endfor %}
@@ -852,12 +946,14 @@
         document.getElementById('section-campus').classList.add('hidden');
         document.getElementById('section-modalidade').classList.add('hidden');
         document.getElementById('section-modalidade-delegacao').classList.add('hidden');
+        document.getElementById('section-delegacoes-modalidade').classList.add('hidden');
         
         document.getElementById('section-' + tabId).classList.remove('hidden');
 
         const btnCampus = document.getElementById('tab-btn-campus');
         const btnModalidade = document.getElementById('tab-btn-modalidade');
         const btnModalidadeDelegacao = document.getElementById('tab-btn-modalidade-delegacao');
+        const btnDelegacoesModalidade = document.getElementById('tab-btn-delegacoes-modalidade');
         const searchContainer = document.getElementById('search-input-container');
 
         const activeClass = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
@@ -866,6 +962,7 @@
         btnCampus.className = inactiveClass;
         btnModalidade.className = inactiveClass;
         btnModalidadeDelegacao.className = inactiveClass;
+        if (btnDelegacoesModalidade) btnDelegacoesModalidade.className = inactiveClass;
 
         if (tabId === 'campus') {
             btnCampus.className = activeClass;
@@ -875,6 +972,9 @@
             if (searchContainer) searchContainer.style.display = '';
         } else if (tabId === 'modalidade-delegacao') {
             btnModalidadeDelegacao.className = activeClass;
+            if (searchContainer) searchContainer.style.display = 'none';
+        } else if (tabId === 'delegacoes-modalidade') {
+            if (btnDelegacoesModalidade) btnDelegacoesModalidade.className = activeClass;
             if (searchContainer) searchContainer.style.display = 'none';
         }
         
@@ -903,6 +1003,29 @@
         const delContainer = document.getElementById('delegacao-container-' + delId);
         if (delContainer) {
             delContainer.classList.remove('hidden');
+        }
+    }
+
+    function updateDelegacoesFilter() {
+        const modSelect = document.getElementById('filter-modalidade');
+        const emptyState = document.getElementById('dm-empty-state');
+        
+        // Ocultar todos os containers de modalidade primeiro
+        document.querySelectorAll('.modalidade-container').forEach(el => el.classList.add('hidden'));
+        
+        const selectedModVal = modSelect.value;
+        if (!selectedModVal) {
+            if (emptyState) emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        if (emptyState) emptyState.classList.add('hidden');
+        
+        // Exibir o container da modalidade selecionada
+        const modId = selectedModVal.replace('modalidade-', '');
+        const modContainer = document.getElementById('modalidade-container-' + modId);
+        if (modContainer) {
+            modContainer.classList.remove('hidden');
         }
     }
 
