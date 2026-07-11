@@ -685,6 +685,14 @@
                         <span class="text-[10px] text-slate-400 block mt-0.5">Tabela de equipes e delegações participantes por modalidade esportiva, separada por campus.</span>
                     </div>
                 </label>
+
+                <label class="flex items-start gap-3 p-3 rounded-2xl border border-slate-100 hover:bg-slate-50/50 transition cursor-pointer select-none">
+                    <input type="checkbox" id="print-opt-delegacoes-modalidade" checked class="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                    <div>
+                        <span class="text-xs font-bold text-slate-700 block">Delegações por Modalidade</span>
+                        <span class="text-[10px] text-slate-400 block mt-0.5">Listagem detalhada das delegações inscritas em cada uma das modalidades esportivas.</span>
+                    </div>
+                </label>
             </div>
         </div>
         <!-- Footer -->
@@ -839,6 +847,37 @@
                 {% empty %}
                 <tr>
                     <td colspan="{{ campi|length|add:2 }}" class="text-center text-muted">Nenhuma modalidade registrada.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Seção 4: Delegações por Modalidade -->
+    <div id="print-section-delegacoes-modalidade" class="print-section">
+        <h4 class="print-section-title">4. DELEGAÇÕES INSCRITAS POR MODALIDADE</h4>
+        <table class="print-data-table">
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Modalidade</th>
+                    <th style="width: 65%;">Delegações Inscritas</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in modalidades_com_delegacoes %}
+                <tr>
+                    <td><strong>{{ m.nome }}</strong> <small>({{ m.get_genero_display }})</small></td>
+                    <td>
+                        {% for im in m.inscricoes.all %}
+                            {{ im.inscricao.delegacao.nome_delegacao|default:im.inscricao.delegacao.nome_completo|default:im.inscricao.delegacao.email }}{% if not forloop.last %}; {% endif %}
+                        {% empty %}
+                            <span class="text-muted italic">Nenhuma delegação inscrita</span>
+                        {% endfor %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="2" class="text-center text-muted">Nenhuma modalidade registrada.</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -1076,11 +1115,13 @@
         const showIndicators = document.getElementById('print-opt-indicators').checked;
         const showCampus = document.getElementById('print-opt-campus').checked;
         const showModalidade = document.getElementById('print-opt-modalidade').checked;
+        const showDelegacoesModalidade = document.getElementById('print-opt-delegacoes-modalidade').checked;
         
         // Exibir/ocultar seções na área de impressão
         document.getElementById('print-section-indicators').style.display = showIndicators ? 'block' : 'none';
         document.getElementById('print-section-campus').style.display = showCampus ? 'block' : 'none';
         document.getElementById('print-section-modalidade').style.display = showModalidade ? 'block' : 'none';
+        document.getElementById('print-section-delegacoes-modalidade').style.display = showDelegacoesModalidade ? 'block' : 'none';
         
         // Gerar data e hora da emissão
         const now = new Date();
