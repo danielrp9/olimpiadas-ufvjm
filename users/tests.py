@@ -209,4 +209,32 @@ class InscritosPorDelegacaoTestCase(TestCase):
         self.assertIn("outra@test.com", [u.email for u in qs_nao])
 
 
+class UserAdminTestCase(TestCase):
+    def test_user_admin_fieldsets(self):
+        from users.admin import UserAdmin
+        from django.contrib.admin.sites import AdminSite
+        
+        site = AdminSite()
+        admin_instance = UserAdmin(User, site)
+        
+        # Verify fieldsets contains delegation fields
+        fieldsets_flat = []
+        for name, info in admin_instance.fieldsets:
+            fieldsets_flat.extend(info.get('fields', []))
+            
+        self.assertIn('nome_delegacao', fieldsets_flat)
+        self.assertIn('status_delegacao', fieldsets_flat)
+        self.assertIn('justificativa_delegacao', fieldsets_flat)
+        self.assertIn('link_comprovante_pagamento', fieldsets_flat)
+        self.assertIn('status_pagamento', fieldsets_flat)
+        self.assertIn('justificativa_pagamento', fieldsets_flat)
+
+        # Verify add_fieldsets contains nome_delegacao
+        add_fieldsets_flat = []
+        for name, info in admin_instance.add_fieldsets:
+            add_fieldsets_flat.extend(info.get('fields', []))
+            
+        self.assertIn('nome_delegacao', add_fieldsets_flat)
+
+
 

@@ -1439,6 +1439,12 @@ def resumo_inscricoes(request):
             'borderRadius': 4,
         })
 
+    # 5. Resumo de Modalidades por Delegação
+    inscricoes_list = Inscricao.objects.select_related('delegacao').prefetch_related(
+        'modalidades__modalidade',
+        'modalidades__atletas__campus'
+    ).order_by('delegacao__nome_delegacao', 'delegacao__email')
+
     context = {
         'unread_notifications': unread_notifications,
         'total_delegacoes': total_delegacoes,
@@ -1463,6 +1469,7 @@ def resumo_inscricoes(request):
         'campi': campi,
         'campus_summary': campus_summary,
         'modalidade_summary': modalidade_summary,
+        'inscricoes_list': inscricoes_list,
         
         'chart_campus_labels_json': json.dumps(chart_campus_labels),
         'chart_modalidade_labels_json': json.dumps(chart_modalidade_labels),

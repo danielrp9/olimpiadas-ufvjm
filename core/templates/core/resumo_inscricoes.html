@@ -147,10 +147,13 @@
             <button onclick="switchTab('modalidade')" id="tab-btn-modalidade" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
                 <i class="fas fa-running"></i> Resumo por Modalidade
             </button>
+            <button onclick="switchTab('modalidade-delegacao')" id="tab-btn-modalidade-delegacao" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-users"></i> Modalidade por Delegação
+            </button>
         </div>
         
         <!-- Campo de Pesquisa -->
-        <div class="relative w-full sm:w-40">
+        <div class="relative w-full sm:w-40" id="search-input-container">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
                 <i class="fas fa-search text-xs"></i>
             </span>
@@ -256,6 +259,108 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <!-- Aba 3: Modalidade por Delegação (Oculta por padrão) -->
+    <div id="section-modalidade-delegacao" class="hidden p-6">
+        <!-- Filtros da Delegação -->
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
+            <div class="flex-1">
+                <label for="filter-delegacao" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Delegação</label>
+                <select id="filter-delegacao" onchange="updateModalidadeFilter()" class="w-full px-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white text-slate-700 font-medium">
+                    <option value="">Selecione uma Delegação</option>
+                    {% for inscricao in inscricoes_list %}
+                        <option value="delegacao-{{ inscricao.id }}">{{ inscricao.delegacao.nome_delegacao|default:inscricao.delegacao.nome_completo|default:inscricao.delegacao.email }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="flex-1">
+                <label for="filter-modalidade" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Modalidade da Delegação</label>
+                <select id="filter-modalidade" onchange="filterModalidadeDelegacao()" class="w-full px-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white text-slate-700 font-medium disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed" disabled>
+                    <option value="">Selecione uma Modalidade</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Conteúdo das Inscrições / Detalhes de Atletas -->
+        <div id="modalidade-delegacao-content" class="space-y-6">
+            <!-- Estado Inicial: Nenhuma Delegação Selecionada -->
+            <div id="md-empty-state" class="text-center py-12 text-slate-400">
+                <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
+                Selecione uma delegação e a modalidade desejada para visualizar os atletas inscritos.
+            </div>
+
+            {% for inscricao in inscricoes_list %}
+                <div id="delegacao-container-{{ inscricao.id }}" class="delegacao-container hidden space-y-6">
+                    {% for insc_mod in inscricao.modalidades.all %}
+                        <div id="mod-container-{{ insc_mod.id }}" class="mod-container hidden bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5" data-modalidade-id="{{ insc_mod.id }}" data-modalidade-nome="{{ insc_mod.modalidade.nome }} ({{ insc_mod.modalidade.get_genero_display }})">
+                            <div class="flex justify-between items-center cursor-pointer select-none" onclick="toggleAtletasAccordion('{{ insc_mod.id }}')">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-slate-400 transition-transform duration-200 inline-block" id="accordion-arrow-{{ insc_mod.id }}">
+                                        <i class="fas fa-chevron-right text-xs"></i>
+                                    </span>
+                                    <div>
+                                        <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                            <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-trophy text-xs"></i></span>
+                                            {{ insc_mod.modalidade.nome }}
+                                        </h4>
+                                        <span class="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mt-1">
+                                            Gênero: {{ insc_mod.modalidade.get_genero_display }}
+                                        </span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    {{ insc_mod.atletas.count }} atleta(s) inscrito(s)
+                                </span>
+                            </div>
+
+                            <div class="overflow-x-auto hidden mt-4 pt-4 border-t border-slate-200/60" id="accordion-content-{{ insc_mod.id }}">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
+                                            <th class="pb-3 pr-4 text-left">Nome do Atleta</th>
+                                            <th class="pb-3 px-4 text-center">Matrícula</th>
+                                            <th class="pb-3 px-4 text-center">Gênero</th>
+                                            <th class="pb-3 px-4 text-center">Tipo</th>
+                                            <th class="pb-3 pl-4 text-right">Campus</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-slate-600 text-xs">
+                                        {% for atleta in insc_mod.atletas.all %}
+                                            <tr class="hover:bg-slate-50/30 transition">
+                                                <td class="py-3 pr-4 font-semibold text-slate-800 text-left">{{ atleta.nome_completo }}</td>
+                                                <td class="py-3 px-4 text-center text-slate-500 font-mono">{{ atleta.matricula|default:"-" }}</td>
+                                                <td class="py-3 px-4 text-center">
+                                                    {% if atleta.genero == 'M' %}
+                                                        <span class="text-blue-600 font-semibold"><i class="fas fa-mars"></i> Masc</span>
+                                                    {% elif atleta.genero == 'F' %}
+                                                        <span class="text-rose-600 font-semibold"><i class="fas fa-venus"></i> Fem</span>
+                                                    {% else %}
+                                                        <span class="text-purple-600 font-semibold"><i class="fas fa-genderless"></i> NB</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td class="py-3 px-4 text-center">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {% if atleta.tipo_atleta == 'estudante' %}bg-emerald-50 text-emerald-700 border border-emerald-100{% else %}bg-amber-50 text-amber-700 border border-amber-100{% endif %} border">
+                                                        {{ atleta.get_tipo_atleta_display }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 pl-4 text-right text-slate-500 font-medium">{{ atleta.campus.nome }}</td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="5" class="py-6 text-center text-slate-400">
+                                                    Nenhum atleta inscrito nesta modalidade.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+        </div>
     </div>
 </div>
 
@@ -767,22 +872,135 @@
     function switchTab(tabId) {
         document.getElementById('section-campus').classList.add('hidden');
         document.getElementById('section-modalidade').classList.add('hidden');
+        document.getElementById('section-modalidade-delegacao').classList.add('hidden');
         
         document.getElementById('section-' + tabId).classList.remove('hidden');
 
         const btnCampus = document.getElementById('tab-btn-campus');
         const btnModalidade = document.getElementById('tab-btn-modalidade');
+        const btnModalidadeDelegacao = document.getElementById('tab-btn-modalidade-delegacao');
+        const searchContainer = document.getElementById('search-input-container');
+
+        const activeClass = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
+        const inactiveClass = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap";
+
+        btnCampus.className = inactiveClass;
+        btnModalidade.className = inactiveClass;
+        btnModalidadeDelegacao.className = inactiveClass;
 
         if (tabId === 'campus') {
-            btnCampus.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
-            btnModalidade.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap";
-        } else {
-            btnCampus.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap";
-            btnModalidade.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
+            btnCampus.className = activeClass;
+            if (searchContainer) searchContainer.style.display = '';
+        } else if (tabId === 'modalidade') {
+            btnModalidade.className = activeClass;
+            if (searchContainer) searchContainer.style.display = '';
+        } else if (tabId === 'modalidade-delegacao') {
+            btnModalidadeDelegacao.className = activeClass;
+            if (searchContainer) searchContainer.style.display = 'none';
         }
         
         document.getElementById('search-input').value = '';
         filterTables();
+    }
+
+    // Funções de filtro de Modalidade por Delegação
+    function updateModalidadeFilter() {
+        const delSelect = document.getElementById('filter-delegacao');
+        const modSelect = document.getElementById('filter-modalidade');
+        const emptyState = document.getElementById('md-empty-state');
+        
+        // Ocultar todos os containers de delegação e de modalidades primeiro
+        document.querySelectorAll('.delegacao-container').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.mod-container').forEach(el => el.classList.add('hidden'));
+        
+        const selectedDelVal = delSelect.value;
+        if (!selectedDelVal) {
+            modSelect.disabled = true;
+            modSelect.innerHTML = '<option value="">Selecione uma Modalidade</option>';
+            if (emptyState) emptyState.classList.remove('hidden');
+            return;
+        }
+        
+        if (emptyState) emptyState.classList.add('hidden');
+        
+        // Exibir o container da delegação selecionada
+        const delId = selectedDelVal.replace('delegacao-', '');
+        const delContainer = document.getElementById('delegacao-container-' + delId);
+        if (delContainer) {
+            delContainer.classList.remove('hidden');
+        }
+        
+        // Preencher o select de modalidades
+        modSelect.disabled = false;
+        modSelect.innerHTML = '<option value="">Todas as Modalidades</option>';
+        
+        if (delContainer) {
+            const modContainers = delContainer.querySelectorAll('.mod-container');
+            modContainers.forEach(mod => {
+                const modId = mod.getAttribute('data-modalidade-id');
+                const modNome = mod.getAttribute('data-modalidade-nome');
+                const opt = document.createElement('option');
+                opt.value = modId;
+                opt.textContent = modNome;
+                modSelect.appendChild(opt);
+                
+                // Exibe todas por padrão
+                mod.classList.remove('hidden');
+                
+                // Garante que iniciem colapsadas e com a seta para a direita
+                const content = document.getElementById('accordion-content-' + modId);
+                const arrow = document.getElementById('accordion-arrow-' + modId);
+                if (content) content.classList.add('hidden');
+                if (arrow) arrow.style.transform = '';
+            });
+        }
+    }
+    
+    function filterModalidadeDelegacao() {
+        const modSelect = document.getElementById('filter-modalidade');
+        const selectedModVal = modSelect.value;
+        const delSelect = document.getElementById('filter-delegacao');
+        const delId = delSelect.value.replace('delegacao-', '');
+        const delContainer = document.getElementById('delegacao-container-' + delId);
+        
+        if (!delContainer) return;
+        
+        const modContainers = delContainer.querySelectorAll('.mod-container');
+        modContainers.forEach(mod => {
+            const modId = mod.getAttribute('data-modalidade-id');
+            const content = document.getElementById('accordion-content-' + modId);
+            const arrow = document.getElementById('accordion-arrow-' + modId);
+
+            if (!selectedModVal || modId === selectedModVal) {
+                mod.classList.remove('hidden');
+                
+                // Se selecionou uma modalidade específica, expande ela automaticamente
+                if (selectedModVal && content && arrow) {
+                    content.classList.remove('hidden');
+                    arrow.style.transform = 'rotate(90deg)';
+                } else if (!selectedModVal && content && arrow) {
+                    // Se selecionou "Todas", colapsa para manter limpo
+                    content.classList.add('hidden');
+                    arrow.style.transform = '';
+                }
+            } else {
+                mod.classList.add('hidden');
+            }
+        });
+    }
+
+    function toggleAtletasAccordion(inscModId) {
+        const content = document.getElementById('accordion-content-' + inscModId);
+        const arrow = document.getElementById('accordion-arrow-' + inscModId);
+        if (!content || !arrow) return;
+        
+        if (content.classList.contains('hidden')) {
+            content.classList.remove('hidden');
+            arrow.style.transform = 'rotate(90deg)';
+        } else {
+            content.classList.add('hidden');
+            arrow.style.transform = '';
+        }
     }
 
     // Filtrar tabelas

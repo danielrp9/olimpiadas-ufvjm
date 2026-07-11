@@ -22,6 +22,10 @@ class UserAdmin(BaseUserAdmin):
     fieldsets = (
         (None, {'fields': ('email', 'nome_completo', 'foto_url', 'google_id')}),
         ('Controle de Acesso (RBAC)', {'fields': ('role', 'parent_delegate', 'cpf', 'perfil_completo')}),
+        ('Informações da Delegação', {'fields': (
+            'nome_delegacao', 'status_delegacao', 'justificativa_delegacao',
+            'link_comprovante_pagamento', 'status_pagamento', 'justificativa_pagamento'
+        )}),
         ('Permissões Django', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Datas Importantes', {'fields': ('last_login', 'date_joined')}),
     )
@@ -33,7 +37,7 @@ class UserAdmin(BaseUserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'nome_completo', 'role', 'parent_delegate', 'cpf', 'is_staff', 'is_superuser'),
+            'fields': ('email', 'nome_completo', 'role', 'nome_delegacao', 'parent_delegate', 'cpf', 'is_staff', 'is_superuser'),
         }),
     )
 
