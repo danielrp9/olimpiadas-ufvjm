@@ -236,7 +236,7 @@
                                         {% if jogo.finalizado %}
                                             <span class="text-[10px] text-slate-400 font-semibold italic">Pré-Súmula encerrada</span>
                                         {% else %}
-                                            {% if user.status_delegacao == 'deferido' %}
+                                            {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
                                                 <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" 
                                                    class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95 focus:outline-none">
                                                     <i class="fas fa-plus"></i> Escalar Atletas

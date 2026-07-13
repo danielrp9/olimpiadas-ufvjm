@@ -926,6 +926,72 @@ class AdminActionsTestCase(TestCase):
         self.assertIn('chart_datasets_modalidades_json', response.context)
 
 
+class CoDelegatePreSumulaTestCase(TestCase):
+    def setUp(self):
+        # Create delegate
+        self.delegate = User.objects.create_user(
+            email='principal@example.com',
+            nome_completo='Delegado Principal',
+            role='REPRESENTANTE',
+            cpf='111.444.777-35',
+            nome_delegacao='Delegação UFVJM',
+            status_delegacao='deferido'
+        )
+        # Create co-delegate
+        self.co_delegate = User.objects.create_user(
+            email='membro@example.com',
+            nome_completo='Membro Auxiliar',
+            role='REPRESENTANTE',
+            parent_delegate=self.delegate
+        )
+        # Create other delegate
+        self.other_delegate = User.objects.create_user(
+            email='other@example.com',
+            nome_completo='Outro Delegado',
+            role='REPRESENTANTE',
+            nome_delegacao='Outra Delegação',
+            status_delegacao='deferido'
+        )
+        
+        # Create a modalidade
+        self.modalidade = Modalidade.objects.create(
+            nome='Futsal',
+            genero='M',
+            limite_minimo_jogadores=1,
+            limite_maximo_jogadores=5
+        )
+        
+        # Create a Jogo
+        self.jogo = Jogo.objects.create(
+            modalidade=self.modalidade,
+            data_jogo=timezone.localdate() + timedelta(days=1),
+            horario_jogo=timezone.localtime().time(),
+            time_a=self.delegate,
+            time_b=self.other_delegate,
+            local='Quadra A'
+        )
+
+    def test_co_delegate_presumula_list_view(self):
+        from django.urls import reverse
+        self.client.force_login(self.co_delegate)
+        response = self.client.get(reverse('presumula_list'))
+        self.assertEqual(response.status_code, 200)
+        # Verify the template uses the co-delegate's active delegation status (which is 'deferido')
+        # Check if the "Escalar Atletas" link is in the response body instead of "Bloqueado"
+        self.assertContains(response, 'Escalar Atletas')
+        self.assertNotContains(response, 'Bloqueado')
+
+    def test_co_delegate_dashboard_view(self):
+        from django.urls import reverse
+        self.client.force_login(self.co_delegate)
+        response = self.client.get(reverse('dashboard'))
+        self.assertEqual(response.status_code, 200)
+        # Verify dashboard shows the delegation status as "Deferida"
+        self.assertContains(response, 'Deferida')
+        self.assertContains(response, 'Escalar')
+
+
+
 
 
 

@@ -448,9 +448,9 @@
             </div>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delegação</span>
-                {% if user.status_delegacao == 'deferido' %}
+                {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
                     <span class="text-xs font-bold text-emerald-600 block mt-1">Deferida</span>
-                {% elif user.status_delegacao == 'indeferido' %}
+                {% elif user.delegacao_ativa.status_delegacao == 'indeferido' %}
                     <span class="text-xs font-bold text-red-600 block mt-1">Recusada</span>
                 {% else %}
                     <span class="text-xs font-bold text-amber-600 block mt-1">Pendente</span>
@@ -515,7 +515,7 @@
                                             <i class="fas fa-check mr-1 text-[8px]"></i> Escalado ({{ jogo.minha_presumula.atletas.count }} atletas)
                                         </span>
                                     {% else %}
-                                        {% if user.status_delegacao == 'deferido' %}
+                                        {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
                                                 <i class="fas fa-circle mr-1 text-blue-500 text-[6px] animate-pulse"></i> Pendente
                                             </span>
@@ -537,7 +537,7 @@
                                             </a>
                                         </div>
                                     {% else %}
-                                        {% if user.status_delegacao == 'deferido' %}
+                                        {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
                                             <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
                                                 <i class="fas fa-plus"></i> Escalar
                                             </a>
