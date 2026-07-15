@@ -1436,12 +1436,23 @@ def resumo_inscricoes(request):
     else:
         categoria_predominante = "Equilibrada" if total_atletas > 0 else "Nenhuma"
 
-    pct_estudantes = round((atletas_estudantes / total_atletas) * 100) if total_atletas > 0 else 0
-    pct_servidores = round((atletas_servidores / total_atletas) * 100) if total_atletas > 0 else 0
+    def calculate_percentage(count, total):
+        if total == 0 or count == 0:
+            return 0
+        pct = (count / total) * 100
+        if pct < 0.5:
+            return round(pct, 1)
+        if pct > 99.5 and count < total:
+            return round(pct, 1)
+        return round(pct)
+
+    pct_estudantes = calculate_percentage(atletas_estudantes, total_atletas)
+    pct_servidores = calculate_percentage(atletas_servidores, total_atletas)
     
-    pct_masculino = round((atletas_m / total_atletas) * 100) if total_atletas > 0 else 0
-    pct_feminino = round((atletas_f / total_atletas) * 100) if total_atletas > 0 else 0
-    pct_nb = round((atletas_n / total_atletas) * 100) if total_atletas > 0 else 0
+    pct_masculino = calculate_percentage(atletas_m, total_atletas)
+    pct_feminino = calculate_percentage(atletas_f, total_atletas)
+    pct_nb = calculate_percentage(atletas_n, total_atletas)
+
 
     # 3. Resumo por Modalidade
     modalidades = Modalidade.objects.all().order_by('nome')
