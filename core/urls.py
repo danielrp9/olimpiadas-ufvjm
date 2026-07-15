@@ -17,6 +17,7 @@ urlpatterns = [
     path('inscricao/passo2/', views.inscricao_passo2, name='inscricao_passo2'),
     path('inscricao/detalhe/', views.inscricao_detail, name='inscricao_detail'),
     path('inscricao/refazer/', views.refazer_inscricao, name='refazer_inscricao'),
+    path('inscricao/segunda-chamada/', views.inscricao_segunda_chamada, name='inscricao_segunda_chamada'),
     # Atletas
     path('atletas/', views.AtletaListView.as_view(), name='atleta_list'),
     path('atletas/adicionar/', views.AtletaBulkCreateView.as_view(), name='atleta_bulk_create'),
@@ -41,6 +42,7 @@ urlpatterns = [
     path('comissao/atleta/<int:pk>/reset-conformidade/', views.reset_conformidade_atleta, name='atleta_reset_conformidade'),
     path('atleta/<int:pk>/enviar-correcao/', views.enviar_correcao_atleta, name='enviar_correcao_atleta'),
     path('comissao/resumo-inscricoes/', views.resumo_inscricoes, name='resumo_inscricoes'),
+    path('comissao/periodo-inscricao/', views.AdminPeriodoInscricaoView.as_view(), name='admin_periodo_inscricao'),
 
     # Rotas de Gestão de Delegações (COMISSAO)
     path('comissao/delegacoes/', views.AdminDelegacaoListView.as_view(), name='admin_delegacoes'),

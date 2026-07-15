@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth import get_user_model
-from .models import Atleta, Modalidade, Jogo
+from .models import Atleta, Modalidade, Jogo, ConfiguracaoPeriodoInscricao
 
 User = get_user_model()
 
@@ -32,26 +32,14 @@ class AtletaForm(forms.ModelForm):
 class ModalidadeForm(forms.ModelForm):
     class Meta:
         model = Modalidade
-        fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas', 'data_publicacao']
+        fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'genero': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'limite_minimo_jogadores': forms.NumberInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'limite_maximo_jogadores': forms.NumberInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'inscricoes_abertas': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600'}),
-            'data_publicacao': forms.DateTimeInput(
-                attrs={
-                    'type': 'datetime-local',
-                    'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'
-                },
-                format='%Y-%m-%dT%H:%M'
-            ),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if self.instance and self.instance.data_publicacao:
-            self.initial['data_publicacao'] = self.instance.data_publicacao.strftime('%Y-%m-%dT%H:%M')
 
 from django.db.models import Q
 
@@ -112,5 +100,53 @@ class JogoForm(forms.ModelForm):
         else:
             limite_data = hoje
         self.fields['data_jogo'].widget.attrs['min'] = limite_data.strftime('%Y-%m-%d')
+
+
+class ConfiguracaoPeriodoInscricaoForm(forms.ModelForm):
+    class Meta:
+        model = ConfiguracaoPeriodoInscricao
+        fields = ['data_inicio', 'data_fim', 'segunda_chamada_inicio', 'segunda_chamada_fim']
+        widgets = {
+            'data_inicio': forms.DateTimeInput(
+                attrs={
+                    'type': 'datetime-local',
+                    'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'
+                },
+                format='%Y-%m-%dT%H:%M'
+            ),
+            'data_fim': forms.DateTimeInput(
+                attrs={
+                    'type': 'datetime-local',
+                    'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'
+                },
+                format='%Y-%m-%dT%H:%M'
+            ),
+            'segunda_chamada_inicio': forms.DateTimeInput(
+                attrs={
+                    'type': 'datetime-local',
+                    'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'
+                },
+                format='%Y-%m-%dT%H:%M'
+            ),
+            'segunda_chamada_fim': forms.DateTimeInput(
+                attrs={
+                    'type': 'datetime-local',
+                    'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'
+                },
+                format='%Y-%m-%dT%H:%M'
+            ),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        from django.utils import timezone
+        if self.instance and self.instance.data_inicio:
+            self.initial['data_inicio'] = timezone.localtime(self.instance.data_inicio).strftime('%Y-%m-%dT%H:%M')
+        if self.instance and self.instance.data_fim:
+            self.initial['data_fim'] = timezone.localtime(self.instance.data_fim).strftime('%Y-%m-%dT%H:%M')
+        if self.instance and self.instance.segunda_chamada_inicio:
+            self.initial['segunda_chamada_inicio'] = timezone.localtime(self.instance.segunda_chamada_inicio).strftime('%Y-%m-%dT%H:%M')
+        if self.instance and self.instance.segunda_chamada_fim:
+            self.initial['segunda_chamada_fim'] = timezone.localtime(self.instance.segunda_chamada_fim).strftime('%Y-%m-%dT%H:%M')
 
 

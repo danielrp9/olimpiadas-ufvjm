@@ -1,0 +1,265 @@
+{% extends 'base.html' %}
+
+{% block title %}Escalação Segunda Chamada - Olimpíadas Universitárias{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-6">
+    <!-- Header -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
+        <a href="{% url 'inscricao_detail' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para a Inscrição">
+            <i class="fas fa-arrow-left text-lg"></i>
+        </a>
+        <span class="p-2.5 bg-indigo-50 text-indigo-650 rounded-2xl shrink-0">
+            <i class="fas fa-users-cog text-base animate-pulse"></i>
+        </span>
+        <div>
+            <h1 class="text-xl font-bold text-slate-800 tracking-tight">Escalação - Segunda Chamada</h1>
+            <p class="text-slate-400 mt-1 text-xs">Substitua atletas existentes ou adicione novos atletas à delegação de forma organizada.</p>
+        </div>
+    </div>
+
+    <!-- Modalidades Selecionadas (Fixas) -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-3">
+        <div class="flex items-center gap-2">
+            <span class="p-1.5 bg-indigo-50 text-indigo-700 rounded-lg text-[10px]"><i class="fas fa-trophy"></i></span>
+            <h3 class="font-bold text-slate-800 text-xs uppercase tracking-wider">Suas Modalidades Registradas (Fixas)</h3>
+        </div>
+        <div class="flex flex-wrap gap-2">
+            {% for mod in modalidades %}
+                <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50/50 text-slate-800 rounded-full text-xs font-semibold shadow-sm transition">
+                    <span class="text-indigo-600 text-[10px]">
+                        <i class="fas fa-check-circle"></i>
+                    </span>
+                    <span class="text-slate-800 font-bold">{{ mod.nome }}</span>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <form method="post" class="space-y-8">
+        {% csrf_token %}
+
+        <!-- SEÇÃO 1: SUBSTITUIÇÃO DE ATLETAS -->
+        <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="p-1.5 bg-indigo-50 text-indigo-650 rounded-lg text-[10px]"><i class="fas fa-exchange-alt"></i></span>
+                    <h3 class="font-bold text-slate-800 text-sm">1. Substituição de Atletas</h3>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-700 uppercase tracking-wider">Opcional</span>
+            </div>
+            
+            <div class="p-6 space-y-5">
+                <p class="text-slate-500 text-xs font-medium">Selecione o jogador que sairá da equipe e o jogador que entrará em seu lugar na estrutura abaixo:</p>
+                
+                <!-- Substitutions Container -->
+                <div id="substitutions-container" class="space-y-4">
+                    <!-- Single Substitution Row by Default -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center relative substitution-row pr-0 md:pr-8">
+                        <!-- Outgoing Athlete -->
+                        <div class="space-y-1">
+                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jogador que SAI</label>
+                            <select name="substituicao_sai[]" onchange="handleSelectChange()"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-indigo-500 transition text-xs bg-white cursor-pointer select-sai">
+                                <option value="">-- Selecione o jogador para remover --</option>
+                                {% for atleta in atletas_atuais %}
+                                    <option value="{{ atleta.id }}">{{ atleta.nome_completo }} (Inscrito)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <!-- Incoming Athlete -->
+                        <div class="space-y-1">
+                            <label class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jogador que ENTRA no lugar</label>
+                            <select name="substituicao_entra[]" onchange="handleSelectChange()"
+                                    class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-indigo-500 transition text-xs bg-white cursor-pointer select-entra">
+                                <option value="">-- Selecione o jogador substituto --</option>
+                                {% for sub in atletas_disponiveis %}
+                                    <option value="{{ sub.id }}">{{ sub.nome_completo }} (Disponível)</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Add More Button -->
+                <div class="pt-2 flex justify-start">
+                    <button type="button" onclick="addSubstitutionRow()" class="px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50/50 font-bold rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-1.5 text-xs bg-transparent border-none">
+                        <i class="fas fa-plus-circle text-base"></i> Adicionar outra substituição
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO 2: INCLUSÃO DE NOVOS ATLETAS -->
+        <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
+            <div class="px-6 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="p-1.5 bg-green-50 text-green-500 rounded-lg text-[10px]"><i class="fas fa-user-plus"></i></span>
+                    <h3 class="font-bold text-slate-800 text-sm">2. Inclusão de Novos Atletas</h3>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'atleta_bulk_create' %}" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-blue-600 rounded-xl font-bold text-[10px] transition active:scale-95 flex items-center gap-1.5 shadow-sm">
+                        <i class="fas fa-plus text-[9px]"></i> Adicionar Novos Atletas ao Sistema
+                    </a>
+                </div>
+            </div>
+            
+            <div class="p-6 space-y-4">
+                <p class="text-slate-500 text-xs">Escolha abaixo quais atletas novos da sua delegação você deseja incluir na equipe. <strong>Apenas atletas novos (não submetidos na primeira inscrição) são exibidos nesta lista:</strong></p>
+                
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                    {% for atleta in atletas_disponiveis %}
+                        <!-- Disponível para Inclusão (Clicável) -->
+                        <label class="relative border border-slate-200 hover:border-indigo-400 rounded-2xl p-3.5 flex items-start gap-3 cursor-pointer select-none transition bg-slate-50/20 hover:bg-slate-50/50" id="label-add-{{ atleta.id }}">
+                            <input type="checkbox" name="adicionar_atletas" value="{{ atleta.id }}" 
+                                   class="mt-0.5 h-4 w-4 text-indigo-600 rounded border-slate-200 focus:ring-indigo-500/20 accent-indigo-600 shrink-0 checkbox-add">
+                            <div>
+                                <span class="font-bold text-slate-700 text-xs block leading-tight">{{ atleta.nome_completo }}</span>
+                                <span class="text-[9px] text-slate-400 block mt-0.5">CPF: {{ atleta.cpf }} | Matrícula: {{ atleta.matricula }}</span>
+                                <span id="badge-add-{{ atleta.id }}" class="inline-flex items-center mt-1.5 px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[8px] font-bold uppercase tracking-wider">
+                                    Disponível para Inclusão
+                                </span>
+                            </div>
+                        </label>
+                    {% empty %}
+                        <div class="col-span-full py-8 text-center space-y-2">
+                            <p class="text-slate-450 text-xs">Não há atletas adicionais cadastrados disponíveis para inclusão.</p>
+                            <a href="{% url 'atleta_bulk_create' %}" class="inline-flex items-center px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] rounded-xl transition">
+                                <i class="fas fa-plus mr-1"></i> Cadastrar Novos Atletas
+                            </a>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- AÇÕES -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
+            <a href="{% url 'inscricao_detail' %}" class="px-5 py-2.5 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition flex items-center gap-1.5">
+                <i class="fas fa-arrow-left text-[10px]"></i> Voltar para Detalhe
+            </a>
+            <button type="submit" class="px-6 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-sm active:scale-[0.98] flex items-center gap-2">
+                <i class="fas fa-check text-[10px]"></i> Enviar Alterações (Segunda Chamada)
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function addSubstitutionRow() {
+        const container = document.getElementById('substitutions-container');
+        const firstRow = container.querySelector('.substitution-row');
+        
+        if (!firstRow) return;
+        
+        // Clone the first row
+        const newRow = firstRow.cloneNode(true);
+        
+        // Reset select values
+        const selects = newRow.querySelectorAll('select');
+        selects.forEach(select => {
+            select.value = "";
+            // Ensure no options are disabled in the new clone originally
+            Array.from(select.options).forEach(opt => opt.disabled = false);
+        });
+        
+        // Add a remove button to the new row
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.className = 'absolute top-1/2 -translate-y-1/2 right-0 w-6 h-6 rounded-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 flex items-center justify-center transition hover:scale-105 active:scale-95 shadow-sm z-10';
+        removeBtn.innerHTML = '<i class="fas fa-times text-[10px]"></i>';
+        removeBtn.onclick = function() {
+            newRow.remove();
+            handleSelectChange();
+        };
+        
+        newRow.appendChild(removeBtn);
+        container.appendChild(newRow);
+        
+        handleSelectChange();
+    }
+
+    function handleSelectChange() {
+        updateAvailableCheckboxes();
+        disableDuplicateOptions();
+    }
+    
+    // Updates checkboxes in section 2 to disable/uncheck any athlete selected for substitution in section 1
+    function updateAvailableCheckboxes() {
+        const selectsEntra = document.querySelectorAll('.select-entra');
+        const selectedEntraIds = new Set();
+        
+        selectsEntra.forEach(select => {
+            if (select.value) {
+                selectedEntraIds.add(select.value);
+            }
+        });
+        
+        const checkboxes = document.querySelectorAll('.checkbox-add');
+        checkboxes.forEach(cb => {
+            const athleteId = cb.value;
+            const label = document.getElementById('label-add-' + athleteId);
+            const badge = document.getElementById('badge-add-' + athleteId);
+            
+            if (selectedEntraIds.has(athleteId)) {
+                // Disabled because already selected as substitution
+                cb.checked = false;
+                cb.disabled = true;
+                if (label) {
+                    label.classList.add('opacity-50', 'cursor-not-allowed');
+                    label.classList.remove('hover:border-indigo-400', 'cursor-pointer');
+                }
+                if (badge) {
+                    badge.className = 'inline-flex items-center mt-1.5 px-2 py-0.5 rounded bg-red-50 text-red-600 text-[8px] font-bold uppercase tracking-wider border border-red-100';
+                    badge.innerText = 'Incluído para substituição';
+                }
+            } else {
+                // Enabled
+                cb.disabled = false;
+                if (label) {
+                    label.classList.remove('opacity-50', 'cursor-not-allowed');
+                    label.classList.add('hover:border-indigo-400', 'cursor-pointer');
+                }
+                if (badge) {
+                    badge.className = 'inline-flex items-center mt-1.5 px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 text-[8px] font-bold uppercase tracking-wider';
+                    badge.innerText = 'Disponível para Inclusão';
+                }
+            }
+        });
+    }
+
+    // Prevents selecting the same athlete in multiple substitution slots
+    function disableDuplicateOptions() {
+        const selectsSai = document.querySelectorAll('.select-sai');
+        const selectsEntra = document.querySelectorAll('.select-entra');
+        
+        const selectedSaiValues = Array.from(selectsSai).map(s => s.value).filter(v => v !== "");
+        const selectedEntraValues = Array.from(selectsEntra).map(s => s.value).filter(v => v !== "");
+        
+        selectsSai.forEach(select => {
+            const currentValue = select.value;
+            Array.from(select.options).forEach(option => {
+                if (option.value !== "") {
+                    // Disable if selected in another slot
+                    option.disabled = selectedSaiValues.includes(option.value) && option.value !== currentValue;
+                }
+            });
+        });
+        
+        selectsEntra.forEach(select => {
+            const currentValue = select.value;
+            Array.from(select.options).forEach(option => {
+                if (option.value !== "") {
+                    // Disable if selected in another slot
+                    option.disabled = selectedEntraValues.includes(option.value) && option.value !== currentValue;
+                }
+            });
+        });
+    }
+    
+    document.addEventListener("DOMContentLoaded", function() {
+        handleSelectChange();
+    });
+</script>
+{% endblock %}

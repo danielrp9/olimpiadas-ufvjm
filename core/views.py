@@ -4,8 +4,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
 from django.urls import reverse_lazy
 from django.contrib import messages
-from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade, Recurso, RecursoMensagem, Notificacao
-from .forms import RegisterForm, AtletaForm, JogoForm, ModalidadeForm
+from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade, Recurso, RecursoMensagem, Notificacao, ConfiguracaoPeriodoInscricao
+from .forms import RegisterForm, AtletaForm, JogoForm, ModalidadeForm, ConfiguracaoPeriodoInscricaoForm
 from users.models import ComissaoWhitelist, MembroDelegacao
 
 class RegisterView(CreateView):
@@ -135,10 +135,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         jogos_encerrados.sort(key=lambda j: (j.data_jogo or datetime.date.min, j.horario_jogo or datetime.time.min, j.id), reverse=True)
         context['jogos_encerrados'] = jogos_encerrados
         
-        from django.utils import timezone
-        context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True).filter(
-            Q(data_publicacao__isnull=True) | Q(data_publicacao__lte=timezone.now())
-        )
+        context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True)
         
         context['inscricao'] = getattr(delegacao, 'inscricao', None)
         return context
@@ -876,11 +873,33 @@ def inscricao_passo1(request):
         return redirect('inscricao_detail')
         
     from django.utils import timezone
-    modalidades = Modalidade.objects.filter(inscricoes_abertas=True).filter(
-        Q(data_publicacao__isnull=True) | Q(data_publicacao__lte=timezone.now())
-    )
+    from .models import ConfiguracaoPeriodoInscricao
     
+    config = ConfiguracaoPeriodoInscricao.objects.first()
+    now = timezone.now()
+    status_inscricao = 'aberta'
+    data_inicio = None
+    data_fim = None
+    
+    if config:
+        data_inicio = config.data_inicio
+        data_fim = config.data_fim
+        is_segunda_chamada_active = config.segunda_chamada_inicio and config.segunda_chamada_fim and (config.segunda_chamada_inicio <= now <= config.segunda_chamada_fim)
+        
+        if is_segunda_chamada_active:
+            status_inscricao = 'segunda_chamada'
+        elif now < config.data_inicio:
+            status_inscricao = 'nao_iniciada'
+        elif now > config.data_fim:
+            status_inscricao = 'encerrada'
+        else:
+            status_inscricao = 'aberta'
+            
     if request.method == 'POST':
+        if status_inscricao != 'aberta':
+            messages.error(request, "As inscrições estão fora do período permitido.")
+            return redirect('inscricao_passo1')
+            
         selected_modalidades = request.POST.getlist('modalidades')
         if not selected_modalidades:
             messages.error(request, "Por favor, selecione ao menos uma modalidade para se inscrever.")
@@ -889,7 +908,14 @@ def inscricao_passo1(request):
         request.session['inscricao_modalidades_ids'] = [int(mid) for mid in selected_modalidades]
         return redirect('inscricao_passo2')
         
-    return render(request, 'core/inscricao_passo1.html', {'modalidades': modalidades})
+    modalidades = Modalidade.objects.filter(inscricoes_abertas=True)
+    return render(request, 'core/inscricao_passo1.html', {
+        'modalidades': modalidades,
+        'status_inscricao': status_inscricao,
+        'data_inicio': data_inicio,
+        'data_fim': data_fim,
+        'config': config
+    })
 
 
 @login_required
@@ -900,6 +926,15 @@ def inscricao_passo2(request):
     inscricao = getattr(delegacao, 'inscricao', None)
     if inscricao:
         return redirect('inscricao_detail')
+        
+    from django.utils import timezone
+    from .models import ConfiguracaoPeriodoInscricao
+    
+    config = ConfiguracaoPeriodoInscricao.objects.first()
+    now = timezone.now()
+    if config and (now < config.data_inicio or now > config.data_fim):
+        messages.error(request, "As inscrições estão fora do período permitido.")
+        return redirect('inscricao_passo1')
         
     modalidades_ids = request.session.get('inscricao_modalidades_ids', [])
     if not modalidades_ids:
@@ -973,10 +1008,18 @@ def inscricao_detail(request):
         
     modalidades_inscritas = inscricao.modalidades.all().select_related('modalidade')
     
+    from django.utils import timezone
+    from .models import ConfiguracaoPeriodoInscricao
+    
+    config = ConfiguracaoPeriodoInscricao.objects.first()
+    now = timezone.now()
+    is_segunda_chamada_active = config and config.segunda_chamada_inicio and config.segunda_chamada_fim and (config.segunda_chamada_inicio <= now <= config.segunda_chamada_fim)
+    
     return render(request, 'core/inscricao_detail.html', {
         'inscricao': inscricao,
         'modalidades_inscritas': modalidades_inscritas,
-        'atletas_inscritos': inscricao.atletas_inscritos
+        'atletas_inscritos': inscricao.atletas_inscritos,
+        'is_segunda_chamada_active': is_segunda_chamada_active
     })
 
 
@@ -1500,5 +1543,248 @@ def resumo_inscricoes(request):
         'chart_datasets_modalidades_json': json.dumps(chart_datasets_modalidades),
     }
     return render(request, 'core/resumo_inscricoes.html', context)
+
+
+from django.views import View
+
+class AdminPeriodoInscricaoView(LoginRequiredMixin, View):
+    """
+    Permite à Comissão Organizadora configurar o período de inscrições das Olimpíadas.
+    """
+    def get(self, request):
+        if not request.user.is_comissao:
+            return redirect('dashboard')
+        config = ConfiguracaoPeriodoInscricao.objects.first()
+        editing = bool(request.GET.get('edit')) or not config
+        
+        status_inscricao = 'aberta'
+        if config:
+            from django.utils import timezone
+            now = timezone.now()
+            if now < config.data_inicio:
+                status_inscricao = 'nao_iniciada'
+            elif now > config.data_fim:
+                is_segunda_chamada_active = config.segunda_chamada_inicio and config.segunda_chamada_fim and (config.segunda_chamada_inicio <= now <= config.segunda_chamada_fim)
+                if is_segunda_chamada_active:
+                    status_inscricao = 'segunda_chamada'
+                else:
+                    status_inscricao = 'encerrada'
+            else:
+                status_inscricao = 'aberta'
+        else:
+            status_inscricao = 'nao_cadastrada'
+
+        second_only = bool(request.GET.get('second_only'))
+        if status_inscricao == 'segunda_chamada':
+            second_only = True
+            
+        form = ConfiguracaoPeriodoInscricaoForm(instance=config) if editing else None
+        
+        return render(request, 'core/admin_periodo_inscricao.html', {
+            'form': form, 
+            'object': config,
+            'editing': editing,
+            'second_only': second_only,
+            'status_inscricao': status_inscricao
+        })
+
+    def post(self, request):
+        if not request.user.is_comissao:
+            return redirect('dashboard')
+        config = ConfiguracaoPeriodoInscricao.objects.first()
+        
+        # Handle exclusion of dates (Encerrar Olimpíadas)
+        if 'delete_period' in request.POST:
+            if config:
+                config.delete()
+            
+            from core.models import Inscricao, PreSumula, Atleta
+            from django.contrib.auth import get_user_model
+            
+            # 1. Delete all inscriptions (cascade-deletes modalidade choices and substitutions)
+            Inscricao.objects.all().delete()
+            
+            # 2. Delete all pre-súmulas
+            PreSumula.objects.all().delete()
+            
+            # 3. Reset representatives/delegations registration statuses and payment fields
+            User = get_user_model()
+            User.objects.filter(role='REPRESENTANTE').update(
+                status_delegacao='pendente',
+                justificativa_delegacao=None,
+                link_comprovante_pagamento=None,
+                status_pagamento='nao_avaliado',
+                justificativa_pagamento=None
+            )
+            
+            # 4. Reset athletes' document verification statuses
+            Atleta.objects.all().update(
+                status_avaliacao='nao_avaliado',
+                em_conformidade=False,
+                justificativa_inconformidade=None,
+                permite_correcao=False,
+                link_correcao=None
+            )
+            
+            messages.warning(request, "As Olimpíadas foram encerradas: todas as inscrições, pré-súmulas e comprovantes foram apagados, e o status das delegações e atletas foi resetado para permitir um novo período.")
+            return redirect('admin_periodo_inscricao')
+
+        if not config:
+            config = ConfiguracaoPeriodoInscricao()
+            
+        status_inscricao = 'aberta'
+        from django.utils import timezone
+        now = timezone.now()
+        if config.pk:
+            if now < config.data_inicio:
+                status_inscricao = 'nao_iniciada'
+            elif now > config.data_fim:
+                is_segunda_chamada_active = config.segunda_chamada_inicio and config.segunda_chamada_fim and (config.segunda_chamada_inicio <= now <= config.segunda_chamada_fim)
+                if is_segunda_chamada_active:
+                    status_inscricao = 'segunda_chamada'
+                else:
+                    status_inscricao = 'encerrada'
+            else:
+                status_inscricao = 'aberta'
+        else:
+            status_inscricao = 'nao_cadastrada'
+
+        second_only = bool(request.GET.get('second_only')) or (status_inscricao == 'segunda_chamada')
+        original_data_inicio = config.data_inicio if config.pk else None
+        original_data_fim = config.data_fim if config.pk else None
+        
+        form = ConfiguracaoPeriodoInscricaoForm(request.POST, instance=config)
+        if form.is_valid():
+            saved_config = form.save(commit=False)
+            if second_only and original_data_inicio and original_data_fim:
+                # Force preserve regular period dates, making sure they cannot be edited
+                saved_config.data_inicio = original_data_inicio
+                saved_config.data_fim = original_data_fim
+            saved_config.save()
+            messages.success(request, "Configuração do período de inscrições salva com sucesso!")
+            return redirect('admin_periodo_inscricao')
+            
+        return render(request, 'core/admin_periodo_inscricao.html', {
+            'form': form, 
+            'object': config if config.pk else None,
+            'editing': True,
+            'second_only': second_only,
+            'status_inscricao': status_inscricao
+        })
+
+
+@login_required
+def inscricao_segunda_chamada(request):
+    if request.user.is_comissao:
+        return redirect('dashboard')
+        
+    delegacao = request.user.delegacao_ativa
+    inscricao = getattr(delegacao, 'inscricao', None)
+    
+    from django.utils import timezone
+    from .models import ConfiguracaoPeriodoInscricao, SubstituicaoAtleta
+    
+    config = ConfiguracaoPeriodoInscricao.objects.first()
+    now = timezone.now()
+    is_segunda_chamada_active = config and config.segunda_chamada_inicio and config.segunda_chamada_fim and (config.segunda_chamada_inicio <= now <= config.segunda_chamada_fim)
+    
+    if not is_segunda_chamada_active:
+        messages.error(request, "O período de segunda chamada de inscrições não está ativo.")
+        return redirect('dashboard')
+        
+    if not inscricao:
+        messages.error(request, "Sua delegação não possui uma inscrição ativa realizada no período regular.")
+        return redirect('dashboard')
+        
+    modalidades_inscritas = [im.modalidade for im in inscricao.modalidades.all()]
+    
+    # Get current registered athletes
+    atletas_atuais = list(inscricao.atletas_inscritos)
+    
+    # Get all athletes of this delegation
+    todos_atletas = Atleta.objects.filter(cadastrado_por=delegacao)
+    
+    # Available athletes (not currently registered)
+    atletas_disponiveis = [a for a in todos_atletas if a not in atletas_atuais]
+    
+    if request.method == 'POST':
+        substitutions_to_create = []
+        athletes_to_remove_ids = []
+        athletes_to_add_ids = []
+        
+        # 1. Process substitutions
+        sub_sai_list = request.POST.getlist('substituicao_sai[]')
+        sub_entra_list = request.POST.getlist('substituicao_entra[]')
+        
+        for sai_str, entra_str in zip(sub_sai_list, sub_entra_list):
+            if sai_str and entra_str:
+                sai_id = int(sai_str)
+                entra_id = int(entra_str)
+                # Verify that the outgoing athlete is actually in the team
+                if sai_id in [a.id for a in atletas_atuais] and entra_id in [a.id for a in todos_atletas]:
+                    substitutions_to_create.append((sai_id, entra_id))
+                    athletes_to_remove_ids.append(sai_id)
+                    athletes_to_add_ids.append(entra_id)
+                
+        # 2. Process additions
+        added_athlete_ids_str = request.POST.getlist('adicionar_atletas')
+        for aid_str in added_athlete_ids_str:
+            aid = int(aid_str)
+            if aid not in athletes_to_add_ids and aid not in [a.id for a in atletas_atuais]:
+                athletes_to_add_ids.append(aid)
+                
+        # Calculate final list of athletes
+        final_athlete_ids = [a.id for a in atletas_atuais if a.id not in athletes_to_remove_ids]
+        for aid in athletes_to_add_ids:
+            if aid not in final_athlete_ids:
+                final_athlete_ids.append(aid)
+                
+        selected_atletas = Atleta.objects.filter(id__in=final_athlete_ids, cadastrado_por=delegacao)
+        
+        if not selected_atletas.exists():
+            messages.error(request, "Por favor, selecione ao menos um atleta.")
+            return redirect('inscricao_segunda_chamada')
+            
+        # Update database relation
+        for im in inscricao.modalidades.all():
+            im.atletas.set(selected_atletas)
+            
+        # Create SubstituicaoAtleta records
+        for sai_id, entra_id in substitutions_to_create:
+            sai = Atleta.objects.get(id=sai_id)
+            entra = Atleta.objects.get(id=entra_id)
+            SubstituicaoAtleta.objects.get_or_create(
+                inscricao=inscricao,
+                atleta_saiu=sai,
+                atleta_entrou=entra
+            )
+            
+        # Reset statuses for re-evaluation
+        inscricao.status = 'pendente'
+        inscricao.save()
+        
+        delegacao.status_delegacao = 'pendente'
+        delegacao.justificativa_delegacao = ''
+        delegacao.save()
+        
+        # Notify commission
+        comissao = User.objects.filter(role='COMISSAO')
+        for admin in comissao:
+            Notificacao.objects.create(
+                usuario=admin,
+                mensagem=f"Alteração de atletas na Segunda Chamada enviada pela delegação {delegacao.nome_delegacao or delegacao.email}.",
+                link='/comissao/delegacoes/'
+            )
+            
+        messages.success(request, "Alterações da Segunda Chamada enviadas com sucesso! A Comissão Organizadora fará a reavaliação.")
+        return redirect('inscricao_detail')
+        
+    return render(request, 'core/inscricao_segunda_chamada.html', {
+        'inscricao': inscricao,
+        'modalidades': modalidades_inscritas,
+        'atletas_atuais': atletas_atuais,
+        'atletas_disponiveis': atletas_disponiveis,
+        'todos_atletas': todos_atletas
+    })
 
 

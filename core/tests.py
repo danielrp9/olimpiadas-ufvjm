@@ -991,6 +991,425 @@ class CoDelegatePreSumulaTestCase(TestCase):
         self.assertContains(response, 'Escalar')
 
 
+class RegistrationPeriodTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from datetime import timedelta
+        User = get_user_model()
+        self.delegate = User.objects.create_user(
+            email='delegate@example.com',
+            nome_completo='Delegate User',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            password='testpassword'
+        )
+        self.delegate.nome_delegacao = 'Delegacao Teste'
+        self.delegate.status_delegacao = 'deferido'
+        self.delegate.save()
+        
+        self.modalidade = Modalidade.objects.create(
+            nome='Futsal Test',
+            genero='M',
+            limite_minimo_jogadores=1,
+            limite_maximo_jogadores=5,
+            inscricoes_abertas=True
+        )
+
+    def test_registration_period_not_started(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao
+        from datetime import timedelta
+        
+        # Configure period in the future
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now + timedelta(days=1),
+            data_fim=now + timedelta(days=2)
+        )
+        
+        self.client.force_login(self.delegate)
+        response = self.client.get(reverse('inscricao_passo1'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'As inscrições ainda não começaram')
+        self.assertNotContains(response, 'Prosseguir para Escalação')
+
+        # Try to post to step 1
+        response = self.client.post(reverse('inscricao_passo1'), {'modalidades': [self.modalidade.id]})
+        self.assertEqual(response.status_code, 302) # Redirects back to step 1 with error
+        
+        # Try to access step 2
+        response = self.client.get(reverse('inscricao_passo2'))
+        self.assertEqual(response.status_code, 302)
+
+    def test_registration_period_open(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao
+        from datetime import timedelta
+        
+        # Configure period active
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=1),
+            data_fim=now + timedelta(days=1)
+        )
+        
+        self.client.force_login(self.delegate)
+        response = self.client.get(reverse('inscricao_passo1'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Inscrições Abertas!')
+        self.assertContains(response, 'Prosseguir para Escalação')
+
+    def test_registration_period_closed(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao
+        from datetime import timedelta
+        
+        # Configure period in the past
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=2),
+            data_fim=now - timedelta(days=1)
+        )
+        
+        self.client.force_login(self.delegate)
+        response = self.client.get(reverse('inscricao_passo1'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Inscrições Encerradas')
+        self.assertNotContains(response, 'Prosseguir para Escalação')
+
+        # Try to post to step 1
+        response = self.client.post(reverse('inscricao_passo1'), {'modalidades': [self.modalidade.id]})
+        self.assertEqual(response.status_code, 302)
+        
+        # Try to access step 2
+        response = self.client.get(reverse('inscricao_passo2'))
+        self.assertEqual(response.status_code, 302)
+
+
+class AdminPeriodoInscricaoTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        self.delegate = User.objects.create_user(
+            email='delegate@example.com',
+            nome_completo='Delegate User',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            password='testpassword'
+        )
+        self.comissao = User.objects.create_user(
+            email='comissao@example.com',
+            nome_completo='Comissao User',
+            role='COMISSAO',
+            cpf='603.957.346-60',
+            password='testpassword'
+        )
+        
+    def test_view_access_restricted_to_comissao(self):
+        from django.urls import reverse
+        # Non-logged in users should redirect to login page
+        response = self.client.get(reverse('admin_periodo_inscricao'))
+        self.assertEqual(response.status_code, 302)
+        
+        # Delegates (representantes) should redirect to dashboard
+        self.client.force_login(self.delegate)
+        response = self.client.get(reverse('admin_periodo_inscricao'))
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.url.endswith(reverse('dashboard')))
+        
+        # Commission users can view the page
+        self.client.force_login(self.comissao)
+        response = self.client.get(reverse('admin_periodo_inscricao'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Período de Inscrição')
+        self.assertContains(response, 'Salvar Configuração')
+
+    def test_save_period_configuration(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao
+        
+        self.client.force_login(self.comissao)
+        response = self.client.post(reverse('admin_periodo_inscricao'), {
+            'data_inicio': '2026-07-20T08:00',
+            'data_fim': '2026-07-30T18:00'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        config = ConfiguracaoPeriodoInscricao.objects.first()
+        self.assertIsNotNone(config)
+        self.assertEqual(config.data_inicio.year, 2026)
+        self.assertEqual(config.data_inicio.month, 7)
+        self.assertEqual(config.data_inicio.day, 20)
+        self.assertEqual(config.data_fim.year, 2026)
+        self.assertEqual(config.data_fim.month, 7)
+        self.assertEqual(config.data_fim.day, 30)
+
+        # GET request now should show read-only view (because config exists and edit is not passed)
+        response = self.client.get(reverse('admin_periodo_inscricao'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Editar Período')
+        self.assertNotContains(response, 'Salvar Configuração')
+
+        # GET request with edit=1 should show form
+        response = self.client.get(reverse('admin_periodo_inscricao') + '?edit=1')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Salvar Configuração')
+        self.assertNotContains(response, 'Editar Período')
+
+        # GET request with edit=1 and second_only=1 should show regular dates as read-only text
+        response = self.client.get(reverse('admin_periodo_inscricao') + '?edit=1&second_only=1')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '1. Período Regular de Inscrições')
+        self.assertContains(response, '20/07/2026 08:00')
+
+    def test_delete_period_and_edit_behavior(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao
+        
+        self.client.force_login(self.comissao)
+        
+        # Create a period configuration where regular period is active and second call is in the future
+        config = ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=timezone.now() - timezone.timedelta(days=2),
+            data_fim=timezone.now() + timezone.timedelta(days=1),
+            segunda_chamada_inicio=timezone.now() + timezone.timedelta(days=2),
+            segunda_chamada_fim=timezone.now() + timezone.timedelta(days=3)
+        )
+        
+        # 1. Edit page with edit=1 without second_only: should NOT show second call fields
+        response = self.client.get(reverse('admin_periodo_inscricao') + '?edit=1')
+        self.assertEqual(response.status_code, 200)
+        self.assertNotContains(response, '2. Segunda Chamada de Inscrições')
+        
+        # 2. Edit page with edit=1 and second_only=1: should show second call fields
+        response = self.client.get(reverse('admin_periodo_inscricao') + '?edit=1&second_only=1')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, '2. Segunda Chamada de Inscrições')
+        
+        original_data_inicio = config.data_inicio
+        original_data_fim = config.data_fim
+
+        # 3. Post to edit regular dates during second_only=1 should preserve database regular dates
+        response = self.client.post(reverse('admin_periodo_inscricao') + '?edit=1&second_only=1', {
+            'data_inicio': '2026-09-01T08:00', # Attempt to change regular start
+            'data_fim': '2026-09-10T18:00',    # Attempt to change regular end
+            'segunda_chamada_inicio': '2026-10-01T08:00',
+            'segunda_chamada_fim': '2026-10-10T18:00'
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        config.refresh_from_db()
+        # Regular dates must remain unchanged
+        self.assertEqual(config.data_inicio, original_data_inicio)
+        self.assertEqual(config.data_fim, original_data_fim)
+        # Second call dates should be updated
+        self.assertEqual(config.segunda_chamada_inicio.year, 2026)
+        self.assertEqual(config.segunda_chamada_inicio.month, 10)
+
+        # Create dummy athlete, inscricao, and presumula to test complete reset
+        from core.models import Inscricao, PreSumula, Atleta, Jogo, Modalidade
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        
+        # 1. Update delegate status
+        self.delegate.status_delegacao = 'deferido'
+        self.delegate.link_comprovante_pagamento = 'http://example.com/pay.pdf'
+        self.delegate.status_pagamento = 'deferido'
+        self.delegate.save()
+        
+        # Create secondary delegate for time_b
+        delegate2 = User.objects.create_user(
+            email='delegate2@example.com',
+            nome_completo='Delegate 2',
+            role='REPRESENTANTE',
+            cpf='111.111.111-11',
+            password='testpassword'
+        )
+        
+        # 2. Create athlete
+        athlete = Atleta.objects.create(
+            nome_completo="Test Athlete Reset",
+            email="athlete_reset@example.com",
+            matricula="12345",
+            curso="Curso",
+            cadastrado_por=self.delegate,
+            status_avaliacao='deferido',
+            em_conformidade=True
+        )
+        
+        # 3. Create Inscricao
+        inscricao = Inscricao.objects.create(
+            delegacao=self.delegate,
+            status='deferido'
+        )
+        
+        # Create modalidade
+        mod = Modalidade.objects.create(
+            nome='Futsal',
+            genero='M',
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12,
+            inscricoes_abertas=True
+        )
+        
+        # 4. Create Jogo and PreSumula
+        game = Jogo.objects.create(
+            modalidade=mod,
+            data_jogo=timezone.now().date(),
+            horario_jogo=timezone.now().time(),
+            time_a=self.delegate,
+            time_b=delegate2,
+            local="Quadra"
+        )
+        presumula = PreSumula.objects.create(
+            jogo=game,
+            representante=self.delegate
+        )
+        
+        # Verify they exist
+        self.assertEqual(Inscricao.objects.count(), 1)
+        self.assertEqual(PreSumula.objects.count(), 1)
+        self.assertEqual(athlete.status_avaliacao, 'deferido')
+        
+        # 4. Post with delete_period should completely remove the configuration and reset states
+        response = self.client.post(reverse('admin_periodo_inscricao'), {
+            'delete_period': '1'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(ConfiguracaoPeriodoInscricao.objects.count(), 0)
+        self.assertEqual(Inscricao.objects.count(), 0)
+        self.assertEqual(PreSumula.objects.count(), 0)
+        
+        # Check delegate is reset
+        self.delegate.refresh_from_db()
+        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+        self.assertIsNone(self.delegate.link_comprovante_pagamento)
+        self.assertEqual(self.delegate.status_pagamento, 'nao_avaliado')
+        
+        # Check athlete is reset
+        athlete.refresh_from_db()
+        self.assertEqual(athlete.status_avaliacao, 'nao_avaliado')
+        self.assertFalse(athlete.em_conformidade)
+
+
+class SecondCallRegistrationTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from core.models import Atleta, Modalidade, Inscricao, InscricaoModalidade
+        User = get_user_model()
+        self.delegate = User.objects.create_user(
+            email='delegate@example.com',
+            nome_completo='Delegate User',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            password='testpassword'
+        )
+        self.delegate.nome_delegacao = 'Delegacao Teste'
+        self.delegate.status_delegacao = 'deferido'
+        self.delegate.save()
+
+        self.modalidade = Modalidade.objects.create(
+            nome='Futsal Test',
+            genero='M',
+            limite_minimo_jogadores=1,
+            limite_maximo_jogadores=5,
+            inscricoes_abertas=True
+        )
+
+        self.atleta1 = Atleta.objects.create(
+            nome_completo="Atleta Um",
+            cpf="405.029.385-40",
+            email="atleta1@example.com",
+            matricula="12345",
+            curso="TI",
+            genero="M",
+            cadastrado_por=self.delegate
+        )
+        self.atleta2 = Atleta.objects.create(
+            nome_completo="Atleta Dois",
+            cpf="304.912.834-50",
+            email="atleta2@example.com",
+            matricula="67890",
+            curso="Mecânica",
+            genero="M",
+            cadastrado_por=self.delegate
+        )
+
+    def test_second_call_inactive_blocks_access(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao
+        from datetime import timedelta
+        
+        # Configure regular period in the past, no second call
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=5),
+            data_fim=now - timedelta(days=4)
+        )
+
+        self.client.force_login(self.delegate)
+        response = self.client.get(reverse('inscricao_segunda_chamada'))
+        self.assertEqual(response.status_code, 302) # Redirects to dashboard
+
+    def test_second_call_active_with_registration(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao, Inscricao, InscricaoModalidade
+        from datetime import timedelta
+
+        # Configure second call active
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=5),
+            data_fim=now - timedelta(days=4),
+            segunda_chamada_inicio=now - timedelta(days=1),
+            segunda_chamada_fim=now + timedelta(days=1)
+        )
+
+        # Create prior registration
+        inscricao = Inscricao.objects.create(delegacao=self.delegate, status='deferido')
+        im = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=self.modalidade)
+        im.atletas.add(self.atleta1)
+
+        self.client.force_login(self.delegate)
+
+        # View details -> should see banner and button
+        response = self.client.get(reverse('inscricao_detail'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Segunda Chamada de Inscrições Ativa')
+        self.assertContains(response, reverse('inscricao_segunda_chamada'))
+
+        # GET second call view -> should load forms with athlete 1 pre-selected
+        response = self.client.get(reverse('inscricao_segunda_chamada'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Escalação - Segunda Chamada')
+        
+        # POST new athlete selection (substituting atleta1 with atleta2)
+        response = self.client.post(reverse('inscricao_segunda_chamada'), {
+            'substituicao_sai[]': [self.atleta1.id],
+            'substituicao_entra[]': [self.atleta2.id]
+        })
+        self.assertEqual(response.status_code, 302) # Redirects to detail
+
+        # Verify registration state was updated
+        im.refresh_from_db()
+        self.assertIn(self.atleta2, im.atletas.all())
+        self.assertNotIn(self.atleta1, im.atletas.all())
+        
+        # Verify SubstituicaoAtleta log was created
+        from .models import SubstituicaoAtleta
+        self.assertTrue(SubstituicaoAtleta.objects.filter(
+            inscricao=inscricao,
+            atleta_saiu=self.atleta1,
+            atleta_entrou=self.atleta2
+        ).exists())
+        
+        # Verify status reset to pendente for re-evaluation
+        inscricao.refresh_from_db()
+        self.assertEqual(inscricao.status, 'pendente')
+        self.delegate.refresh_from_db()
+        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+
+
 
 
 

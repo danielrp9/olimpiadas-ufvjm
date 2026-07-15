@@ -77,8 +77,6 @@ class Modalidade(models.Model):
     limite_minimo_jogadores = models.PositiveIntegerField(default=1)
     limite_maximo_jogadores = models.PositiveIntegerField(default=20)
     inscricoes_abertas = models.BooleanField(default=True)
-    data_publicacao = models.DateTimeField(blank=True, null=True, verbose_name="Data/Hora de Publicação (Agendamento)", help_text="Se preenchido, a modalidade só ficará pública para inscrições a partir desta data/hora.")
-
     def __str__(self):
         return f"{self.nome} ({self.get_genero_display()})"
 
@@ -356,3 +354,42 @@ class Notificacao(models.Model):
 
     def __str__(self):
         return f"Notificação para {self.usuario.email}: {self.mensagem}"
+
+
+class ConfiguracaoPeriodoInscricao(models.Model):
+    """
+    Controla o período de abertura das inscrições das Olimpíadas.
+    """
+    data_inicio = models.DateTimeField(verbose_name="Data/Hora de Início das Inscrições")
+    data_fim = models.DateTimeField(verbose_name="Data/Hora de Fim das Inscrições")
+    
+    segunda_chamada_inicio = models.DateTimeField(blank=True, null=True, verbose_name="Data/Hora de Início da Segunda Chamada")
+    segunda_chamada_fim = models.DateTimeField(blank=True, null=True, verbose_name="Data/Hora de Fim da Segunda Chamada")
+
+    class Meta:
+        verbose_name = "Configuração do Período de Inscrição"
+        verbose_name_plural = "Configurações do Período de Inscrição"
+
+    def __str__(self):
+        regular_period = f"Regular: {self.data_inicio.strftime('%d/%m/%Y %H:%M')} até {self.data_fim.strftime('%d/%m/%Y %H:%M')}"
+        if self.segunda_chamada_inicio and self.segunda_chamada_fim:
+            second_period = f" | Segunda Chamada: {self.segunda_chamada_inicio.strftime('%d/%m/%Y %H:%M')} até {self.segunda_chamada_fim.strftime('%d/%m/%Y %H:%M')}"
+            return regular_period + second_period
+        return regular_period
+
+
+class SubstituicaoAtleta(models.Model):
+    """
+    Registra a substituição de um atleta por outro na Segunda Chamada.
+    """
+    inscricao = models.ForeignKey(Inscricao, on_delete=models.CASCADE, related_name='substituicoes')
+    atleta_saiu = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='substituidos')
+    atleta_entrou = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='substitutos')
+    data_substituicao = models.DateTimeField(auto_now_add=True, verbose_name="Data da Substituição")
+
+    class Meta:
+        verbose_name = "Substituição de Atleta"
+        verbose_name_plural = "Substituições de Atletas"
+
+    def __str__(self):
+        return f"{self.atleta_saiu.nome_completo} -> {self.atleta_entrou.nome_completo}"

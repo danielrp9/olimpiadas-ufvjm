@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao, Inscricao, InscricaoModalidade
+from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao, Inscricao, InscricaoModalidade, ConfiguracaoPeriodoInscricao, SubstituicaoAtleta
+
+
+@admin.register(ConfiguracaoPeriodoInscricao)
+class ConfiguracaoPeriodoInscricaoAdmin(admin.ModelAdmin):
+    list_display = ('data_inicio', 'data_fim')
 
 
 @admin.register(Campus)
@@ -107,4 +112,11 @@ class InscricaoModalidadeAdmin(admin.ModelAdmin):
                 except InscricaoModalidade.DoesNotExist:
                     pass
         return super().formfield_for_manytomany(db_field, request, **kwargs)
+
+
+@admin.register(SubstituicaoAtleta)
+class SubstituicaoAtletaAdmin(admin.ModelAdmin):
+    list_display = ('inscricao', 'atleta_saiu', 'atleta_entrou', 'data_substituicao')
+    list_filter = ('data_substituicao',)
+    search_fields = ('inscricao__delegacao__email', 'atleta_saiu__nome_completo', 'atleta_entrou__nome_completo')
 

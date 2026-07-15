@@ -26,9 +26,65 @@
         </div>
     </div>
 
-    <!-- Formulário de Seleção -->
-    <form method="post" class="space-y-6">
-        {% csrf_token %}
+    {% if status_inscricao == 'nao_iniciada' %}
+        <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-amber-800">
+            <span class="p-3 bg-amber-100 text-amber-600 rounded-2xl shrink-0">
+                <i class="fas fa-calendar-alt text-lg"></i>
+            </span>
+            <div>
+                <h3 class="font-bold text-sm">As inscrições ainda não começaram</h3>
+                <p class="text-xs mt-1 text-amber-700">
+                    O período de inscrições será de <strong>{{ data_inicio|date:"d/m/Y H:i" }}</strong> até <strong>{{ data_fim|date:"d/m/Y H:i" }}</strong>.
+                </p>
+            </div>
+        </div>
+    {% elif status_inscricao == 'segunda_chamada' %}
+        <div class="bg-indigo-50 border border-indigo-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-indigo-800">
+            <span class="p-3 bg-indigo-100 text-indigo-650 rounded-2xl shrink-0">
+                <i class="fas fa-calendar-check text-lg"></i>
+            </span>
+            <div>
+                <h3 class="font-bold text-sm">Segunda Chamada de Inscrições</h3>
+                <p class="text-xs mt-1 text-indigo-700">
+                    O período de inscrições regular está encerrado. O período de <strong>Segunda Chamada</strong> está ativo de <strong>{{ config.segunda_chamada_inicio|date:"d/m/Y H:i" }}</strong> até <strong>{{ config.segunda_chamada_fim|date:"d/m/Y H:i" }}</strong>.
+                </p>
+                <p class="text-[10px] mt-2 text-indigo-600 font-bold uppercase tracking-wider">
+                    Nota: Apenas delegações que já possuem inscrição no período regular podem adicionar ou substituir atletas. Novas inscrições de delegações não são permitidas nesta etapa.
+                </p>
+            </div>
+        </div>
+    {% elif status_inscricao == 'encerrada' %}
+        <div class="bg-red-50 border border-red-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-red-800">
+            <span class="p-3 bg-red-100 text-red-650 rounded-2xl shrink-0">
+                <i class="fas fa-ban text-lg"></i>
+            </span>
+            <div>
+                <h3 class="font-bold text-sm">Inscrições Encerradas</h3>
+                <p class="text-xs mt-1 text-red-700">
+                    As inscrições para as Olimpíadas Universitárias foram encerradas em <strong>{{ data_fim|date:"d/m/Y H:i" }}</strong>.
+                </p>
+            </div>
+        </div>
+    {% else %}
+        <div class="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-emerald-800">
+            <span class="p-3 bg-emerald-100 text-emerald-650 rounded-2xl shrink-0">
+                <i class="fas fa-check-circle text-lg"></i>
+            </span>
+            <div>
+                <h3 class="font-bold text-sm">Inscrições Abertas!</h3>
+                <p class="text-xs mt-1 text-emerald-700">
+                    {% if data_fim %}
+                        O período de inscrições está ativo. Inscreva sua delegação selecionando as modalidades abaixo até <strong>{{ data_fim|date:"d/m/Y H:i" }}</strong>.
+                    {% else %}
+                        O período de inscrições está ativo. Inscreva sua delegação selecionando as modalidades abaixo.
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Formulário de Seleção -->
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {% for mod in modalidades %}
@@ -48,11 +104,6 @@
                         <p class="text-[11px] text-slate-400 leading-relaxed mt-1">
                             Regras: Mínimo de <strong class="text-slate-700 font-bold">{{ mod.limite_minimo_jogadores }}</strong> e máximo de <strong class="text-slate-700 font-bold">{{ mod.limite_maximo_jogadores }}</strong> jogadores.
                         </p>
-                        {% if mod.data_publicacao %}
-                            <p class="text-[9px] text-emerald-600 font-semibold mt-1">
-                                <i class="far fa-clock"></i> Liberada em: {{ mod.data_publicacao|date:"d/m/Y H:i" }}
-                            </p>
-                        {% endif %}
                     </div>
                 </label>
             {% empty %}
@@ -77,5 +128,6 @@
             </div>
         {% endif %}
     </form>
+    {% endif %}
 </div>
 {% endblock %}

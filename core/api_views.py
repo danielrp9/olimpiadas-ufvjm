@@ -82,7 +82,7 @@ def modalidade_to_dict(modalidade):
         'limite_minimo_jogadores': modalidade.limite_minimo_jogadores,
         'limite_maximo_jogadores': modalidade.limite_maximo_jogadores,
         'inscricoes_abertas': modalidade.inscricoes_abertas,
-        'data_publicacao': modalidade.data_publicacao.isoformat() if modalidade.data_publicacao else None
+        'data_publicacao': None
     }
 
 def jogo_to_dict(jogo):
@@ -211,9 +211,7 @@ class APIDashboardView(View):
                 'data_jogo': ps.jogo.data_jogo.isoformat()
             })
             
-        modalidades_abertas = Modalidade.objects.filter(inscricoes_abertas=True).filter(
-            Q(data_publicacao__isnull=True) | Q(data_publicacao__lte=timezone.now())
-        )
+        modalidades_abertas = Modalidade.objects.filter(inscricoes_abertas=True)
         modalidades_data = [modalidade_to_dict(m) for m in modalidades_abertas]
         
         inscricao = getattr(delegacao, 'inscricao', None)
@@ -429,9 +427,7 @@ class APIModalidadesView(View):
         if request.user.is_comissao:
             modalidades = Modalidade.objects.all().order_by('nome')
         else:
-            modalidades = Modalidade.objects.filter(inscricoes_abertas=True).filter(
-                Q(data_publicacao__isnull=True) | Q(data_publicacao__lte=timezone.now())
-            ).order_by('nome')
+            modalidades = Modalidade.objects.filter(inscricoes_abertas=True).order_by('nome')
             
         return JsonResponse({'modalidades': [modalidade_to_dict(m) for m in modalidades]})
         
@@ -450,8 +446,7 @@ class APIModalidadesView(View):
                 genero=data.get('genero', 'M'),
                 limite_minimo_jogadores=int(data.get('limite_minimo_jogadores', 1)),
                 limite_maximo_jogadores=int(data.get('limite_maximo_jogadores', 20)),
-                inscricoes_abertas=bool(data.get('inscricoes_abertas', True)),
-                data_publicacao=data.get('data_publicacao')
+                inscricoes_abertas=bool(data.get('inscricoes_abertas', True))
             )
             return JsonResponse({'success': True, 'modalidade': modalidade_to_dict(modalidade)})
         except Exception as e:
@@ -471,7 +466,6 @@ class APIModalidadeDetailView(View):
             modalidade.limite_minimo_jogadores = int(data.get('limite_minimo_jogadores', modalidade.limite_minimo_jogadores))
             modalidade.limite_maximo_jogadores = int(data.get('limite_maximo_jogadores', modalidade.limite_maximo_jogadores))
             modalidade.inscricoes_abertas = bool(data.get('inscricoes_abertas', modalidade.inscricoes_abertas))
-            modalidade.data_publicacao = data.get('data_publicacao', modalidade.data_publicacao)
             modalidade.save()
             return JsonResponse({'success': True, 'modalidade': modalidade_to_dict(modalidade)})
         except Exception as e:
