@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load l10n %}
 
 {% block title %}Resumo de Inscrições - Olimpíadas Universitárias{% endblock %}
 
@@ -483,7 +484,7 @@
                     <span>{{ atletas_m }} <span class="text-slate-400 font-normal">({{ pct_masculino }}%)</span></span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-2">
-                    <div class="h-full rounded-full" style="width: {{ pct_masculino }}%; background-color: #3b82f6;"></div>
+                    <div class="h-full rounded-full" style="width: {{ pct_masculino|unlocalize }}%; background-color: #3b82f6;"></div>
                 </div>
             </div>
             
@@ -494,7 +495,7 @@
                     <span>{{ atletas_f }} <span class="text-slate-400 font-normal">({{ pct_feminino }}%)</span></span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-2">
-                    <div class="h-full rounded-full" style="width: {{ pct_feminino }}%; background-color: #e11d48;"></div>
+                    <div class="h-full rounded-full" style="width: {{ pct_feminino|unlocalize }}%; background-color: #e11d48;"></div>
                 </div>
             </div>
             
@@ -505,7 +506,7 @@
                     <span>{{ atletas_n }} <span class="text-slate-400 font-normal">({{ pct_nb }}%)</span></span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-2">
-                    <div class="h-full rounded-full" style="width: {{ pct_nb }}%; background-color: #8b5cf6;"></div>
+                    <div class="h-full rounded-full" style="width: {{ pct_nb|unlocalize }}%; background-color: #8b5cf6;"></div>
                 </div>
             </div>
         </div>
