@@ -279,7 +279,7 @@
 
         <!-- Conteúdo Interno / Main -->
         <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
-            <div class="{% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-lg md:max-w-xl{% else %}w-full max-w-[1440px]{% endif %} mx-auto">
+            <div class="{% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md mx-auto{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-lg md:max-w-xl mx-auto{% else %}w-full max-w-[1440px] mx-auto md:ml-0 md:mr-auto{% endif %}">
                 
 
                 <!-- BLOCO ÚNICO DE CONTEÚDO -->
