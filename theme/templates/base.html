@@ -278,25 +278,34 @@
         {% endif %}
 
         <!-- Conteúdo Interno / Main -->
-        <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
+        <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
             <div class="{% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md mx-auto{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-lg md:max-w-xl mx-auto{% else %}w-full max-w-[1440px] mx-auto md:ml-0 md:mr-auto{% endif %}">
                 
 
                 <!-- BLOCO ÚNICO DE CONTEÚDO -->
                 {% block content %}{% endblock %}
             </div>
-        </main>
 
-        <!-- Rodapé (Apenas para telas autenticadas/comuns) -->
-        {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
-            <footer class="bg-white border-t border-slate-100 py-6 mt-auto">
-                <div class="max-w-7xl mx-auto px-4 text-center">
-                    <p class="text-xs text-slate-400">
-                        &copy; Olimpíadas Universitárias. Organização e Transparência.
+            <!-- Rodapé (Apenas para telas autenticadas/comuns) -->
+            {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
+                <footer class="w-full max-w-[1440px] mx-auto md:ml-0 md:mr-auto bg-slate-900 border border-slate-800 rounded-3xl py-6 px-6 shadow-sm text-center space-y-3">
+                    <h3 class="text-sm font-bold text-white tracking-wide">
+                        Olimpíadas Universitárias
+                    </h3>
+                    <p class="text-xs text-slate-400 font-medium">
+                        Desenvolvido por <span class="text-slate-200 font-semibold">Daniel Rodrigues</span>
                     </p>
-                </div>
-            </footer>
-        {% endif %}
+                    <div class="flex items-center justify-center gap-4 pt-1">
+                        <a href="https://www.linkedin.com/in/daniel-rodrigues-pereira-29b1b7243/" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-blue-400 text-lg transition-all duration-200 hover:scale-110" title="LinkedIn">
+                            <i class="fab fa-linkedin"></i>
+                        </a>
+                        <a href="mailto:danielrodrigues878@hotmail.com" class="text-slate-400 hover:text-amber-400 text-lg transition-all duration-200 hover:scale-110" title="E-mail">
+                            <i class="fas fa-envelope"></i>
+                        </a>
+                    </div>
+                </footer>
+            {% endif %}
+        </main>
     </div>
 
     <!-- Javascript para manipular o menu móvel -->
