@@ -260,16 +260,17 @@
                     </td>
                 </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Aba 3: Modalidade por Delegação (Oculta por padrão) -->
+           <!-- Aba 3: Modalidade por Delegação (Oculta por padrão) -->
     <div id="section-modalidade-delegacao" class="hidden p-6">
-        <!-- Filtros da Delegação -->
-        <div class="flex gap-4 mb-6">
-            <div class="flex-1">
-                <label for="filter-delegacao" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Delegação</label>
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
+            <!-- Filtro Lateral (Delegação) -->
+            <div class="w-full lg:w-72 shrink-0 bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5 sticky top-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-filter text-xs"></i></span>
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Filtrar Delegação</h4>
+                </div>
+                <p class="text-[10px] text-slate-455 mb-3 leading-normal">Selecione uma delegação abaixo para ver as modalidades selecionadas por ela.</p>
+                <label for="filter-delegacao" class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Delegação</label>
                 <select id="filter-delegacao" onchange="updateModalidadeFilter()" class="w-full px-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white text-slate-700 font-medium">
                     <option value="">Selecione uma Delegação</option>
                     {% for inscricao in inscricoes_list %}
@@ -277,80 +278,85 @@
                     {% endfor %}
                 </select>
             </div>
-        </div>
 
-        <!-- Conteúdo das Inscrições / Detalhes de Atletas -->
-        <div id="modalidade-delegacao-content" class="space-y-6">
-            <!-- Estado Inicial: Nenhuma Delegação Selecionada -->
-            <div id="md-empty-state" class="text-center py-12 text-slate-400">
-                <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
-                Selecione uma delegação para visualizar as modalidades em que ela manifestou interesse de participação.
-            </div>
+            <!-- Conteúdo das Inscrições / Detalhes de Atletas -->
+            <div id="modalidade-delegacao-content" class="flex-grow w-full space-y-6">
+                <!-- Estado Inicial: Nenhuma Delegação Selecionada -->
+                <div id="md-empty-state" class="text-center py-12 text-slate-400 bg-slate-50/30 rounded-2xl border border-slate-200/60 border-dashed">
+                    <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
+                    Selecione uma delegação na barra lateral para visualizar as modalidades em que ela manifestou interesse de participação.
+                </div>
 
-            {% for inscricao in inscricoes_list %}
-                <div id="delegacao-container-{{ inscricao.id }}" class="delegacao-container hidden">
-                    <div class="bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5">
-                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200/60">
-                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-users text-xs"></i></span>
-                                Modalidades da Delegação
-                            </h4>
-                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                {{ inscricao.modalidades.count }} modalidade(s) selecionada(s)
-                            </span>
-                        </div>
+                {% for inscricao in inscricoes_list %}
+                    <div id="delegacao-container-{{ inscricao.id }}" class="delegacao-container hidden">
+                        <div class="bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5">
+                            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200/60">
+                                <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-users text-xs"></i></span>
+                                    Modalidades da Delegação
+                                </h4>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    {{ inscricao.modalidades.count }} modalidade(s) selecionada(s)
+                                </span>
+                            </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
-                                        <th class="pb-3 pr-4 text-left">#</th>
-                                        <th class="pb-3 px-4 text-left">Modalidade</th>
-                                        <th class="pb-3 pl-4 text-right">Categoria / Gênero</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
-                                    {% for insc_mod in inscricao.modalidades.all %}
-                                        <tr class="hover:bg-slate-50/30 transition">
-                                            <td class="py-3 pr-4 font-semibold text-slate-500 text-left">{{ forloop.counter }}</td>
-                                            <td class="py-3 px-4 font-semibold text-slate-800 text-left">
-                                                <span class="inline-flex items-center gap-2">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                                    {{ insc_mod.modalidade.nome }}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 pl-4 text-right text-slate-500 font-medium">
-                                                {% if 'Masc' in insc_mod.modalidade.get_genero_display or 'M' == insc_mod.modalidade.genero %}
-                                                    <span class="inline-flex items-center gap-1 text-blue-600 font-semibold"><i class="fas fa-mars text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
-                                                {% elif 'Fem' in insc_mod.modalidade.get_genero_display or 'F' == insc_mod.modalidade.genero %}
-                                                    <span class="inline-flex items-center gap-1 text-rose-600 font-semibold"><i class="fas fa-venus text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
-                                                {% else %}
-                                                    <span class="inline-flex items-center gap-1 text-purple-600 font-semibold"><i class="fas fa-genderless text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
-                                                {% endif %}
-                                            </td>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
+                                            <th class="pb-3 pr-4 text-left">#</th>
+                                            <th class="pb-3 px-4 text-left">Modalidade</th>
+                                            <th class="pb-3 pl-4 text-right">Categoria / Gênero</th>
                                         </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="3" class="py-6 text-center text-slate-400">
-                                                Nenhuma modalidade selecionada por esta delegação.
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                                        {% for insc_mod in inscricao.modalidades.all %}
+                                            <tr class="hover:bg-slate-50/30 transition">
+                                                <td class="py-3 pr-4 font-semibold text-slate-500 text-left">{{ forloop.counter }}</td>
+                                                <td class="py-3 px-4 font-semibold text-slate-800 text-left">
+                                                    <span class="inline-flex items-center gap-2">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                        {{ insc_mod.modalidade.nome }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 pl-4 text-right text-slate-500 font-medium">
+                                                    {% if 'Masc' in insc_mod.modalidade.get_genero_display or 'M' == insc_mod.modalidade.genero %}
+                                                        <span class="inline-flex items-center gap-1 text-blue-600 font-semibold"><i class="fas fa-mars text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
+                                                    {% elif 'Fem' in insc_mod.modalidade.get_genero_display or 'F' == insc_mod.modalidade.genero %}
+                                                        <span class="inline-flex items-center gap-1 text-rose-600 font-semibold"><i class="fas fa-venus text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
+                                                    {% else %}
+                                                        <span class="inline-flex items-center gap-1 text-purple-650 font-semibold"><i class="fas fa-genderless text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="py-6 text-center text-slate-400">
+                                                    Nenhuma modalidade selecionada por esta delegação.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 
     <!-- Aba 4: Delegações por Modalidade (Oculta por padrão) -->
     <div id="section-delegacoes-modalidade" class="hidden p-6">
-        <!-- Filtros da Modalidade -->
-        <div class="flex gap-4 mb-6">
-            <div class="flex-1">
-                <label for="filter-modalidade" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Modalidade</label>
+        <div class="flex flex-col lg:flex-row gap-6 items-start">
+            <!-- Filtro Lateral (Modalidade) -->
+            <div class="w-full lg:w-72 shrink-0 bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5 sticky top-6">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-filter text-xs"></i></span>
+                    <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Filtrar Modalidade</h4>
+                </div>
+                <p class="text-[10px] text-slate-455 mb-3 leading-normal">Selecione uma modalidade abaixo para ver as delegações inscritas.</p>
+                <label for="filter-modalidade" class="block text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Modalidade</label>
                 <select id="filter-modalidade" onchange="updateDelegacoesFilter()" class="w-full px-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white text-slate-700 font-medium">
                     <option value="">Selecione uma Modalidade</option>
                     {% for m in modalidades_com_delegacoes %}
@@ -358,67 +364,67 @@
                     {% endfor %}
                 </select>
             </div>
-        </div>
 
-        <!-- Conteúdo das Delegações / Detalhes de Atletas -->
-        <div id="delegacoes-modalidade-content" class="space-y-6">
-            <!-- Estado Inicial: Nenhuma Modalidade Selecionada -->
-            <div id="dm-empty-state" class="text-center py-12 text-slate-400">
-                <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
-                Selecione uma modalidade para visualizar as delegações que manifestaram interesse de participação nela.
-            </div>
+            <!-- Conteúdo das Delegações / Detalhes de Atletas -->
+            <div id="delegacoes-modalidade-content" class="flex-grow w-full space-y-6">
+                <!-- Estado Inicial: Nenhuma Modalidade Selecionada -->
+                <div id="dm-empty-state" class="text-center py-12 text-slate-400 bg-slate-50/30 rounded-2xl border border-slate-200/60 border-dashed">
+                    <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
+                    Selecione uma modalidade na barra lateral para visualizar as delegações que manifestaram interesse de participação nela.
+                </div>
 
-            {% for m in modalidades_com_delegacoes %}
-                <div id="modalidade-container-{{ m.id }}" class="modalidade-container hidden">
-                    <div class="bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5">
-                        <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200/60">
-                            <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-flag text-xs"></i></span>
-                                Delegações Inscritas em {{ m.nome }} ({{ m.get_genero_display }})
-                            </h4>
-                            <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
-                                {{ m.inscricoes.count }} delegação(ões) inscrita(s)
-                            </span>
-                        </div>
+                {% for m in modalidades_com_delegacoes %}
+                    <div id="modalidade-container-{{ m.id }}" class="modalidade-container hidden">
+                        <div class="bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5">
+                            <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200/60">
+                                <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-flag text-xs"></i></span>
+                                    Delegações Inscritas em {{ m.nome }} ({{ m.get_genero_display }})
+                                </h4>
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                                    {{ m.inscricoes.count }} delegação(ões) inscrita(s)
+                                </span>
+                            </div>
 
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-left border-collapse">
-                                <thead>
-                                    <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
-                                        <th class="pb-3 pr-4 text-left">#</th>
-                                        <th class="pb-3 px-4 text-left">Delegação</th>
-                                        <th class="pb-3 pl-4 text-right">Campus Principal</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
-                                    {% for im in m.inscricoes.all %}
-                                        <tr class="hover:bg-slate-50/30 transition">
-                                            <td class="py-3 pr-4 font-semibold text-slate-500 text-left">{{ forloop.counter }}</td>
-                                            <td class="py-3 px-4 font-semibold text-slate-800 text-left">
-                                                <span class="inline-flex items-center gap-2">
-                                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
-                                                    {{ im.inscricao.delegacao.nome_delegacao|default:im.inscricao.delegacao.nome_completo|default:im.inscricao.delegacao.email }}
-                                                </span>
-                                            </td>
-                                            <td class="py-3 pl-4 text-right text-slate-500 font-medium">
-                                                {% with first_atleta=im.inscricao.delegacao.atletas.all.first %}
-                                                    {{ first_atleta.campus.nome|default:"-" }}
-                                                {% endwith %}
-                                            </td>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr class="text-slate-500 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
+                                            <th class="pb-3 pr-4 text-left">#</th>
+                                            <th class="pb-3 px-4 text-left">Delegação</th>
+                                            <th class="pb-3 pl-4 text-right">Campus Principal</th>
                                         </tr>
-                                    {% empty %}
-                                        <tr>
-                                            <td colspan="3" class="py-6 text-center text-slate-400">
-                                                Nenhuma delegação inscrita nesta modalidade.
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
+                                        {% for im in m.inscricoes.all %}
+                                            <tr class="hover:bg-slate-50/30 transition">
+                                                <td class="py-3 pr-4 font-semibold text-slate-500 text-left">{{ forloop.counter }}</td>
+                                                <td class="py-3 px-4 font-semibold text-slate-800 text-left">
+                                                    <span class="inline-flex items-center gap-2">
+                                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                                        {{ im.inscricao.delegacao.nome_delegacao|default:im.inscricao.delegacao.nome_completo|default:im.inscricao.delegacao.email }}
+                                                    </span>
+                                                </td>
+                                                <td class="py-3 pl-4 text-right text-slate-500 font-medium">
+                                                    {% with first_atleta=im.inscricao.delegacao.atletas.all.first %}
+                                                        {{ first_atleta.campus.nome|default:"-" }}
+                                                    {% endwith %}
+                                                </td>
+                                            </tr>
+                                        {% empty %}
+                                            <tr>
+                                                <td colspan="3" class="py-6 text-center text-slate-400">
+                                                    Nenhuma delegação inscrita nesta modalidade.
+                                                </td>
+                                            </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            </div>
         </div>
     </div>
 </div>
