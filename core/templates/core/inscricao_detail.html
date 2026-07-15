@@ -113,7 +113,7 @@
                     <div>
                         <h1 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
                             Status da Inscrição
-                            <i id="arrow-collapsible" class="fas fa-chevron-down text-slate-400 text-sm transition-transform duration-300 inline-block"></i>
+                            <i id="arrow-collapsible" class="fas fa-chevron-down text-slate-400 text-sm transition-transform duration-300 inline-block {% if not is_segunda_chamada_active %}rotate-180{% endif %}"></i>
                         </h1>
                         <p class="text-slate-400 mt-1 text-xs">Clique para visualizar ou ocultar as modalidades e atletas inscritos.</p>
                         <span class="text-[10px] text-slate-400 font-semibold block mt-1 uppercase tracking-wider">Enviado em: {{ inscricao.data_envio|date:"d/m/Y H:i" }}</span>
@@ -197,7 +197,7 @@
         </div>
 
         <!-- Bloco Envelopado/Colapsável das Modalidades e Elenco -->
-        <div id="modalidades-atletas-collapsible" class="hidden space-y-6 animate-slide-down">
+        <div id="modalidades-atletas-collapsible" class="{% if is_segunda_chamada_active %}hidden{% endif %} space-y-6 animate-slide-down">
             
             <!-- Feedback da Comissão se houver justificativa -->
             {% if inscricao.status == 'indeferido' and inscricao.justificativa %}
