@@ -305,6 +305,21 @@
 {% else %}
     <!-- DASHBOARD DO REPRESENTANTE -->
     
+    <!-- Banner: Olimpíadas não iniciadas -->
+    {% if not olimpiadas_ativas %}
+    <div class="relative bg-gradient-to-r from-red-50 to-amber-50 border border-red-200/50 rounded-3xl p-5 flex items-start gap-4 mb-6 shadow-sm">
+        <span class="p-2.5 bg-red-100 text-red-700 rounded-2xl shrink-0 flex items-center justify-center animate-pulse">
+            <i class="fas fa-exclamation-triangle text-base"></i>
+        </span>
+        <div>
+            <h4 class="text-xs font-bold text-red-800 uppercase tracking-wide">As Olimpíadas ainda não foram iniciadas</h4>
+            <p class="text-[11px] text-red-700 mt-1 leading-relaxed font-medium">
+                O período de inscrições e as Olimpíadas ainda não foram iniciados/configurados pela Comissão Organizadora. Por favor, aguarde o início oficial do período de inscrições.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+    
     {% if user.parent_delegate %}
     <div class="relative bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-200/50 rounded-3xl p-5 flex items-start gap-4 mb-6 shadow-sm">
         <span class="p-2.5 bg-blue-500/20 text-blue-600 rounded-2xl shrink-0 flex items-center justify-center">
@@ -448,7 +463,9 @@
             </div>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delegação</span>
-                {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
+                {% if not olimpiadas_ativas %}
+                    <span class="text-xs font-bold text-slate-400 block mt-1">-</span>
+                {% elif user.delegacao_ativa.status_delegacao == 'deferido' %}
                     <span class="text-xs font-bold text-emerald-600 block mt-1">Deferida</span>
                 {% elif user.delegacao_ativa.status_delegacao == 'indeferido' %}
                     <span class="text-xs font-bold text-red-600 block mt-1">Recusada</span>

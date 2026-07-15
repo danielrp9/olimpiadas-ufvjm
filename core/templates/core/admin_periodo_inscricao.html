@@ -6,16 +6,23 @@
 <div class="w-full space-y-6">
     
     <!-- Header do Cadastro com Seta de Voltar Integrada -->
-    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
-        <a href="{% url 'dashboard' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para o Dashboard">
-            <i class="fas fa-arrow-left text-lg"></i>
-        </a>
-        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-            <i class="fas fa-calendar-alt text-base"></i>
-        </span>
-        <div>
-            <h1 class="text-xl font-bold text-slate-800 tracking-tight">Período de Inscrição</h1>
-            <p class="text-slate-400 mt-1 text-xs">Defina o período (início e término) em que os representantes poderão inscrever suas delegações.</p>
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'dashboard' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para o Dashboard">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
+                <i class="fas fa-calendar-alt text-base"></i>
+            </span>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">Período de Inscrição</h1>
+                <p class="text-slate-400 mt-1 text-xs">Defina o período (início e término) em que os representantes poderão inscrever suas delegações.</p>
+            </div>
+        </div>
+        <div class="shrink-0">
+            <a href="{% url 'admin_modalidades' %}" class="w-full sm:w-auto px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 rounded-xl font-bold transition shadow-sm active:scale-[0.98] flex items-center justify-center gap-2 text-xs">
+                <i class="fas fa-running text-xs"></i> Gerenciar Modalidades
+            </a>
         </div>
     </div>
 
@@ -163,7 +170,7 @@
             <div class="flex items-start gap-2.5 max-w-xl">
                 <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5 text-sm shrink-0"></i>
                 <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                    <strong>Encerrar Olimpíadas:</strong> Ao encerrar, as datas de inscrições regular e segunda chamada serão apagadas do sistema. Isso encerrará a possibilidade de qualquer atlética realizar novas inscrições ou alterar elencos.
+                    <strong>Encerrar Olimpíadas:</strong> Ao encerrar, as datas de inscrições (regular e segunda chamada) serão apagadas. Isso irá excluir permanentemente todos os dados e processos das Olimpíadas atuais (inscrições das delegações, pré-súmulas e recursos). Esta ação deve ser executada apenas ao término das Olimpíadas para limpar o sistema para o próximo evento. Os atletas cadastrados pelas delegações não serão excluídos, apenas os processos relacionados às inscrições serão reiniciados.
                 </p>
             </div>
             <div class="shrink-0">
@@ -312,7 +319,7 @@
                 <div class="space-y-1.5">
                     <p class="text-sm font-semibold text-slate-800">Deseja realmente encerrar as Olimpíadas?</p>
                     <p class="text-xs text-slate-500 leading-relaxed font-medium">
-                        Esta ação é definitiva. Ao encerrar, as datas dos períodos regular e de segunda chamada serão excluídas e as inscrições de todas as atléticas serão finalizadas no sistema.
+                        Esta ação é definitiva. Ao confirmar, todos os processos e dados das Olimpíadas atuais (datas de inscrições, inscrições das delegações, pré-súmulas e recursos) serão excluídos permanentemente para preparar o sistema para um novo ciclo. Nota: Os atletas cadastrados pelas delegações não serão excluídos.
                     </p>
                 </div>
             </div>

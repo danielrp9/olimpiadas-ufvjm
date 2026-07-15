@@ -210,8 +210,11 @@ class APIDashboardView(View):
                 'jogo_str': str(ps.jogo),
                 'data_jogo': ps.jogo.data_jogo.isoformat()
             })
-            
-        modalidades_abertas = Modalidade.objects.filter(inscricoes_abertas=True)
+        from .models import ConfiguracaoPeriodoInscricao
+        if ConfiguracaoPeriodoInscricao.objects.exists():
+            modalidades_abertas = Modalidade.objects.filter(inscricoes_abertas=True)
+        else:
+            modalidades_abertas = Modalidade.objects.none()
         modalidades_data = [modalidade_to_dict(m) for m in modalidades_abertas]
         
         inscricao = getattr(delegacao, 'inscricao', None)

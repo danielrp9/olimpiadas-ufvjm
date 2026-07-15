@@ -26,7 +26,19 @@
         </div>
     </div>
 
-    {% if status_inscricao == 'nao_iniciada' %}
+    {% if status_inscricao == 'nao_cadastrada' %}
+        <div class="bg-red-50 border border-red-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-red-800">
+            <span class="p-3 bg-red-100 text-red-655 rounded-2xl shrink-0 animate-pulse">
+                <i class="fas fa-exclamation-triangle text-lg"></i>
+            </span>
+            <div>
+                <h3 class="font-bold text-sm">As Olimpíadas ainda não foram iniciadas</h3>
+                <p class="text-xs mt-1 text-red-700">
+                    O período de inscrições e as Olimpíadas ainda não foram iniciados/configurados pela Comissão Organizadora. Por favor, aguarde o início oficial do período de inscrições.
+                </p>
+            </div>
+        </div>
+    {% elif status_inscricao == 'nao_iniciada' %}
         <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-amber-800">
             <span class="p-3 bg-amber-100 text-amber-600 rounded-2xl shrink-0">
                 <i class="fas fa-calendar-alt text-lg"></i>
@@ -65,8 +77,11 @@
                 </p>
             </div>
         </div>
-    {% else %}
-        <div class="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-emerald-800">
+    {% endif %}
+
+    {% if status_inscricao == 'aberta' or status_inscricao == 'nao_cadastrada' %}
+        {% if status_inscricao == 'aberta' %}
+        <div class="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-emerald-800 mb-6">
             <span class="p-3 bg-emerald-100 text-emerald-650 rounded-2xl shrink-0">
                 <i class="fas fa-check-circle text-lg"></i>
             </span>
@@ -81,6 +96,7 @@
                 </p>
             </div>
         </div>
+        {% endif %}
 
         <!-- Formulário de Seleção -->
         <form method="post" class="space-y-6">
@@ -111,8 +127,13 @@
                     <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200">
                         <i class="fas fa-ban text-xl"></i>
                     </div>
-                    <h3 class="font-bold text-slate-700 text-sm">Nenhuma modalidade aberta</h3>
-                    <p class="text-xs text-slate-400 mt-1">A comissão organizadora ainda não liberou inscrições para nenhuma modalidade.</p>
+                    {% if status_inscricao == 'nao_cadastrada' %}
+                        <h3 class="font-bold text-slate-750 text-sm">As Olimpíadas ainda não foram iniciadas</h3>
+                        <p class="text-xs text-slate-400 mt-1">A comissão organizadora ainda não iniciou o período de inscrições das Olimpíadas.</p>
+                    {% else %}
+                        <h3 class="font-bold text-slate-700 text-sm">Nenhuma modalidade aberta</h3>
+                        <p class="text-xs text-slate-400 mt-1">A comissão organizadora ainda não liberou inscrições para nenhuma modalidade.</p>
+                    {% endif %}
                 </div>
             {% endfor %}
         </div>

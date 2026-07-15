@@ -135,7 +135,13 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         jogos_encerrados.sort(key=lambda j: (j.data_jogo or datetime.date.min, j.horario_jogo or datetime.time.min, j.id), reverse=True)
         context['jogos_encerrados'] = jogos_encerrados
         
-        context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True)
+        from .models import ConfiguracaoPeriodoInscricao
+        has_config = ConfiguracaoPeriodoInscricao.objects.exists()
+        context['olimpiadas_ativas'] = has_config
+        if has_config:
+            context['modalidades_abertas'] = Modalidade.objects.filter(inscricoes_abertas=True)
+        else:
+            context['modalidades_abertas'] = Modalidade.objects.none()
         
         context['inscricao'] = getattr(delegacao, 'inscricao', None)
         return context
@@ -877,7 +883,7 @@ def inscricao_passo1(request):
     
     config = ConfiguracaoPeriodoInscricao.objects.first()
     now = timezone.now()
-    status_inscricao = 'aberta'
+    status_inscricao = 'nao_cadastrada'
     data_inicio = None
     data_fim = None
     
@@ -908,7 +914,11 @@ def inscricao_passo1(request):
         request.session['inscricao_modalidades_ids'] = [int(mid) for mid in selected_modalidades]
         return redirect('inscricao_passo2')
         
-    modalidades = Modalidade.objects.filter(inscricoes_abertas=True)
+    if config:
+        modalidades = Modalidade.objects.filter(inscricoes_abertas=True)
+    else:
+        modalidades = Modalidade.objects.none()
+        
     return render(request, 'core/inscricao_passo1.html', {
         'modalidades': modalidades,
         'status_inscricao': status_inscricao,
@@ -1598,14 +1608,16 @@ class AdminPeriodoInscricaoView(LoginRequiredMixin, View):
             if config:
                 config.delete()
             
-            from core.models import Inscricao, PreSumula, Atleta
+            from core.models import Inscricao, PreSumula, Atleta, Recurso, Jogo
             from django.contrib.auth import get_user_model
             
             # 1. Delete all inscriptions (cascade-deletes modalidade choices and substitutions)
             Inscricao.objects.all().delete()
             
-            # 2. Delete all pre-súmulas
+            # 2. Delete all pre-súmulas, resources and games
             PreSumula.objects.all().delete()
+            Recurso.objects.all().delete()
+            Jogo.objects.all().delete()
             
             # 3. Reset representatives/delegations registration statuses and payment fields
             User = get_user_model()

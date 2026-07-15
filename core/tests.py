@@ -983,6 +983,11 @@ class CoDelegatePreSumulaTestCase(TestCase):
 
     def test_co_delegate_dashboard_view(self):
         from django.urls import reverse
+        from core.models import ConfiguracaoPeriodoInscricao
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=timezone.now() - timedelta(days=1),
+            data_fim=timezone.now() + timedelta(days=1)
+        )
         self.client.force_login(self.co_delegate)
         response = self.client.get(reverse('dashboard'))
         self.assertEqual(response.status_code, 200)
@@ -1222,7 +1227,7 @@ class AdminPeriodoInscricaoTests(TestCase):
             email='delegate2@example.com',
             nome_completo='Delegate 2',
             role='REPRESENTANTE',
-            cpf='111.111.111-11',
+            cpf='181.498.521-23',
             password='testpassword'
         )
         
@@ -1252,7 +1257,7 @@ class AdminPeriodoInscricaoTests(TestCase):
             inscricoes_abertas=True
         )
         
-        # 4. Create Jogo and PreSumula
+        # 4. Create Jogo, PreSumula, and Recurso
         game = Jogo.objects.create(
             modalidade=mod,
             data_jogo=timezone.now().date(),
@@ -1265,10 +1270,19 @@ class AdminPeriodoInscricaoTests(TestCase):
             jogo=game,
             representante=self.delegate
         )
+        from core.models import Recurso
+        recurso = Recurso.objects.create(
+            jogo=game,
+            requerente=self.delegate,
+            titulo="Recurso Teste",
+            corpo="Texto do recurso"
+        )
         
         # Verify they exist
         self.assertEqual(Inscricao.objects.count(), 1)
         self.assertEqual(PreSumula.objects.count(), 1)
+        self.assertEqual(Recurso.objects.count(), 1)
+        self.assertEqual(Jogo.objects.count(), 1)
         self.assertEqual(athlete.status_avaliacao, 'deferido')
         
         # 4. Post with delete_period should completely remove the configuration and reset states
@@ -1279,6 +1293,8 @@ class AdminPeriodoInscricaoTests(TestCase):
         self.assertEqual(ConfiguracaoPeriodoInscricao.objects.count(), 0)
         self.assertEqual(Inscricao.objects.count(), 0)
         self.assertEqual(PreSumula.objects.count(), 0)
+        self.assertEqual(Recurso.objects.count(), 0)
+        self.assertEqual(Jogo.objects.count(), 0)
         
         # Check delegate is reset
         self.delegate.refresh_from_db()
@@ -1290,6 +1306,18 @@ class AdminPeriodoInscricaoTests(TestCase):
         athlete.refresh_from_db()
         self.assertEqual(athlete.status_avaliacao, 'nao_avaliado')
         self.assertFalse(athlete.em_conformidade)
+
+        # Check modalities are not exposed anymore in dashboard/step1
+        self.delegate.nome_delegacao = 'Delegacao Teste'
+        self.delegate.save()
+        self.client.force_login(self.delegate)
+        response_dash = self.client.get(reverse('dashboard'))
+        self.assertEqual(response_dash.context['modalidades_abertas'].count(), 0)
+        self.assertContains(response_dash, 'As Olimpíadas ainda não foram iniciadas')
+        
+        response_step1 = self.client.get(reverse('inscricao_passo1'))
+        self.assertEqual(response_step1.context['modalidades'].count(), 0)
+        self.assertEqual(response_step1.context['status_inscricao'], 'nao_cadastrada')
 
 
 class SecondCallRegistrationTests(TestCase):

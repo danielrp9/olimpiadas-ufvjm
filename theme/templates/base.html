@@ -61,14 +61,6 @@
                                 <i class="fas fa-university mr-3 text-base"></i>
                                 Delegações
                             </a>
-                            <a href="{% url 'admin_modalidades' %}" class="{% if 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-running mr-3 text-base"></i>
-                                Modalidades
-                            </a>
-                            <a href="{% url 'admin_periodo_inscricao' %}" class="{% if 'comissao/periodo-inscricao' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-calendar-alt mr-3 text-base"></i>
-                                Período de Inscrição
-                            </a>
                             <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-file-signature mr-3 text-base"></i>
                                 Pré-Súmulas
@@ -76,6 +68,10 @@
                             <a href="{% url 'recurso_list' %}" class="{% if 'recurso' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-balance-scale mr-3 text-base"></i>
                                 Recursos
+                            </a>
+                            <a href="{% url 'admin_periodo_inscricao' %}" class="{% if 'comissao/periodo-inscricao' in request.path or 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-calendar-alt mr-3 text-base"></i>
+                                Gerenciar Olimpíadas
                             </a>
                             <a href="{% url 'admin_whitelist' %}" class="{% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-envelope-open-text mr-3 text-base"></i>
@@ -180,14 +176,6 @@
                                     <i class="fas fa-university mr-3 text-base"></i>
                                     Delegações
                                 </a>
-                                <a href="{% url 'admin_modalidades' %}" class="{% if 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-running mr-3 text-base"></i>
-                                    Modalidades
-                                </a>
-                                <a href="{% url 'admin_periodo_inscricao' %}" class="{% if 'comissao/periodo-inscricao' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-calendar-alt mr-3 text-base"></i>
-                                    Período de Inscrição
-                                </a>
                                 <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-file-signature mr-3 text-base"></i>
                                     Pré-Súmulas
@@ -195,6 +183,10 @@
                                 <a href="{% url 'recurso_list' %}" class="{% if 'recurso' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-balance-scale mr-3 text-base"></i>
                                     Recursos
+                                </a>
+                                <a href="{% url 'admin_periodo_inscricao' %}" class="{% if 'comissao/periodo-inscricao' in request.path or 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-calendar-alt mr-3 text-base"></i>
+                                    Gerenciar Olimpíadas
                                 </a>
                                 <a href="{% url 'admin_whitelist' %}" class="{% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-envelope-open-text mr-3 text-base"></i>
