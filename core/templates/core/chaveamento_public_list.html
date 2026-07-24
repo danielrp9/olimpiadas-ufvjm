@@ -4,8 +4,8 @@
 
 {% block content %}
 <div class="space-y-8 w-full pb-12">
-    <!-- Banner de Apresentação (Estilo Dashboard / Fincan.io) -->
-    <div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-sm overflow-hidden mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+    <!-- Banner de Apresentação -->
+    <div class="relative bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-[0_4px_25px_rgba(0,0,0,0.06)] overflow-hidden mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <!-- Abstract SVG Wave Grid -->
         <div class="absolute inset-0 opacity-20 pointer-events-none">
             <svg class="w-full h-full object-cover" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -27,19 +27,20 @@
         <div class="absolute left-1/3 -bottom-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
 
         <div class="relative z-10 w-full sm:w-auto">
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Chaveamento de partidas</h1>
+            <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">Chaveamento de Partidas</h1>
+            <p class="text-xs text-slate-300 mt-1">Acompanhe tabelas, classificações e confrontos da sua delegação</p>
         </div>
         
         <!-- Perfil / Delegação Logada -->
-        <div class="relative z-10 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-2 px-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
+        <div class="relative z-10 flex items-center gap-3 bg-white/10 border border-white/15 rounded-full py-1.5 px-4 select-none backdrop-blur-md shadow-inner shrink-0">
             <div class="text-right">
                 <span class="text-xs font-bold text-white block leading-tight max-w-[150px] sm:max-w-none truncate">{{ delegacao.nome_delegacao|default:user.nome_completo|default:user.email }}</span>
-                <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">Minha Delegação</span>
+                <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider">Minha Delegação</span>
             </div>
             {% if user.foto_url %}
-                <img src="{{ user.foto_url }}" alt="Perfil" class="w-9 h-9 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
+                <img src="{{ user.foto_url }}" alt="Perfil" class="w-8 h-8 rounded-full object-cover border border-white/20 shadow-sm shrink-0">
             {% else %}
-                <div class="w-9 h-9 rounded-full bg-indigo-600/40 border border-indigo-400/30 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
+                <div class="w-8 h-8 rounded-full bg-blue-600 border border-blue-400/40 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
                     <i class="fas fa-flag text-xs"></i>
                 </div>
             {% endif %}
@@ -49,25 +50,26 @@
     <!-- Lista de Chaveamentos -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {% for item in modalidades_info %}
-        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm hover:shadow-md transition duration-300 flex flex-col justify-between">
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-300 flex flex-col justify-between">
             <div>
-                <div class="flex items-center justify-between gap-3 mb-4">
-                    <span class="px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                <div class="flex items-center justify-between gap-3 mb-4 flex-wrap">
+                    <span class="px-3.5 py-1 text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs">
                         {{ item.modalidade.get_genero_display }}
                     </span>
                     {% if item.minha_participacao %}
-                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-100 text-blue-700 border border-blue-200">
-                            <i class="fas fa-user-shield mr-1"></i> Minha Equipe Inscrita
+                        <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs flex items-center gap-1">
+                            <i class="fas fa-user-shield text-emerald-600 text-[10px]"></i>
+                            <span>Minha Equipe</span>
                         </span>
                     {% endif %}
                 </div>
 
-                <h3 class="text-xl font-bold text-slate-900 tracking-tight">{{ item.modalidade.nome }}</h3>
+                <h3 class="text-xl font-extrabold text-slate-800 tracking-tight">{{ item.modalidade.nome }}</h3>
 
                 <div class="mt-4 pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-                    <span>Status do Torneio:</span>
+                    <span class="font-medium">Fase Atual:</span>
                     {% if item.chaveamento %}
-                        <span class="font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200">
+                        <span class="font-bold text-slate-700 bg-slate-100/90 px-3 py-1 rounded-full border border-slate-200/80 text-xs shadow-2xs">
                             {{ item.chaveamento.get_fase_atual_display }}
                         </span>
                     {% else %}
@@ -78,8 +80,8 @@
 
             <div class="mt-6 pt-4 border-t border-slate-100">
                 {% if item.chaveamento %}
-                    <a href="{% url 'chaveamento_public_detail' pk=item.modalidade.pk %}" class="w-full text-center py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-2">
-                        <i class="fas fa-eye"></i> Visualizar Chaveamento & Tabelas
+                    <a href="{% url 'chaveamento_public_detail' pk=item.modalidade.pk %}" class="w-full text-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-2">
+                        <i class="fas fa-eye text-xs"></i> Visualizar Chaveamento & Tabelas
                     </a>
                 {% else %}
                     <button disabled class="w-full py-2.5 px-4 bg-slate-100 text-slate-400 font-bold text-xs rounded-2xl cursor-not-allowed text-center">
@@ -89,9 +91,9 @@
             </div>
         </div>
         {% empty %}
-        <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500">
+        <div class="col-span-full bg-white border border-slate-200/80 rounded-3xl p-12 text-center text-slate-500 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
             <i class="fas fa-trophy text-4xl text-slate-300 mb-3 block"></i>
-            Nenhuma modalidade com chaveamento disponível momento.
+            Nenhuma modalidade com chaveamento disponível no momento.
         </div>
         {% endfor %}
     </div>
