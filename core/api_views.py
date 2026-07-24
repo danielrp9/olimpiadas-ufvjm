@@ -779,8 +779,9 @@ class APIPreSumulasView(View):
     def delete(self, request):
         if not request.user.is_authenticated or not request.user.is_comissao:
             return JsonResponse({'error': 'Não autorizado'}, status=403)
-        count, _ = PreSumula.objects.all().delete()
-        return JsonResponse({'success': True, 'count': count})
+        jogos_count, _ = Jogo.objects.all().delete()
+        presumulas_count, _ = PreSumula.objects.all().delete()
+        return JsonResponse({'success': True, 'jogos_count': jogos_count, 'presumulas_count': presumulas_count})
 
 @method_decorator(csrf_exempt, name='dispatch')
 class APIPreSumulaDetailView(View):

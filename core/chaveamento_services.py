@@ -873,19 +873,16 @@ def _montar_fase_geral(chaveamento, final_local, disputa_3_local, classificados_
 
 def _sincronizar_jogo_partida(partida, descricao_local="Quadra Principal"):
     """
-    Garante que uma PartidaChaveamento tenha um Jogo correspondente no sistema.
+    Garante que uma PartidaChaveamento tenha um Jogo correspondente no sistema apenas quando ambas as delegações estiverem definidas.
     """
-    if not partida.jogo and (partida.time_a or partida.time_b):
+    if not partida.jogo and partida.time_a and partida.time_b and partida.time_a != partida.time_b:
         hoje = timezone.localdate()
-        dummy_b = partida.time_b or partida.time_a
-        dummy_a = partida.time_a or partida.time_b
-        if dummy_a and dummy_b:
-            jogo = Jogo.objects.create(
-                modalidade=partida.chaveamento.modalidade,
-                data_jogo=hoje,
-                time_a=dummy_a,
-                time_b=dummy_b,
-                local=descricao_local
-            )
-            partida.jogo = jogo
-            partida.save()
+        jogo = Jogo.objects.create(
+            modalidade=partida.chaveamento.modalidade,
+            data_jogo=hoje,
+            time_a=partida.time_a,
+            time_b=partida.time_b,
+            local=descricao_local
+        )
+        partida.jogo = jogo
+        partida.save()

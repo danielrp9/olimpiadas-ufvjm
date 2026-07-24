@@ -1498,19 +1498,21 @@ class PreSumulaManagementTests(TestCase):
 
     def test_delete_all_presumulas_as_commission(self):
         from django.urls import reverse
-        from core.models import PreSumula
+        from core.models import PreSumula, Jogo
         self.client.force_login(self.staff)
         response = self.client.post(reverse('presumula_delete_all'))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(PreSumula.objects.count(), 0)
+        self.assertEqual(Jogo.objects.count(), 0)
 
     def test_delete_all_presumulas_denied_for_representative(self):
         from django.urls import reverse
-        from core.models import PreSumula
+        from core.models import PreSumula, Jogo
         self.client.force_login(self.delegate)
         response = self.client.post(reverse('presumula_delete_all'))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(PreSumula.objects.count(), 2)
+        self.assertEqual(Jogo.objects.count(), 1)
 
     def test_delete_single_presumula(self):
         from django.urls import reverse
@@ -1521,18 +1523,23 @@ class PreSumulaManagementTests(TestCase):
         self.assertFalse(PreSumula.objects.filter(pk=self.presumula1.pk).exists())
         self.assertTrue(PreSumula.objects.filter(pk=self.presumula2.pk).exists())
 
-    def test_chaveamento_generation_does_not_create_presumulas(self):
-        from core.models import PreSumula, Jogo
-        from core.chaveamento_services import gerar_chaveamento_modalidade
-        PreSumula.objects.all().delete()
-        self.assertEqual(PreSumula.objects.count(), 0)
+    def test_chaveamento_generation_does_not_create_dummy_jogos_or_presumulas(self):
+        from core.models import PreSumula, Jogo, PartidaChaveamento, ChaveamentoModalidade
+        from core.chaveamento_services import _sincronizar_jogo_partida
         
-        # Gerar chaveamento
-        gerar_chaveamento_modalidade(self.modalidade)
+        # Test that _sincronizar_jogo_partida does NOT create a Jogo if time_a or time_b is missing or equal
+        ch = ChaveamentoModalidade.objects.create(modalidade=self.modalidade)
+        partida = PartidaChaveamento.objects.create(chaveamento=ch, fase='FINAL_LOCAL', time_a=self.delegate, time_b=None)
+        _sincronizar_jogo_partida(partida)
+        self.assertIsNone(partida.jogo)
         
-        # Verificacoes
-        self.assertGreater(Jogo.objects.filter(modalidade=self.modalidade).count(), 0)
-        self.assertEqual(PreSumula.objects.count(), 0)
+        # Test that when both distinct teams are present, it creates a Jogo
+        partida.time_b = self.delegate_b
+        partida.save()
+        _sincronizar_jogo_partida(partida)
+        self.assertIsNotNone(partida.jogo)
+        self.assertEqual(partida.jogo.time_a, self.delegate)
+        self.assertEqual(partida.jogo.time_b, self.delegate_b)
 
 
 

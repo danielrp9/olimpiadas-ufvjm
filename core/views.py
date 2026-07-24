@@ -840,16 +840,18 @@ class PreSumulaDetailView(LoginRequiredMixin, DetailView):
 
 class PreSumulaDeleteAllView(LoginRequiredMixin, View):
     """
-    Exclui TODAS as pré-súmulas cadastradas no sistema.
+    Exclui TODOS os jogos e pré-súmulas cadastrados no sistema.
     Disponível apenas para a Comissão Organizadora (staff / comissão).
     """
     def post(self, request):
         if not (request.user.is_staff or request.user.is_comissao):
-            messages.error(request, "Acesso negado: Apenas a comissão organizadora pode apagar todas as pré-súmulas.")
+            messages.error(request, "Acesso negado: Apenas a comissão organizadora pode realizar esta ação.")
             return redirect('presumula_list')
         
-        count, _ = PreSumula.objects.all().delete()
-        messages.success(request, f"Todas as pré-súmulas ({count} registro(s)) foram apagadas com sucesso.")
+        jogos_count, _ = Jogo.objects.all().delete()
+        presumulas_count, _ = PreSumula.objects.all().delete()
+        
+        messages.success(request, f"Limpeza concluída: {jogos_count} jogo(s) e {presumulas_count} pré-súmula(s) foram apagados com sucesso.")
         return redirect('presumula_list')
 
 

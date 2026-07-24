@@ -36,8 +36,8 @@
             </button>
 
             {% if user.is_staff or user.is_comissao %}
-                <button type="button" onclick="openDeleteAllPresumulasModal()" class="inline-flex items-center px-3.5 py-2 border border-red-200 text-xs font-semibold rounded-xl text-red-600 bg-red-50 hover:bg-red-100 transition shadow-sm gap-1.5 active:scale-95 focus:outline-none" title="Apagar todas as pré-súmulas do sistema">
-                    <i class="fas fa-trash-alt text-red-500"></i> Apagar Todas as Pré-Súmulas
+                <button type="button" onclick="openDeleteAllPresumulasModal()" class="inline-flex items-center px-3.5 py-2 border border-red-200 text-xs font-semibold rounded-xl text-red-600 bg-red-50 hover:bg-red-100 transition shadow-sm gap-1.5 active:scale-95 focus:outline-none" title="Apagar todos os jogos e pré-súmulas do sistema">
+                    <i class="fas fa-trash-alt text-red-500"></i> Apagar Todos os Jogos e Súmulas
                 </button>
                 <a href="{% url 'admin_modalidades' %}" class="inline-flex items-center px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-500 bg-white hover:bg-slate-50 transition shadow-sm gap-1.5 focus:outline-none">
                     <i class="fas fa-running text-blue-555"></i> Modalidades
@@ -429,9 +429,9 @@
         
         <!-- Content -->
         <div class="space-y-2">
-            <h3 class="text-base font-bold text-slate-800">Apagar Todas as Pré-Súmulas</h3>
+            <h3 class="text-base font-bold text-slate-800">Apagar Todos os Jogos e Pré-Súmulas</h3>
             <p class="text-xs text-slate-555 leading-relaxed">
-                Deseja realmente apagar <strong class="text-red-600">TODAS</strong> as pré-súmulas cadastradas no sistema? Esta ação removerá permanentemente as escalações de todas as equipes e não poderá ser desfeita.
+                Deseja realmente apagar <strong class="text-red-600">TODOS</strong> os jogos e pré-súmulas cadastrados no sistema? Esta ação removerá permanentemente as partidas agendadas e todas as escalações de equipes e não poderá ser desfeita.
             </p>
         </div>
         
