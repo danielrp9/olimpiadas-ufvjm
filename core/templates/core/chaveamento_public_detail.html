@@ -37,13 +37,13 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {% for grupo in grupos %}
             <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-300 space-y-6">
-                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
-                    <div>
-                        <h3 class="text-lg font-extrabold text-slate-800 tracking-tight">{{ grupo.nome }}</h3>
-                        <span class="text-xs text-slate-500 font-medium">{{ grupo.get_tipo_display }} • Passam os {{ grupo.vagas_classificacao }} primeiro(s)</span>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4 gap-2">
+                    <div class="min-w-0 flex-1">
+                        <h3 class="text-base sm:text-lg font-extrabold text-slate-800 tracking-tight truncate">{{ grupo.nome }}</h3>
+                        <span class="text-[11px] sm:text-xs text-slate-500 font-medium truncate block">{{ grupo.get_tipo_display }} • Passam os {{ grupo.vagas_classificacao }} primeiro(s)</span>
                     </div>
-                    <span class="px-3.5 py-1 text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs">
-                        {{ grupo.times.count }} equipes
+                    <span class="px-2.5 py-0.5 sm:px-3.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs shrink-0 whitespace-nowrap">
+                        {{ grupo.times.count }} <span class="hidden sm:inline">equipes</span><span class="sm:hidden">eq.</span>
                     </span>
                 </div>
 
