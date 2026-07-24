@@ -1819,12 +1819,14 @@ from .chaveamento_services import (
     gerar_chaveamento_modalidade,
     registrar_resultado_partida,
     encerrar_fase_grupos_e_gerar_mata_mata,
-    classificar_delegacoes_por_campus
+    classificar_delegacoes_por_campus,
+    obter_resumo_chaveamentos_admin,
+    obter_resumo_chaveamentos_publico
 )
 
 class ChaveamentoAdminListView(LoginRequiredMixin, View):
     """
-    Lista todas as modalidades com estatísticas de delegações por campus e status do chaveamento.
+    Lista todas as modalidades com estatísticas de delegações por campus e status do chaveamento (Otimizado em lote).
     Disponível para a Comissão Organizadora.
     """
     def get(self, request):
@@ -1832,23 +1834,7 @@ class ChaveamentoAdminListView(LoginRequiredMixin, View):
             messages.error(request, "Acesso restrito à Comissão Organizadora.")
             return redirect('dashboard')
 
-        modalidades = Modalidade.objects.exclude(nome__icontains='atletismo').order_by('nome')
-        modalidades_info = []
-
-        for m in modalidades:
-            ch = getattr(m, 'chaveamento', None)
-            buckets = classificar_delegacoes_por_campus(m)
-            total_delegacoes = sum(len(v) for v in buckets.values())
-
-            modalidades_info.append({
-                'modalidade': m,
-                'chaveamento': ch,
-                'total_delegacoes': total_delegacoes,
-                'mucuri_count': len(buckets['mucuri']),
-                'unai_count': len(buckets['unai']),
-                'janauba_count': len(buckets['janauba']),
-                'diamantina_count': len(buckets['diamantina']),
-            })
+        modalidades_info = obter_resumo_chaveamentos_admin()
 
         return render(request, 'core/chaveamento_admin_list.html', {
             'modalidades_info': modalidades_info
@@ -1871,7 +1857,7 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
             messages.info(request, "O chaveamento para esta modalidade ainda não foi gerado. Clique em 'Gerar Chaveamento' para iniciar.")
             return redirect('chaveamento_admin_list')
 
-        grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b').all()
+        grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
         partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
 
         # Agrupa partidas por fase
@@ -1952,25 +1938,11 @@ def salvar_resultado_partida_view(request, pk):
 
 class ChaveamentoPublicListView(LoginRequiredMixin, View):
     """
-    Lista de Chaveamentos acessível para Representantes de Delegações e membros.
+    Lista de Chaveamentos acessível para Representantes de Delegações e membros (Otimizado em lote).
     """
     def get(self, request):
-        modalidades = Modalidade.objects.exclude(nome__icontains='atletismo').order_by('nome')
         delegacao_user = request.user.delegacao_ativa
-
-        modalidades_info = []
-        for m in modalidades:
-            ch = getattr(m, 'chaveamento', None)
-            minha_participacao = False
-            if ch:
-                minha_participacao = TimeGrupo.objects.filter(grupo__chaveamento=ch, delegacao=delegacao_user).exists() or \
-                                     PartidaChaveamento.objects.filter(Q(time_a=delegacao_user) | Q(time_b=delegacao_user), chaveamento=ch).exists()
-
-            modalidades_info.append({
-                'modalidade': m,
-                'chaveamento': ch,
-                'minha_participacao': minha_participacao
-            })
+        modalidades_info = obter_resumo_chaveamentos_publico(delegacao_user)
 
         return render(request, 'core/chaveamento_public_list.html', {
             'modalidades_info': modalidades_info,
@@ -1990,7 +1962,7 @@ class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
             messages.info(request, "O chaveamento desta modalidade ainda não foi gerado pela Comissão Organizadora.")
             return redirect('chaveamento_public_list')
 
-        grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b').all()
+        grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
         partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
 
         partidas_por_fase = {

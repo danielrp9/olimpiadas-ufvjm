@@ -410,7 +410,7 @@ class ChaveamentoModalidade(models.Model):
     ]
 
     modalidade = models.OneToOneField(Modalidade, on_delete=models.CASCADE, related_name='chaveamento')
-    fase_atual = models.CharField(max_length=30, choices=FASE_CHOICES, default='nao_iniciado')
+    fase_atual = models.CharField(max_length=30, choices=FASE_CHOICES, default='nao_iniciado', db_index=True)
     vagas_externas = models.PositiveIntegerField(default=0, help_text="Total de vagas classificadas dos campi externos (0, 1 ou 2)")
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
@@ -461,7 +461,7 @@ class TimeGrupo(models.Model):
     gols_pro = models.IntegerField(default=0)
     gols_contra = models.IntegerField(default=0)
     saldo_gols = models.IntegerField(default=0)
-    classificado = models.BooleanField(default=False)
+    classificado = models.BooleanField(default=False, db_index=True)
 
     class Meta:
         verbose_name = "Time no Grupo"
@@ -492,7 +492,7 @@ class PartidaChaveamento(models.Model):
 
     chaveamento = models.ForeignKey(ChaveamentoModalidade, on_delete=models.CASCADE, related_name='partidas')
     jogo = models.ForeignKey(Jogo, on_delete=models.SET_NULL, null=True, blank=True, related_name='partida_chaveamento')
-    fase = models.CharField(max_length=30, choices=FASE_PARTIDA_CHOICES)
+    fase = models.CharField(max_length=30, choices=FASE_PARTIDA_CHOICES, db_index=True)
     grupo = models.ForeignKey(GrupoChaveamento, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas')
     rodada = models.PositiveIntegerField(default=1)
     
@@ -504,7 +504,7 @@ class PartidaChaveamento(models.Model):
     
     vencedor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_vencidas')
     perdedor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_perdidas')
-    finalizada = models.BooleanField(default=False)
+    finalizada = models.BooleanField(default=False, db_index=True)
     
     proxima_partida = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_origem')
     posicao_proxima_partida = models.CharField(max_length=1, choices=[('A', 'Time A'), ('B', 'Time B')], null=True, blank=True)

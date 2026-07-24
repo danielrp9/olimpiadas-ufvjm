@@ -1,6 +1,7 @@
 import math
 import random
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
 from django.contrib.auth import get_user_model
 from core.models import (
@@ -10,6 +11,114 @@ from core.models import (
 )
 
 User = get_user_model()
+
+
+def obter_resumo_chaveamentos_admin():
+    """
+    Retorna a lista de modalidades com estatísticas de delegações otimizada em apenas 3 queries (Zero N+1).
+    """
+    modalidades = list(
+        Modalidade.objects.exclude(nome__icontains='atletismo')
+        .select_related('chaveamento')
+        .order_by('nome')
+    )
+
+    # 1. Busca todas as inscrições ativas e seus atletas em lote
+    inscricoes_qs = list(
+        InscricaoModalidade.objects.filter(inscricao__status='deferido')
+        .select_related('inscricao__delegacao')
+    )
+
+    mod_inscricoes_map = {}
+    for im in inscricoes_qs:
+        if im.inscricao and im.inscricao.delegacao:
+            mod_inscricoes_map.setdefault(im.modalidade_id, set()).add(im.inscricao.delegacao)
+
+    # 2. Busca mapeamento em lote de delegação -> nome do campus
+    atletas_campus_qs = Atleta.objects.filter(campus__isnull=False).select_related('campus').values('cadastrado_por_id', 'campus__nome')
+    user_campus_name_map = {}
+    for row in atletas_campus_qs:
+        uid = row['cadastrado_por_id']
+        if uid not in user_campus_name_map:
+            user_campus_name_map[uid] = row['campus__nome'].lower()
+
+    modalidades_info = []
+    for m in modalidades:
+        ch = getattr(m, 'chaveamento', None)
+        delegacoes = list(mod_inscricoes_map.get(m.id, set()))
+
+        # Fallback para inscrições sem filtro de status se estiver vazio
+        if not delegacoes:
+            raw_ims = InscricaoModalidade.objects.filter(modalidade=m).select_related('inscricao__delegacao')
+            delegacoes = list(set(im.inscricao.delegacao for im in raw_ims if im.inscricao and im.inscricao.delegacao))
+
+        mucuri_count = 0
+        unai_count = 0
+        janauba_count = 0
+        diamantina_count = 0
+
+        for d in delegacoes:
+            c_nome = user_campus_name_map.get(d.id, '')
+            if 'mucuri' in c_nome:
+                mucuri_count += 1
+            elif 'unaí' in c_nome or 'unai' in c_nome:
+                unai_count += 1
+            elif 'janaúba' in c_nome or 'janauba' in c_nome:
+                janauba_count += 1
+            else:
+                diamantina_count += 1
+
+        modalidades_info.append({
+            'modalidade': m,
+            'chaveamento': ch,
+            'total_delegacoes': len(delegacoes),
+            'mucuri_count': mucuri_count,
+            'unai_count': unai_count,
+            'janauba_count': janauba_count,
+            'diamantina_count': diamantina_count,
+        })
+
+    return modalidades_info
+
+
+def obter_resumo_chaveamentos_publico(delegacao_user):
+    """
+    Retorna a lista pública de modalidades e status de participação da delegação em 3 queries (Zero N+1).
+    """
+    modalidades = list(
+        Modalidade.objects.exclude(nome__icontains='atletismo')
+        .select_related('chaveamento')
+        .order_by('nome')
+    )
+
+    meus_grupos_ch_ids = set()
+    minhas_partidas_ch_ids = set()
+
+    if delegacao_user:
+        meus_grupos_ch_ids = set(
+            TimeGrupo.objects.filter(delegacao=delegacao_user)
+            .values_list('grupo__chaveamento_id', flat=True)
+        )
+        minhas_partidas_ch_ids = set(
+            PartidaChaveamento.objects.filter(Q(time_a=delegacao_user) | Q(time_b=delegacao_user))
+            .values_list('chaveamento_id', flat=True)
+        )
+
+    modalidades_info = []
+    for m in modalidades:
+        ch = getattr(m, 'chaveamento', None)
+        minha_participacao = False
+        if ch and (ch.id in meus_grupos_ch_ids or ch.id in minhas_partidas_ch_ids):
+            minha_participacao = True
+
+        modalidades_info.append({
+            'modalidade': m,
+            'chaveamento': ch,
+            'minha_participacao': minha_participacao
+        })
+
+    return modalidades_info
+
 
 
 def get_delegacao_campus(delegacao, modalidade=None):
