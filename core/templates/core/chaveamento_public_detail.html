@@ -120,17 +120,13 @@
                             <!-- Data (DD/MM/AAAA) -->
                             <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner text-slate-600 text-[11px]" title="Data do Jogo">
                                 <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
-                                <span>{{ p.data_jogo_exibicao|default:"DD/MM/AAAA" }}</span>
+                                <span>{{ p.data_jogo_exibicao|default:"A definir" }}</span>
                             </div>
 
                             <!-- Horário (HH:MM) -->
                             <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner text-slate-600 text-[11px]" title="Horário do Jogo">
                                 <i class="fas fa-clock text-slate-400 text-[10px]"></i>
-                                <span>{{ p.horario_jogo_exibicao|default:"HH:MM" }}</span>
-                            </div>
-
-                            <div class="p-1 text-slate-400 flex-shrink-0" title="Partida Registrada">
-                                <i class="fas fa-lock"></i>
+                                <span>{{ p.horario_jogo_exibicao|default:"A definir" }}</span>
                             </div>
                         </div>
                         {% endfor %}

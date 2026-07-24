@@ -97,40 +97,53 @@
                 <!-- Jogos do Grupo -->
                 <div class="pt-4 border-t border-slate-100 space-y-3">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos da Fase</h4>
-                    <div class="space-y-2">
+                    <div class="space-y-3">
                         {% for p in grupo.partidas.all %}
-                        <form action="{% url 'chaveamento_partida_resultado' pk=p.pk %}" method="POST" class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-2 text-xs">
-                            {% csrf_token %}
-                            <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0">
-                                {{ p.time_a.nome_delegacao|default:p.time_a.email }}
-                            </div>
+                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-2.5">
+                            <!-- Form 1: Salvar Placar -->
+                            <form action="{% url 'chaveamento_partida_resultado' pk=p.pk %}" method="POST" class="flex items-center justify-between gap-2 text-xs">
+                                {% csrf_token %}
+                                <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0">
+                                    {{ p.time_a.nome_delegacao|default:p.time_a.email }}
+                                </div>
 
-                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner flex-shrink-0">
-                                <input type="number" min="0" name="placar_a" value="{{ p.placar_a|default_if_none:'' }}" placeholder="0" class="w-7 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
-                                <span class="text-slate-400 font-bold">x</span>
-                                <input type="number" min="0" name="placar_b" value="{{ p.placar_b|default_if_none:'' }}" placeholder="0" class="w-7 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
-                            </div>
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner flex-shrink-0">
+                                    <input type="number" min="0" name="placar_a" value="{{ p.placar_a|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+                                    <span class="text-slate-400 font-bold">x</span>
+                                    <input type="number" min="0" name="placar_b" value="{{ p.placar_b|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+                                </div>
 
-                            <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0">
-                                {{ p.time_b.nome_delegacao|default:p.time_b.email }}
-                            </div>
+                                <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0">
+                                    {{ p.time_b.nome_delegacao|default:p.time_b.email }}
+                                </div>
 
-                            <!-- Campo Data (DD/MM/AAAA) -->
-                            <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner" title="Data (DD/MM/AAAA)">
-                                <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
-                                <input type="date" name="data_jogo" value="{{ p.data_jogo_formatada }}" class="w-24 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" placeholder="DD/MM/AAAA">
-                            </div>
+                                <button type="submit" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 flex-shrink-0 shadow-sm" title="Salvar Placar">
+                                    <i class="fas fa-save"></i>
+                                    <span class="hidden sm:inline">Salvar Placar</span>
+                                </button>
+                            </form>
 
-                            <!-- Campo Horário (HH:MM) -->
-                            <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner" title="Horário (HH:MM)">
-                                <i class="fas fa-clock text-slate-400 text-[10px]"></i>
-                                <input type="time" name="horario_jogo" value="{{ p.horario_jogo_formatado }}" class="w-16 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" placeholder="HH:MM">
-                            </div>
+                            <!-- Form 2: Salvar Data e Horário -->
+                            <form action="{% url 'chaveamento_partida_resultado' pk=p.pk %}" method="POST" class="flex items-center justify-end gap-2 text-xs pt-2 border-t border-slate-200/60">
+                                {% csrf_token %}
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Data:</span>
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
+                                    <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
+                                    <input type="date" name="data_jogo" value="{{ p.data_jogo_formatada }}" class="w-24 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Data (DD/MM/AAAA)">
+                                </div>
 
-                            <button type="submit" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition flex-shrink-0" title="Salvar Resultado e Horário">
-                                <i class="fas fa-lock"></i>
-                            </button>
-                        </form>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Horário:</span>
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
+                                    <i class="fas fa-clock text-slate-400 text-[10px]"></i>
+                                    <input type="time" name="horario_jogo" value="{{ p.horario_jogo_formatado }}" class="w-16 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Horário (HH:MM)">
+                                </div>
+
+                                <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Agendamento">
+                                    <i class="fas fa-save"></i>
+                                    <span>Salvar Data/Hora</span>
+                                </button>
+                            </form>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
@@ -149,21 +162,24 @@
 
             <!-- Quartas de Final (Diamantina) -->
             {% if partidas_por_fase.QUARTAS_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                         Quartas de Final (Diamantina)
                     </h3>
 
                     <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3">
+                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
                         {% csrf_token %}
                         <input type="hidden" name="fase_key" value="QUARTAS_LOCAL">
-                        <i class="fas fa-calendar-alt text-slate-400 text-xs flex-shrink-0"></i>
-                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                        <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.QUARTAS_LOCAL %}{{ chaveamento.datas_fases.QUARTAS_LOCAL }}{% endif %}" onchange="this.form.submit()" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-full" placeholder="DD/MM/AAAA">
-                        <button type="submit" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save text-xs"></i>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.QUARTAS_LOCAL %}{{ chaveamento.datas_fases.QUARTAS_LOCAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                        </div>
+                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
+                            <i class="fas fa-save"></i>
+                            <span>Salvar Data</span>
                         </button>
                     </form>
 
@@ -178,21 +194,24 @@
 
             <!-- Semifinais Locais (Diamantina) -->
             {% if partidas_por_fase.SEMI_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                         Semifinais (Diamantina)
                     </h3>
 
                     <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3">
+                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
                         {% csrf_token %}
                         <input type="hidden" name="fase_key" value="SEMI_LOCAL">
-                        <i class="fas fa-calendar-alt text-slate-400 text-xs flex-shrink-0"></i>
-                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                        <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_LOCAL %}{{ chaveamento.datas_fases.SEMI_LOCAL }}{% endif %}" onchange="this.form.submit()" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-full" placeholder="DD/MM/AAAA">
-                        <button type="submit" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save text-xs"></i>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_LOCAL %}{{ chaveamento.datas_fases.SEMI_LOCAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                        </div>
+                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
+                            <i class="fas fa-save"></i>
+                            <span>Salvar Data</span>
                         </button>
                     </form>
 
@@ -207,21 +226,24 @@
 
             <!-- Final Local & 3º Lugar (Diamantina) -->
             {% if partidas_por_fase.FINAL_LOCAL or partidas_por_fase.DISPUTA_3_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                         Finais Locais (Diamantina)
                     </h3>
 
                     <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3">
+                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
                         {% csrf_token %}
                         <input type="hidden" name="fase_key" value="FINAL_LOCAL">
-                        <i class="fas fa-calendar-alt text-slate-400 text-xs flex-shrink-0"></i>
-                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                        <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_LOCAL %}{{ chaveamento.datas_fases.FINAL_LOCAL }}{% endif %}" onchange="this.form.submit()" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-full" placeholder="DD/MM/AAAA">
-                        <button type="submit" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save text-xs"></i>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_LOCAL %}{{ chaveamento.datas_fases.FINAL_LOCAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                        </div>
+                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
+                            <i class="fas fa-save"></i>
+                            <span>Salvar Data</span>
                         </button>
                     </form>
 
@@ -242,7 +264,7 @@
 
             <!-- Semifinais Gerais -->
             {% if partidas_por_fase.SEMI_GERAL %}
-            <div class="bg-white border border-blue-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+            <div class="bg-white border border-blue-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
                         <span>Semifinais Gerais</span>
@@ -250,14 +272,17 @@
                     </h3>
 
                     <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3">
+                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
                         {% csrf_token %}
                         <input type="hidden" name="fase_key" value="SEMI_GERAL">
-                        <i class="fas fa-calendar-alt text-slate-400 text-xs flex-shrink-0"></i>
-                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                        <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_GERAL %}{{ chaveamento.datas_fases.SEMI_GERAL }}{% endif %}" onchange="this.form.submit()" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-full" placeholder="DD/MM/AAAA">
-                        <button type="submit" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save text-xs"></i>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_GERAL %}{{ chaveamento.datas_fases.SEMI_GERAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                        </div>
+                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
+                            <i class="fas fa-save"></i>
+                            <span>Salvar Data</span>
                         </button>
                     </form>
 
@@ -272,7 +297,7 @@
 
             <!-- Grande Final Geral & Chave Bronze -->
             {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
-            <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+            <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
                         <span>Final Geral & Chave Bronze</span>
@@ -280,14 +305,17 @@
                     </h3>
 
                     <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3">
+                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
                         {% csrf_token %}
                         <input type="hidden" name="fase_key" value="FINAL_GERAL">
-                        <i class="fas fa-calendar-alt text-slate-400 text-xs flex-shrink-0"></i>
-                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                        <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_GERAL %}{{ chaveamento.datas_fases.FINAL_GERAL }}{% endif %}" onchange="this.form.submit()" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-full" placeholder="DD/MM/AAAA">
-                        <button type="submit" class="p-1 text-blue-600 hover:bg-blue-50 rounded transition flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save text-xs"></i>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                            <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_GERAL %}{{ chaveamento.datas_fases.FINAL_GERAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                        </div>
+                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
+                            <i class="fas fa-save"></i>
+                            <span>Salvar Data</span>
                         </button>
                     </form>
 

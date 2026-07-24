@@ -1,37 +1,36 @@
-<div class="bg-white/10 backdrop-blur-sm p-2.5 rounded-2xl border border-slate-200/60 shadow-sm flex items-center justify-between gap-2 text-xs {% if partida.time_a == delegacao or partida.time_b == delegacao %}ring-2 ring-blue-500 bg-blue-50/50{% endif %}">
-    <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0 {% if partida.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
-        {% if partida.time_a %}
-            {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
-            {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 ml-1"></i>{% endif %}
-        {% else %}
-            <span class="text-slate-400 font-normal italic">A definir</span>
-        {% endif %}
+<div class="bg-white/10 backdrop-blur-sm p-3 rounded-2xl border border-slate-200/60 shadow-sm space-y-2 text-xs {% if partida.time_a == delegacao or partida.time_b == delegacao %}ring-2 ring-blue-500 bg-blue-50/50{% endif %}">
+    <div class="flex items-center justify-between gap-2">
+        <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0 {% if partida.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
+            {% if partida.time_a %}
+                {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
+                {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 ml-1"></i>{% endif %}
+            {% else %}
+                <span class="text-slate-400 font-normal italic">A definir</span>
+            {% endif %}
+        </div>
+
+        <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
+            {% if partida.finalizada %}
+                {{ partida.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ partida.placar_b }}
+            {% else %}
+                <span class="text-slate-400 font-normal italic">vs</span>
+            {% endif %}
+        </div>
+
+        <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0 {% if partida.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
+            {% if partida.time_b %}
+                {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
+                {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 ml-1"></i>{% endif %}
+            {% else %}
+                <span class="text-slate-400 font-normal italic">A definir</span>
+            {% endif %}
+        </div>
     </div>
 
-    <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
-        {% if partida.finalizada %}
-            {{ partida.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ partida.placar_b }}
-        {% else %}
-            <span class="text-slate-400 font-normal italic">vs</span>
-        {% endif %}
-    </div>
-
-    <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0 {% if partida.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
-        {% if partida.time_b %}
-            {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
-            {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 ml-1"></i>{% endif %}
-        {% else %}
-            <span class="text-slate-400 font-normal italic">A definir</span>
-        {% endif %}
-    </div>
-
-    <!-- Horário do Mata-Mata (HH:MM) à esquerda do cadeado -->
-    <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner text-slate-600 text-[11px]">
+    <!-- Horário Exibição -->
+    <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-slate-100 text-slate-500 text-[11px]">
         <i class="fas fa-clock text-slate-400 text-[10px]"></i>
-        <span>{{ partida.horario_jogo_exibicao|default:"HH:MM" }}</span>
-    </div>
-
-    <div class="p-1 text-slate-400 flex-shrink-0" title="Partida do Mata-Mata">
-        <i class="fas fa-lock"></i>
+        <span class="font-medium">Horário:</span>
+        <span class="font-bold text-slate-800">{{ partida.horario_jogo_exibicao|default:"A definir" }}</span>
     </div>
 </div>

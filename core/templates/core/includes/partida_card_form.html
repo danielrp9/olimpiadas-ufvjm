@@ -1,34 +1,46 @@
-<form action="{% url 'chaveamento_partida_resultado' pk=partida.pk %}" method="POST" class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-2 text-xs">
-    {% csrf_token %}
-    <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0">
-        {% if partida.time_a %}
-            {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
-        {% else %}
-            <span class="text-slate-400 font-normal italic">A definir</span>
-        {% endif %}
-    </div>
+<div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-2.5">
+    <!-- Form 1: Salvar Resultado do Placar -->
+    <form action="{% url 'chaveamento_partida_resultado' pk=partida.pk %}" method="POST" class="flex items-center justify-between gap-2 text-xs">
+        {% csrf_token %}
+        <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0">
+            {% if partida.time_a %}
+                {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
+            {% else %}
+                <span class="text-slate-400 font-normal italic">A definir</span>
+            {% endif %}
+        </div>
 
-    <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner flex-shrink-0">
-        <input type="number" min="0" name="placar_a" value="{{ partida.placar_a|default_if_none:'' }}" placeholder="0" class="w-7 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
-        <span class="text-slate-400 font-bold">x</span>
-        <input type="number" min="0" name="placar_b" value="{{ partida.placar_b|default_if_none:'' }}" placeholder="0" class="w-7 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
-    </div>
+        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner flex-shrink-0">
+            <input type="number" min="0" name="placar_a" value="{{ partida.placar_a|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+            <span class="text-slate-400 font-bold">x</span>
+            <input type="number" min="0" name="placar_b" value="{{ partida.placar_b|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+        </div>
 
-    <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0">
-        {% if partida.time_b %}
-            {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
-        {% else %}
-            <span class="text-slate-400 font-normal italic">A definir</span>
-        {% endif %}
-    </div>
+        <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0">
+            {% if partida.time_b %}
+                {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
+            {% else %}
+                <span class="text-slate-400 font-normal italic">A definir</span>
+            {% endif %}
+        </div>
 
-    <!-- Horário do Mata-Mata (HH:MM) à esquerda do cadeado -->
-    <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
-        <i class="fas fa-clock text-slate-400 text-[10px]"></i>
-        <input type="time" name="horario_jogo" value="{{ partida.horario_jogo_formatado }}" class="w-16 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Horário (HH:MM)">
-    </div>
+        <button type="submit" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 flex-shrink-0 shadow-sm" title="Salvar Placar">
+            <i class="fas fa-save"></i>
+            <span class="hidden sm:inline">Salvar Placar</span>
+        </button>
+    </form>
 
-    <button type="submit" class="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition flex-shrink-0" title="Salvar Resultado e Horário">
-        <i class="fas fa-lock"></i>
-    </button>
-</form>
+    <!-- Form 2: Salvar Horário da Partida -->
+    <form action="{% url 'chaveamento_partida_resultado' pk=partida.pk %}" method="POST" class="flex items-center justify-end gap-2 text-xs pt-2 border-t border-slate-200/60">
+        {% csrf_token %}
+        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Horário:</span>
+        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
+            <i class="fas fa-clock text-slate-400 text-[10px]"></i>
+            <input type="time" name="horario_jogo" value="{{ partida.horario_jogo_formatado }}" class="w-16 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Horário (HH:MM)">
+        </div>
+        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Horário">
+            <i class="fas fa-save"></i>
+            <span>Salvar Horário</span>
+        </button>
+    </form>
+</div>
