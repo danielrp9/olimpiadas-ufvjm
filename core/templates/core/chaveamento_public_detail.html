@@ -100,12 +100,12 @@
                     <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos e Resultados</h4>
                     <div class="space-y-2">
                         {% for p in grupo.partidas.all %}
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3 text-xs {% if p.time_a == delegacao or p.time_b == delegacao %}ring-2 ring-blue-500/30 bg-blue-50/30{% endif %}">
-                            <div class="flex-1 font-semibold text-slate-800 text-right truncate {% if p.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
+                        <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-2 text-xs {% if p.time_a == delegacao or p.time_b == delegacao %}ring-2 ring-blue-500/30 bg-blue-50/30{% endif %}">
+                            <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0 {% if p.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
                                 {{ p.time_a.nome_delegacao|default:p.time_a.email }}
                             </div>
 
-                            <div class="px-3 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
+                            <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
                                 {% if p.finalizada %}
                                     {{ p.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ p.placar_b }}
                                 {% else %}
@@ -113,8 +113,24 @@
                                 {% endif %}
                             </div>
 
-                            <div class="flex-1 font-semibold text-slate-800 text-left truncate {% if p.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
+                            <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0 {% if p.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
                                 {{ p.time_b.nome_delegacao|default:p.time_b.email }}
+                            </div>
+
+                            <!-- Data (DD/MM/AAAA) -->
+                            <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner text-slate-600 text-[11px]" title="Data do Jogo">
+                                <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
+                                <span>{{ p.data_jogo_exibicao|default:"DD/MM/AAAA" }}</span>
+                            </div>
+
+                            <!-- Horário (HH:MM) -->
+                            <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner text-slate-600 text-[11px]" title="Horário do Jogo">
+                                <i class="fas fa-clock text-slate-400 text-[10px]"></i>
+                                <span>{{ p.horario_jogo_exibicao|default:"HH:MM" }}</span>
+                            </div>
+
+                            <div class="p-1 text-slate-400 flex-shrink-0" title="Partida Registrada">
+                                <i class="fas fa-lock"></i>
                             </div>
                         </div>
                         {% endfor %}
@@ -135,88 +151,138 @@
 
             <!-- Quartas de Final (Diamantina) -->
             {% if partidas_por_fase.QUARTAS_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
-                    Quartas de Final (Diamantina)
-                </h3>
-                <div class="space-y-3">
-                    {% for p in partidas_por_fase.QUARTAS_LOCAL %}
-                    {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
-                    {% endfor %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
+                        Quartas de Final (Diamantina)
+                    </h3>
+
+                    <!-- Data da Fase no topo -->
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3 text-xs text-slate-600">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                        <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.QUARTAS_LOCAL %}{{ chaveamento.datas_fases.QUARTAS_LOCAL }}{% else %}DD/MM/AAAA{% endif %}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for p in partidas_por_fase.QUARTAS_LOCAL %}
+                        {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             {% endif %}
 
             <!-- Semifinais Locais (Diamantina) -->
             {% if partidas_por_fase.SEMI_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
-                    Semifinais (Diamantina)
-                </h3>
-                <div class="space-y-3">
-                    {% for p in partidas_por_fase.SEMI_LOCAL %}
-                    {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
-                    {% endfor %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
+                        Semifinais (Diamantina)
+                    </h3>
+
+                    <!-- Data da Fase no topo -->
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3 text-xs text-slate-600">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                        <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.SEMI_LOCAL %}{{ chaveamento.datas_fases.SEMI_LOCAL }}{% else %}DD/MM/AAAA{% endif %}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for p in partidas_por_fase.SEMI_LOCAL %}
+                        {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             {% endif %}
 
             <!-- Final Local & 3º Lugar (Diamantina) -->
             {% if partidas_por_fase.FINAL_LOCAL or partidas_por_fase.DISPUTA_3_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
-                    Finais Locais (Diamantina)
-                </h3>
-                <div class="space-y-3">
-                    {% for p in partidas_por_fase.FINAL_LOCAL %}
-                    <div class="mb-1"><span class="text-[10px] font-bold text-amber-600 uppercase">Final Local</span></div>
-                    {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
-                    {% endfor %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
+                        Finais Locais (Diamantina)
+                    </h3>
 
-                    {% for p in partidas_por_fase.DISPUTA_3_LOCAL %}
-                    <div class="mb-1 mt-4"><span class="text-[10px] font-bold text-slate-500 uppercase">3º Lugar Local</span></div>
-                    {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
-                    {% endfor %}
+                    <!-- Data da Fase no topo -->
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3 text-xs text-slate-600">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                        <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.FINAL_LOCAL %}{{ chaveamento.datas_fases.FINAL_LOCAL }}{% else %}DD/MM/AAAA{% endif %}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for p in partidas_por_fase.FINAL_LOCAL %}
+                        <div class="mb-1"><span class="text-[10px] font-bold text-amber-600 uppercase">Final Local</span></div>
+                        {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                        {% endfor %}
+
+                        {% for p in partidas_por_fase.DISPUTA_3_LOCAL %}
+                        <div class="mb-1 mt-4"><span class="text-[10px] font-bold text-slate-500 uppercase">3º Lugar Local</span></div>
+                        {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             {% endif %}
 
             <!-- Semifinais Gerais -->
             {% if partidas_por_fase.SEMI_GERAL %}
-            <div class="bg-white border border-blue-200 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
-                    <span>Semifinais Gerais</span>
-                    <i class="fas fa-star text-blue-500"></i>
-                </h3>
-                <div class="space-y-3">
-                    {% for p in partidas_por_fase.SEMI_GERAL %}
-                    {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
-                    {% endfor %}
+            <div class="bg-white border border-blue-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
+                        <span>Semifinais Gerais</span>
+                        <i class="fas fa-star text-blue-500"></i>
+                    </h3>
+
+                    <!-- Data da Fase no topo -->
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3 text-xs text-slate-600">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                        <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.SEMI_GERAL %}{{ chaveamento.datas_fases.SEMI_GERAL }}{% else %}DD/MM/AAAA{% endif %}</span>
+                    </div>
+
+                    <div class="space-y-3">
+                        {% for p in partidas_por_fase.SEMI_GERAL %}
+                        {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             {% endif %}
 
             <!-- Grande Final Geral & Chave Bronze -->
             {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
-            <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-sm space-y-4">
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
-                    <span>Final Geral & Chave Bronze</span>
-                    <i class="fas fa-trophy text-amber-500"></i>
-                </h3>
-                <div class="space-y-4">
-                    {% for p in partidas_por_fase.FINAL_GERAL %}
-                    <div>
-                        <span class="text-[10px] font-bold text-amber-700 uppercase tracking-widest block mb-1">Grande Final Geral</span>
-                        {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
-                    </div>
-                    {% endfor %}
+            <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-sm space-y-4 min-h-[260px] flex flex-col justify-between">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
+                        <span>Final Geral & Chave Bronze</span>
+                        <i class="fas fa-trophy text-amber-500"></i>
+                    </h3>
 
-                    {% for p in partidas_por_fase.BRONZE %}
-                    <div class="pt-3 border-t border-slate-200">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Chave Bronze (3º Lugar Geral)</span>
-                        {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                    <!-- Data da Fase no topo -->
+                    <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3 py-1.5 rounded-2xl mt-3 mb-3 text-xs text-slate-600">
+                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
+                        <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.FINAL_GERAL %}{{ chaveamento.datas_fases.FINAL_GERAL }}{% else %}DD/MM/AAAA{% endif %}</span>
                     </div>
-                    {% endfor %}
+
+                    <div class="space-y-4">
+                        {% for p in partidas_por_fase.FINAL_GERAL %}
+                        <div>
+                            <span class="text-[10px] font-bold text-amber-700 uppercase tracking-widest block mb-1">Grande Final Geral</span>
+                            {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                        </div>
+                        {% endfor %}
+
+                        {% for p in partidas_por_fase.BRONZE %}
+                        <div class="pt-3 border-t border-slate-200">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Chave Bronze (3º Lugar Geral)</span>
+                            {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
             {% endif %}

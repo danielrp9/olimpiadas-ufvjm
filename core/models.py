@@ -412,6 +412,7 @@ class ChaveamentoModalidade(models.Model):
     modalidade = models.OneToOneField(Modalidade, on_delete=models.CASCADE, related_name='chaveamento')
     fase_atual = models.CharField(max_length=30, choices=FASE_CHOICES, default='nao_iniciado', db_index=True)
     vagas_externas = models.PositiveIntegerField(default=0, help_text="Total de vagas classificadas dos campi externos (0, 1 ou 2)")
+    datas_fases = models.JSONField(default=dict, blank=True, help_text="Mapeamento de datas por fase do chaveamento")
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
@@ -421,6 +422,11 @@ class ChaveamentoModalidade(models.Model):
 
     def __str__(self):
         return f"Chaveamento: {self.modalidade.nome} ({self.get_fase_atual_display()})"
+
+    def get_data_fase(self, fase_key):
+        if isinstance(self.datas_fases, dict):
+            return self.datas_fases.get(fase_key, '')
+        return ''
 
 
 class GrupoChaveamento(models.Model):
@@ -502,6 +508,9 @@ class PartidaChaveamento(models.Model):
     placar_a = models.PositiveIntegerField(null=True, blank=True)
     placar_b = models.PositiveIntegerField(null=True, blank=True)
     
+    data_partida = models.DateField(null=True, blank=True, verbose_name="Data da Partida")
+    horario_partida = models.TimeField(null=True, blank=True, verbose_name="Horário da Partida")
+
     vencedor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_vencidas')
     perdedor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_perdidas')
     finalizada = models.BooleanField(default=False, db_index=True)
@@ -516,6 +525,26 @@ class PartidaChaveamento(models.Model):
         verbose_name = "Partida do Chaveamento"
         verbose_name_plural = "Partidas do Chaveamento"
         ordering = ['id']
+
+    @property
+    def data_jogo_formatada(self):
+        d = self.data_partida or (self.jogo.data_jogo if self.jogo else None)
+        return d.strftime('%Y-%m-%d') if d else ''
+
+    @property
+    def data_jogo_exibicao(self):
+        d = self.data_partida or (self.jogo.data_jogo if self.jogo else None)
+        return d.strftime('%d/%m/%Y') if d else ''
+
+    @property
+    def horario_jogo_formatado(self):
+        h = self.horario_partida or (self.jogo.horario_jogo if self.jogo else None)
+        return h.strftime('%H:%M') if h else ''
+
+    @property
+    def horario_jogo_exibicao(self):
+        h = self.horario_partida or (self.jogo.horario_jogo if self.jogo else None)
+        return h.strftime('%H:%M') if h else ''
 
     def __str__(self):
         ta = self.time_a.nome_delegacao if self.time_a else "A definir"

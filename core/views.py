@@ -1922,17 +1922,65 @@ def salvar_resultado_partida_view(request, pk):
         partida = get_object_or_404(PartidaChaveamento, pk=pk)
         placar_a_raw = request.POST.get('placar_a')
         placar_b_raw = request.POST.get('placar_b')
+        data_raw = request.POST.get('data_jogo') or request.POST.get('data_partida')
+        horario_raw = request.POST.get('horario_jogo') or request.POST.get('horario_partida')
 
-        if placar_a_raw is not None and placar_b_raw is not None:
+        updated_anything = False
+
+        if placar_a_raw is not None and placar_b_raw is not None and placar_a_raw != '' and placar_b_raw != '':
             try:
                 placar_a = int(placar_a_raw)
                 placar_b = int(placar_b_raw)
                 registrar_resultado_partida(partida, placar_a, placar_b)
-                messages.success(request, "Resultado salvo e chaveamento atualizado!")
+                updated_anything = True
             except ValueError:
                 messages.error(request, "Placares inválidos.")
 
+        import datetime
+        if data_raw:
+            try:
+                partida.data_partida = datetime.datetime.strptime(data_raw, '%Y-%m-%d').date()
+                if partida.jogo:
+                    partida.jogo.data_jogo = partida.data_partida
+                    partida.jogo.save()
+                updated_anything = True
+            except ValueError:
+                pass
+
+        if horario_raw:
+            try:
+                partida.horario_partida = datetime.datetime.strptime(horario_raw, '%H:%M').time()
+                if partida.jogo:
+                    partida.jogo.horario_jogo = partida.horario_partida
+                    partida.jogo.save()
+                updated_anything = True
+            except ValueError:
+                pass
+
+        partida.save()
+
+        if updated_anything:
+            messages.success(request, "Dados da partida salvos com sucesso!")
+
         return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_staff)
+def salvar_fase_data_view(request, pk):
+    if request.method == 'POST':
+        chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
+        fase_key = request.POST.get('fase_key')
+        data_fase_raw = request.POST.get('data_fase')
+
+        if fase_key:
+            datas = dict(chaveamento.datas_fases) if isinstance(chaveamento.datas_fases, dict) else {}
+            datas[fase_key] = data_fase_raw
+            chaveamento.datas_fases = datas
+            chaveamento.save()
+            messages.success(request, "Data da fase salva com sucesso!")
+
+        return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
     return redirect('chaveamento_admin_list')
 
 
