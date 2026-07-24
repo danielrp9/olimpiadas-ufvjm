@@ -221,7 +221,7 @@ class ChaveamentoModuleTestCase(TestCase):
     def test_gerar_chaveamento_1_sede_1_externo_direto_final(self):
         """
         Caso excepcional: 1 time da sede (Diamantina) e 1 time de fora (Mucuri).
-        Ambos devem ir direto para a Grande Final Geral sem grupos, semifinais ou repescagem.
+        Ambos devem ir direto para a Grande Final Geral sem grupos locais, semifinais ou repescagem.
         """
         modalidade_teste = Modalidade.objects.create(
             nome="Vôlei de Praia Masculino",
@@ -234,20 +234,20 @@ class ChaveamentoModuleTestCase(TestCase):
 
         chaveamento = gerar_chaveamento_modalidade(modalidade_teste)
 
-        # 1. Não deve haver grupos criados
-        self.assertEqual(chaveamento.grupos.count(), 0)
+        # 1. Não deve haver fase de grupos local criada para Diamantina
+        self.assertEqual(chaveamento.grupos.filter(tipo='grupo_local').count(), 0)
 
-        # 2. Deve existir exatamente 1 partida (FINAL_GERAL)
-        partidas = chaveamento.partidas.all()
-        self.assertEqual(partidas.count(), 1)
+        # 2. Deve existir exatamente 1 partida na arvore de mata-mata/geral (FINAL_GERAL)
+        partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True)
+        self.assertEqual(partidas_mata_mata.count(), 1)
 
-        final_geral = partidas.first()
+        final_geral = partidas_mata_mata.first()
         self.assertEqual(final_geral.fase, 'FINAL_GERAL')
         self.assertEqual(final_geral.time_a, d_dia)
         self.assertEqual(final_geral.time_b, d_muc)
 
         # 3. Não deve haver semifinais, repescagem ou quartas
-        fases = set(partidas.values_list('fase', flat=True))
+        fases = set(partidas_mata_mata.values_list('fase', flat=True))
         self.assertNotIn('SEMI_GERAL', fases)
         self.assertNotIn('SEMI_LOCAL', fases)
         self.assertNotIn('BRONZE', fases)
@@ -258,4 +258,55 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertIsNotNone(final_geral.jogo)
         self.assertEqual(final_geral.jogo.time_a, d_dia)
         self.assertEqual(final_geral.jogo.time_b, d_muc)
+
+    def test_gerar_chaveamento_1_sede_2_externos_eliminatoria(self):
+        """
+        Cenário real (ex: Basquete Feminino):
+        - 1 time de Diamantina (sede)
+        - 2 times de Mucuri (que disputam eliminatória externa por 1 vaga no confronto final)
+        Resultado esperado:
+        - Eliminatória Externa para Mucuri
+        - Sem fase de grupos para Diamantina
+        - Árvore de Mata-Mata contendo APENAS a Grande Final Geral (sem semifinais, finais locais ou bronze)
+        - O vencedor da eliminatória externa avança diretamente para a Grande Final Geral.
+        """
+        basquete_fem = Modalidade.objects.create(
+            nome="Basquete Feminino",
+            genero="F",
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12
+        )
+        d_dia = self._create_delegation_for_mod("atletica_macabra@ufvjm.edu.br", "Atlética Macabra", self.campus_dia, basquete_fem)
+        d_muc1 = self._create_delegation_for_mod("flamejante@ufvjm.edu.br", "Flamejante", self.campus_muc, basquete_fem)
+        d_muc2 = self._create_delegation_for_mod("preguica@ufvjm.edu.br", "Preguiça Doida", self.campus_muc, basquete_fem)
+
+        chaveamento = gerar_chaveamento_modalidade(basquete_fem)
+
+        # 1. Sem grupo local para Diamantina
+        self.assertEqual(chaveamento.grupos.filter(tipo='grupo_local').count(), 0)
+
+        # 2. Eliminatória Externa de Mucuri criada
+        grupo_muc = chaveamento.grupos.filter(tipo='eliminatoria_ext').first()
+        self.assertIsNotNone(grupo_muc)
+        self.assertEqual(grupo_muc.partidas.count(), 1)
+        partida_elim = grupo_muc.partidas.first()
+
+        # 3. Árvore de Mata-Mata tem APENAS a Grande Final Geral
+        partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True)
+        self.assertEqual(partidas_mata_mata.count(), 1)
+
+        final_geral = partidas_mata_mata.first()
+        self.assertEqual(final_geral.fase, 'FINAL_GERAL')
+        self.assertEqual(final_geral.time_a, d_dia)
+        self.assertIsNone(final_geral.time_b) # Aguarda vencedor da eliminatória
+
+        # 4. A partida eliminatória externa deve apontar para a Grande Final Geral
+        self.assertEqual(partida_elim.proxima_partida, final_geral)
+        self.assertEqual(partida_elim.posicao_proxima_partida, 'B')
+
+        # 5. Ao registrar o resultado da eliminatória, o vencedor deve ir direto para a final
+        registrar_resultado_partida(partida_elim, 28, 20)
+        final_geral.refresh_from_db()
+        self.assertEqual(final_geral.time_b, d_muc1)
+
 

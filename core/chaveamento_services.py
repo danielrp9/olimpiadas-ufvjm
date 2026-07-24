@@ -217,23 +217,7 @@ def gerar_chaveamento_modalidade(modalidade):
     n_diamantina = len(diamantina)
     n_externos = len(total_externos)
 
-    # -------------------------------------------------------------
-    # Caso Excepcional: 1 time da sede (Diamantina) e 1 time de fora.
-    # Ambos avançam direto para a Grande Final Geral (sem grupos, semifinais ou repescagem).
-    # -------------------------------------------------------------
-    if n_diamantina == 1 and n_externos == 1:
-        chaveamento.fase_atual = 'fase_geral'
-        chaveamento.vagas_externas = 1
-        chaveamento.save()
 
-        final_geral = PartidaChaveamento.objects.create(
-            chaveamento=chaveamento,
-            fase='FINAL_GERAL',
-            time_a=diamantina[0],
-            time_b=total_externos[0]
-        )
-        _sincronizar_jogo_partida(final_geral, "Grande Final Geral")
-        return chaveamento
 
     campus_mucuri = Campus.objects.filter(nome__icontains='Mucuri').first()
     campus_unai = Campus.objects.filter(nome__icontains='Unaí').first() or Campus.objects.filter(nome__icontains='Unai').first()
@@ -314,19 +298,23 @@ def gerar_chaveamento_modalidade(modalidade):
     # Formato Híbrido (Grupos + Mata-mata)
     # -------------------------------------------------------------
     n_diamantina = len(diamantina)
-    if n_diamantina > 0:
+    if n_diamantina > 1:
         _construir_fase_grupos_diamantina(chaveamento, diamantina, campus_diamantina)
 
     # -------------------------------------------------------------
     # 4. Estrutura Completa de Mata-Mata Gerada Imediatamente
     # -------------------------------------------------------------
-    num_vagas_local = sum(g.vagas_classificacao for g in chaveamento.grupos.filter(tipo='grupo_local'))
-    if num_vagas_local == 0 and n_diamantina > 0:
-        num_vagas_local = n_diamantina
-    if num_vagas_local == 0:
-        num_vagas_local = 2
+    if n_diamantina == 1:
+        classificados_local = [diamantina[0]]
+    else:
+        num_vagas_local = sum(g.vagas_classificacao for g in chaveamento.grupos.filter(tipo='grupo_local'))
+        if num_vagas_local == 0 and n_diamantina > 0:
+            num_vagas_local = n_diamantina
+        if num_vagas_local == 0:
+            num_vagas_local = 2
+        classificados_local = [None] * num_vagas_local
 
-    _construir_mata_mata_diamantina(chaveamento, [None] * num_vagas_local, classificados_externos_iniciais)
+    _construir_mata_mata_diamantina(chaveamento, classificados_local, classificados_externos_iniciais)
 
     return chaveamento
 
@@ -662,6 +650,31 @@ def _construir_mata_mata_diamantina(chaveamento, classificados_local, classifica
     vagas_ext = chaveamento.vagas_externas
 
     if n_local == 0:
+        return
+
+    # Caso Excepcional: 1 classificado local + 1 vaga externa -> Vai DIRETO para a Grande Final Geral
+    if n_local == 1 and vagas_ext == 1:
+        ext_team = classificados_externos[0] if classificados_externos else None
+        final_geral = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            fase='FINAL_GERAL',
+            time_a=classificados_local[0],
+            time_b=ext_team
+        )
+        _sincronizar_jogo_partida(final_geral, "Grande Final Geral")
+
+        # Conecta eliminatórias externas à Final Geral (posição B) se houverem partidas eliminatórias
+        partidas_ext = PartidaChaveamento.objects.filter(
+            chaveamento=chaveamento,
+            fase='EXTERNO_ELIMINATORIA'
+        )
+        for p_ext in partidas_ext:
+            p_ext.proxima_partida = final_geral
+            p_ext.posicao_proxima_partida = 'B'
+            p_ext.save()
+
+        chaveamento.fase_atual = 'fase_geral'
+        chaveamento.save()
         return
 
     # Caso 1: 2 classificados locais -> Já são o Campeão e Vice de Diamantina
