@@ -107,9 +107,8 @@ class ChaveamentoModuleTestCase(TestCase):
         grupos = list(chaveamento.grupos.all())
         self.assertTrue(len(grupos) >= 2)
 
-        # Encerrar fase de grupos
+        # Atualiza classificados e preenche mata-mata
         encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
-        self.assertEqual(chaveamento.fase_atual, 'mata_mata_local')
 
         partidas_mata_mata = PartidaChaveamento.objects.filter(chaveamento=chaveamento)
         fases = set(p.fase for p in partidas_mata_mata)

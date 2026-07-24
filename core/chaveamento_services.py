@@ -220,6 +220,7 @@ def gerar_chaveamento_modalidade(modalidade):
 
     vagas_ext_mucuri = 0
     vagas_ext_uj = 0
+    classificados_externos_iniciais = []
 
     # -------------------------------------------------------------
     # 2. Regras dos Campi Externos (Máximo 2 vagas na Fase Geral)
@@ -240,6 +241,7 @@ def gerar_chaveamento_modalidade(modalidade):
         # Gerar partidas todos contra todos ou confronto direto
         _gerar_partidas_grupo(grupo_mucuri, fase_nome='EXTERNO_ELIMINATORIA')
         vagas_ext_mucuri = 1
+        classificados_externos_iniciais.append(None)
     elif len(mucuri) == 1:
         grupo_mucuri = GrupoChaveamento.objects.create(
             chaveamento=chaveamento,
@@ -250,6 +252,7 @@ def gerar_chaveamento_modalidade(modalidade):
         )
         TimeGrupo.objects.create(grupo=grupo_mucuri, delegacao=mucuri[0], classificado=True)
         vagas_ext_mucuri = 1
+        classificados_externos_iniciais.append(mucuri[0])
 
     # Unaí e Janaúba: Se ambos tiverem time inscrito, enfrentam-se por 1 vaga na semifinal geral.
     # Se apenas um deles se inscrever, este avança direto para a semifinal geral.
@@ -266,6 +269,7 @@ def gerar_chaveamento_modalidade(modalidade):
             TimeGrupo.objects.create(grupo=grupo_uj, delegacao=team)
         _gerar_partidas_grupo(grupo_uj, fase_nome='EXTERNO_ELIMINATORIA')
         vagas_ext_uj = 1
+        classificados_externos_iniciais.append(None)
     elif len(teams_uj) > 0:
         grupo_uj = GrupoChaveamento.objects.create(
             chaveamento=chaveamento,
@@ -277,6 +281,7 @@ def gerar_chaveamento_modalidade(modalidade):
         for team in teams_uj:
             TimeGrupo.objects.create(grupo=grupo_uj, delegacao=team, classificado=True)
         vagas_ext_uj = 1
+        classificados_externos_iniciais.append(teams_uj[0])
 
     total_vagas_externas = vagas_ext_mucuri + vagas_ext_uj
     chaveamento.vagas_externas = total_vagas_externas
@@ -289,6 +294,17 @@ def gerar_chaveamento_modalidade(modalidade):
     n_diamantina = len(diamantina)
     if n_diamantina > 0:
         _construir_fase_grupos_diamantina(chaveamento, diamantina, campus_diamantina)
+
+    # -------------------------------------------------------------
+    # 4. Estrutura Completa de Mata-Mata Gerada Imediatamente
+    # -------------------------------------------------------------
+    num_vagas_local = sum(g.vagas_classificacao for g in chaveamento.grupos.filter(tipo='grupo_local'))
+    if num_vagas_local == 0 and n_diamantina > 0:
+        num_vagas_local = n_diamantina
+    if num_vagas_local == 0:
+        num_vagas_local = 2
+
+    _construir_mata_mata_diamantina(chaveamento, [None] * num_vagas_local, classificados_externos_iniciais)
 
     return chaveamento
 
@@ -509,9 +525,10 @@ def registrar_resultado_partida(partida, placar_a, placar_b):
         jogo.finalizado = True
         jogo.save()
 
-    # Se for partida de grupo, atualiza a tabela do grupo
+    # Se for partida de grupo, atualiza a tabela do grupo e avança classificados
     if partida.grupo:
         atualizar_tabela_grupo(partida.grupo)
+        atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
 
     # Avança vencedor para a próxima partida se configurado
     if partida.proxima_partida and partida.vencedor:
@@ -521,6 +538,7 @@ def registrar_resultado_partida(partida, placar_a, placar_b):
         elif partida.posicao_proxima_partida == 'B':
             prox.time_b = partida.vencedor
         prox.save()
+        _sincronizar_jogo_partida(prox, "Mata-Mata")
 
     # Avança perdedor para partida de perdedor (Chave Bronze / 3º lugar) se configurado
     if partida.partida_perdedor_destino and partida.perdedor:
@@ -530,27 +548,24 @@ def registrar_resultado_partida(partida, placar_a, placar_b):
         elif partida.posicao_perdedor_destino == 'B':
             dest.time_b = partida.perdedor
         dest.save()
+        _sincronizar_jogo_partida(dest, "Chave Bronze / 3º Lugar")
 
     return partida
 
 
 @transaction.atomic
-def encerrar_fase_grupos_e_gerar_mata_mata(chaveamento):
+def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     """
-    Consolida a fase de grupos, marca os classificados de Diamantina e dos campi externos,
-    e constrói a árvore de mata-mata local de Diamantina e as Semifinais Gerais.
+    Atualiza os classificados dos grupos e preenche dinamicamente as vagas do Mata-Mata pré-existente.
     """
-    # 1. Atualizar tabelas de todos os grupos
     for g in chaveamento.grupos.all():
         atualizar_tabela_grupo(g)
 
-    # 2. Definir classificados em cada grupo
     classificados_diamantina = []
     classificados_externos = []
 
     for g in chaveamento.grupos.all():
         times_ordenados = list(g.times.order_by('-pontos', '-vitorias', '-saldo_gols', '-gols_pro'))
-        # Marcar os top `vagas_classificacao`
         vagas = g.vagas_classificacao
         for idx, tg in enumerate(times_ordenados):
             if idx < vagas:
@@ -563,16 +578,55 @@ def encerrar_fase_grupos_e_gerar_mata_mata(chaveamento):
                 tg.classificado = False
             tg.save()
 
-    # Remove duplicatas preservando ordem
     classificados_diamantina = list(dict.fromkeys(classificados_diamantina))
     classificados_externos = list(dict.fromkeys(classificados_externos))
 
-    # 3. Montar Mata-Mata Local de Diamantina
-    # O mata-mata de Diamantina afunila até Campeão (1º), Vice (2º) e 3º Colocado.
-    _construir_mata_mata_diamantina(chaveamento, classificados_diamantina, classificados_externos)
+    quartas = list(chaveamento.partidas.filter(fase='QUARTAS_LOCAL').order_by('id'))
+    semis_local = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+    semis_geral = list(chaveamento.partidas.filter(fase='SEMI_GERAL').order_by('id'))
+    final_local = chaveamento.partidas.filter(fase='FINAL_LOCAL').first()
 
-    chaveamento.fase_atual = 'mata_mata_local'
-    chaveamento.save()
+    if quartas and len(classificados_diamantina) >= 2:
+        pairings = [(0, 7), (3, 4), (1, 6), (2, 5)]
+        for i, q in enumerate(quartas):
+            idx_a, idx_b = pairings[i]
+            if idx_a < len(classificados_diamantina):
+                q.time_a = classificados_diamantina[idx_a]
+            if idx_b < len(classificados_diamantina):
+                q.time_b = classificados_diamantina[idx_b]
+            q.save()
+            _sincronizar_jogo_partida(q, f"Quartas {i+1} (Diamantina)")
+    elif semis_local and len(classificados_diamantina) >= 2:
+        if len(classificados_diamantina) >= 1:
+            semis_local[0].time_a = classificados_diamantina[0]
+        if len(classificados_diamantina) >= 4:
+            semis_local[0].time_b = classificados_diamantina[3]
+        if len(classificados_diamantina) >= 2:
+            semis_local[1].time_a = classificados_diamantina[1]
+        if len(classificados_diamantina) >= 3:
+            semis_local[1].time_b = classificados_diamantina[2]
+        for idx, s in enumerate(semis_local):
+            s.save()
+            _sincronizar_jogo_partida(s, f"Semifinal {idx+1} (Diamantina)")
+    elif final_local and len(classificados_diamantina) == 2 and not quartas and not semis_local:
+        final_local.time_a = classificados_diamantina[0]
+        final_local.time_b = classificados_diamantina[1]
+        final_local.save()
+        _sincronizar_jogo_partida(final_local, "Final de Diamantina")
+
+    if semis_geral and classificados_externos:
+        if len(classificados_externos) >= 1:
+            semis_geral[0].time_b = classificados_externos[0]
+            semis_geral[0].save()
+            _sincronizar_jogo_partida(semis_geral[0], "Semifinal Geral 1")
+        if len(classificados_externos) >= 2 and len(semis_geral) > 1:
+            semis_geral[1].time_b = classificados_externos[1]
+            semis_geral[1].save()
+            _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
+
+
+def encerrar_fase_grupos_e_gerar_mata_mata(chaveamento):
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
 
 
 def _construir_mata_mata_diamantina(chaveamento, classificados_local, classificados_externos):

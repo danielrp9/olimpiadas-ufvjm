@@ -23,15 +23,6 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            {% if chaveamento.fase_atual == 'fase_grupos' %}
-            <form action="{% url 'chaveamento_encerrar_grupos' pk=modalidade.pk %}" method="POST">
-                {% csrf_token %}
-                <button type="submit" class="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center gap-2">
-                    <i class="fas fa-check-double"></i> Encerrar Grupos e Gerar Mata-Mata
-                </button>
-            </form>
-            {% endif %}
-
             <form action="{% url 'chaveamento_resetar' pk=modalidade.pk %}" method="POST" onsubmit="return confirm('Tem certeza que deseja resetar todo o chaveamento desta modalidade?');">
                 {% csrf_token %}
                 <button type="submit" class="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-650 font-bold text-xs rounded-2xl transition border border-red-200 flex items-center gap-2">
@@ -137,7 +128,6 @@
     </div>
 
     <!-- SEÇÃO 2: MATA-MATA E FASE GERAL -->
-    {% if chaveamento.fase_atual != 'fase_grupos' %}
     <div class="space-y-8 pt-8 border-t border-slate-200">
         <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
             <i class="fas fa-trophy text-amber-500"></i> Árvore de Mata-Mata & Fase Geral
@@ -235,7 +225,6 @@
 
         </div>
     </div>
-    {% endif %}
 
 </div>
 {% endblock %}
