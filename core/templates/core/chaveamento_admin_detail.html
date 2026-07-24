@@ -21,8 +21,8 @@
         <div class="flex flex-wrap items-center gap-3">
             <form action="{% url 'chaveamento_resetar' pk=modalidade.pk %}" method="POST" onsubmit="return confirm('Tem certeza que deseja resetar todo o chaveamento desta modalidade?');">
                 {% csrf_token %}
-                <button type="submit" class="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-650 font-bold text-xs rounded-2xl transition border border-red-200 flex items-center gap-2">
-                    <i class="fas fa-redo-alt"></i> Resetar Chaveamento
+                <button type="submit" class="py-2 px-3.5 bg-white hover:bg-slate-50 text-slate-600 hover:text-slate-900 font-bold text-xs rounded-xl transition border border-slate-200 shadow-sm flex items-center gap-2" title="Resetar todo o chaveamento">
+                    <i class="fas fa-redo-alt text-slate-400 text-xs"></i> Resetar Chaveamento
                 </button>
             </form>
         </div>

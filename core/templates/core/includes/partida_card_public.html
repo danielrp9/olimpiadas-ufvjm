@@ -1,36 +1,46 @@
-<div class="bg-white/10 backdrop-blur-sm p-3 rounded-2xl border border-slate-200/60 shadow-sm space-y-2 text-xs {% if partida.time_a == delegacao or partida.time_b == delegacao %}ring-2 ring-blue-500 bg-blue-50/50{% endif %}">
+<div class="bg-white p-3.5 rounded-2xl border border-slate-200/90 shadow-sm hover:border-blue-300 transition-all duration-200 space-y-2.5 text-xs {% if partida.time_a == delegacao or partida.time_b == delegacao %}ring-2 ring-blue-500/40 bg-blue-50/30 border-blue-300{% endif %}">
     <div class="flex items-center justify-between gap-2">
-        <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0 {% if partida.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
+        <div class="flex-1 font-bold text-slate-800 text-right truncate min-w-0 {% if partida.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
             {% if partida.time_a %}
-                {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
-                {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 ml-1"></i>{% endif %}
+                <span class="text-slate-900 font-extrabold tracking-tight">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+                {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 ml-1 text-xs" title="Vencedor"></i>{% endif %}
             {% else %}
                 <span class="text-slate-400 font-normal italic">A definir</span>
             {% endif %}
         </div>
 
-        <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
+        <div class="px-3 py-1 bg-slate-900 text-white rounded-xl border border-slate-800 font-extrabold shadow-sm flex-shrink-0 min-w-[54px] text-center">
             {% if partida.finalizada %}
-                {{ partida.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ partida.placar_b }}
+                <span class="text-white font-black text-sm">{{ partida.placar_a }}</span>
+                <span class="text-slate-400 font-normal px-0.5">x</span>
+                <span class="text-white font-black text-sm">{{ partida.placar_b }}</span>
             {% else %}
                 <span class="text-slate-400 font-normal italic">vs</span>
             {% endif %}
         </div>
 
-        <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0 {% if partida.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
+        <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0 {% if partida.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
             {% if partida.time_b %}
-                {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
-                {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 ml-1"></i>{% endif %}
+                <span class="text-slate-900 font-extrabold tracking-tight">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+                {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 ml-1 text-xs" title="Vencedor"></i>{% endif %}
             {% else %}
                 <span class="text-slate-400 font-normal italic">A definir</span>
             {% endif %}
         </div>
     </div>
 
-    <!-- Horário Exibição -->
-    <div class="flex items-center justify-end gap-1 pt-1.5 border-t border-slate-100 text-slate-500 text-[11px]">
-        <i class="fas fa-clock text-slate-400 text-[10px]"></i>
-        <span class="font-medium">Horário:</span>
-        <span class="font-bold text-slate-800">{{ partida.horario_jogo_exibicao|default:"A definir" }}</span>
+    <!-- Data e Horário Exibição -->
+    <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-slate-500 text-[11px]">
+        <div class="flex items-center gap-3 text-slate-500">
+            <span class="flex items-center gap-1.5" title="Data do jogo">
+                <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                <strong class="text-slate-700 font-semibold">{{ partida.data_jogo_exibicao|default:"A definir" }}</strong>
+            </span>
+            <span class="flex items-center gap-1.5" title="Horário do jogo">
+                <i class="fas fa-clock text-blue-600 text-[10px]"></i>
+                <strong class="text-slate-700 font-semibold">{{ partida.horario_jogo_exibicao|default:"A definir" }}</strong>
+            </span>
+        </div>
     </div>
 </div>
+

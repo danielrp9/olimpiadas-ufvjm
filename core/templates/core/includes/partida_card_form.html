@@ -1,20 +1,20 @@
-<div id="partida-card-{{ partida.pk }}" class="partida-card-container bg-white border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 transition-all duration-200 shadow-sm hover:border-blue-300 hover:shadow">
+<div id="partida-card-{{ partida.pk }}" class="partida-card-container bg-white border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 transition-all duration-200 shadow-sm hover:border-blue-300 hover:shadow-md">
     <!-- MODO DE LEITURA (Padrão) -->
-    <div id="partida-read-{{ partida.pk }}" class="space-y-2 text-xs">
+    <div id="partida-read-{{ partida.pk }}" class="space-y-2.5 text-xs">
         <!-- Equipes e Placar -->
         <div class="flex items-center justify-between gap-2">
             <!-- Time A -->
-            <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0">
+            <div class="flex-1 font-bold text-slate-800 text-right truncate min-w-0">
                 {% if partida.time_a %}
-                    {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
-                    {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 ml-1" title="Vencedor"></i>{% endif %}
+                    <span class="text-slate-900 font-extrabold tracking-tight">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+                    {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 ml-1 text-xs" title="Vencedor"></i>{% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
                 {% endif %}
             </div>
 
             <!-- Placar Exibição -->
-            <div class="px-3 py-1 bg-slate-900 text-white rounded-xl border border-slate-800 font-extrabold shadow-sm flex-shrink-0 min-w-[52px] text-center">
+            <div class="px-3 py-1 bg-slate-900 text-white rounded-xl border border-slate-800 font-extrabold shadow-sm flex-shrink-0 min-w-[54px] text-center">
                 {% if partida.finalizada or partida.placar_a != None %}
                     <span class="text-white font-black text-sm">{{ partida.placar_a|default:0 }}</span>
                     <span class="text-slate-400 font-normal px-0.5">x</span>
@@ -25,10 +25,10 @@
             </div>
 
             <!-- Time B -->
-            <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0">
+            <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0">
                 {% if partida.time_b %}
-                    {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
-                    {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 ml-1" title="Vencedor"></i>{% endif %}
+                    <span class="text-slate-900 font-extrabold tracking-tight">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+                    {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 ml-1 text-xs" title="Vencedor"></i>{% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
                 {% endif %}
@@ -36,21 +36,21 @@
         </div>
 
         <!-- Footer / Data, Horário e Botão Editar -->
-        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-200/60 text-[11px]">
-            <div class="flex items-center gap-3 text-slate-500">
-                <span class="flex items-center gap-1" title="Data do jogo">
-                    <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
+        <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-[11px]">
+            <div class="flex items-center gap-3.5 text-slate-500">
+                <span class="flex items-center gap-1.5" title="Data do jogo">
+                    <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
                     <strong class="text-slate-700 font-semibold">{{ partida.data_jogo_exibicao|default:"A definir" }}</strong>
                 </span>
-                <span class="flex items-center gap-1" title="Horário do jogo">
-                    <i class="fas fa-clock text-slate-400 text-[10px]"></i>
+                <span class="flex items-center gap-1.5" title="Horário do jogo">
+                    <i class="fas fa-clock text-blue-600 text-[10px]"></i>
                     <strong class="text-slate-700 font-semibold">{{ partida.horario_jogo_exibicao|default:"A definir" }}</strong>
                 </span>
             </div>
 
-            <!-- Botão Lápis para Editar -->
-            <button type="button" onclick="togglePartidaEdit({{ partida.pk }}, true)" class="px-2 py-1 text-slate-500 hover:text-blue-600 hover:bg-white rounded-lg text-xs font-semibold border border-transparent hover:border-slate-200 transition flex items-center gap-1" title="Editar Placar e Agendamento">
-                <i class="fas fa-pencil-alt text-[11px]"></i>
+            <!-- Botão Lápis para Editar com Cor de Destaque -->
+            <button type="button" onclick="togglePartidaEdit({{ partida.pk }}, true)" class="px-2.5 py-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl text-xs font-bold border border-blue-100 transition flex items-center gap-1.5 shadow-2xs" title="Editar Placar e Agendamento">
+                <i class="fas fa-pencil-alt text-[10px] text-blue-600"></i>
                 <span class="hidden sm:inline text-[11px]">Editar</span>
             </button>
         </div>
@@ -62,7 +62,7 @@
         
         <!-- Badge Indicador de Mudança de Estado -->
         <div class="flex items-center justify-between pb-2 border-b border-blue-200">
-            <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1">
+            <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1 shadow-2xs">
                 <i class="fas fa-pencil-alt text-[9px]"></i> Modo de Edição
             </span>
             <span class="text-[10px] text-slate-500 font-medium">Edite o placar e horários</span>
@@ -95,22 +95,22 @@
         </div>
 
         <!-- Inputs de Data e Horário + Botões de Ação -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-blue-100 bg-white/70 p-2 rounded-xl">
+        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-blue-100 bg-blue-50/30 p-2 rounded-xl">
             <div class="flex items-center gap-2 flex-wrap">
                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
-                    <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
+                    <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
                     <input type="date" name="data_jogo" value="{{ partida.data_jogo_formatada }}" class="w-24 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Data (AAAA-MM-DD)">
                 </div>
 
                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
-                    <i class="fas fa-clock text-slate-400 text-[10px]"></i>
+                    <i class="fas fa-clock text-blue-600 text-[10px]"></i>
                     <input type="time" name="horario_jogo" value="{{ partida.horario_jogo_formatado }}" class="w-16 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Horário (HH:MM)">
                 </div>
             </div>
 
             <!-- Botões de Ação: Salvar e Cancelar -->
             <div class="flex items-center gap-1.5 ml-auto">
-                <button type="submit" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Salvar Alterações">
+                <button type="submit" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Salvar Alterações">
                     <i class="fas fa-save text-xs"></i>
                     <span>Salvar</span>
                 </button>
@@ -122,4 +122,5 @@
         </div>
     </form>
 </div>
+
 
