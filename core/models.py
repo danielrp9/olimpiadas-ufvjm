@@ -405,7 +405,7 @@ class ChaveamentoModalidade(models.Model):
         ('nao_iniciado', 'Não Iniciado'),
         ('fase_grupos', 'Fase de Grupos / Classificatórias'),
         ('mata_mata_local', 'Mata-Mata Local (Diamantina)'),
-        ('fase_geral', 'Semifinais e Finais Gerais'),
+        ('fase_geral', 'Ativo'),
         ('finalizado', 'Torneio Finalizado'),
     ]
 
