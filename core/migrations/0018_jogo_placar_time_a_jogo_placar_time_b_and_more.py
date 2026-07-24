@@ -5,6 +5,16 @@ from django.conf import settings
 from django.db import migrations, models
 
 
+def add_placar_fields_safely(apps, schema_editor):
+    connection = schema_editor.connection
+    with connection.cursor() as cursor:
+        columns = [col[1] for col in cursor.execute("PRAGMA table_info(core_jogo);").fetchall()]
+        if 'placar_time_a' not in columns:
+            cursor.execute("ALTER TABLE core_jogo ADD COLUMN placar_time_a integer;")
+        if 'placar_time_b' not in columns:
+            cursor.execute("ALTER TABLE core_jogo ADD COLUMN placar_time_b integer;")
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -13,15 +23,22 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='jogo',
-            name='placar_time_a',
-            field=models.PositiveIntegerField(blank=True, null=True, verbose_name='Placar Time A'),
-        ),
-        migrations.AddField(
-            model_name='jogo',
-            name='placar_time_b',
-            field=models.PositiveIntegerField(blank=True, null=True, verbose_name='Placar Time B'),
+        migrations.SeparateDatabaseAndState(
+            state_operations=[
+                migrations.AddField(
+                    model_name='jogo',
+                    name='placar_time_a',
+                    field=models.PositiveIntegerField(blank=True, null=True, verbose_name='Placar Time A'),
+                ),
+                migrations.AddField(
+                    model_name='jogo',
+                    name='placar_time_b',
+                    field=models.PositiveIntegerField(blank=True, null=True, verbose_name='Placar Time B'),
+                ),
+            ],
+            database_operations=[
+                migrations.RunPython(add_placar_fields_safely, reverse_code=migrations.RunPython.noop)
+            ]
         ),
         migrations.CreateModel(
             name='ChaveamentoModalidade',
