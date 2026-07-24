@@ -6,9 +6,9 @@
 
 {% block content %}
 <!-- Banner de Apresentação (Estilo Fincan.io - Idêntico ao da Home) -->
-<div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl pt-22 pb-14 sm:pt-16 sm:pb-24 px-4 sm:px-10 border border-slate-800 shadow-sm overflow-hidden mb-6 flex flex-col sm:flex-row justify-between items-start gap-6">
+<div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl pt-22 pb-14 sm:pt-16 sm:pb-24 px-4 sm:px-10 border border-slate-800 shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-start gap-6">
     <!-- Abstract SVG Wave Grid -->
-    <div class="absolute inset-0 opacity-20 pointer-events-none">
+    <div class="absolute inset-0 opacity-20 pointer-events-none rounded-3xl overflow-hidden">
         <svg class="w-full h-full object-cover" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M-50,150 Q150,50 350,120 T750,70 T1150,100" stroke="url(#wave-gradient)" stroke-width="2" stroke-dasharray="10 15" />
             <path d="M-50,120 Q150,20 350,90 T750,40 T1150,70" stroke="url(#wave-gradient)" stroke-width="1.5" stroke-dasharray="8 12" />
@@ -24,8 +24,8 @@
     </div>
     
     <!-- Glowing Orbs -->
-    <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute left-1/3 -bottom-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
+    <div class="absolute -right-10 -top-10 w-40 h-40 bg-blue-500/10 rounded-full blur-3xl pointer-events-none overflow-hidden"></div>
+    <div class="absolute left-1/3 -bottom-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl pointer-events-none overflow-hidden"></div>
 
     <div class="relative z-10 w-full sm:w-auto">
         <div class="flex items-center gap-2">
@@ -38,7 +38,7 @@
     </div>
     
     <!-- Header Right Area (Absolute Top-Right) -->
-    <div class="absolute top-3 right-3 sm:top-10 sm:right-10 z-15 flex items-center gap-3 sm:gap-4">
+    <div class="absolute top-3 right-3 sm:top-10 sm:right-10 z-20 flex items-center gap-3 sm:gap-4">
         <!-- Botão Exportar / Imprimir -->
         <button onclick="openPrintModal()" class="print:hidden inline-flex items-center px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-2xl transition gap-2 select-none backdrop-blur-sm active:scale-95 shadow-inner">
             <i class="fas fa-print"></i> <span class="hidden md:inline">Imprimir Relatório</span>
@@ -55,7 +55,7 @@
                 {% endif %}
             </button>
             <!-- Dropdown Content -->
-            <div id="notification-dropdown-admin" class="hidden absolute right-0 mt-2 w-72 bg-white rounded-2xl shadow-xl border border-slate-200/80 z-50 overflow-hidden py-1 text-slate-800">
+            <div id="notification-dropdown-admin" class="hidden fixed sm:absolute inset-x-4 sm:inset-x-auto top-20 sm:top-auto sm:right-0 mt-2 sm:w-72 max-w-sm sm:max-w-none mx-auto sm:mx-0 bg-white rounded-2xl shadow-2xl border border-slate-200/80 z-50 overflow-hidden py-1 text-slate-800">
                 <div class="px-4 py-2 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <span class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">Notificações</span>
                     <a href="{% url 'notificacao_list' %}" class="text-[9px] font-bold text-blue-600 hover:text-blue-700">Ver todas</a>
