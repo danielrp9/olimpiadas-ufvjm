@@ -556,7 +556,8 @@ def registrar_resultado_partida(partida, placar_a, placar_b):
 @transaction.atomic
 def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     """
-    Atualiza os classificados dos grupos e preenche dinamicamente as vagas do Mata-Mata pré-existente.
+    Atualiza os classificados dos grupos SOMENTE quando todas as partidas do grupo forem concluídas (ou se não houver partidas no grupo).
+    Preenche dinamicamente as vagas do Mata-Mata pré-existente.
     """
     for g in chaveamento.grupos.all():
         atualizar_tabela_grupo(g)
@@ -565,10 +566,15 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     classificados_externos = []
 
     for g in chaveamento.grupos.all():
+        has_matches = g.partidas.exists()
+        grupo_concluido = (not g.partidas.filter(finalizada=False).exists()) if has_matches else True
+
         times_ordenados = list(g.times.order_by('-pontos', '-vitorias', '-saldo_gols', '-gols_pro'))
         vagas = g.vagas_classificacao
+
         for idx, tg in enumerate(times_ordenados):
-            if idx < vagas:
+            # Só marca como classificado se o grupo estver 100% concluído (ou sem partidas pendentes)
+            if grupo_concluido and idx < vagas:
                 tg.classificado = True
                 if g.tipo == 'grupo_local':
                     classificados_diamantina.append(tg.delegacao)
@@ -586,41 +592,38 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     semis_geral = list(chaveamento.partidas.filter(fase='SEMI_GERAL').order_by('id'))
     final_local = chaveamento.partidas.filter(fase='FINAL_LOCAL').first()
 
-    if quartas and len(classificados_diamantina) >= 2:
+    if quartas:
         pairings = [(0, 7), (3, 4), (1, 6), (2, 5)]
         for i, q in enumerate(quartas):
             idx_a, idx_b = pairings[i]
-            if idx_a < len(classificados_diamantina):
-                q.time_a = classificados_diamantina[idx_a]
-            if idx_b < len(classificados_diamantina):
-                q.time_b = classificados_diamantina[idx_b]
+            q.time_a = classificados_diamantina[idx_a] if idx_a < len(classificados_diamantina) else None
+            q.time_b = classificados_diamantina[idx_b] if idx_b < len(classificados_diamantina) else None
             q.save()
             _sincronizar_jogo_partida(q, f"Quartas {i+1} (Diamantina)")
-    elif semis_local and len(classificados_diamantina) >= 2:
-        if len(classificados_diamantina) >= 1:
-            semis_local[0].time_a = classificados_diamantina[0]
-        if len(classificados_diamantina) >= 4:
-            semis_local[0].time_b = classificados_diamantina[3]
-        if len(classificados_diamantina) >= 2:
-            semis_local[1].time_a = classificados_diamantina[1]
-        if len(classificados_diamantina) >= 3:
-            semis_local[1].time_b = classificados_diamantina[2]
-        for idx, s in enumerate(semis_local):
-            s.save()
-            _sincronizar_jogo_partida(s, f"Semifinal {idx+1} (Diamantina)")
-    elif final_local and len(classificados_diamantina) == 2 and not quartas and not semis_local:
-        final_local.time_a = classificados_diamantina[0]
-        final_local.time_b = classificados_diamantina[1]
+    elif semis_local:
+        if len(semis_local) >= 1:
+            semis_local[0].time_a = classificados_diamantina[0] if len(classificados_diamantina) >= 1 else None
+            semis_local[0].time_b = classificados_diamantina[3] if len(classificados_diamantina) >= 4 else None
+            semis_local[0].save()
+            _sincronizar_jogo_partida(semis_local[0], "Semifinal 1 (Diamantina)")
+        if len(semis_local) >= 2:
+            semis_local[1].time_a = classificados_diamantina[1] if len(classificados_diamantina) >= 2 else None
+            semis_local[1].time_b = classificados_diamantina[2] if len(classificados_diamantina) >= 3 else None
+            semis_local[1].save()
+            _sincronizar_jogo_partida(semis_local[1], "Semifinal 2 (Diamantina)")
+    elif final_local and not quartas and not semis_local:
+        final_local.time_a = classificados_diamantina[0] if len(classificados_diamantina) >= 1 else None
+        final_local.time_b = classificados_diamantina[1] if len(classificados_diamantina) >= 2 else None
         final_local.save()
         _sincronizar_jogo_partida(final_local, "Final de Diamantina")
 
-    if semis_geral and classificados_externos:
-        if len(classificados_externos) >= 1:
-            semis_geral[0].time_b = classificados_externos[0]
+    if semis_geral:
+        if len(semis_geral) >= 1:
+            semis_geral[0].time_b = classificados_externos[0] if len(classificados_externos) >= 1 else None
             semis_geral[0].save()
             _sincronizar_jogo_partida(semis_geral[0], "Semifinal Geral 1")
-        if len(classificados_externos) >= 2 and len(semis_geral) > 1:
-            semis_geral[1].time_b = classificados_externos[1]
+        if len(semis_geral) >= 2:
+            semis_geral[1].time_b = classificados_externos[1] if len(classificados_externos) >= 2 else None
             semis_geral[1].save()
             _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
 
