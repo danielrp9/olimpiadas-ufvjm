@@ -183,10 +183,10 @@
 
             <!-- Semifinais Gerais -->
             {% if partidas_por_fase.SEMI_GERAL %}
-            <div class="bg-gradient-to-br from-blue-900 to-indigo-900 text-white rounded-3xl p-6 shadow-lg space-y-4">
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-200 border-b border-blue-800/80 pb-2 flex items-center justify-between">
+            <div class="bg-white border border-blue-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
                     <span>Semifinais Gerais</span>
-                    <i class="fas fa-star text-amber-400"></i>
+                    <i class="fas fa-star text-blue-500"></i>
                 </h3>
                 <div class="space-y-3">
                     {% for p in partidas_por_fase.SEMI_GERAL %}
@@ -198,22 +198,22 @@
 
             <!-- Grande Final Geral & Chave Bronze -->
             {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
-            <div class="bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 text-white rounded-3xl p-6 shadow-lg space-y-4">
-                <h3 class="text-sm font-extrabold uppercase tracking-wider text-white border-b border-white/20 pb-2 flex items-center justify-between">
+            <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
                     <span>Final Geral & Chave Bronze</span>
-                    <i class="fas fa-trophy text-amber-200"></i>
+                    <i class="fas fa-trophy text-amber-500"></i>
                 </h3>
                 <div class="space-y-4">
                     {% for p in partidas_por_fase.FINAL_GERAL %}
                     <div>
-                        <span class="text-[10px] font-bold text-amber-100 uppercase tracking-widest block mb-1">Grande Final Geral</span>
+                        <span class="text-[10px] font-bold text-amber-700 uppercase tracking-widest block mb-1">Grande Final Geral</span>
                         {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
                     </div>
                     {% endfor %}
 
                     {% for p in partidas_por_fase.BRONZE %}
-                    <div class="pt-3 border-t border-white/20">
-                        <span class="text-[10px] font-bold text-amber-200 uppercase tracking-widest block mb-1">Chave Bronze (3º Lugar Geral)</span>
+                    <div class="pt-3 border-t border-slate-200">
+                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Chave Bronze (3º Lugar Geral)</span>
                         {% include "core/includes/partida_card_public.html" with partida=p delegacao=delegacao %}
                     </div>
                     {% endfor %}
