@@ -1,0 +1,241 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerenciar Chaveamento - {{ modalidade.nome }}{% endblock %}
+
+{% block content %}
+<div class="space-y-8 w-full pb-16">
+    <!-- Header Controls -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+            <div class="flex items-center gap-3">
+                <a href="{% url 'chaveamento_admin_list' %}" class="text-slate-400 hover:text-slate-600 transition">
+                    <i class="fas fa-arrow-left text-lg"></i>
+                </a>
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ modalidade.nome }}</h1>
+                <span class="px-3 py-1 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                    {{ modalidade.get_genero_display }}
+                </span>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-500 mt-2">
+                Fase Atual: <strong class="text-blue-600 uppercase tracking-wide">{{ chaveamento.get_fase_atual_display }}</strong> |
+                Vagas Classificatórias Externas: <strong class="text-emerald-600">{{ chaveamento.vagas_externas }}</strong>
+            </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+            {% if chaveamento.fase_atual == 'fase_grupos' %}
+            <form action="{% url 'chaveamento_encerrar_grupos' pk=modalidade.pk %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="py-2.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center gap-2">
+                    <i class="fas fa-check-double"></i> Encerrar Grupos e Gerar Mata-Mata
+                </button>
+            </form>
+            {% endif %}
+
+            <form action="{% url 'chaveamento_resetar' pk=modalidade.pk %}" method="POST" onsubmit="return confirm('Tem certeza que deseja resetar todo o chaveamento desta modalidade?');">
+                {% csrf_token %}
+                <button type="submit" class="py-2.5 px-4 bg-red-50 hover:bg-red-100 text-red-650 font-bold text-xs rounded-2xl transition border border-red-200 flex items-center gap-2">
+                    <i class="fas fa-redo-alt"></i> Resetar Chaveamento
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 1: FASE DE GRUPOS & ELIMINATÓRIAS -->
+    <div class="space-y-6">
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <i class="fas fa-users-class text-blue-600"></i> Fase de Grupos & Eliminatórias por Campus
+        </h2>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {% for grupo in grupos %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6">
+                <!-- Nome do Grupo -->
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 tracking-tight">{{ grupo.nome }}</h3>
+                        <span class="text-xs text-slate-500">{{ grupo.get_tipo_display }} • Passam {{ grupo.vagas_classificacao }} time(s)</span>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
+                        {{ grupo.times.count }} equipes
+                    </span>
+                </div>
+
+                <!-- Tabela de Classificação -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead>
+                            <tr class="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+                                <th class="py-2 px-3">Pos</th>
+                                <th class="py-2 px-3">Delegação</th>
+                                <th class="py-2 px-2 text-center">Pts</th>
+                                <th class="py-2 px-2 text-center">J</th>
+                                <th class="py-2 px-2 text-center">V</th>
+                                <th class="py-2 px-2 text-center">E</th>
+                                <th class="py-2 px-2 text-center">D</th>
+                                <th class="py-2 px-2 text-center">SG</th>
+                                <th class="py-2 px-3 text-right">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            {% for tg in grupo.times.all %}
+                            <tr class="{% if tg.classificado %}bg-emerald-50/50{% endif %} hover:bg-slate-50 transition">
+                                <td class="py-2.5 px-3 font-bold text-slate-700">{{ forloop.counter }}º</td>
+                                <td class="py-2.5 px-3 font-semibold text-slate-900">
+                                    {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
+                                </td>
+                                <td class="py-2.5 px-2 text-center font-extrabold text-blue-600">{{ tg.pontos }}</td>
+                                <td class="py-2.5 px-2 text-center text-slate-600">{{ tg.jogos }}</td>
+                                <td class="py-2.5 px-2 text-center text-slate-600">{{ tg.vitorias }}</td>
+                                <td class="py-2.5 px-2 text-center text-slate-600">{{ tg.empates }}</td>
+                                <td class="py-2.5 px-2 text-center text-slate-600">{{ tg.derrotas }}</td>
+                                <td class="py-2.5 px-2 text-center font-semibold text-slate-700">{{ tg.saldo_gols }}</td>
+                                <td class="py-2.5 px-3 text-right font-bold">
+                                    {% if tg.classificado %}
+                                        <span class="text-emerald-600 text-[10px] bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-200">Classificado</span>
+                                    {% else %}
+                                        <span class="text-slate-400 text-[10px]">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Jogos do Grupo -->
+                <div class="pt-4 border-t border-slate-100 space-y-3">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos da Fase</h4>
+                    <div class="space-y-2">
+                        {% for p in grupo.partidas.all %}
+                        <form action="{% url 'chaveamento_partida_resultado' pk=p.pk %}" method="POST" class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
+                            {% csrf_token %}
+                            <div class="flex-1 font-semibold text-slate-800 text-right">
+                                {{ p.time_a.nome_delegacao|default:p.time_a.email }}
+                            </div>
+
+                            <div class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
+                                <input type="number" min="0" name="placar_a" value="{{ p.placar_a|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+                                <span class="text-slate-400 font-bold">x</span>
+                                <input type="number" min="0" name="placar_b" value="{{ p.placar_b|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+                            </div>
+
+                            <div class="flex-1 font-semibold text-slate-800 text-left">
+                                {{ p.time_b.nome_delegacao|default:p.time_b.email }}
+                            </div>
+
+                            <button type="submit" class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition" title="Salvar Resultado">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </form>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- SEÇÃO 2: MATA-MATA E FASE GERAL -->
+    {% if chaveamento.fase_atual != 'fase_grupos' %}
+    <div class="space-y-8 pt-8 border-t border-slate-200">
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <i class="fas fa-trophy text-amber-500"></i> Árvore de Mata-Mata & Fase Geral
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <!-- Quartas de Final (Diamantina) -->
+            {% if partidas_por_fase.QUARTAS_LOCAL %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
+                    Quartas de Final (Diamantina)
+                </h3>
+                <div class="space-y-3">
+                    {% for p in partidas_por_fase.QUARTAS_LOCAL %}
+                    {% include "core/includes/partida_card_form.html" with partida=p %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Semifinais Locais (Diamantina) -->
+            {% if partidas_por_fase.SEMI_LOCAL %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
+                    Semifinais (Diamantina)
+                </h3>
+                <div class="space-y-3">
+                    {% for p in partidas_por_fase.SEMI_LOCAL %}
+                    {% include "core/includes/partida_card_form.html" with partida=p %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Final Local & 3º Lugar (Diamantina) -->
+            {% if partidas_por_fase.FINAL_LOCAL or partidas_por_fase.DISPUTA_3_LOCAL %}
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
+                    Finais Locais (Diamantina)
+                </h3>
+                <div class="space-y-3">
+                    {% for p in partidas_por_fase.FINAL_LOCAL %}
+                    <div class="mb-2"><span class="text-[10px] font-bold text-amber-600 uppercase">Final Local</span></div>
+                    {% include "core/includes/partida_card_form.html" with partida=p %}
+                    {% endfor %}
+
+                    {% for p in partidas_por_fase.DISPUTA_3_LOCAL %}
+                    <div class="mb-2 mt-4"><span class="text-[10px] font-bold text-slate-500 uppercase">3º Lugar Local</span></div>
+                    {% include "core/includes/partida_card_form.html" with partida=p %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Semifinais Gerais -->
+            {% if partidas_por_fase.SEMI_GERAL %}
+            <div class="bg-gradient-to-br from-blue-900 to-indigo-900 text-white rounded-3xl p-6 shadow-lg space-y-4">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-200 border-b border-blue-800/80 pb-2 flex items-center justify-between">
+                    <span>Semifinais Gerais</span>
+                    <i class="fas fa-star text-amber-400"></i>
+                </h3>
+                <div class="space-y-3">
+                    {% for p in partidas_por_fase.SEMI_GERAL %}
+                    {% include "core/includes/partida_card_form_dark.html" with partida=p %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Grande Final Geral & Chave Bronze -->
+            {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
+            <div class="bg-gradient-to-br from-amber-500 via-orange-600 to-red-600 text-white rounded-3xl p-6 shadow-lg space-y-4">
+                <h3 class="text-sm font-extrabold uppercase tracking-wider text-white border-b border-white/20 pb-2 flex items-center justify-between">
+                    <span>Final Geral & Chave Bronze</span>
+                    <i class="fas fa-trophy text-amber-200"></i>
+                </h3>
+                <div class="space-y-4">
+                    {% for p in partidas_por_fase.FINAL_GERAL %}
+                    <div>
+                        <span class="text-[10px] font-bold text-amber-100 uppercase tracking-widest block mb-1">Grande Final Geral</span>
+                        {% include "core/includes/partida_card_form_dark.html" with partida=p %}
+                    </div>
+                    {% endfor %}
+
+                    {% for p in partidas_por_fase.BRONZE %}
+                    <div class="pt-3 border-t border-white/20">
+                        <span class="text-[10px] font-bold text-amber-200 uppercase tracking-widest block mb-1">Chave Bronze (3º Lugar Geral)</span>
+                        {% include "core/includes/partida_card_form_dark.html" with partida=p %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

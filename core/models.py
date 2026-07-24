@@ -98,6 +98,8 @@ class Jogo(models.Model):
     local = models.CharField(max_length=100, blank=True, null=True, verbose_name="Local/Quadra")
     arbitro = models.CharField(max_length=255, blank=True, null=True, verbose_name="Árbitro")
     finalizado = models.BooleanField(default=False, verbose_name="Jogo Finalizado?")
+    placar_time_a = models.PositiveIntegerField(verbose_name="Placar Time A", blank=True, null=True)
+    placar_time_b = models.PositiveIntegerField(verbose_name="Placar Time B", blank=True, null=True)
     data_hora_fim = models.DateTimeField(verbose_name="Fim Real do Jogo", blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
 
@@ -393,3 +395,130 @@ class SubstituicaoAtleta(models.Model):
 
     def __str__(self):
         return f"{self.atleta_saiu.nome_completo} -> {self.atleta_entrou.nome_completo}"
+
+
+class ChaveamentoModalidade(models.Model):
+    """
+    Modelo principal de controle do chaveamento de uma Modalidade Esportiva.
+    """
+    FASE_CHOICES = [
+        ('nao_iniciado', 'Não Iniciado'),
+        ('fase_grupos', 'Fase de Grupos / Classificatórias'),
+        ('mata_mata_local', 'Mata-Mata Local (Diamantina)'),
+        ('fase_geral', 'Semifinais e Finais Gerais'),
+        ('finalizado', 'Torneio Finalizado'),
+    ]
+
+    modalidade = models.OneToOneField(Modalidade, on_delete=models.CASCADE, related_name='chaveamento')
+    fase_atual = models.CharField(max_length=30, choices=FASE_CHOICES, default='nao_iniciado')
+    vagas_externas = models.PositiveIntegerField(default=0, help_text="Total de vagas classificadas dos campi externos (0, 1 ou 2)")
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Chaveamento de Modalidade"
+        verbose_name_plural = "Chaveamentos de Modalidades"
+
+    def __str__(self):
+        return f"Chaveamento: {self.modalidade.nome} ({self.get_fase_atual_display()})"
+
+
+class GrupoChaveamento(models.Model):
+    """
+    Grupo de chaveamento (Fase de grupos do campus sede ou eliminatórias externas).
+    """
+    TIPO_CHOICES = [
+        ('grupo_local', 'Grupo Sede (Diamantina)'),
+        ('eliminatoria_ext', 'Eliminatória Externa'),
+    ]
+
+    chaveamento = models.ForeignKey(ChaveamentoModalidade, on_delete=models.CASCADE, related_name='grupos')
+    nome = models.CharField(max_length=100)
+    campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, null=True, blank=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='grupo_local')
+    vagas_classificacao = models.PositiveIntegerField(default=2)
+
+    class Meta:
+        verbose_name = "Grupo de Chaveamento"
+        verbose_name_plural = "Grupos de Chaveamento"
+        ordering = ['nome']
+
+    def __str__(self):
+        return f"{self.chaveamento.modalidade.nome} - {self.nome}"
+
+
+class TimeGrupo(models.Model):
+    """
+    Desempenho de uma delegação dentro de um Grupo de Chaveamento.
+    """
+    grupo = models.ForeignKey(GrupoChaveamento, on_delete=models.CASCADE, related_name='times')
+    delegacao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='grupos_chaveamento')
+    pontos = models.IntegerField(default=0)
+    jogos = models.IntegerField(default=0)
+    vitorias = models.IntegerField(default=0)
+    empates = models.IntegerField(default=0)
+    derrotas = models.IntegerField(default=0)
+    gols_pro = models.IntegerField(default=0)
+    gols_contra = models.IntegerField(default=0)
+    saldo_gols = models.IntegerField(default=0)
+    classificado = models.BooleanField(default=False)
+
+    class Meta:
+        verbose_name = "Time no Grupo"
+        verbose_name_plural = "Times nos Grupos"
+        unique_together = ('grupo', 'delegacao')
+        ordering = ['-pontos', '-vitorias', '-saldo_gols', '-gols_pro']
+
+    def __str__(self):
+        nome_del = self.delegacao.nome_delegacao or self.delegacao.nome_completo or self.delegacao.email
+        return f"{nome_del} no {self.grupo.nome} ({self.pontos} pts)"
+
+
+class PartidaChaveamento(models.Model):
+    """
+    Partida/Confronto vinculada ao chaveamento da modalidade.
+    """
+    FASE_PARTIDA_CHOICES = [
+        ('EXTERNO_ELIMINATORIA', 'Eliminatória Externa'),
+        ('GRUPO_LOCAL', 'Fase de Grupos'),
+        ('QUARTAS_LOCAL', 'Quartas de Final (Diamantina)'),
+        ('SEMI_LOCAL', 'Semifinal (Diamantina)'),
+        ('FINAL_LOCAL', 'Final (Diamantina)'),
+        ('DISPUTA_3_LOCAL', '3º Lugar (Diamantina)'),
+        ('SEMI_GERAL', 'Semifinal Geral'),
+        ('FINAL_GERAL', 'Final Geral'),
+        ('BRONZE', 'Chave Bronze (3º Lugar Geral)'),
+    ]
+
+    chaveamento = models.ForeignKey(ChaveamentoModalidade, on_delete=models.CASCADE, related_name='partidas')
+    jogo = models.ForeignKey(Jogo, on_delete=models.SET_NULL, null=True, blank=True, related_name='partida_chaveamento')
+    fase = models.CharField(max_length=30, choices=FASE_PARTIDA_CHOICES)
+    grupo = models.ForeignKey(GrupoChaveamento, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas')
+    rodada = models.PositiveIntegerField(default=1)
+    
+    time_a = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_chaveamento_a')
+    time_b = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_chaveamento_b')
+    
+    placar_a = models.PositiveIntegerField(null=True, blank=True)
+    placar_b = models.PositiveIntegerField(null=True, blank=True)
+    
+    vencedor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_vencidas')
+    perdedor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_perdidas')
+    finalizada = models.BooleanField(default=False)
+    
+    proxima_partida = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_origem')
+    posicao_proxima_partida = models.CharField(max_length=1, choices=[('A', 'Time A'), ('B', 'Time B')], null=True, blank=True)
+    
+    partida_perdedor_destino = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_origem_perdedor')
+    posicao_perdedor_destino = models.CharField(max_length=1, choices=[('A', 'Time A'), ('B', 'Time B')], null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Partida do Chaveamento"
+        verbose_name_plural = "Partidas do Chaveamento"
+        ordering = ['id']
+
+    def __str__(self):
+        ta = self.time_a.nome_delegacao if self.time_a else "A definir"
+        tb = self.time_b.nome_delegacao if self.time_b else "A definir"
+        return f"[{self.get_fase_display()}] {ta} vs {tb}"
+

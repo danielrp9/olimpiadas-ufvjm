@@ -61,6 +61,10 @@
                                 <i class="fas fa-university mr-3 text-base"></i>
                                 Delegações
                             </a>
+                            <a href="{% url 'chaveamento_admin_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-sitemap mr-3 text-base"></i>
+                                Chaveamentos
+                            </a>
                             <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-file-signature mr-3 text-base"></i>
                                 Pré-Súmulas
@@ -89,6 +93,10 @@
                             <a href="{% url 'inscricao_detail' %}" class="{% if 'inscricao' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-file-invoice mr-3 text-base"></i>
                                 Inscrição
+                            </a>
+                            <a href="{% url 'chaveamento_public_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-sitemap mr-3 text-base"></i>
+                                Chaveamentos
                             </a>
                             <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-file-signature mr-3 text-base"></i>
@@ -176,6 +184,10 @@
                                     <i class="fas fa-university mr-3 text-base"></i>
                                     Delegações
                                 </a>
+                                <a href="{% url 'chaveamento_admin_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-sitemap mr-3 text-base"></i>
+                                    Chaveamentos
+                                </a>
                                 <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-file-signature mr-3 text-base"></i>
                                     Pré-Súmulas
@@ -203,6 +215,10 @@
                                 <a href="{% url 'inscricao_detail' %}" class="{% if 'inscricao' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-file-invoice mr-3 text-base"></i>
                                     Inscrição
+                                </a>
+                                <a href="{% url 'chaveamento_public_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-sitemap mr-3 text-base"></i>
+                                    Chaveamentos
                                 </a>
                                 <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-file-signature mr-3 text-base"></i>

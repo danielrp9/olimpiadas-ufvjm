@@ -1,0 +1,42 @@
+REGRAS
+
+Diretrizes:
+- Não inventar regras;
+- Não inventar decisões;
+- Não pressupor que algo esteja correto por decisão arbitrária;
+
+---------------------------------------------------------------
+
+Objetivos:
+- Desenvolver um módulo independente no sistema para a construção do chaveamento da competição das olimpíadas;
+- Aproveitar dados que o sistema já coleta para alimentar este módulo;
+- Garantir que o módulo seja capaz de chavear todas as modalidades igualmente e de forma inteligente, evitando disparidade na quantidade de jogos entre os times;
+
+---------------------------------------------------------------
+
+Contexto Geral:
+
+Foram abertas as inscrições das olimpíadas, onde 4 campi da UFVJM participam: Mucuri, Unaí, Janaúba e Diamantina.
+Diamantina é a sede onde a maioria dos jogos acontece. Os outros 3 campi são "campi externos" e precisam ter seus classificados definidos para entrar no chaveamento geral de Diamantina.
+
+1. Regras dos Campi Externos (Máximo 2 vagas na Fase Geral):
+- Mucuri: Se houver 2 delegações inscritas, competem entre si por 1 vaga na semifinal geral.
+- Unaí e Janaúba: Se ambos tiverem time inscrito, enfrentam-se por 1 vaga na semifinal geral. Se apenas um deles se inscrever, este avança direto para a semifinal geral.
+
+2. Regras do Campus Sede (Diamantina):
+- Formato Híbrido (Grupos + Mata-mata):
+  - Quando a quantidade de times em Diamantina for ímpar, são criados grupos para eliminar a fração ímpar e afunilar o torneio em um número par de classificados.
+  - A proporção de classificados por grupo segue estritamente o tamanho do grupo:
+    - Grupos de 4 times: passam 3 times.
+    - Grupos de 3 times: passam 2 times.
+  - Os jogos dentro dos grupos ocorrem no formato "todos contra todos".
+  - A soma dos classificados dos grupos gera um total par (ex: 8 times no caso de 11 inscritos) que avança para o mata-mata local (quartas de final).
+- Chaveamento Local: O mata-mata afunila os classificados até definir o Campeão e o Vice de Diamantina.
+
+3. Integração na Fase Geral (Semifinais Gerais):
+- Se houver 2 vagas externas -> Diamantina envia 2 times (Campeão e Vice) para as semifinais gerais.
+- Se houver 1 vaga externa -> Diamantina envia 3 times para as semifinais gerais.
+- Se houver 0 vagas externas -> O torneio segue 100% no chaveamento local de Diamantina até a final.
+
+4. Repescagem e Chave Bronze:
+- A disputa de 3º e 4º lugares (Chave Bronze) reúne os perdedores das semifinais locais de Diamantina cruzando com os perdedores das semifinais gerais.

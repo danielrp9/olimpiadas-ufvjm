@@ -1,0 +1,28 @@
+<form action="{% url 'chaveamento_partida_resultado' pk=partida.pk %}" method="POST" class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-3 text-xs">
+    {% csrf_token %}
+    <div class="flex-1 font-semibold text-slate-800 text-right truncate">
+        {% if partida.time_a %}
+            {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
+        {% else %}
+            <span class="text-slate-400 font-normal italic">A definir</span>
+        {% endif %}
+    </div>
+
+    <div class="flex items-center gap-1.5 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner flex-shrink-0">
+        <input type="number" min="0" name="placar_a" value="{{ partida.placar_a|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+        <span class="text-slate-400 font-bold">x</span>
+        <input type="number" min="0" name="placar_b" value="{{ partida.placar_b|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
+    </div>
+
+    <div class="flex-1 font-semibold text-slate-800 text-left truncate">
+        {% if partida.time_b %}
+            {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
+        {% else %}
+            <span class="text-slate-400 font-normal italic">A definir</span>
+        {% endif %}
+    </div>
+
+    <button type="submit" class="p-1.5 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition flex-shrink-0" title="Salvar Resultado">
+        <i class="fas fa-save"></i>
+    </button>
+</form>

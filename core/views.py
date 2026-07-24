@@ -1811,3 +1811,211 @@ def inscricao_segunda_chamada(request):
     })
 
 
+# =====================================================================
+# Vistas do Módulo de Chaveamento (Comissão & Delegações)
+# =====================================================================
+from .models import ChaveamentoModalidade, GrupoChaveamento, TimeGrupo, PartidaChaveamento
+from .chaveamento_services import (
+    gerar_chaveamento_modalidade,
+    registrar_resultado_partida,
+    encerrar_fase_grupos_e_gerar_mata_mata,
+    classificar_delegacoes_por_campus
+)
+
+class ChaveamentoAdminListView(LoginRequiredMixin, View):
+    """
+    Lista todas as modalidades com estatísticas de delegações por campus e status do chaveamento.
+    Disponível para a Comissão Organizadora.
+    """
+    def get(self, request):
+        if not request.user.is_comissao:
+            messages.error(request, "Acesso restrito à Comissão Organizadora.")
+            return redirect('dashboard')
+
+        modalidades = Modalidade.objects.all().order_by('nome')
+        modalidades_info = []
+
+        for m in modalidades:
+            ch = getattr(m, 'chaveamento', None)
+            buckets = classificar_delegacoes_por_campus(m)
+            total_delegacoes = sum(len(v) for v in buckets.values())
+
+            modalidades_info.append({
+                'modalidade': m,
+                'chaveamento': ch,
+                'total_delegacoes': total_delegacoes,
+                'mucuri_count': len(buckets['mucuri']),
+                'unai_count': len(buckets['unai']),
+                'janauba_count': len(buckets['janauba']),
+                'diamantina_count': len(buckets['diamantina']),
+            })
+
+        return render(request, 'core/chaveamento_admin_list.html', {
+            'modalidades_info': modalidades_info
+        })
+
+
+class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
+    """
+    Painel de Gestão e Controle do Chaveamento de uma modalidade para a Comissão.
+    """
+    def get(self, request, pk):
+        if not request.user.is_comissao:
+            messages.error(request, "Acesso restrito à Comissão Organizadora.")
+            return redirect('dashboard')
+
+        modalidade = get_object_or_404(Modalidade, pk=pk)
+        chaveamento = getattr(modalidade, 'chaveamento', None)
+
+        if not chaveamento:
+            messages.info(request, "O chaveamento para esta modalidade ainda não foi gerado. Clique em 'Gerar Chaveamento' para iniciar.")
+            return redirect('chaveamento_admin_list')
+
+        grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b').all()
+        partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
+
+        # Agrupa partidas por fase
+        partidas_por_fase = {
+            'QUARTAS_LOCAL': [],
+            'SEMI_LOCAL': [],
+            'FINAL_LOCAL': [],
+            'DISPUTA_3_LOCAL': [],
+            'SEMI_GERAL': [],
+            'FINAL_GERAL': [],
+            'BRONZE': [],
+        }
+
+        for p in partidas_mata_mata:
+            if p.fase in partidas_por_fase:
+                partidas_por_fase[p.fase].append(p)
+
+        buckets = classificar_delegacoes_por_campus(modalidade)
+
+        return render(request, 'core/chaveamento_admin_detail.html', {
+            'modalidade': modalidade,
+            'chaveamento': chaveamento,
+            'grupos': grupos,
+            'partidas_por_fase': partidas_por_fase,
+            'buckets': buckets
+        })
+
+
+@user_passes_test(lambda u: u.is_staff)
+def gerar_chaveamento_view(request, pk):
+    if request.method == 'POST':
+        modalidade = get_object_or_404(Modalidade, pk=pk)
+        chaveamento = gerar_chaveamento_modalidade(modalidade)
+        messages.success(request, f"Chaveamento da modalidade '{modalidade.nome}' gerado com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_staff)
+def encerrar_fase_grupos_view(request, pk):
+    if request.method == 'POST':
+        modalidade = get_object_or_404(Modalidade, pk=pk)
+        chaveamento = get_object_or_404(ChaveamentoModalidade, modalidade=modalidade)
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+        messages.success(request, "Fase de grupos encerrada! Mata-mata local e fase geral construídos com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_staff)
+def resetar_chaveamento_view(request, pk):
+    if request.method == 'POST':
+        modalidade = get_object_or_404(Modalidade, pk=pk)
+        ChaveamentoModalidade.objects.filter(modalidade=modalidade).delete()
+        messages.warning(request, f"Chaveamento da modalidade '{modalidade.nome}' resetado com sucesso.")
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_staff)
+def salvar_resultado_partida_view(request, pk):
+    if request.method == 'POST':
+        partida = get_object_or_404(PartidaChaveamento, pk=pk)
+        placar_a_raw = request.POST.get('placar_a')
+        placar_b_raw = request.POST.get('placar_b')
+
+        if placar_a_raw is not None and placar_b_raw is not None:
+            try:
+                placar_a = int(placar_a_raw)
+                placar_b = int(placar_b_raw)
+                registrar_resultado_partida(partida, placar_a, placar_b)
+                messages.success(request, "Resultado salvo e chaveamento atualizado!")
+            except ValueError:
+                messages.error(request, "Placares inválidos.")
+
+        return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+class ChaveamentoPublicListView(LoginRequiredMixin, View):
+    """
+    Lista de Chaveamentos acessível para Representantes de Delegações e membros.
+    """
+    def get(self, request):
+        modalidades = Modalidade.objects.all().order_by('nome')
+        delegacao_user = request.user.delegacao_ativa
+
+        modalidades_info = []
+        for m in modalidades:
+            ch = getattr(m, 'chaveamento', None)
+            minha_participacao = False
+            if ch:
+                minha_participacao = TimeGrupo.objects.filter(grupo__chaveamento=ch, delegacao=delegacao_user).exists() or \
+                                     PartidaChaveamento.objects.filter(Q(time_a=delegacao_user) | Q(time_b=delegacao_user), chaveamento=ch).exists()
+
+            modalidades_info.append({
+                'modalidade': m,
+                'chaveamento': ch,
+                'minha_participacao': minha_participacao
+            })
+
+        return render(request, 'core/chaveamento_public_list.html', {
+            'modalidades_info': modalidades_info,
+            'delegacao': delegacao_user
+        })
+
+
+class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
+    """
+    Visualização pública e intuitiva do Chaveamento para Delegações.
+    """
+    def get(self, request, pk):
+        modalidade = get_object_or_404(Modalidade, pk=pk)
+        chaveamento = getattr(modalidade, 'chaveamento', None)
+
+        if not chaveamento:
+            messages.info(request, "O chaveamento desta modalidade ainda não foi gerado pela Comissão Organizadora.")
+            return redirect('chaveamento_public_list')
+
+        grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b').all()
+        partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
+
+        partidas_por_fase = {
+            'QUARTAS_LOCAL': [],
+            'SEMI_LOCAL': [],
+            'FINAL_LOCAL': [],
+            'DISPUTA_3_LOCAL': [],
+            'SEMI_GERAL': [],
+            'FINAL_GERAL': [],
+            'BRONZE': [],
+        }
+
+        for p in partidas_mata_mata:
+            if p.fase in partidas_por_fase:
+                partidas_por_fase[p.fase].append(p)
+
+        delegacao_user = request.user.delegacao_ativa
+
+        return render(request, 'core/chaveamento_public_detail.html', {
+            'modalidade': modalidade,
+            'chaveamento': chaveamento,
+            'grupos': grupos,
+            'partidas_por_fase': partidas_por_fase,
+            'delegacao': delegacao_user
+        })
+
+
+

@@ -70,4 +70,16 @@ urlpatterns = [
     path('notificacoes/', views.NotificacaoListView.as_view(), name='notificacao_list'),
     path('notificacao/<int:pk>/ler/', views.notificacao_ler, name='notificacao_ler'),
     path('notificacoes/limpar/', views.notificacoes_limpar, name='notificacoes_limpar'),
+
+    # Módulo de Chaveamento (Comissão Organizadora)
+    path('comissao/chaveamentos/', views.ChaveamentoAdminListView.as_view(), name='chaveamento_admin_list'),
+    path('comissao/chaveamento/<int:pk>/', views.ChaveamentoAdminDetailView.as_view(), name='chaveamento_admin_detail'),
+    path('comissao/chaveamento/<int:pk>/gerar/', views.gerar_chaveamento_view, name='chaveamento_gerar'),
+    path('comissao/chaveamento/<int:pk>/encerrar-grupos/', views.encerrar_fase_grupos_view, name='chaveamento_encerrar_grupos'),
+    path('comissao/chaveamento/<int:pk>/resetar/', views.resetar_chaveamento_view, name='chaveamento_resetar'),
+    path('comissao/chaveamento/partida/<int:pk>/resultado/', views.salvar_resultado_partida_view, name='chaveamento_partida_resultado'),
+
+    # Módulo de Chaveamento (Delegações & Público)
+    path('chaveamentos/', views.ChaveamentoPublicListView.as_view(), name='chaveamento_public_list'),
+    path('chaveamento/<int:pk>/', views.ChaveamentoPublicDetailView.as_view(), name='chaveamento_public_detail'),
 ]
