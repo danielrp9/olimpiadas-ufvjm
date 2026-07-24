@@ -99,51 +99,7 @@
                     <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos da Fase</h4>
                     <div class="space-y-3">
                         {% for p in grupo.partidas.all %}
-                        <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-2.5">
-                            <!-- Form 1: Salvar Placar -->
-                            <form action="{% url 'chaveamento_partida_resultado' pk=p.pk %}" method="POST" class="flex items-center justify-between gap-2 text-xs">
-                                {% csrf_token %}
-                                <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0">
-                                    {{ p.time_a.nome_delegacao|default:p.time_a.email }}
-                                </div>
-
-                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner flex-shrink-0">
-                                    <input type="number" min="0" name="placar_a" value="{{ p.placar_a|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
-                                    <span class="text-slate-400 font-bold">x</span>
-                                    <input type="number" min="0" name="placar_b" value="{{ p.placar_b|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0">
-                                </div>
-
-                                <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0">
-                                    {{ p.time_b.nome_delegacao|default:p.time_b.email }}
-                                </div>
-
-                                <button type="submit" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 flex-shrink-0 shadow-sm" title="Salvar Placar">
-                                    <i class="fas fa-save"></i>
-                                    <span class="hidden sm:inline">Salvar Placar</span>
-                                </button>
-                            </form>
-
-                            <!-- Form 2: Salvar Data e Horário -->
-                            <form action="{% url 'chaveamento_partida_resultado' pk=p.pk %}" method="POST" class="flex items-center justify-end gap-2 text-xs pt-2 border-t border-slate-200/60">
-                                {% csrf_token %}
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Data:</span>
-                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
-                                    <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
-                                    <input type="date" name="data_jogo" value="{{ p.data_jogo_formatada }}" class="w-24 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Data (DD/MM/AAAA)">
-                                </div>
-
-                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider ml-1">Horário:</span>
-                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
-                                    <i class="fas fa-clock text-slate-400 text-[10px]"></i>
-                                    <input type="time" name="horario_jogo" value="{{ p.horario_jogo_formatado }}" class="w-16 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Horário (HH:MM)">
-                                </div>
-
-                                <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Agendamento">
-                                    <i class="fas fa-save"></i>
-                                    <span>Salvar Data/Hora</span>
-                                </button>
-                            </form>
-                        </div>
+                        {% include "core/includes/partida_card_form.html" with partida=p %}
                         {% endfor %}
                     </div>
                 </div>
@@ -163,29 +119,53 @@
             <i class="fas fa-trophy text-amber-500"></i> Árvore de Mata-Mata & Fase Geral
         </h2>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <!-- Grid de mesmo tamanho e proporção da fase de grupos (2 Colunas) -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
             <!-- Quartas de Final (Diamantina) -->
             {% if partidas_por_fase.QUARTAS_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                         Quartas de Final (Diamantina)
                     </h3>
 
-                    <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="fase_key" value="QUARTAS_LOCAL">
+                    <!-- Data da Fase: Modo Leitura -->
+                    <div id="fase-date-read-QUARTAS_LOCAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
                             <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.QUARTAS_LOCAL %}{{ chaveamento.datas_fases.QUARTAS_LOCAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.QUARTAS_LOCAL %}{{ chaveamento.datas_fases.QUARTAS_LOCAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                         </div>
-                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save"></i>
-                            <span>Salvar Data</span>
+                        <button type="button" onclick="toggleFaseDateEdit('QUARTAS_LOCAL', true)" class="px-2.5 py-1 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl text-xs font-semibold border border-transparent hover:border-slate-200 transition flex items-center gap-1" title="Editar Data da Fase">
+                            <i class="fas fa-pencil-alt text-xs"></i>
+                            <span class="hidden sm:inline text-[11px]">Editar Data</span>
                         </button>
+                    </div>
+
+                    <!-- Data da Fase: Modo Edição -->
+                    <form id="fase-date-edit-QUARTAS_LOCAL" action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="hidden flex flex-wrap items-center justify-between gap-2 bg-blue-50/70 border border-blue-300 ring-2 ring-blue-500/20 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
+                        {% csrf_token %}
+                        <input type="hidden" name="fase_key" value="QUARTAS_LOCAL">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1">
+                                <i class="fas fa-pencil-alt text-[9px]"></i> Editando Data
+                            </span>
+                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-300 shadow-inner">
+                                <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                                <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.QUARTAS_LOCAL %}{{ chaveamento.datas_fases.QUARTAS_LOCAL }}{% endif %}" class="text-xs font-bold text-slate-800 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="submit" class="px-3 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-1 shadow-sm" title="Salvar Data da Fase">
+                                <i class="fas fa-save"></i>
+                                <span>Salvar</span>
+                            </button>
+                            <button type="button" onclick="toggleFaseDateEdit('QUARTAS_LOCAL', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl transition flex items-center gap-1" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                                <span>Cancelar</span>
+                            </button>
+                        </div>
                     </form>
 
                     <div class="space-y-3">
@@ -199,25 +179,48 @@
 
             <!-- Semifinais Locais (Diamantina) -->
             {% if partidas_por_fase.SEMI_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                         Semifinais (Diamantina)
                     </h3>
 
-                    <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="fase_key" value="SEMI_LOCAL">
+                    <!-- Data da Fase: Modo Leitura -->
+                    <div id="fase-date-read-SEMI_LOCAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
                             <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_LOCAL %}{{ chaveamento.datas_fases.SEMI_LOCAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.SEMI_LOCAL %}{{ chaveamento.datas_fases.SEMI_LOCAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                         </div>
-                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save"></i>
-                            <span>Salvar Data</span>
+                        <button type="button" onclick="toggleFaseDateEdit('SEMI_LOCAL', true)" class="px-2.5 py-1 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl text-xs font-semibold border border-transparent hover:border-slate-200 transition flex items-center gap-1" title="Editar Data da Fase">
+                            <i class="fas fa-pencil-alt text-xs"></i>
+                            <span class="hidden sm:inline text-[11px]">Editar Data</span>
                         </button>
+                    </div>
+
+                    <!-- Data da Fase: Modo Edição -->
+                    <form id="fase-date-edit-SEMI_LOCAL" action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="hidden flex flex-wrap items-center justify-between gap-2 bg-blue-50/70 border border-blue-300 ring-2 ring-blue-500/20 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
+                        {% csrf_token %}
+                        <input type="hidden" name="fase_key" value="SEMI_LOCAL">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1">
+                                <i class="fas fa-pencil-alt text-[9px]"></i> Editando Data
+                            </span>
+                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-300 shadow-inner">
+                                <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                                <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_LOCAL %}{{ chaveamento.datas_fases.SEMI_LOCAL }}{% endif %}" class="text-xs font-bold text-slate-800 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="submit" class="px-3 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-1 shadow-sm" title="Salvar Data da Fase">
+                                <i class="fas fa-save"></i>
+                                <span>Salvar</span>
+                            </button>
+                            <button type="button" onclick="toggleFaseDateEdit('SEMI_LOCAL', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl transition flex items-center gap-1" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                                <span>Cancelar</span>
+                            </button>
+                        </div>
                     </form>
 
                     <div class="space-y-3">
@@ -231,25 +234,48 @@
 
             <!-- Final Local & 3º Lugar (Diamantina) -->
             {% if partidas_por_fase.FINAL_LOCAL or partidas_por_fase.DISPUTA_3_LOCAL %}
-            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
+            <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                         Finais Locais (Diamantina)
                     </h3>
 
-                    <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="fase_key" value="FINAL_LOCAL">
+                    <!-- Data da Fase: Modo Leitura -->
+                    <div id="fase-date-read-FINAL_LOCAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
                             <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_LOCAL %}{{ chaveamento.datas_fases.FINAL_LOCAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.FINAL_LOCAL %}{{ chaveamento.datas_fases.FINAL_LOCAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                         </div>
-                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save"></i>
-                            <span>Salvar Data</span>
+                        <button type="button" onclick="toggleFaseDateEdit('FINAL_LOCAL', true)" class="px-2.5 py-1 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl text-xs font-semibold border border-transparent hover:border-slate-200 transition flex items-center gap-1" title="Editar Data da Fase">
+                            <i class="fas fa-pencil-alt text-xs"></i>
+                            <span class="hidden sm:inline text-[11px]">Editar Data</span>
                         </button>
+                    </div>
+
+                    <!-- Data da Fase: Modo Edição -->
+                    <form id="fase-date-edit-FINAL_LOCAL" action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="hidden flex flex-wrap items-center justify-between gap-2 bg-blue-50/70 border border-blue-300 ring-2 ring-blue-500/20 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
+                        {% csrf_token %}
+                        <input type="hidden" name="fase_key" value="FINAL_LOCAL">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1">
+                                <i class="fas fa-pencil-alt text-[9px]"></i> Editando Data
+                            </span>
+                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-300 shadow-inner">
+                                <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                                <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_LOCAL %}{{ chaveamento.datas_fases.FINAL_LOCAL }}{% endif %}" class="text-xs font-bold text-slate-800 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="submit" class="px-3 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-1 shadow-sm" title="Salvar Data da Fase">
+                                <i class="fas fa-save"></i>
+                                <span>Salvar</span>
+                            </button>
+                            <button type="button" onclick="toggleFaseDateEdit('FINAL_LOCAL', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl transition flex items-center gap-1" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                                <span>Cancelar</span>
+                            </button>
+                        </div>
                     </form>
 
                     <div class="space-y-3">
@@ -269,26 +295,49 @@
 
             <!-- Semifinais Gerais -->
             {% if partidas_por_fase.SEMI_GERAL %}
-            <div class="bg-white border border-blue-200 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
+            <div class="bg-white border border-blue-200 rounded-3xl p-6 shadow-sm space-y-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
                         <span>Semifinais Gerais</span>
                         <i class="fas fa-star text-blue-500"></i>
                     </h3>
 
-                    <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="fase_key" value="SEMI_GERAL">
+                    <!-- Data da Fase: Modo Leitura -->
+                    <div id="fase-date-read-SEMI_GERAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
                             <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_GERAL %}{{ chaveamento.datas_fases.SEMI_GERAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.SEMI_GERAL %}{{ chaveamento.datas_fases.SEMI_GERAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                         </div>
-                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save"></i>
-                            <span>Salvar Data</span>
+                        <button type="button" onclick="toggleFaseDateEdit('SEMI_GERAL', true)" class="px-2.5 py-1 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl text-xs font-semibold border border-transparent hover:border-slate-200 transition flex items-center gap-1" title="Editar Data da Fase">
+                            <i class="fas fa-pencil-alt text-xs"></i>
+                            <span class="hidden sm:inline text-[11px]">Editar Data</span>
                         </button>
+                    </div>
+
+                    <!-- Data da Fase: Modo Edição -->
+                    <form id="fase-date-edit-SEMI_GERAL" action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="hidden flex flex-wrap items-center justify-between gap-2 bg-blue-50/70 border border-blue-300 ring-2 ring-blue-500/20 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
+                        {% csrf_token %}
+                        <input type="hidden" name="fase_key" value="SEMI_GERAL">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1">
+                                <i class="fas fa-pencil-alt text-[9px]"></i> Editando Data
+                            </span>
+                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-300 shadow-inner">
+                                <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                                <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.SEMI_GERAL %}{{ chaveamento.datas_fases.SEMI_GERAL }}{% endif %}" class="text-xs font-bold text-slate-800 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="submit" class="px-3 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-1 shadow-sm" title="Salvar Data da Fase">
+                                <i class="fas fa-save"></i>
+                                <span>Salvar</span>
+                            </button>
+                            <button type="button" onclick="toggleFaseDateEdit('SEMI_GERAL', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl transition flex items-center gap-1" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                                <span>Cancelar</span>
+                            </button>
+                        </div>
                     </form>
 
                     <div class="space-y-3">
@@ -302,26 +351,49 @@
 
             <!-- Grande Final Geral & Chave Bronze -->
             {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
-            <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-sm space-y-4 min-h-[280px] flex flex-col justify-between">
+            <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-sm space-y-6 flex flex-col justify-between">
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
                         <span>Final Geral & Chave Bronze</span>
                         <i class="fas fa-trophy text-amber-500"></i>
                     </h3>
 
-                    <!-- Campo Data da Fase (Topo do Contêiner) -->
-                    <form action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3 py-2 rounded-2xl mt-3 mb-3">
-                        {% csrf_token %}
-                        <input type="hidden" name="fase_key" value="FINAL_GERAL">
+                    <!-- Data da Fase: Modo Leitura -->
+                    <div id="fase-date-read-FINAL_GERAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
                         <div class="flex items-center gap-2">
                             <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
                             <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
-                            <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_GERAL %}{{ chaveamento.datas_fases.FINAL_GERAL }}{% endif %}" class="text-xs font-semibold text-slate-700 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.FINAL_GERAL %}{{ chaveamento.datas_fases.FINAL_GERAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                         </div>
-                        <button type="submit" class="px-2.5 py-1 text-[10px] font-bold bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200/80 rounded-xl transition flex items-center gap-1 flex-shrink-0" title="Salvar Data da Fase">
-                            <i class="fas fa-save"></i>
-                            <span>Salvar Data</span>
+                        <button type="button" onclick="toggleFaseDateEdit('FINAL_GERAL', true)" class="px-2.5 py-1 text-slate-500 hover:text-blue-600 hover:bg-white rounded-xl text-xs font-semibold border border-transparent hover:border-slate-200 transition flex items-center gap-1" title="Editar Data da Fase">
+                            <i class="fas fa-pencil-alt text-xs"></i>
+                            <span class="hidden sm:inline text-[11px]">Editar Data</span>
                         </button>
+                    </div>
+
+                    <!-- Data da Fase: Modo Edição -->
+                    <form id="fase-date-edit-FINAL_GERAL" action="{% url 'chaveamento_fase_data' pk=chaveamento.pk %}" method="POST" class="hidden flex flex-wrap items-center justify-between gap-2 bg-blue-50/70 border border-blue-300 ring-2 ring-blue-500/20 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
+                        {% csrf_token %}
+                        <input type="hidden" name="fase_key" value="FINAL_GERAL">
+                        <div class="flex items-center gap-2">
+                            <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1">
+                                <i class="fas fa-pencil-alt text-[9px]"></i> Editando Data
+                            </span>
+                            <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-300 shadow-inner">
+                                <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                                <input type="date" name="data_fase" value="{% if chaveamento.datas_fases.FINAL_GERAL %}{{ chaveamento.datas_fases.FINAL_GERAL }}{% endif %}" class="text-xs font-bold text-slate-800 bg-transparent border-0 p-0 focus:ring-0 w-28" placeholder="DD/MM/AAAA">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <button type="submit" class="px-3 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition flex items-center gap-1 shadow-sm" title="Salvar Data da Fase">
+                                <i class="fas fa-save"></i>
+                                <span>Salvar</span>
+                            </button>
+                            <button type="button" onclick="toggleFaseDateEdit('FINAL_GERAL', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl transition flex items-center gap-1" title="Cancelar">
+                                <i class="fas fa-times"></i>
+                                <span>Cancelar</span>
+                            </button>
+                        </div>
                     </form>
 
                     <div class="space-y-4">
@@ -347,4 +419,45 @@
     </div>
 
 </div>
+
+<!-- Scripts de Interatividade para o Modo de Edição -->
+<script>
+    function togglePartidaEdit(partidaId, enable) {
+        const container = document.getElementById(`partida-card-${partidaId}`);
+        const readView = document.getElementById(`partida-read-${partidaId}`);
+        const editForm = document.getElementById(`partida-edit-${partidaId}`);
+        
+        if (!container || !readView || !editForm) return;
+
+        if (enable) {
+            readView.classList.add('hidden');
+            editForm.classList.remove('hidden');
+            container.classList.add('ring-2', 'ring-blue-500/40', 'bg-blue-50/40', 'border-blue-300');
+            container.classList.remove('bg-slate-50/90');
+        } else {
+            editForm.classList.add('hidden');
+            readView.classList.remove('hidden');
+            container.classList.remove('ring-2', 'ring-blue-500/40', 'bg-blue-50/40', 'border-blue-300');
+            container.classList.add('bg-slate-50/90');
+        }
+    }
+
+    function toggleFaseDateEdit(faseKey, enable) {
+        const readView = document.getElementById(`fase-date-read-${faseKey}`);
+        const editForm = document.getElementById(`fase-date-edit-${faseKey}`);
+        
+        if (!readView || !editForm) return;
+
+        if (enable) {
+            readView.classList.add('hidden');
+            editForm.classList.remove('hidden');
+            editForm.classList.add('flex');
+        } else {
+            editForm.classList.add('hidden');
+            editForm.classList.remove('flex');
+            readView.classList.remove('hidden');
+        }
+    }
+</script>
 {% endblock %}
+
