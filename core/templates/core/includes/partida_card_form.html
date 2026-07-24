@@ -1,4 +1,4 @@
-<div id="partida-card-{{ partida.pk }}" class="partida-card-container bg-slate-50/90 hover:bg-slate-100/80 border border-slate-200/80 rounded-2xl p-3.5 space-y-2.5 transition-all duration-200 shadow-sm">
+<div id="partida-card-{{ partida.pk }}" class="partida-card-container bg-white border border-slate-200/90 rounded-2xl p-3.5 space-y-2.5 transition-all duration-200 shadow-sm hover:border-blue-300 hover:shadow">
     <!-- MODO DE LEITURA (Padrão) -->
     <div id="partida-read-{{ partida.pk }}" class="space-y-2 text-xs">
         <!-- Equipes e Placar -->
@@ -14,11 +14,11 @@
             </div>
 
             <!-- Placar Exibição -->
-            <div class="px-3 py-1 bg-white rounded-xl border border-slate-200/90 font-extrabold text-slate-900 shadow-inner flex-shrink-0 min-w-[52px] text-center">
+            <div class="px-3 py-1 bg-slate-900 text-white rounded-xl border border-slate-800 font-extrabold shadow-sm flex-shrink-0 min-w-[52px] text-center">
                 {% if partida.finalizada or partida.placar_a != None %}
-                    <span class="text-blue-700 font-black text-sm">{{ partida.placar_a|default:0 }}</span>
+                    <span class="text-white font-black text-sm">{{ partida.placar_a|default:0 }}</span>
                     <span class="text-slate-400 font-normal px-0.5">x</span>
-                    <span class="text-blue-700 font-black text-sm">{{ partida.placar_b|default:0 }}</span>
+                    <span class="text-white font-black text-sm">{{ partida.placar_b|default:0 }}</span>
                 {% else %}
                     <span class="text-slate-400 font-normal italic">vs</span>
                 {% endif %}
