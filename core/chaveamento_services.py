@@ -199,8 +199,13 @@ def gerar_chaveamento_modalidade(modalidade):
     """
     Gera o chaveamento completo de uma modalidade esportiva conforme as Diretrizes de Desenvolvimento.
     """
-    # 1. Limpa chaveamento anterior se existir
-    ChaveamentoModalidade.objects.filter(modalidade=modalidade).delete()
+    # 1. Limpa chaveamento e jogos anteriores da modalidade se existirem
+    chaveamentos_antigos = ChaveamentoModalidade.objects.filter(modalidade=modalidade)
+    for ch in chaveamentos_antigos:
+        jogos_ids = list(ch.partidas.filter(jogo__isnull=False).values_list('jogo_id', flat=True))
+        if jogos_ids:
+            Jogo.objects.filter(id__in=jogos_ids).delete()
+    chaveamentos_antigos.delete()
 
     chaveamento = ChaveamentoModalidade.objects.create(
         modalidade=modalidade,

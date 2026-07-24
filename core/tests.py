@@ -1438,6 +1438,104 @@ class SecondCallRegistrationTests(TestCase):
         self.assertEqual(self.delegate.status_delegacao, 'pendente')
 
 
+class PreSumulaManagementTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from django.utils import timezone
+        from core.models import Modalidade, Jogo, PreSumula
+        User = get_user_model()
+        self.staff = User.objects.create_superuser(
+            email='admin_presumula@example.com',
+            nome_completo='Admin Staff',
+            role='COMISSAO',
+            cpf='366.146.971-10',
+            password='password123'
+        )
+        self.delegate = User.objects.create_user(
+            email='rep_presumula1@example.com',
+            nome_completo='Rep User 1',
+            role='REPRESENTANTE',
+            cpf='181.498.521-23',
+            password='password123'
+        )
+        self.delegate.nome_delegacao = 'Delegacao A'
+        self.delegate.status_delegacao = 'deferido'
+        self.delegate.save()
+
+        self.delegate_b = User.objects.create_user(
+            email='rep_presumula2@example.com',
+            nome_completo='Rep B',
+            role='REPRESENTANTE',
+            cpf='069.258.583-45',
+            password='password123'
+        )
+        self.delegate_b.nome_delegacao = 'Delegacao B'
+        self.delegate_b.status_delegacao = 'deferido'
+        self.delegate_b.save()
+
+        self.modalidade = Modalidade.objects.create(
+            nome='Basquete Teste',
+            genero='M',
+            limite_minimo_jogadores=1,
+            limite_maximo_jogadores=5
+        )
+        self.jogo = Jogo.objects.create(
+            modalidade=self.modalidade,
+            data_jogo=timezone.localdate(),
+            time_a=self.delegate,
+            time_b=self.delegate_b
+        )
+        self.presumula1 = PreSumula.objects.create(
+            jogo=self.jogo,
+            representante=self.delegate,
+            tecnico='Tecnico A'
+        )
+        self.presumula2 = PreSumula.objects.create(
+            jogo=self.jogo,
+            representante=self.delegate_b,
+            tecnico='Tecnico B'
+        )
+
+    def test_delete_all_presumulas_as_commission(self):
+        from django.urls import reverse
+        from core.models import PreSumula
+        self.client.force_login(self.staff)
+        response = self.client.post(reverse('presumula_delete_all'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(PreSumula.objects.count(), 0)
+
+    def test_delete_all_presumulas_denied_for_representative(self):
+        from django.urls import reverse
+        from core.models import PreSumula
+        self.client.force_login(self.delegate)
+        response = self.client.post(reverse('presumula_delete_all'))
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(PreSumula.objects.count(), 2)
+
+    def test_delete_single_presumula(self):
+        from django.urls import reverse
+        from core.models import PreSumula
+        self.client.force_login(self.delegate)
+        response = self.client.post(reverse('presumula_delete', kwargs={'pk': self.presumula1.pk}))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(PreSumula.objects.filter(pk=self.presumula1.pk).exists())
+        self.assertTrue(PreSumula.objects.filter(pk=self.presumula2.pk).exists())
+
+    def test_chaveamento_generation_does_not_create_presumulas(self):
+        from core.models import PreSumula, Jogo
+        from core.chaveamento_services import gerar_chaveamento_modalidade
+        PreSumula.objects.all().delete()
+        self.assertEqual(PreSumula.objects.count(), 0)
+        
+        # Gerar chaveamento
+        gerar_chaveamento_modalidade(self.modalidade)
+        
+        # Verificacoes
+        self.assertGreater(Jogo.objects.filter(modalidade=self.modalidade).count(), 0)
+        self.assertEqual(PreSumula.objects.count(), 0)
+
+
+
 
 
 

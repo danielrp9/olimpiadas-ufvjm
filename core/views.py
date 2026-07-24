@@ -833,9 +833,44 @@ class PreSumulaDetailView(LoginRequiredMixin, DetailView):
     context_object_name = 'presumula'
 
     def get_queryset(self):
-        if self.request.user.is_staff:
+        if self.request.user.is_staff or self.request.user.is_comissao:
             return PreSumula.objects.all()
         return PreSumula.objects.filter(representante=self.request.user.delegacao_ativa)
+
+
+class PreSumulaDeleteAllView(LoginRequiredMixin, View):
+    """
+    Exclui TODAS as pré-súmulas cadastradas no sistema.
+    Disponível apenas para a Comissão Organizadora (staff / comissão).
+    """
+    def post(self, request):
+        if not (request.user.is_staff or request.user.is_comissao):
+            messages.error(request, "Acesso negado: Apenas a comissão organizadora pode apagar todas as pré-súmulas.")
+            return redirect('presumula_list')
+        
+        count, _ = PreSumula.objects.all().delete()
+        messages.success(request, f"Todas as pré-súmulas ({count} registro(s)) foram apagadas com sucesso.")
+        return redirect('presumula_list')
+
+
+class PreSumulaDeleteView(LoginRequiredMixin, View):
+    """
+    Exclui uma pré-súmula específica.
+    Disponível para a Comissão ou para o próprio representante responsável.
+    """
+    def post(self, request, pk):
+        presumula = get_object_or_404(PreSumula, pk=pk)
+        user = request.user
+        delegacao = getattr(user, 'delegacao_ativa', user)
+        
+        if not (user.is_staff or user.is_comissao or presumula.representante == delegacao):
+            messages.error(request, "Você não tem permissão para remover esta pré-súmula.")
+            return redirect('presumula_list')
+            
+        presumula.delete()
+        messages.success(request, "Pré-súmula removida com sucesso.")
+        return redirect('presumula_list')
+
 
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
 class AdminWhitelistView(LoginRequiredMixin, View):
@@ -1911,7 +1946,12 @@ def encerrar_fase_grupos_view(request, pk):
 def resetar_chaveamento_view(request, pk):
     if request.method == 'POST':
         modalidade = get_object_or_404(Modalidade, pk=pk)
-        ChaveamentoModalidade.objects.filter(modalidade=modalidade).delete()
+        chaveamentos = ChaveamentoModalidade.objects.filter(modalidade=modalidade)
+        for ch in chaveamentos:
+            jogos_ids = list(ch.partidas.filter(jogo__isnull=False).values_list('jogo_id', flat=True))
+            if jogos_ids:
+                Jogo.objects.filter(id__in=jogos_ids).delete()
+        chaveamentos.delete()
         messages.warning(request, f"Chaveamento da modalidade '{modalidade.nome}' resetado com sucesso.")
     return redirect('chaveamento_admin_list')
 

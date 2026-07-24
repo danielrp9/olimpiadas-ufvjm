@@ -35,7 +35,10 @@
                 {% endif %}
             </button>
 
-            {% if user.is_staff %}
+            {% if user.is_staff or user.is_comissao %}
+                <button type="button" onclick="openDeleteAllPresumulasModal()" class="inline-flex items-center px-3.5 py-2 border border-red-200 text-xs font-semibold rounded-xl text-red-600 bg-red-50 hover:bg-red-100 transition shadow-sm gap-1.5 active:scale-95 focus:outline-none" title="Apagar todas as pré-súmulas do sistema">
+                    <i class="fas fa-trash-alt text-red-500"></i> Apagar Todas as Pré-Súmulas
+                </button>
                 <a href="{% url 'admin_modalidades' %}" class="inline-flex items-center px-3.5 py-2 border border-slate-200 text-xs font-semibold rounded-xl text-slate-500 bg-white hover:bg-slate-50 transition shadow-sm gap-1.5 focus:outline-none">
                     <i class="fas fa-running text-blue-555"></i> Modalidades
                 </a>
@@ -415,6 +418,38 @@
     </div>
 </div>
 
+<!-- Modal de Confirmação de Exclusão de Todas as Pré-Súmulas (Glassmorphism Backdrop) -->
+<div id="confirm-delete-all-presumulas-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closeDeleteAllPresumulasModal()">
+    <!-- Card Interno -->
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto text-center mx-auto" onclick="event.stopPropagation()">
+        <!-- Icon Circle -->
+        <div class="w-12 h-12 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto border border-red-100 shadow-sm shrink-0">
+            <i class="fas fa-exclamation-triangle text-lg"></i>
+        </div>
+        
+        <!-- Content -->
+        <div class="space-y-2">
+            <h3 class="text-base font-bold text-slate-800">Apagar Todas as Pré-Súmulas</h3>
+            <p class="text-xs text-slate-555 leading-relaxed">
+                Deseja realmente apagar <strong class="text-red-600">TODAS</strong> as pré-súmulas cadastradas no sistema? Esta ação removerá permanentemente as escalações de todas as equipes e não poderá ser desfeita.
+            </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="flex items-center gap-3 justify-center pt-2 border-t border-slate-100 mt-2">
+            <button type="button" onclick="closeDeleteAllPresumulasModal()" class="px-4 py-2 border border-slate-200 text-slate-600 hover:bg-slate-50 font-semibold text-xs rounded-xl transition focus:outline-none">
+                Cancelar
+            </button>
+            <form action="{% url 'presumula_delete_all' %}" method="post" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl transition shadow-sm focus:outline-none">
+                    Sim, Apagar Todas
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
 // Keep open if filters are active
 {% if filtros_ativos > 0 %}
@@ -494,6 +529,16 @@ function openInfoModal() {
 
 function closeInfoModal() {
     document.getElementById('info-modal').classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+function openDeleteAllPresumulasModal() {
+    document.getElementById('confirm-delete-all-presumulas-modal').classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+}
+
+function closeDeleteAllPresumulasModal() {
+    document.getElementById('confirm-delete-all-presumulas-modal').classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
 }
 </script>

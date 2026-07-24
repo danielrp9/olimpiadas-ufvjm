@@ -36,9 +36,16 @@ class PreSumulaAtletaInline(admin.TabularInline):
 
 @admin.register(PreSumula)
 class PreSumulaAdmin(admin.ModelAdmin):
-    list_display = ('jogo', 'representante', 'tecnico', 'data_criacao')
+    list_display = ('id', 'jogo', 'representante', 'tecnico', 'data_criacao')
+    list_filter = ('jogo__modalidade', 'data_criacao')
     inlines = [PreSumulaAtletaInline]
-    search_fields = ('representante__nome_delegacao', 'representante__nome_completo', 'tecnico')
+    search_fields = ('representante__nome_delegacao', 'representante__nome_completo', 'tecnico', 'jogo__modalidade__nome')
+    actions = ['delete_selected', 'apagar_todas_presumulas_action']
+
+    @admin.action(description="Apagar TODAS as pré-súmulas do sistema")
+    def apagar_todas_presumulas_action(self, request, queryset):
+        count, _ = PreSumula.objects.all().delete()
+        self.message_user(request, f"Todas as {count} pré-súmula(s) foram excluídas com sucesso.")
 
 @admin.register(Recurso)
 class RecursoAdmin(admin.ModelAdmin):

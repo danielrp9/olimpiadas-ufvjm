@@ -52,9 +52,11 @@ urlpatterns = [
 
     # Rotas de Pré-Súmulas (REPRESENTANTE e COMISSAO)
     path('presumulas/', views.PreSumulaListView.as_view(), name='presumula_list'),
+    path('presumulas/apagar-todas/', views.PreSumulaDeleteAllView.as_view(), name='presumula_delete_all'),
     path('presumula/criar/', views.PreSumulaCreateView.as_view(), name='presumula_create'),
     path('presumula/<int:pk>/', views.PreSumulaDetailView.as_view(), name='presumula_detail'),
     path('presumula/<int:pk>/editar/', views.PreSumulaUpdateView.as_view(), name='presumula_update'),
+    path('presumula/<int:pk>/remover/', views.PreSumulaDeleteView.as_view(), name='presumula_delete'),
     
     # Gestão de Membros Autorizados da Delegação
     path('delegacao/membros/', views.MembrosDelegacaoView.as_view(), name='membros_delegacao'),

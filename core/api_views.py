@@ -776,6 +776,12 @@ class APIPreSumulasView(View):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
 
+    def delete(self, request):
+        if not request.user.is_authenticated or not request.user.is_comissao:
+            return JsonResponse({'error': 'Não autorizado'}, status=403)
+        count, _ = PreSumula.objects.all().delete()
+        return JsonResponse({'success': True, 'count': count})
+
 @method_decorator(csrf_exempt, name='dispatch')
 class APIPreSumulaDetailView(View):
     def get(self, request, pk):
@@ -839,6 +845,17 @@ class APIPreSumulaDetailView(View):
             return JsonResponse({'success': True})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
+
+    def delete(self, request, pk):
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Não autorizado'}, status=401)
+            
+        presumula = get_object_or_404(PreSumula, pk=pk)
+        if not request.user.is_comissao and presumula.representante != request.user.delegacao_ativa:
+            return JsonResponse({'error': 'Não autorizado'}, status=403)
+
+        presumula.delete()
+        return JsonResponse({'success': True})
 
 
 # --- INSCRIÇÃO FLUXO ---

@@ -24,13 +24,21 @@
                             <h1 class="text-2xl font-black mt-2 tracking-tight text-white flex flex-wrap items-center gap-3">
                                 {{ presumula.jogo.modalidade.nome }}
                                 
-                                {% if not user.is_staff or presumula.representante == user %}
-                                    {% if not presumula.jogo.finalizado %}
+                                {% if not presumula.jogo.finalizado %}
+                                    {% if not user.is_staff or presumula.representante == user %}
                                     <a href="{% url 'presumula_update' presumula.id %}" 
                                        class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold shadow-sm transition gap-1.5 active:scale-95 border border-blue-500/30">
                                         <i class="far fa-edit"></i> Editar Escalação
                                     </a>
                                     {% endif %}
+                                {% endif %}
+                                {% if user.is_staff or user.is_comissao or presumula.representante == user.delegacao_ativa %}
+                                    <form action="{% url 'presumula_delete' presumula.id %}" method="post" class="inline" onsubmit="return confirm('Deseja realmente remover esta pré-súmula?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="inline-flex items-center px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-sm transition gap-1.5 active:scale-95 border border-red-500/30">
+                                            <i class="far fa-trash-alt"></i> Excluir Pré-Súmula
+                                        </button>
+                                    </form>
                                 {% endif %}
                             </h1>
                         </div>
