@@ -5,24 +5,24 @@
 {% block content %}
 <div class="space-y-8 w-full pb-16">
     <!-- Header Controls -->
-    <div class="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-8 shadow-[0_4px_25px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-[0_4px_20px_rgba(0,0,0,0.04)] flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
             <div class="flex items-center gap-3">
                 <a href="{% url 'chaveamento_public_list' %}" class="text-slate-400 hover:text-slate-600 transition">
                     <i class="fas fa-arrow-left text-lg"></i>
                 </a>
-                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ modalidade.nome }}</h1>
-                <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">{{ modalidade.nome }}</h1>
+                <span class="px-3.5 py-1 text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs">
                     {{ modalidade.get_genero_display }}
                 </span>
             </div>
         </div>
         {% if delegacao %}
-        <div class="bg-slate-50 border border-slate-200 px-4 py-2.5 rounded-2xl flex items-center gap-3 shadow-sm">
+        <div class="bg-slate-50/80 border border-slate-200/80 px-4 py-2.5 rounded-2xl flex items-center gap-3 shadow-2xs">
             <i class="fas fa-flag text-blue-600 text-lg"></i>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
-                <span class="text-xs font-bold text-slate-900">{{ delegacao.nome_delegacao|default:delegacao.nome_completo }}</span>
+                <span class="text-xs font-bold text-slate-800">{{ delegacao.nome_delegacao|default:delegacao.nome_completo }}</span>
             </div>
         </div>
         {% endif %}
@@ -30,28 +30,28 @@
 
     <!-- SEÇÃO 1: FASE DE GRUPOS & CLASSIFICATÓRIAS -->
     <div class="space-y-6">
-        <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+        <h2 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
             <i class="fas fa-users-class text-blue-600"></i> Fase de Grupos & Classificatórias por Campus
         </h2>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {% for grupo in grupos %}
-            <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 space-y-6">
+            <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-300 space-y-6">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-4">
                     <div>
-                        <h3 class="text-lg font-extrabold text-slate-900 tracking-tight">{{ grupo.nome }}</h3>
+                        <h3 class="text-lg font-extrabold text-slate-800 tracking-tight">{{ grupo.nome }}</h3>
                         <span class="text-xs text-slate-500 font-medium">{{ grupo.get_tipo_display }} • Passam os {{ grupo.vagas_classificacao }} primeiro(s)</span>
                     </div>
-                    <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200 shadow-sm">
+                    <span class="px-3.5 py-1 text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs">
                         {{ grupo.times.count }} equipes
                     </span>
                 </div>
 
                 <!-- Tabela de Classificação do Grupo -->
-                <div class="overflow-x-auto rounded-2xl border border-slate-200/80 shadow-sm bg-white">
+                <div class="overflow-x-auto rounded-2xl border border-slate-200/70 shadow-2xs bg-white">
                     <table class="w-full text-left border-collapse text-xs">
                         <thead>
-                            <tr class="bg-slate-900 text-white font-bold tracking-wider">
+                            <tr class="bg-slate-800 text-white font-bold tracking-wider">
                                 <th class="py-2.5 px-3">Pos</th>
                                 <th class="py-2.5 px-3">Delegação</th>
                                 <th class="py-2.5 px-2 text-center">Pts</th>
@@ -65,23 +65,23 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
                             {% for tg in grupo.times.all %}
-                            <tr class="{% if tg.delegacao == delegacao %}bg-blue-50/80 font-bold border-l-4 border-l-blue-600{% elif tg.classificado %}bg-emerald-50/60 font-semibold{% else %}hover:bg-slate-50/80{% endif %} transition">
+                            <tr class="{% if tg.delegacao == delegacao %}bg-blue-50/80 font-bold border-l-4 border-l-blue-600{% elif tg.classificado %}bg-emerald-50/50 font-semibold{% else %}hover:bg-slate-50/80{% endif %} transition">
                                 <td class="py-3 px-3 font-bold text-slate-700">{{ forloop.counter }}º</td>
-                                <td class="py-3 px-3 font-semibold text-slate-900">
+                                <td class="py-3 px-3 font-semibold text-slate-800">
                                     {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
                                     {% if tg.delegacao == delegacao %}
                                         <span class="ml-1 px-1.5 py-0.5 text-[9px] bg-blue-600 text-white rounded font-bold uppercase">Você</span>
                                     {% endif %}
                                 </td>
                                 <td class="py-3 px-2 text-center font-black text-blue-600 text-sm">{{ tg.pontos }}</td>
-                                <td class="py-3 px-2 text-center text-slate-700 font-medium">{{ tg.jogos }}</td>
-                                <td class="py-3 px-2 text-center text-slate-700 font-medium">{{ tg.vitorias }}</td>
-                                <td class="py-3 px-2 text-center text-slate-700 font-medium">{{ tg.empates }}</td>
-                                <td class="py-3 px-2 text-center text-slate-700 font-medium">{{ tg.derrotas }}</td>
-                                <td class="py-3 px-2 text-center font-bold text-slate-800">{{ tg.saldo_gols }}</td>
+                                <td class="py-3 px-2 text-center text-slate-500 font-medium">{{ tg.jogos }}</td>
+                                <td class="py-3 px-2 text-center text-slate-700 font-bold">{{ tg.vitorias }}</td>
+                                <td class="py-3 px-2 text-center text-slate-500 font-medium">{{ tg.empates }}</td>
+                                <td class="py-3 px-2 text-center text-slate-700 font-bold">{{ tg.derrotas }}</td>
+                                <td class="py-3 px-2 text-center text-slate-500 font-medium">{{ tg.saldo_gols }}</td>
                                 <td class="py-3 px-3 text-right font-bold">
                                     {% if tg.classificado %}
-                                        <span class="text-emerald-700 text-[10px] bg-emerald-100/90 px-2.5 py-1 rounded-full border border-emerald-200 font-extrabold shadow-sm">Classificado</span>
+                                        <span class="text-emerald-700 text-[10px] bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-200/80 font-extrabold shadow-2xs">Classificado</span>
                                     {% else %}
                                         <span class="text-slate-400 text-[10px]">-</span>
                                     {% endif %}

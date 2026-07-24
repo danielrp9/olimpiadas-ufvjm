@@ -14,7 +14,7 @@
             </div>
 
             <!-- Placar Exibição -->
-            <div class="px-3 py-1 bg-slate-900 text-white rounded-xl border border-slate-800 font-extrabold shadow-sm flex-shrink-0 min-w-[54px] text-center">
+            <div class="px-3 py-1 bg-slate-800 text-white rounded-xl border border-slate-700/80 font-extrabold shadow-xs flex-shrink-0 min-w-[54px] text-center">
                 {% if partida.finalizada or partida.placar_a != None %}
                     <span class="text-white font-black text-sm">{{ partida.placar_a|default:0 }}</span>
                     <span class="text-slate-400 font-normal px-0.5">x</span>
