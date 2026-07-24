@@ -213,6 +213,28 @@ def gerar_chaveamento_modalidade(modalidade):
     janauba = buckets['janauba']
     diamantina = buckets['diamantina']
 
+    total_externos = mucuri + unai + janauba
+    n_diamantina = len(diamantina)
+    n_externos = len(total_externos)
+
+    # -------------------------------------------------------------
+    # Caso Excepcional: 1 time da sede (Diamantina) e 1 time de fora.
+    # Ambos avançam direto para a Grande Final Geral (sem grupos, semifinais ou repescagem).
+    # -------------------------------------------------------------
+    if n_diamantina == 1 and n_externos == 1:
+        chaveamento.fase_atual = 'fase_geral'
+        chaveamento.vagas_externas = 1
+        chaveamento.save()
+
+        final_geral = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            fase='FINAL_GERAL',
+            time_a=diamantina[0],
+            time_b=total_externos[0]
+        )
+        _sincronizar_jogo_partida(final_geral, "Grande Final Geral")
+        return chaveamento
+
     campus_mucuri = Campus.objects.filter(nome__icontains='Mucuri').first()
     campus_unai = Campus.objects.filter(nome__icontains='Unaí').first() or Campus.objects.filter(nome__icontains='Unai').first()
     campus_janauba = Campus.objects.filter(nome__icontains='Janaúba').first() or Campus.objects.filter(nome__icontains='Janauba').first()

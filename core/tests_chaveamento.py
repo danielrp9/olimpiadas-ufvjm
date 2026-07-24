@@ -84,6 +84,33 @@ class ChaveamentoModuleTestCase(TestCase):
         im.atletas.add(atleta)
         return user
 
+    def _create_delegation_for_mod(self, email, nome_del, campus, modalidade):
+        global cpf_counter
+        cpf_counter += 1
+        user_cpf = generate_valid_cpf(cpf_counter)
+        user = User.objects.create_user(
+            email=email,
+            nome_completo=f"Rep {nome_del}",
+            role="REPRESENTANTE",
+            nome_delegacao=nome_del,
+            cpf=user_cpf,
+            status_delegacao="deferido"
+        )
+
+        atleta = Atleta.objects.create(
+            nome_completo=f"Atleta {nome_del}",
+            email=f"atleta_{email}",
+            matricula="123456",
+            curso="Ed. Física",
+            campus=campus,
+            cadastrado_por=user,
+            em_conformidade=True
+        )
+        inscricao = Inscricao.objects.create(delegacao=user, status="deferido")
+        im = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=modalidade)
+        im.atletas.add(atleta)
+        return user
+
     def test_gerar_chaveamento_com_2_vagas_externas(self):
         """
         Métricas: 1 time de Mucuri, 1 time de Unaí, 1 time de Janaúba (Total ext = 2 vagas)
@@ -190,3 +217,45 @@ class ChaveamentoModuleTestCase(TestCase):
         # 3. Public Detail
         res_detail = self.client.get(reverse('chaveamento_public_detail', kwargs={'pk': self.futsal.pk}))
         self.assertEqual(res_detail.status_code, 200)
+
+    def test_gerar_chaveamento_1_sede_1_externo_direto_final(self):
+        """
+        Caso excepcional: 1 time da sede (Diamantina) e 1 time de fora (Mucuri).
+        Ambos devem ir direto para a Grande Final Geral sem grupos, semifinais ou repescagem.
+        """
+        modalidade_teste = Modalidade.objects.create(
+            nome="Vôlei de Praia Masculino",
+            genero="M",
+            limite_minimo_jogadores=2,
+            limite_maximo_jogadores=4
+        )
+        d_dia = self._create_delegation_for_mod("dia_unico@ufvjm.edu.br", "Del Diamantina Único", self.campus_dia, modalidade_teste)
+        d_muc = self._create_delegation_for_mod("muc_unico@ufvjm.edu.br", "Del Mucuri Único", self.campus_muc, modalidade_teste)
+
+        chaveamento = gerar_chaveamento_modalidade(modalidade_teste)
+
+        # 1. Não deve haver grupos criados
+        self.assertEqual(chaveamento.grupos.count(), 0)
+
+        # 2. Deve existir exatamente 1 partida (FINAL_GERAL)
+        partidas = chaveamento.partidas.all()
+        self.assertEqual(partidas.count(), 1)
+
+        final_geral = partidas.first()
+        self.assertEqual(final_geral.fase, 'FINAL_GERAL')
+        self.assertEqual(final_geral.time_a, d_dia)
+        self.assertEqual(final_geral.time_b, d_muc)
+
+        # 3. Não deve haver semifinais, repescagem ou quartas
+        fases = set(partidas.values_list('fase', flat=True))
+        self.assertNotIn('SEMI_GERAL', fases)
+        self.assertNotIn('SEMI_LOCAL', fases)
+        self.assertNotIn('BRONZE', fases)
+        self.assertNotIn('DISPUTA_3_LOCAL', fases)
+        self.assertNotIn('QUARTAS_LOCAL', fases)
+
+        # 4. Deve sincronizar com a tabela Jogo
+        self.assertIsNotNone(final_geral.jogo)
+        self.assertEqual(final_geral.jogo.time_a, d_dia)
+        self.assertEqual(final_geral.jogo.time_b, d_muc)
+
