@@ -1832,7 +1832,7 @@ class ChaveamentoAdminListView(LoginRequiredMixin, View):
             messages.error(request, "Acesso restrito à Comissão Organizadora.")
             return redirect('dashboard')
 
-        modalidades = Modalidade.objects.all().order_by('nome')
+        modalidades = Modalidade.objects.exclude(nome__icontains='atletismo').order_by('nome')
         modalidades_info = []
 
         for m in modalidades:
@@ -1955,7 +1955,7 @@ class ChaveamentoPublicListView(LoginRequiredMixin, View):
     Lista de Chaveamentos acessível para Representantes de Delegações e membros.
     """
     def get(self, request):
-        modalidades = Modalidade.objects.all().order_by('nome')
+        modalidades = Modalidade.objects.exclude(nome__icontains='atletismo').order_by('nome')
         delegacao_user = request.user.delegacao_ativa
 
         modalidades_info = []
