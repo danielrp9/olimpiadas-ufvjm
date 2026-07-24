@@ -97,33 +97,37 @@
                     <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos e Resultados</h4>
                     <div class="space-y-2">
                         {% for p in grupo.partidas.all %}
-                        <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 flex items-center justify-between gap-2 text-xs {% if p.time_a == delegacao or p.time_b == delegacao %}ring-2 ring-blue-500/30 bg-blue-50/30{% endif %}">
-                            <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0 {% if p.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
-                                {{ p.time_a.nome_delegacao|default:p.time_a.email }}
+                        <div class="bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs {% if p.time_a == delegacao or p.time_b == delegacao %}ring-2 ring-blue-500/30 bg-blue-50/30{% endif %}">
+                            <!-- Linha 1 no Mobile / Esquerda no Desktop: Time A vs Time B -->
+                            <div class="flex items-center justify-between gap-2 flex-1 w-full sm:w-auto">
+                                <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0 {% if p.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
+                                    {{ p.time_a.nome_delegacao|default:p.time_a.email }}
+                                </div>
+
+                                <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
+                                    {% if p.finalizada %}
+                                        {{ p.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ p.placar_b }}
+                                    {% else %}
+                                        <span class="text-slate-400 font-normal italic">vs</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0 {% if p.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
+                                    {{ p.time_b.nome_delegacao|default:p.time_b.email }}
+                                </div>
                             </div>
 
-                            <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
-                                {% if p.finalizada %}
-                                    {{ p.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ p.placar_b }}
-                                {% else %}
-                                    <span class="text-slate-400 font-normal italic">vs</span>
-                                {% endif %}
-                            </div>
+                            <!-- Linha 2 no Mobile / Direita no Desktop: Data e Horário -->
+                            <div class="flex items-center justify-end sm:justify-start gap-2 pt-1.5 sm:pt-0 border-t border-slate-200/60 sm:border-t-0 text-[11px] text-slate-600">
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner" title="Data do Jogo">
+                                    <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
+                                    <span>{{ p.data_jogo_exibicao|default:"A definir" }}</span>
+                                </div>
 
-                            <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0 {% if p.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
-                                {{ p.time_b.nome_delegacao|default:p.time_b.email }}
-                            </div>
-
-                            <!-- Data (DD/MM/AAAA) -->
-                            <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner text-slate-600 text-[11px]" title="Data do Jogo">
-                                <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
-                                <span>{{ p.data_jogo_exibicao|default:"A definir" }}</span>
-                            </div>
-
-                            <!-- Horário (HH:MM) -->
-                            <div class="flex items-center gap-1 flex-shrink-0 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner text-slate-600 text-[11px]" title="Horário do Jogo">
-                                <i class="fas fa-clock text-slate-400 text-[10px]"></i>
-                                <span>{{ p.horario_jogo_exibicao|default:"A definir" }}</span>
+                                <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner" title="Horário do Jogo">
+                                    <i class="fas fa-clock text-slate-400 text-[10px]"></i>
+                                    <span>{{ p.horario_jogo_exibicao|default:"A definir" }}</span>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
