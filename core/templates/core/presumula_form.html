@@ -141,29 +141,47 @@
                 <!-- Lista de Checkboxes de Atletas -->
                 <div class="max-h-96 overflow-y-auto border border-slate-200 rounded-2xl divide-y divide-slate-100 p-2 space-y-1 bg-slate-50/30" id="athleteListContainer">
                     {% for atleta in atletas %}
-                    <label class="flex flex-row items-center justify-between gap-4 px-5 py-3.5 bg-white hover:bg-blue-50/20 rounded-xl border border-slate-100 hover:border-blue-100 cursor-pointer transition-all duration-150 relative select-none [&:has(input.athlete-checkbox:checked)]:bg-blue-50/30 [&:has(input.athlete-checkbox:checked)]:border-blue-150 text-slate-700"
+                    <label class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 px-4 py-3.5 sm:px-5 bg-white hover:bg-blue-50/20 rounded-2xl border border-slate-100 hover:border-blue-100 cursor-pointer transition-all duration-150 relative select-none [&:has(input.athlete-checkbox:checked)]:bg-blue-50/30 [&:has(input.athlete-checkbox:checked)]:border-blue-150 text-slate-700 shadow-2xs"
                            data-search-text="{{ atleta.nome_completo|lower }} {{ atleta.curso|lower }} {{ atleta.matricula|lower }}">
-                        <div class="flex items-center gap-4 flex-grow min-w-0">
+                        <div class="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
                             <input type="checkbox" name="atletas" value="{{ atleta.id }}" 
-                                   class="athlete-checkbox w-4.5 h-4.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 accent-blue-600 shrink-0"
+                                   class="athlete-checkbox w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 accent-blue-600 shrink-0 mt-0.5 sm:mt-0"
                                    {% if atleta.is_escalado %}checked{% endif %}
                                    onchange="toggleCamisaInput(this, '{{ atleta.id }}')">
-                            <div class="min-w-0 flex-grow">
-                                <h4 class="font-bold text-slate-800 leading-tight text-xs truncate">{{ atleta.nome_completo }}</h4>
-                                <p class="text-[10px] text-slate-400 mt-1 leading-normal truncate">
-                                    Matrícula: <strong class="text-slate-650">{{ atleta.matricula }}</strong> &bull; Curso: <span class="text-slate-600">{{ atleta.curso }}</span> &bull; Campus: <span class="text-slate-600">{{ atleta.campus }}</span> &bull; Gênero: <span class="text-slate-600 font-semibold">{{ atleta.get_genero_display }}</span>
-                                </p>
+                            <div class="min-w-0 flex-1">
+                                <!-- Nome Completo (Exibido na íntegra no mobile) -->
+                                <h4 class="font-bold text-slate-800 leading-snug text-xs sm:text-sm break-words">{{ atleta.nome_completo }}</h4>
+                                
+                                <!-- Matrícula Evidente & Detalhes -->
+                                <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] text-slate-500 mt-1.5">
+                                    <span class="inline-flex items-center gap-1 font-bold text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md shadow-2xs">
+                                        <i class="fas fa-id-card text-[9px] text-blue-500"></i> Matrícula: {{ atleta.matricula }}
+                                    </span>
+                                    <span class="text-slate-600 font-medium">
+                                        &bull; {{ atleta.curso }}
+                                    </span>
+                                    {% if atleta.campus %}
+                                        <span class="text-slate-400 font-normal hidden sm:inline">
+                                            &bull; {{ atleta.campus }}
+                                        </span>
+                                    {% endif %}
+                                    <span class="text-slate-400 font-normal">
+                                        &bull; {{ atleta.get_genero_display }}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         
-                        <!-- Input da Camisa -->
-                        <div class="flex items-center gap-2 flex-shrink-0">
-                            <label for="camisa_{{ atleta.id }}" class="text-[9px] font-bold text-slate-450 uppercase tracking-wider">Camisa:</label>
+                        <!-- Input da Camisa (Empilhado abaixo no mobile, alinhado no desktop) -->
+                        <div class="flex items-center justify-between sm:justify-end gap-2 shrink-0 pt-2.5 sm:pt-0 border-t border-slate-100 sm:border-t-0 pl-8 sm:pl-0">
+                            <label for="camisa_{{ atleta.id }}" class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
+                                Nº da Camisa:
+                            </label>
                             <input type="number" id="camisa_{{ atleta.id }}" name="camisa_{{ atleta.id }}" min="1" max="999"
                                    value="{{ atleta.camisa }}"
                                    {% if atleta.is_escalado %}required{% else %}disabled{% endif %}
                                    placeholder="Nº"
-                                   class="camisa-input w-20 px-3 py-1.5 text-center font-bold text-slate-800 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 rounded-xl bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 transition text-[11px] shadow-sm">
+                                   class="camisa-input w-24 sm:w-20 px-3 py-1.5 text-center font-bold text-slate-800 border border-slate-200 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 rounded-xl bg-white disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-100 transition text-xs shadow-sm">
                         </div>
                     </label>
                     {% empty %}
