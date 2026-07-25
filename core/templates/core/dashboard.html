@@ -520,16 +520,16 @@
         </a>
     </div>
 
-    <!-- Jogos e Pré-Súmulas Ativas (Largura Total) -->
+    <!-- Jogos e Pré-Súmulas Ativas (Largura Total com Tabela Responsiva) -->
     <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
-            <div>
-                <h3 class="text-base font-bold text-slate-800">Pré-súmulas</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Jogos programados e abertos para escalação da sua delegação.</p>
+        <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between gap-4 bg-white">
+            <div class="min-w-0 flex-1">
+                <h3 class="text-base font-bold text-slate-800 truncate">Pré-súmulas</h3>
+                <p class="text-xs text-slate-400 mt-0.5 leading-tight">Jogos programados e abertos para escalação da sua delegação.</p>
             </div>
-            <div>
-                <a href="{% url 'presumula_list' %}" class="inline-flex items-center text-xs font-bold text-blue-600 hover:text-blue-700 transition gap-1">
-                    Visualizar tudo <i class="fas fa-arrow-right text-[10px]"></i>
+            <div class="shrink-0">
+                <a href="{% url 'presumula_list' %}" class="inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-blue-600 text-white text-xs font-bold rounded-2xl shadow-sm hover:shadow-md transition-all duration-200 active:scale-95 whitespace-nowrap">
+                    Ver mais
                 </a>
             </div>
         </div>
@@ -539,16 +539,16 @@
                     <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                         <th class="px-6 py-4">Ação</th>
                         <th class="px-6 py-4">Modalidade</th>
-                        <th class="px-6 py-4">Confronto</th>
-                        <th class="px-6 py-3">Data</th>
-                        <th class="px-6 py-3">Local</th>
-                        <th class="px-6 py-3">Status</th>
+                        <th class="hidden md:table-cell px-6 py-4">Confronto</th>
+                        <th class="hidden md:table-cell px-6 py-3">Data</th>
+                        <th class="hidden lg:table-cell px-6 py-3">Local</th>
+                        <th class="hidden sm:table-cell px-6 py-3">Status</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
                     {% for jogo in jogos_ativos %}
                     <tr class="hover:bg-slate-50/30 transition">
-                        <!-- 1. Ação (Primeira Coluna para Acesso Rápido no Mobile) -->
+                        <!-- 1. Botão de Ação (Sempre Visível) -->
                         <td class="px-6 py-4">
                             {% if jogo.minha_presumula %}
                                 <div class="flex items-center gap-2">
@@ -561,7 +561,7 @@
                                 </div>
                             {% else %}
                                 {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
-                                    <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
+                                    <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95 whitespace-nowrap">
                                         <i class="fas fa-plus"></i> Escalar
                                     </a>
                                 {% else %}
@@ -570,20 +570,23 @@
                             {% endif %}
                         </td>
 
-                        <!-- 2. Modalidade -->
-                        <td class="px-6 py-4 font-bold text-slate-800 whitespace-nowrap">
-                            <span class="flex items-center gap-1.5">
+                        <!-- 2. Modalidade (Sempre Visível - Exibe confronto no mobile) -->
+                        <td class="px-6 py-4 font-bold text-slate-800">
+                            <span class="flex items-center gap-1.5 whitespace-nowrap">
                                 <i class="fas fa-running text-blue-500"></i> {{ jogo.modalidade.nome }}
+                            </span>
+                            <span class="text-[10px] text-slate-400 block font-normal mt-0.5 md:hidden">
+                                {{ jogo.time_a_display }} vs {{ jogo.time_b_display }}
                             </span>
                         </td>
 
-                        <!-- 3. Confronto -->
-                        <td class="px-6 py-4 text-xs font-semibold text-slate-700 whitespace-nowrap">
+                        <!-- 3. Confronto (Visível em telas maiores - md:) -->
+                        <td class="hidden md:table-cell px-6 py-4 text-xs font-semibold text-slate-700 whitespace-nowrap">
                             {{ jogo.time_a_display }} <span class="text-slate-400 font-normal px-1">vs</span> {{ jogo.time_b_display }}
                         </td>
 
-                        <!-- 4. Data -->
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <!-- 4. Data (Visível em telas maiores - md:) -->
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-100 text-[10px]">
                                 {{ jogo.data_jogo|date:"d/m/Y" }}
                                 {% if jogo.horario_jogo %}
@@ -592,8 +595,8 @@
                             </span>
                         </td>
 
-                        <!-- 5. Local da Partida -->
-                        <td class="px-6 py-4">
+                        <!-- 5. Local (Visível em telas maiores - lg:) -->
+                        <td class="hidden lg:table-cell px-6 py-4">
                             {% if jogo.local %}
                                 <span class="block text-xs font-semibold text-slate-700">
                                     <i class="fas fa-map-marker-alt text-slate-400 mr-1 text-[10px]"></i> {{ jogo.local }}
@@ -608,8 +611,8 @@
                             {% endif %}
                         </td>
 
-                        <!-- 6. Status -->
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        <!-- 6. Status (Visível em sm:) -->
+                        <td class="hidden sm:table-cell px-6 py-4 whitespace-nowrap">
                             {% if jogo.minha_presumula %}
                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase tracking-wide">
                                     <i class="fas fa-check mr-1 text-[8px]"></i> Escalado ({{ jogo.minha_presumula.atletas.count }} atletas)
