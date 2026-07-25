@@ -46,30 +46,54 @@
 
         <!-- Ícone de Notificação com Dropdown -->
         <div class="relative" id="notification-dropdown-container-admin">
-            <button type="button" onclick="toggleNotificationDropdown('notification-dropdown-admin')" class="relative rounded-xl bg-white/5 border border-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition focus:outline-none flex items-center justify-center w-9 h-9 shadow-inner select-none backdrop-blur-sm">
+            <button type="button" onclick="toggleNotificationDropdown('notification-dropdown-admin')" class="relative rounded-xl bg-white/5 border border-white/10 hover:bg-white/15 text-slate-200 hover:text-white transition focus:outline-none flex items-center justify-center w-9 h-9 shadow-inner select-none backdrop-blur-sm active:scale-95">
                 <i class="far fa-bell text-lg h-5 w-5 flex items-center justify-center"></i>
                 {% if unread_notifications.count > 0 %}
-                    <span class="absolute top-0 right-0 transform translate-x-1/4 -translate-y-1/4 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[9px] font-bold shadow-sm leading-none">
+                    <span class="absolute -top-1 -right-1 bg-red-500 text-white rounded-full min-w-[18px] h-4.5 px-1 flex items-center justify-center text-[10px] font-black shadow-sm leading-none border-2 border-slate-900">
                         {{ unread_notifications.count }}
                     </span>
                 {% endif %}
             </button>
             <!-- Dropdown Content -->
-            <div id="notification-dropdown-admin" class="hidden fixed sm:absolute inset-x-4 sm:inset-x-auto top-20 sm:top-auto sm:right-0 mt-2 sm:w-72 max-w-sm sm:max-w-none mx-auto sm:mx-0 bg-white rounded-2xl shadow-2xl border border-slate-200/80 z-50 overflow-hidden py-1 text-slate-800">
-                <div class="px-4 py-2 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                    <span class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wider">Notificações</span>
-                    <a href="{% url 'notificacao_list' %}" class="text-[9px] font-bold text-blue-600 hover:text-blue-700">Ver todas</a>
+            <div id="notification-dropdown-admin" class="hidden fixed sm:absolute inset-x-4 sm:inset-x-auto top-20 sm:top-full sm:right-0 mt-2 w-auto sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 overflow-hidden text-slate-800">
+                <div class="px-3.5 py-2.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider">Notificações</span>
+                        {% if unread_notifications.count > 0 %}
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold bg-blue-100 text-blue-700 rounded-full">
+                                {{ unread_notifications.count }} nova{% if unread_notifications.count > 1 %}s{% endif %}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <a href="{% url 'notificacao_list' %}" class="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition hover:underline">
+                        Ver todas
+                    </a>
                 </div>
-                <div class="max-h-60 overflow-y-auto divide-y divide-slate-100">
+                <div class="max-h-64 overflow-y-auto divide-y divide-slate-100">
                     {% for notif in unread_notifications %}
-                        <a href="{% url 'notificacao_ler' notif.id %}" class="block px-4 py-2.5 hover:bg-slate-50 text-[10px] text-slate-655 font-semibold transition leading-snug">
-                            {{ notif.mensagem }}
-                            <span class="block text-[8px] text-slate-400 font-normal mt-0.5">{{ notif.data_criacao|date:"d/m/Y H:i" }}</span>
+                        <a href="{% url 'notificacao_ler' notif.id %}" class="flex items-start gap-2.5 p-2.5 hover:bg-slate-50 transition relative group">
+                            <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/60 shadow-xs mt-0.5">
+                                <i class="far fa-bell text-[10px]"></i>
+                            </div>
+                            <div class="flex-grow min-w-0 pr-1">
+                                <p class="text-[11px] font-semibold text-slate-800 leading-snug group-hover:text-blue-600 transition">
+                                    {{ notif.mensagem }}
+                                </p>
+                                <span class="inline-flex items-center gap-1 text-[10px] text-slate-400 font-medium mt-0.5">
+                                    <i class="far fa-clock text-[9px]"></i> {{ notif.data_criacao|date:"d/m/Y H:i" }}
+                                </span>
+                            </div>
+                            <div class="shrink-0 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition self-center">
+                                <i class="fas fa-chevron-right text-[9px]"></i>
+                            </div>
                         </a>
                     {% empty %}
-                        <div class="px-4 py-6 text-center text-slate-400">
-                            <i class="far fa-bell-slash text-base mb-1 block"></i>
-                            <span class="text-[10px] font-medium">Nenhuma notificação</span>
+                        <div class="py-6 px-4 text-center">
+                            <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                                <i class="far fa-bell-slash text-sm"></i>
+                            </div>
+                            <p class="text-[11px] font-bold text-slate-700">Nenhuma notificação pendente</p>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Você está em dia com todos os avisos.</p>
                         </div>
                     {% endfor %}
                 </div>
