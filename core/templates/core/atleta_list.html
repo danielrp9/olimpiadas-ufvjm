@@ -53,33 +53,33 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                    <th class="px-6 py-4">Nome Completo</th>
-                    <th class="px-6 py-4">E-mail</th>
-                    <th class="px-6 py-4">Matrícula/SIAPE</th>
-                    <th class="px-6 py-4">Status da Condição</th>
-                    <th class="px-6 py-4 text-right">Ações</th>
+                    <th class="px-4 py-3.5 sm:px-6 sm:py-4">Nome Completo</th>
+                    <th class="hidden md:table-cell px-6 py-4">E-mail</th>
+                    <th class="hidden md:table-cell px-6 py-4">Matrícula/SIAPE</th>
+                    <th class="hidden md:table-cell px-6 py-4">Status da Condição</th>
+                    <th class="px-4 py-3.5 sm:px-6 sm:py-4 text-right">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-650 text-xs">
                 {% for atleta in atletas %}
                 <tr class="hover:bg-slate-50/30 transition">
-                    <!-- Nome Completo -->
-                    <td class="px-6 py-4 font-bold text-slate-800 leading-tight">
+                    <!-- Nome Completo (Sempre Visível no Mobile e Desktop) -->
+                    <td class="px-4 py-3.5 sm:px-6 sm:py-4 font-bold text-slate-800 leading-tight">
                         {{ atleta.nome_completo }}
                     </td>
                     
-                    <!-- E-mail -->
-                    <td class="px-6 py-4 text-slate-500">
+                    <!-- E-mail (Oculto no Mobile) -->
+                    <td class="hidden md:table-cell px-6 py-4 text-slate-500">
                         {{ atleta.email }}
                     </td>
                     
-                    <!-- Matrícula -->
-                    <td class="px-6 py-4 font-semibold text-slate-700">
+                    <!-- Matrícula (Oculto no Mobile) -->
+                    <td class="hidden md:table-cell px-6 py-4 font-semibold text-slate-700">
                         {{ atleta.matricula }}
                     </td>
  
-                    <!-- Status da Condição -->
-                    <td class="px-6 py-4">
+                    <!-- Status da Condição (Oculto no Mobile) -->
+                    <td class="hidden md:table-cell px-6 py-4">
                         {% if atleta.status_avaliacao == 'deferido' %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
                                 <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido
@@ -98,8 +98,8 @@
                         {% endif %}
                     </td>
  
-                    <!-- Ações -->
-                    <td class="px-6 py-4 text-right whitespace-nowrap space-x-1.5">
+                    <!-- Ações (Sempre Visível no Mobile e Desktop) -->
+                    <td class="px-4 py-3.5 sm:px-6 sm:py-4 text-right whitespace-nowrap space-x-1 sm:space-x-1.5">
                         <button type="button" 
                                 data-nome="{{ atleta.nome_completo }}"
                                 data-email="{{ atleta.email }}"
@@ -118,19 +118,19 @@
                                 data-permite-correcao="{% if atleta.permite_correcao %}1{% else %}0{% endif %}"
                                 data-correcao-url="{% url 'enviar_correcao_atleta' atleta.id %}"
                                 onclick="showAtletaDetails(this)"
-                                class="inline-flex items-center px-2.5 py-1.5 border border-slate-200/60 hover:border-blue-500 hover:text-blue-600 rounded-xl transition text-slate-500 bg-white shadow-sm gap-1 text-[11px] font-bold"
+                                class="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1.5 border border-slate-200/60 hover:border-blue-500 hover:text-blue-600 rounded-xl transition text-slate-500 bg-white shadow-2xs gap-1 text-[11px] font-bold active:scale-95"
                                 title="Ver Dados">
-                            <i class="far fa-eye text-xs"></i> Ver Dados
+                            <i class="far fa-eye text-xs"></i> <span class="hidden sm:inline">Ver Dados</span>
                         </button>
                         <a href="{% url 'atleta_update' atleta.pk %}" 
-                           class="inline-flex items-center px-2.5 py-1.5 border border-slate-200/60 hover:border-blue-500 hover:text-blue-600 rounded-xl transition text-slate-500 bg-white shadow-sm gap-1 text-[11px] font-bold"
+                           class="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1.5 border border-slate-200/60 hover:border-blue-500 hover:text-blue-600 rounded-xl transition text-slate-500 bg-white shadow-2xs gap-1 text-[11px] font-bold active:scale-95"
                            title="Editar">
-                            <i class="far fa-edit text-xs"></i> Editar
+                            <i class="far fa-edit text-xs"></i> <span class="hidden sm:inline">Editar</span>
                         </a>
                         <a href="{% url 'atleta_delete' atleta.pk %}" 
-                           class="inline-flex items-center px-2.5 py-1.5 border border-red-100 hover:border-red-200 hover:bg-red-50/50 hover:text-red-650 rounded-xl transition gap-1 text-[11px] font-bold"
+                           class="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1.5 border border-red-100 hover:border-red-200 hover:bg-red-50/50 text-red-500 hover:text-red-600 rounded-xl transition gap-1 text-[11px] font-bold active:scale-95"
                            title="Remover">
-                            <i class="far fa-trash-alt text-xs"></i> Remover
+                            <i class="far fa-trash-alt text-xs"></i> <span class="hidden sm:inline">Remover</span>
                         </a>
                     </td>
                 </tr>
