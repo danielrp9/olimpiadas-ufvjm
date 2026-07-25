@@ -17,7 +17,45 @@
             -ms-overflow-style: none;
             scrollbar-width: none;
         }
+        /* Transições suaves para a barra lateral e o contêiner principal */
+        #desktop-sidebar, #main-content-wrapper {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        /* Regras CSS para o estado recolhido (ícone único) */
+        .sidebar-collapsed #desktop-sidebar {
+            width: 5rem !important; /* 80px */
+        }
+        .sidebar-collapsed #desktop-sidebar .sidebar-logo-container {
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            justify-content: center !important;
+        }
+        .sidebar-collapsed #desktop-sidebar .sidebar-text {
+            display: none !important;
+        }
+        .sidebar-collapsed #desktop-sidebar .sidebar-icon {
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+        }
+        .sidebar-collapsed #desktop-sidebar .sidebar-item {
+            justify-content: center !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+        }
+        .sidebar-collapsed #desktop-sidebar #sidebar-toggle-icon {
+            transform: rotate(180deg);
+        }
+        .sidebar-collapsed #main-content-wrapper {
+            padding-left: 6.5rem !important; /* 104px */
+        }
     </style>
+    <script>
+        (function() {
+            if (localStorage.getItem('sidebar-collapsed') === 'true') {
+                document.documentElement.classList.add('sidebar-collapsed');
+            }
+        })();
+    </script>
 </head>
 
 <body class="text-slate-900 font-sans min-h-screen {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}bg-[#f0f4f8] flex flex-col justify-center{% else %}bg-[#f1f5f9]{% endif %}">
@@ -25,28 +63,31 @@
     <!-- ELEMENTOS LATERAIS (SIDEBARS) - Apenas se NÃO for tela de login/cadastro/completar perfil -->
     {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
         <!-- Sidebar Desktop -->
-        <aside class="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-4 md:left-4 bg-white border border-slate-200/60 rounded-3xl z-30 shadow-[0_2px_12px_rgba(0,0,0,0.015)] overflow-hidden">
-            <!-- Logo -->
-            <div class="flex items-center h-16 flex-shrink-0 px-6 border-b border-slate-100 bg-white">
-                <a href="{% url 'dashboard' %}" class="text-lg font-bold text-blue-600 tracking-tight flex items-center gap-2">
-                    <i class="fas fa-medal text-blue-600 text-xl"></i>
-                    <span>Olimpíadas <span class="text-slate-700">UFVJM</span></span>
+        <aside id="desktop-sidebar" class="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-4 md:left-4 bg-white border border-slate-200/60 rounded-3xl z-30 shadow-[0_2px_12px_rgba(0,0,0,0.015)] overflow-visible">
+            <!-- Logo & Botão Alternar Sidebar (Posicionado na Borda Divisória do Cabeçalho) -->
+            <div class="flex items-center justify-between h-16 flex-shrink-0 px-5 border-b border-slate-100 bg-white relative rounded-t-3xl sidebar-logo-container">
+                <a href="{% url 'dashboard' %}" class="text-lg font-bold text-blue-600 tracking-tight flex items-center gap-2 overflow-hidden whitespace-nowrap">
+                    <i class="fas fa-medal text-blue-600 text-xl shrink-0"></i>
+                    <span class="sidebar-text transition-all duration-200">Olimpíadas <span class="text-slate-700">UFVJM</span></span>
                 </a>
+                <button type="button" id="sidebar-toggle-btn" onclick="toggleDesktopSidebar()" title="Recolher menu" class="absolute -right-1.5 top-full -translate-y-1/2 w-6 h-6 rounded-full bg-white hover:bg-blue-600 text-slate-400 hover:text-white border border-slate-200 shadow-sm flex items-center justify-center transition-all duration-300 z-40 focus:outline-none active:scale-90 cursor-pointer">
+                    <i id="sidebar-toggle-icon" class="fas fa-chevron-left text-[9px] transition-transform duration-300"></i>
+                </button>
             </div>
 
             <!-- Navegação -->
-            <div class="flex-grow flex flex-col overflow-y-auto no-scrollbar px-4 py-4 justify-between bg-white">
+            <div class="flex-grow flex flex-col overflow-y-auto no-scrollbar px-4 py-4 justify-between bg-white rounded-b-3xl">
                 <nav class="space-y-1">
                     <!-- Dashboard (Autenticado) -->
                     {% if user.is_authenticated %}
-                    <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or 'dashboard' in request.resolver_match.url_name %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                        <i class="fas fa-chart-pie mr-3 text-base"></i>
-                        Dashboard
+                    <a href="{% url 'dashboard' %}" title="Dashboard" class="sidebar-item {% if request.path == '/' or 'dashboard' in request.resolver_match.url_name %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                        <i class="fas fa-chart-pie mr-3 text-base sidebar-icon shrink-0"></i>
+                        <span class="sidebar-text whitespace-nowrap">Dashboard</span>
                     </a>
                     {% if user.is_comissao %}
-                    <a href="{% url 'resumo_inscricoes' %}" class="{% if 'comissao/resumo-inscricoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                        <i class="fas fa-chart-bar mr-3 text-base"></i>
-                        Resumo Inscrições
+                    <a href="{% url 'resumo_inscricoes' %}" title="Resumo Inscrições" class="sidebar-item {% if 'comissao/resumo-inscricoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                        <i class="fas fa-chart-bar mr-3 text-base sidebar-icon shrink-0"></i>
+                        <span class="sidebar-text whitespace-nowrap">Resumo Inscrições</span>
                     </a>
                     {% endif %}
                     {% endif %}
@@ -54,61 +95,61 @@
                     {% if user.is_authenticated %}
                         {% if user.is_comissao %}
                             <!-- Menus da Comissão -->
-                            <div class="pt-3 pb-1">
+                            <div class="pt-3 pb-1 sidebar-text">
                                 <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gestão Geral</span>
                             </div>
-                            <a href="{% url 'admin_delegacoes' %}" class="{% if 'comissao/delegacoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-university mr-3 text-base"></i>
-                                Delegações
+                            <a href="{% url 'admin_delegacoes' %}" title="Delegações" class="sidebar-item {% if 'comissao/delegacoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-university mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Delegações</span>
                             </a>
-                            <a href="{% url 'chaveamento_admin_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-sitemap mr-3 text-base"></i>
-                                Chaveamentos
+                            <a href="{% url 'chaveamento_admin_list' %}" title="Chaveamentos" class="sidebar-item {% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-sitemap mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Chaveamentos</span>
                             </a>
-                            <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-file-signature mr-3 text-base"></i>
-                                Pré-Súmulas
+                            <a href="{% url 'presumula_list' %}" title="Pré-Súmulas" class="sidebar-item {% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-file-signature mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Pré-Súmulas</span>
                             </a>
-                            <a href="{% url 'recurso_list' %}" class="{% if 'recurso' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-balance-scale mr-3 text-base"></i>
-                                Recursos
+                            <a href="{% url 'recurso_list' %}" title="Recursos" class="sidebar-item {% if 'recurso' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-balance-scale mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Recursos</span>
                             </a>
-                            <a href="{% url 'admin_periodo_inscricao' %}" class="{% if 'comissao/periodo-inscricao' in request.path or 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-calendar-alt mr-3 text-base"></i>
-                                Gerenciar Olimpíadas
+                            <a href="{% url 'admin_periodo_inscricao' %}" title="Gerenciar Olimpíadas" class="sidebar-item {% if 'comissao/periodo-inscricao' in request.path or 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-calendar-alt mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Gerenciar Olimpíadas</span>
                             </a>
-                            <a href="{% url 'admin_whitelist' %}" class="{% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-envelope-open-text mr-3 text-base"></i>
-                                Autorizar Comissão
+                            <a href="{% url 'admin_whitelist' %}" title="Autorizar Comissão" class="sidebar-item {% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-envelope-open-text mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Autorizar Comissão</span>
                             </a>
                             <!-- Menus do Representante -->
                             {% else %}
-                            <div class="pt-3 pb-1">
+                            <div class="pt-3 pb-1 sidebar-text">
                                 <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
                             </div>
-                            <a href="{% url 'atleta_list' %}" class="{% if 'atleta' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-users mr-3 text-base"></i>
-                                Atletas
+                            <a href="{% url 'atleta_list' %}" title="Atletas" class="sidebar-item {% if 'atleta' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-users mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Atletas</span>
                             </a>
-                            <a href="{% url 'inscricao_detail' %}" class="{% if 'inscricao' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-file-invoice mr-3 text-base"></i>
-                                Inscrição
+                            <a href="{% url 'inscricao_detail' %}" title="Inscrição" class="sidebar-item {% if 'inscricao' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-file-invoice mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Inscrição</span>
                             </a>
-                            <a href="{% url 'chaveamento_public_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-sitemap mr-3 text-base"></i>
-                                Chaveamentos
+                            <a href="{% url 'chaveamento_public_list' %}" title="Chaveamentos" class="sidebar-item {% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-sitemap mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Chaveamentos</span>
                             </a>
-                            <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-file-signature mr-3 text-base"></i>
-                                Pré-Súmulas (Escalar)
+                            <a href="{% url 'presumula_list' %}" title="Pré-Súmulas (Escalar)" class="sidebar-item {% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-file-signature mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Pré-Súmulas (Escalar)</span>
                             </a>
-                            <a href="{% url 'recurso_list' %}" class="{% if 'recurso' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-balance-scale mr-3 text-base"></i>
-                                Recursos
+                            <a href="{% url 'recurso_list' %}" title="Recursos" class="sidebar-item {% if 'recurso' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-balance-scale mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Recursos</span>
                             </a>
-                            <a href="{% url 'membros_delegacao' %}" class="{% if 'membros' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-user-friends mr-3 text-base"></i>
-                                Autorizar Membros
+                            <a href="{% url 'membros_delegacao' %}" title="Autorizar Membros" class="sidebar-item {% if 'membros' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-user-friends mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Autorizar Membros</span>
                             </a>
                         {% endif %}
                     {% endif %}
@@ -117,14 +158,14 @@
                 <!-- Logout / Acesso -->
                 <div class="border-t border-slate-100 pt-3 mt-4">
                     {% if user.is_authenticated %}
-                    <a href="{% url 'logout' %}" class="text-red-650 bg-red-50 hover:bg-red-100/85 border border-red-100 group flex items-center px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 active:scale-95 shadow-sm">
-                        <i class="fas fa-sign-out-alt mr-2.5 text-sm"></i>
-                        Sair da Conta
+                    <a href="{% url 'logout' %}" title="Sair da Conta" class="sidebar-item text-red-650 bg-red-50 hover:bg-red-100/85 border border-red-100 group flex items-center px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 active:scale-95 shadow-sm">
+                        <i class="fas fa-sign-out-alt mr-2.5 text-sm sidebar-icon shrink-0"></i>
+                        <span class="sidebar-text whitespace-nowrap">Sair da Conta</span>
                     </a>
                     {% else %}
-                    <a href="{% url 'login' %}" class="text-slate-500 hover:bg-slate-50 group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                        <i class="fas fa-sign-in-alt mr-3 text-base"></i>
-                        Entrar
+                    <a href="{% url 'login' %}" title="Entrar" class="sidebar-item text-slate-500 hover:bg-slate-50 group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                        <i class="fas fa-sign-in-alt mr-3 text-base sidebar-icon shrink-0"></i>
+                        <span class="sidebar-text whitespace-nowrap">Entrar</span>
                     </a>
                     {% endif %}
                 </div>
@@ -255,7 +296,7 @@
     {% endif %}
 
     <!-- ÁREA DE CONTEÚDO PRINCIPAL (Doutrina de Container Único) -->
-    <div class="flex-grow flex flex-col min-h-screen {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}md:pl-[17rem]{% else %}justify-center{% endif %}">
+    <div id="main-content-wrapper" class="flex-grow flex flex-col min-h-screen {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}md:pl-[17rem]{% else %}justify-center{% endif %}">
         
         <!-- Topbar Header (Ocultado temporariamente para o teste de layout integrado) -->
         {% if False %}
@@ -398,6 +439,15 @@
             setTimeout(() => {
                 toast.remove();
             }, 300);
+        }
+
+        function toggleDesktopSidebar() {
+            const isCollapsed = document.documentElement.classList.toggle('sidebar-collapsed');
+            localStorage.setItem('sidebar-collapsed', isCollapsed ? 'true' : 'false');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            if (toggleBtn) {
+                toggleBtn.setAttribute('title', isCollapsed ? 'Expandir menu' : 'Recolher menu');
+            }
         }
     </script>
 </body>
