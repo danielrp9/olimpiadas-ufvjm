@@ -58,7 +58,7 @@
     </script>
 </head>
 
-<body class="text-slate-900 font-sans min-h-screen {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}bg-[#f0f4f8] flex flex-col justify-center{% else %}bg-[#f1f5f9]{% endif %}">
+<body class="text-slate-900 font-sans min-h-screen overflow-x-hidden max-w-full {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}bg-[#f0f4f8] flex flex-col justify-center{% else %}bg-[#f1f5f9]{% endif %}">
     
     <!-- ELEMENTOS LATERAIS (SIDEBARS) - Apenas se NÃO for tela de login/cadastro/completar perfil -->
     {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
@@ -212,12 +212,8 @@
                             Resumo Inscrições
                         </a>
                         {% endif %}
-                        {% endif %}
 
-
-
-                        {% if user.is_authenticated %}
-                            {% if user.is_comissao %}
+                        {% if user.is_comissao %}
                                 <div class="pt-3 pb-1">
                                     <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gestão Geral</span>
                                 </div>
@@ -296,7 +292,7 @@
     {% endif %}
 
     <!-- ÁREA DE CONTEÚDO PRINCIPAL (Doutrina de Container Único) -->
-    <div id="main-content-wrapper" class="flex-grow flex flex-col min-h-screen {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}md:pl-[17rem]{% else %}justify-center{% endif %}">
+    <div id="main-content-wrapper" class="flex-grow flex flex-col min-h-screen max-w-full overflow-x-hidden {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}md:pl-[17rem]{% else %}justify-center{% endif %}">
         
         <!-- Topbar Header (Ocultado temporariamente para o teste de layout integrado) -->
         {% if False %}
@@ -335,8 +331,8 @@
         {% endif %}
 
         <!-- Conteúdo Interno / Main -->
-        <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
-            <div class="{% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md mx-auto{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-lg md:max-w-xl mx-auto{% else %}w-full max-w-[1440px] mx-auto md:ml-0 md:mr-auto{% endif %}">
+        <main class="flex-grow pt-4 pb-8 px-4 sm:px-6 lg:px-8 flex flex-col gap-6 max-w-full overflow-x-hidden {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' or request.resolver_match.url_name == 'complete_profile' %}justify-center{% endif %}">
+            <div class="max-w-full overflow-x-hidden {% if request.resolver_match.url_name == 'login' or request.resolver_match.url_name == 'register' %}max-w-md mx-auto{% elif request.resolver_match.url_name == 'complete_profile' %}max-w-md sm:max-w-lg md:max-w-xl mx-auto{% else %}w-full max-w-[1440px] mx-auto md:ml-0 md:mr-auto{% endif %}">
                 
 
                 <!-- BLOCO ÚNICO DE CONTEÚDO -->

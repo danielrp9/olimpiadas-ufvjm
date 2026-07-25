@@ -6,7 +6,7 @@
 
 {% block content %}
 <!-- Banner de Apresentação (Estilo Fincan.io - Idêntico ao da Home) -->
-<div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl pt-22 pb-14 sm:pt-16 sm:pb-24 px-4 sm:px-10 border border-slate-800 shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-start gap-6">
+<div class="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl pt-22 pb-14 sm:pt-16 sm:pb-24 px-4 sm:px-10 border border-slate-800 shadow-sm mb-6 flex flex-col sm:flex-row justify-between items-start gap-6">
     <!-- Abstract SVG Wave Grid -->
     <div class="absolute inset-0 opacity-20 pointer-events-none rounded-3xl overflow-hidden">
         <svg class="w-full h-full object-cover" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -55,7 +55,7 @@
                 {% endif %}
             </button>
             <!-- Dropdown Content -->
-            <div id="notification-dropdown-admin" class="hidden fixed sm:absolute inset-x-4 sm:inset-x-auto top-20 sm:top-full sm:right-0 mt-2 w-auto sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 overflow-hidden text-slate-800">
+            <div id="notification-dropdown-admin" class="hidden absolute right-0 top-full mt-2 w-72 sm:w-80 bg-white rounded-2xl shadow-xl border border-slate-200/90 z-50 overflow-hidden text-slate-800">
                 <div class="px-3.5 py-2.5 border-b border-slate-100 flex justify-between items-center bg-slate-50/80 backdrop-blur-sm">
                     <div class="flex items-center gap-2">
                         <span class="text-[11px] font-extrabold text-slate-800 uppercase tracking-wider">Notificações</span>
