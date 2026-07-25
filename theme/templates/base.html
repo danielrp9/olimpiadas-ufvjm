@@ -66,9 +66,9 @@
         <aside id="desktop-sidebar" class="hidden md:flex md:w-60 md:flex-col md:fixed md:inset-y-4 md:left-4 bg-white border border-slate-200/60 rounded-3xl z-30 shadow-[0_2px_12px_rgba(0,0,0,0.015)] overflow-visible">
             <!-- Logo & Botão Alternar Sidebar (Posicionado na Borda Divisória do Cabeçalho) -->
             <div class="flex items-center justify-between h-16 flex-shrink-0 px-5 border-b border-slate-100 bg-white relative rounded-t-3xl sidebar-logo-container">
-                <a href="{% url 'dashboard' %}" class="text-lg font-bold text-blue-600 tracking-tight flex items-center gap-2 overflow-hidden whitespace-nowrap">
-                    <i class="fas fa-medal text-blue-600 text-xl shrink-0"></i>
-                    <span class="sidebar-text transition-all duration-200">Olimpíadas <span class="text-slate-700">UFVJM</span></span>
+                <a href="{% url 'dashboard' %}" class="text-lg font-extrabold tracking-tight flex items-center gap-2.5 overflow-hidden whitespace-nowrap">
+                    <img src="{% static 'logo.png' %}" alt="Logo Olimpíadas" class="w-8 h-8 object-contain shrink-0">
+                    <span class="sidebar-text transition-all duration-200 text-slate-800">Olimpíadas <span class="text-blue-600 font-black">UFVJM</span></span>
                 </a>
                 <button type="button" id="sidebar-toggle-btn" onclick="toggleDesktopSidebar()" title="Recolher menu" class="absolute -right-1.5 top-full -translate-y-1/2 w-6 h-6 rounded-full bg-white hover:bg-blue-600 text-slate-400 hover:text-white border border-slate-200 shadow-sm flex items-center justify-center transition-all duration-300 z-40 focus:outline-none active:scale-90 cursor-pointer">
                     <i id="sidebar-toggle-icon" class="fas fa-chevron-left text-[9px] transition-transform duration-300"></i>
@@ -174,9 +174,9 @@
 
         <!-- Header / Navbar Móvel -->
         <div class="md:hidden flex items-center justify-between h-16 bg-white/90 backdrop-blur-md border border-slate-200/60 rounded-3xl px-6 sticky top-4 z-40 mx-4 mt-4 shadow-[0_2px_12px_rgba(0,0,0,0.015)]">
-            <a href="{% url 'dashboard' %}" class="text-lg font-bold text-blue-600 tracking-tight flex items-center gap-1.5">
-                <i class="fas fa-medal text-xl"></i>
-                <span>Olimpíadas <span class="text-slate-700">UFVJM</span></span>
+            <a href="{% url 'dashboard' %}" class="text-lg font-extrabold tracking-tight flex items-center gap-2">
+                <img src="{% static 'logo.png' %}" alt="Logo Olimpíadas" class="w-7 h-7 object-contain shrink-0">
+                <span class="text-slate-800">Olimpíadas <span class="text-blue-600 font-black">UFVJM</span></span>
             </a>
             <button type="button" onclick="toggleMobileMenu()" class="text-slate-500 hover:text-slate-700 focus:outline-none p-1">
                 <i class="fas fa-bars text-xl"></i>
@@ -190,9 +190,9 @@
             <!-- Drawer -->
             <div class="fixed inset-y-4 left-4 w-64 bg-white border border-slate-200/60 rounded-3xl shadow-xl flex flex-col max-w-xs transition-transform duration-300 overflow-hidden">
                 <div class="flex items-center h-16 px-6 border-b border-slate-100 justify-between bg-white">
-                    <span class="text-lg font-bold text-blue-600 tracking-tight flex items-center gap-1.5">
-                        <i class="fas fa-medal text-xl"></i>
-                        <span>Olimpíadas</span>
+                    <span class="text-lg font-extrabold tracking-tight flex items-center gap-2">
+                        <img src="{% static 'logo.png' %}" alt="Logo Olimpíadas" class="w-7 h-7 object-contain shrink-0">
+                        <span class="text-slate-800">Olimpíadas <span class="text-blue-600 font-black">UFVJM</span></span>
                     </span>
                     <button type="button" onclick="toggleMobileMenu()" class="text-slate-400 hover:text-slate-650">
                         <i class="fas fa-times text-lg"></i>
