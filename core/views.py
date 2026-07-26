@@ -1566,6 +1566,35 @@ def resumo_inscricoes(request):
         'inscricoes__inscricao__delegacao__atletas__campus'
     ).order_by('nome')
 
+    # 7. Dados da Análise Quantitativa
+    campi_all = Campus.objects.all().order_by('nome')
+    campi_stats = []
+    total_servidores_global = Atleta.objects.filter(tipo_atleta='servidor').count()
+    total_estudantes_global = Atleta.objects.filter(tipo_atleta='estudante').count()
+    total_inscritos_global = Atleta.objects.count()
+
+    for campus in campi_all:
+        delegacoes_count = User.objects.filter(
+            role='REPRESENTANTE',
+            parent_delegate__isnull=True,
+            inscricao__isnull=False,
+            atletas__campus=campus
+        ).distinct().count()
+        
+        atletas_count = Atleta.objects.filter(campus=campus, tipo_atleta='estudante').count()
+        servidores_count = Atleta.objects.filter(campus=campus, tipo_atleta='servidor').count()
+        total_membros = atletas_count + servidores_count
+        
+        campi_stats.append({
+            'nome': campus.nome,
+            'delegacoes': delegacoes_count,
+            'atletas': atletas_count,
+            'servidores': servidores_count,
+            'total_membros': total_membros,
+        })
+        
+    max_members = max([s['total_membros'] for s in campi_stats], default=0)
+
     context = {
         'unread_notifications': unread_notifications,
         'total_delegacoes': total_delegacoes,
@@ -1592,6 +1621,12 @@ def resumo_inscricoes(request):
         'modalidade_summary': modalidade_summary,
         'inscricoes_list': inscricoes_list,
         'modalidades_com_delegacoes': modalidades_com_delegacoes,
+
+        'campi_stats': campi_stats,
+        'total_servidores_global': total_servidores_global,
+        'total_estudantes_global': total_estudantes_global,
+        'total_inscritos_global': total_inscritos_global,
+        'max_members': max_members,
         
         'chart_campus_labels_json': json.dumps(chart_campus_labels),
         'chart_modalidade_labels_json': json.dumps(chart_modalidade_labels),
