@@ -47,43 +47,46 @@
                     </span>
                 </div>
 
-                <!-- Tabela de Classificação do Grupo -->
+                <!-- Tabela de Classificação do Grupo (Ajustada para Mobile sem Barra de Rolagem) -->
                 <div class="overflow-x-auto rounded-2xl border border-slate-200/70 shadow-2xs bg-white">
-                    <table class="w-full text-left border-collapse text-xs">
+                    <table class="w-full text-left border-collapse text-[10px] sm:text-xs">
                         <thead>
-                            <tr class="bg-slate-800 text-white font-bold tracking-wider">
-                                <th class="py-2.5 px-3">Pos</th>
-                                <th class="py-2.5 px-3">Delegação</th>
-                                <th class="py-2.5 px-2 text-center">Pts</th>
-                                <th class="py-2.5 px-2 text-center">J</th>
-                                <th class="py-2.5 px-2 text-center">V</th>
-                                <th class="py-2.5 px-2 text-center">E</th>
-                                <th class="py-2.5 px-2 text-center">D</th>
-                                <th class="py-2.5 px-2 text-center">SG</th>
-                                <th class="py-2.5 px-3 text-right">Status</th>
+                            <tr class="bg-slate-800 text-white font-bold tracking-wider text-[9px] sm:text-[10px]">
+                                <th class="py-2 px-1.5 sm:py-2.5 sm:px-3 text-center sm:text-left">Pos</th>
+                                <th class="py-2 px-1.5 sm:py-2.5 sm:px-3">Delegação</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">Pts</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">J</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">V</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">E</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">D</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">SG</th>
+                                <th class="py-2 px-1.5 sm:py-2.5 sm:px-3 text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
                             {% for tg in grupo.times.all %}
                             <tr class="{% if tg.delegacao == delegacao %}bg-blue-50/80 font-bold border-l-4 border-l-blue-600{% elif tg.classificado %}bg-emerald-50/50 font-semibold{% else %}hover:bg-slate-50/80{% endif %} transition">
-                                <td class="py-3 px-3 font-bold text-slate-700">{{ forloop.counter }}º</td>
-                                <td class="py-3 px-3 font-semibold text-slate-800">
+                                <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-bold text-slate-700 text-center sm:text-left">{{ forloop.counter }}º</td>
+                                <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-semibold text-slate-800 max-w-[90px] xs:max-w-[130px] sm:max-w-none truncate">
                                     {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
                                     {% if tg.delegacao == delegacao %}
-                                        <span class="ml-1 px-1.5 py-0.5 text-[9px] bg-blue-600 text-white rounded font-bold uppercase">Você</span>
+                                        <span class="ml-0.5 sm:ml-1 px-1 py-0.2 sm:px-1.5 sm:py-0.5 text-[8px] sm:text-[9px] bg-blue-600 text-white rounded font-bold uppercase inline-block">Você</span>
                                     {% endif %}
                                 </td>
-                                <td class="py-3 px-2 text-center font-black text-blue-600 text-sm">{{ tg.pontos }}</td>
-                                <td class="py-3 px-2 text-center text-slate-500 font-medium">{{ tg.jogos }}</td>
-                                <td class="py-3 px-2 text-center text-slate-700 font-bold">{{ tg.vitorias }}</td>
-                                <td class="py-3 px-2 text-center text-slate-500 font-medium">{{ tg.empates }}</td>
-                                <td class="py-3 px-2 text-center text-slate-700 font-bold">{{ tg.derrotas }}</td>
-                                <td class="py-3 px-2 text-center text-slate-500 font-medium">{{ tg.saldo_gols }}</td>
-                                <td class="py-3 px-3 text-right font-bold">
+                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center font-black text-blue-600 text-xs sm:text-sm">{{ tg.pontos }}</td>
+                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.jogos }}</td>
+                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-700 font-bold text-[10px] sm:text-xs">{{ tg.vitorias }}</td>
+                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.empates }}</td>
+                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-700 font-bold text-[10px] sm:text-xs">{{ tg.derrotas }}</td>
+                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.saldo_gols }}</td>
+                                <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 text-right font-bold">
                                     {% if tg.classificado %}
-                                        <span class="text-emerald-700 text-[10px] bg-emerald-100/80 px-2.5 py-1 rounded-full border border-emerald-200/80 font-extrabold shadow-2xs">Classificado</span>
+                                        <span class="text-emerald-700 text-[9px] sm:text-[10px] bg-emerald-100/80 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-200/80 font-extrabold shadow-2xs whitespace-nowrap">
+                                            <span class="hidden sm:inline">Classificado</span>
+                                            <span class="sm:hidden">Classif.</span>
+                                        </span>
                                     {% else %}
-                                        <span class="text-slate-400 text-[10px]">-</span>
+                                        <span class="text-slate-400 text-[9px] sm:text-[10px]">-</span>
                                     {% endif %}
                                 </td>
                             </tr>
