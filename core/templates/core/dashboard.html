@@ -157,37 +157,76 @@
         </div>
     </div>
 
-    <!-- 2. Atividades Gerais -->
+    <!-- 2. Acessos Rápidos -->
     <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
-        <h3 class="text-base font-bold text-slate-800">Atividades Gerais</h3>
-        <p class="text-xs text-slate-400 mt-1">Visão geral do andamento do torneio universitário.</p>
-        
-        <div class="mt-6 border-t border-slate-100 pt-6 space-y-6">
-            <div class="flex items-start gap-4">
-                <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0 text-xs">
-                    <i class="fas fa-university"></i>
-                </div>
-                <div>
-                    <h4 class="text-sm font-bold text-slate-800 leading-tight">Delegações Pendentes</h4>
-                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Representantes registram delegações que requerem avaliação para aprovar a entrada dos atletas nas Olimpíadas.</p>
-                    <a href="{% url 'admin_delegacoes' %}" class="text-xs font-bold text-blue-600 hover:text-blue-700 inline-flex items-center gap-1 mt-2">
-                        Avaliar Delegações <i class="fas fa-chevron-right text-[10px]"></i>
-                    </a>
-                </div>
+        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+            <div>
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl">
+                        <i class="fas fa-bolt text-xs"></i>
+                    </span>
+                    Acessos Rápidos
+                </h3>
+                <p class="text-xs text-slate-400 mt-1">Atalhos diretos para a gestão e operacionalização das Olimpíadas.</p>
             </div>
+        </div>
 
-            <div class="flex items-start gap-4">
-                <div class="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center flex-shrink-0 text-xs">
-                    <i class="fas fa-file-signature"></i>
-                </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <!-- 1. Abertura de Inscrições -->
+            <a href="{% url 'admin_periodo_inscricao' %}" class="group bg-slate-50/50 hover:bg-blue-50/40 border border-slate-200/70 hover:border-blue-200 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs hover:shadow-md active:scale-[0.98]">
                 <div>
-                    <h4 class="text-sm font-bold text-slate-800 leading-tight">Pré-Súmulas de Jogos</h4>
-                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Ficha digital com atletas escalados pelos representantes antes dos confrontos. Utilizado para conferência da arbitragem.</p>
-                    <a href="{% url 'presumula_list' %}" class="text-xs font-bold text-purple-600 hover:text-purple-700 inline-flex items-center gap-1 mt-2">
-                        Visualizar Súmulas <i class="fas fa-chevron-right text-[10px]"></i>
-                    </a>
+                    <div class="w-10 h-10 rounded-xl bg-blue-100/70 text-blue-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-calendar-alt text-base"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">Abertura de Inscrições</h4>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Gerencie o período oficial e etapas de inscrições do evento.</p>
                 </div>
-            </div>
+                <div class="mt-4 flex items-center text-xs font-bold text-blue-600 gap-1 group-hover:translate-x-1 transition-transform">
+                    Acessar <i class="fas fa-arrow-right text-[10px]"></i>
+                </div>
+            </a>
+
+            <!-- 2. Gerenciamento de Pré-Súmulas -->
+            <a href="{% url 'presumula_list' %}" class="group bg-slate-50/50 hover:bg-purple-50/40 border border-slate-200/70 hover:border-purple-200 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs hover:shadow-md active:scale-[0.98]">
+                <div>
+                    <div class="w-10 h-10 rounded-xl bg-purple-100/70 text-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-file-signature text-base"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-purple-600 transition-colors">Gerenciamento de Pré-súmulas</h4>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Visualize e gerencie as escalações enviadas pelas delegações.</p>
+                </div>
+                <div class="mt-4 flex items-center text-xs font-bold text-purple-600 gap-1 group-hover:translate-x-1 transition-transform">
+                    Acessar <i class="fas fa-arrow-right text-[10px]"></i>
+                </div>
+            </a>
+
+            <!-- 3. Gerenciamento de Recursos -->
+            <a href="{% url 'recurso_list' %}" class="group bg-slate-50/50 hover:bg-red-50/40 border border-slate-200/70 hover:border-red-200 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs hover:shadow-md active:scale-[0.98]">
+                <div>
+                    <div class="w-10 h-10 rounded-xl bg-red-100/70 text-red-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-balance-scale text-base"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-red-600 transition-colors">Gerenciamento de Recursos</h4>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Analise processos e emita pareceres sobre contestação de jogos.</p>
+                </div>
+                <div class="mt-4 flex items-center text-xs font-bold text-red-600 gap-1 group-hover:translate-x-1 transition-transform">
+                    Acessar <i class="fas fa-arrow-right text-[10px]"></i>
+                </div>
+            </a>
+
+            <!-- 4. Chaveamentos -->
+            <a href="{% url 'chaveamento_admin_list' %}" class="group bg-slate-50/50 hover:bg-emerald-50/40 border border-slate-200/70 hover:border-emerald-200 p-5 rounded-2xl transition-all duration-200 flex flex-col justify-between shadow-xs hover:shadow-md active:scale-[0.98]">
+                <div>
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100/70 text-emerald-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-sitemap text-base"></i>
+                    </div>
+                    <h4 class="text-sm font-bold text-slate-800 group-hover:text-emerald-600 transition-colors">Chaveamentos</h4>
+                    <p class="text-xs text-slate-400 mt-1 leading-relaxed">Organize os grupos, sorteios e tabelas das modalidades esportivas.</p>
+                </div>
+                <div class="mt-4 flex items-center text-xs font-bold text-emerald-600 gap-1 group-hover:translate-x-1 transition-transform">
+                    Acessar <i class="fas fa-arrow-right text-[10px]"></i>
+                </div>
+            </a>
         </div>
     </div>
 
