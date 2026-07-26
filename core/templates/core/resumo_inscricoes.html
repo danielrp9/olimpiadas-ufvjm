@@ -163,18 +163,18 @@
 <div class="bg-white rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] overflow-hidden mb-8">
     <!-- Menu de Abas -->
     <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <button onclick="switchTab('campus')" id="tab-btn-campus" class="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-map-marker-alt"></i> Resumo por Campus
+        <div class="flex flex-nowrap sm:flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
+            <button onclick="switchTab('campus')" id="tab-btn-campus" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-map-marker-alt"></i> <span class="tab-text inline">Resumo por Campus</span>
             </button>
-            <button onclick="switchTab('modalidade')" id="tab-btn-modalidade" class="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-running"></i> Resumo por Modalidade
+            <button onclick="switchTab('modalidade')" id="tab-btn-modalidade" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-running"></i> <span class="tab-text hidden sm:inline">Resumo por Modalidade</span>
             </button>
-            <button onclick="switchTab('modalidade-delegacao')" id="tab-btn-modalidade-delegacao" class="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-users"></i> Modalidade por Delegação
+            <button onclick="switchTab('modalidade-delegacao')" id="tab-btn-modalidade-delegacao" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-users"></i> <span class="tab-text hidden sm:inline">Modalidade por Delegação</span>
             </button>
-            <button onclick="switchTab('delegacoes-modalidade')" id="tab-btn-delegacoes-modalidade" class="w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-flag"></i> Delegações por Modalidade
+            <button onclick="switchTab('delegacoes-modalidade')" id="tab-btn-delegacoes-modalidade" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
+                <i class="fas fa-flag"></i> <span class="tab-text hidden sm:inline">Delegações por Modalidade</span>
             </button>
         </div>
         
@@ -1145,25 +1145,37 @@
         const btnDelegacoesModalidade = document.getElementById('tab-btn-delegacoes-modalidade');
         const searchContainer = document.getElementById('search-input-container');
 
-        const activeClass = "w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
-        const inactiveClass = "w-full sm:w-auto justify-center px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap";
+        const activeClass = "w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap";
+        const inactiveClass = "w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap";
 
-        btnCampus.className = inactiveClass;
-        btnModalidade.className = inactiveClass;
-        btnModalidadeDelegacao.className = inactiveClass;
-        if (btnDelegacoesModalidade) btnDelegacoesModalidade.className = inactiveClass;
+        const tabs = [
+            { id: 'campus', btn: btnCampus },
+            { id: 'modalidade', btn: btnModalidade },
+            { id: 'modalidade-delegacao', btn: btnModalidadeDelegacao },
+            { id: 'delegacoes-modalidade', btn: btnDelegacoesModalidade }
+        ];
 
-        if (tabId === 'campus') {
-            btnCampus.className = activeClass;
+        tabs.forEach(t => {
+            if (!t.btn) return;
+            const textSpan = t.btn.querySelector('.tab-text');
+            if (t.id === tabId) {
+                t.btn.className = activeClass;
+                if (textSpan) {
+                    textSpan.classList.remove('hidden');
+                    textSpan.classList.add('inline');
+                }
+            } else {
+                t.btn.className = inactiveClass;
+                if (textSpan) {
+                    textSpan.classList.remove('inline');
+                    textSpan.classList.add('hidden', 'sm:inline');
+                }
+            }
+        });
+
+        if (tabId === 'campus' || tabId === 'modalidade') {
             if (searchContainer) searchContainer.style.display = '';
-        } else if (tabId === 'modalidade') {
-            btnModalidade.className = activeClass;
-            if (searchContainer) searchContainer.style.display = '';
-        } else if (tabId === 'modalidade-delegacao') {
-            btnModalidadeDelegacao.className = activeClass;
-            if (searchContainer) searchContainer.style.display = 'none';
-        } else if (tabId === 'delegacoes-modalidade') {
-            if (btnDelegacoesModalidade) btnDelegacoesModalidade.className = activeClass;
+        } else {
             if (searchContainer) searchContainer.style.display = 'none';
         }
         
