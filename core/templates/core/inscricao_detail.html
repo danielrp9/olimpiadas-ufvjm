@@ -293,20 +293,27 @@
                     <table class="w-full text-left text-xs border-collapse">
                         <thead>
                             <tr class="bg-slate-50/10 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                                <th class="px-6 py-3">Jogador</th>
-                                <th class="px-6 py-3">Gênero</th>
-                                <th class="px-6 py-3">Matrícula</th>
-                                <th class="px-6 py-3">Pasta Documentos</th>
-                                <th class="px-6 py-3 text-right">Avaliação</th>
+                                <th class="px-4 py-3 sm:px-6 sm:py-3">Jogador</th>
+                                <th class="hidden md:table-cell px-6 py-3">Gênero</th>
+                                <th class="hidden md:table-cell px-6 py-3">Matrícula</th>
+                                <th class="hidden md:table-cell px-6 py-3">Pasta Documentos</th>
+                                <th class="px-4 py-3 sm:px-6 sm:py-3 text-right">Avaliação</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-655">
                             {% for atleta in atletas_inscritos %}
                                 <tr class="hover:bg-slate-55/40 transition duration-150">
-                                    <td class="px-6 py-4 font-bold text-slate-800">{{ atleta.nome_completo }}</td>
-                                    <td class="px-6 py-4 font-semibold">{{ atleta.get_genero_display }}</td>
-                                    <td class="px-6 py-4 font-mono font-medium text-slate-500">{{ atleta.matricula }}</td>
-                                    <td class="px-6 py-4">
+                                    <!-- Jogador (Nome Completo) - Sempre visível no mobile e desktop -->
+                                    <td class="px-4 py-3.5 sm:px-6 sm:py-4 font-bold text-slate-800">{{ atleta.nome_completo }}</td>
+                                    
+                                    <!-- Gênero - Oculto no Mobile (< md) -->
+                                    <td class="hidden md:table-cell px-6 py-4 font-semibold">{{ atleta.get_genero_display }}</td>
+                                    
+                                    <!-- Matrícula - Oculto no Mobile (< md) -->
+                                    <td class="hidden md:table-cell px-6 py-4 font-mono font-medium text-slate-500">{{ atleta.matricula }}</td>
+                                    
+                                    <!-- Pasta Documentos - Oculto no Mobile (< md) -->
+                                    <td class="hidden md:table-cell px-6 py-4">
                                         {% if atleta.link_documento %}
                                             <a href="{{ atleta.link_documento }}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-bold transition">
                                                 <i class="fas fa-folder-open text-xs"></i> Pasta Drive <i class="fas fa-external-link-alt text-[9px]"></i>
@@ -315,7 +322,9 @@
                                             <span class="text-slate-400 italic">Não enviado</span>
                                         {% endif %}
                                     </td>
-                                    <td class="px-6 py-4 text-right">
+                                    
+                                    <!-- Avaliação (Status) - Sempre visível no mobile e desktop -->
+                                    <td class="px-4 py-3.5 sm:px-6 sm:py-4 text-right">
                                         {% if atleta.status_avaliacao == 'deferido' %}
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
                                                 <i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado
