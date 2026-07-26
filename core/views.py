@@ -1316,7 +1316,7 @@ def enviar_mensagem_recurso(request, pk):
             messages.error(request, "Você não tem permissão para interagir com este recurso.")
             return redirect('recurso_list')
 
-        if recurso.status == 'encerrado' and not user.is_comissao:
+        if recurso.status == 'encerrado':
             messages.error(request, "Este recurso está encerrado e não aceita novos comentários.")
             return redirect('recurso_detail', pk=recurso.id)
 

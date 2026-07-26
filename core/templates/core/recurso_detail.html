@@ -220,62 +220,114 @@
         </div>
     </div>
 
-    <!-- Área de Envio de Parecer / Mensagem -->
-    {% if recurso.status != 'encerrado' or user.is_comissao %}
+    <!-- Área de Envio de Parecer / Mensagem / Status do Recurso -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
-        <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-            <i class="fas fa-reply text-slate-400"></i>
-            {% if user.is_comissao %}
-                Adicionar Parecer / Deliberar Recurso
-            {% else %}
-                Enviar Nova Mensagem / Réplica
-            {% endif %}
-        </h3>
-
-        <form method="post" action="{% url 'recurso_mensagem_enviar' recurso.id %}" class="space-y-4">
-            {% csrf_token %}
-
-            <div class="space-y-1.5">
-                <textarea name="texto" rows="5" required
-                          placeholder="Digite aqui o seu texto explicativo ou parecer oficial..."
-                          class="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm"></textarea>
-            </div>
-
-            <!-- Opções da Comissão -->
-            {% if user.is_comissao %}
-            <div class="bg-yellow-50/30 border border-yellow-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-slate-700">
-                <div>
-                    <span class="text-[10px] text-yellow-650 font-bold uppercase tracking-wider block">Decisão de Status do Processo</span>
-                    <span class="text-[11px] text-slate-400 block mt-0.5">Defina se o recurso continuará em andamento ou se será encerrado definitivamente.</span>
+        {% if recurso.status == 'encerrado' %}
+            <!-- Estado Ocioso: Recurso Encerrado -->
+            <div class="space-y-4">
+                <div class="bg-slate-100/80 border border-slate-200/80 rounded-2xl p-4 flex items-start sm:items-center gap-3.5 text-slate-600">
+                    <span class="p-2.5 bg-slate-200 text-slate-600 rounded-xl shrink-0 flex items-center justify-center">
+                        <i class="fas fa-lock text-sm"></i>
+                    </span>
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wide flex items-center gap-2">
+                            Processo Encerrado e Concluído
+                            <span class="px-2 py-0.5 text-[9px] bg-slate-200 text-slate-600 rounded-full font-bold uppercase">Finalizado</span>
+                        </h4>
+                        <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                            Este recurso foi encerrado definitivamente pela Comissão Organizadora. O campo de interações e as ações do formulário foram desabilitados.
+                        </p>
+                    </div>
                 </div>
-                <div class="flex items-center gap-4 shrink-0">
-                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-                        <input type="radio" name="novo_status" value="parecer_emitido" checked class="w-4 h-4 text-blue-600 border-slate-350 focus:ring-blue-500">
-                        <span class="text-xs font-bold text-slate-700">Manter Aberto</span>
-                    </label>
-                    <label class="inline-flex items-center gap-2 cursor-pointer select-none">
-                        <input type="radio" name="novo_status" value="encerrado" class="w-4 h-4 text-red-600 border-slate-350 focus:ring-red-500">
-                        <span class="text-xs font-bold text-red-750">Responder & Encerrar</span>
-                    </label>
+
+                <div class="space-y-1.5 opacity-60 pointer-events-none select-none">
+                    <textarea disabled rows="3"
+                              placeholder="Recurso encerrado. Não é possível enviar novas mensagens ou pareceres."
+                              class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-xs bg-slate-100 text-slate-400 cursor-not-allowed shadow-none resize-none"></textarea>
+                </div>
+
+                {% if user.is_comissao %}
+                <div class="bg-slate-50 border border-slate-200/60 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 opacity-60 pointer-events-none select-none">
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Decisão de Status do Processo</span>
+                        <span class="text-[11px] text-slate-400 block mt-0.5">Recurso finalizado. Nenhuma alteração de status pode ser feita.</span>
+                    </div>
+                    <div class="flex items-center gap-4 shrink-0">
+                        <label class="inline-flex items-center gap-2 cursor-not-allowed">
+                            <input type="radio" disabled class="w-4 h-4 text-slate-400 border-slate-300">
+                            <span class="text-xs font-bold text-slate-400">Manter Aberto</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-not-allowed">
+                            <input type="radio" disabled checked class="w-4 h-4 text-slate-400 border-slate-300">
+                            <span class="text-xs font-bold text-slate-500">Responder & Encerrar (Concluído)</span>
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="button" disabled
+                            class="inline-flex items-center px-5 py-2 bg-slate-200 text-slate-400 text-xs font-bold rounded-xl shadow-none cursor-not-allowed gap-1.5 opacity-70">
+                        <i class="fas fa-lock text-[10px]"></i>
+                        Ações Encerradas
+                    </button>
                 </div>
             </div>
-            {% endif %}
+        {% else %}
+            <!-- Formulário Ativo (Aberto / Parecer Emitido) -->
+            <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+                <i class="fas fa-reply text-slate-400"></i>
+                {% if user.is_comissao %}
+                    Adicionar Parecer / Deliberar Recurso
+                {% else %}
+                    Enviar Nova Mensagem / Réplica
+                {% endif %}
+            </h3>
 
-            <!-- Botões de Ação -->
-            <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                <button type="submit" 
-                        class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
-                    <i class="fas fa-paper-plane"></i>
-                    {% if user.is_comissao %}
-                        Registrar Decisão
-                    {% else %}
-                        Enviar Mensagem
-                    {% endif %}
-                </button>
-            </div>
-        </form>
+            <form method="post" action="{% url 'recurso_mensagem_enviar' recurso.id %}" class="space-y-4">
+                {% csrf_token %}
+
+                <div class="space-y-1.5">
+                    <textarea name="texto" rows="5" required
+                              placeholder="Digite aqui o seu texto explicativo ou parecer oficial..."
+                              class="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm"></textarea>
+                </div>
+
+                <!-- Opções da Comissão -->
+                {% if user.is_comissao %}
+                <div class="bg-yellow-50/30 border border-yellow-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 text-slate-700">
+                    <div>
+                        <span class="text-[10px] text-yellow-650 font-bold uppercase tracking-wider block">Decisão de Status do Processo</span>
+                        <span class="text-[11px] text-slate-400 block mt-0.5">Defina se o recurso continuará em andamento ou se será encerrado definitivamente.</span>
+                    </div>
+                    <div class="flex items-center gap-4 shrink-0">
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input type="radio" name="novo_status" value="parecer_emitido" checked class="w-4 h-4 text-blue-600 border-slate-350 focus:ring-blue-500">
+                            <span class="text-xs font-bold text-slate-700">Manter Aberto</span>
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+                            <input type="radio" name="novo_status" value="encerrado" class="w-4 h-4 text-red-600 border-slate-350 focus:ring-red-500">
+                            <span class="text-xs font-bold text-red-750">Responder & Encerrar</span>
+                        </label>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Botões de Ação -->
+                <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                    <button type="submit" 
+                            class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
+                        <i class="fas fa-paper-plane"></i>
+                        {% if user.is_comissao %}
+                            Registrar Decisão
+                        {% else %}
+                            Enviar Mensagem
+                        {% endif %}
+                    </button>
+                </div>
+            </form>
+        {% endif %}
     </div>
-    {% endif %}
 </div>
 
 <!-- Scripts de Exibição Dinâmica (Ver Mais) -->
