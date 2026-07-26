@@ -157,69 +157,55 @@
         </div>
     </div>
 
-    <!-- 2. Acessos Rápidos -->
-    <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)]">
-        <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-            <div>
-                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
-                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl">
-                        <i class="fas fa-bolt text-xs"></i>
-                    </span>
-                    Acessos Rápidos
-                </h3>
-                <p class="text-xs text-slate-400 mt-1">Atalhos diretos para a gestão e operacionalização das Olimpíadas.</p>
+    <!-- 2. Acessos Rápidos (Grid de Cards) -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- 1. Abertura de Inscrições -->
+        <a href="{% url 'admin_periodo_inscricao' %}" class="group relative overflow-hidden bg-gradient-to-br from-blue-50/70 via-slate-50/30 to-white hover:from-blue-100/80 hover:via-blue-50/50 hover:to-white border border-blue-100/80 hover:border-blue-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 border border-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-xs">
+                    <i class="fas fa-calendar-alt text-lg"></i>
+                </div>
+                <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors">Abertura de Inscrições</h4>
+                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Gerencie o período oficial e etapas de inscrições do evento.</p>
             </div>
-        </div>
+        </a>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- 1. Abertura de Inscrições -->
-            <a href="{% url 'admin_periodo_inscricao' %}" class="group relative overflow-hidden bg-gradient-to-br from-blue-50/70 via-slate-50/30 to-white hover:from-blue-100/80 hover:via-blue-50/50 hover:to-white border border-blue-100/80 hover:border-blue-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors pointer-events-none"></div>
-                <div class="relative z-10">
-                    <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 border border-blue-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-blue-600 group-hover:text-white transition-all duration-300 shadow-xs">
-                        <i class="fas fa-calendar-alt text-lg"></i>
-                    </div>
-                    <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-blue-600 transition-colors">Abertura de Inscrições</h4>
-                    <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Gerencie o período oficial e etapas de inscrições do evento.</p>
+        <!-- 2. Gerenciamento de Pré-Súmulas -->
+        <a href="{% url 'presumula_list' %}" class="group relative overflow-hidden bg-gradient-to-br from-purple-50/70 via-slate-50/30 to-white hover:from-purple-100/80 hover:via-purple-50/50 hover:to-white border border-purple-100/80 hover:border-purple-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 border border-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-xs">
+                    <i class="fas fa-file-signature text-lg"></i>
                 </div>
-            </a>
+                <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-purple-600 transition-colors">Gerenciamento de Pré-súmulas</h4>
+                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Visualize e gerencie as escalações enviadas pelas delegações.</p>
+            </div>
+        </a>
 
-            <!-- 2. Gerenciamento de Pré-Súmulas -->
-            <a href="{% url 'presumula_list' %}" class="group relative overflow-hidden bg-gradient-to-br from-purple-50/70 via-slate-50/30 to-white hover:from-purple-100/80 hover:via-purple-50/50 hover:to-white border border-purple-100/80 hover:border-purple-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl group-hover:bg-purple-500/20 transition-colors pointer-events-none"></div>
-                <div class="relative z-10">
-                    <div class="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-600 border border-purple-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-xs">
-                        <i class="fas fa-file-signature text-lg"></i>
-                    </div>
-                    <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-purple-600 transition-colors">Gerenciamento de Pré-súmulas</h4>
-                    <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Visualize e gerencie as escalações enviadas pelas delegações.</p>
+        <!-- 3. Gerenciamento de Recursos -->
+        <a href="{% url 'recurso_list' %}" class="group relative overflow-hidden bg-gradient-to-br from-red-50/70 via-slate-50/30 to-white hover:from-red-100/80 hover:via-red-50/50 hover:to-white border border-red-100/80 hover:border-red-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="w-12 h-12 rounded-2xl bg-red-500/10 text-red-600 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-red-600 group-hover:text-white transition-all duration-300 shadow-xs">
+                    <i class="fas fa-balance-scale text-lg"></i>
                 </div>
-            </a>
+                <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-red-600 transition-colors">Gerenciamento de Recursos</h4>
+                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Analise processos e emita pareceres sobre contestação de jogos.</p>
+            </div>
+        </a>
 
-            <!-- 3. Gerenciamento de Recursos -->
-            <a href="{% url 'recurso_list' %}" class="group relative overflow-hidden bg-gradient-to-br from-red-50/70 via-slate-50/30 to-white hover:from-red-100/80 hover:via-red-50/50 hover:to-white border border-red-100/80 hover:border-red-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-colors pointer-events-none"></div>
-                <div class="relative z-10">
-                    <div class="w-12 h-12 rounded-2xl bg-red-500/10 text-red-600 border border-red-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-red-600 group-hover:text-white transition-all duration-300 shadow-xs">
-                        <i class="fas fa-balance-scale text-lg"></i>
-                    </div>
-                    <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-red-600 transition-colors">Gerenciamento de Recursos</h4>
-                    <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Analise processos e emita pareceres sobre contestação de jogos.</p>
+        <!-- 4. Chaveamentos -->
+        <a href="{% url 'chaveamento_admin_list' %}" class="group relative overflow-hidden bg-gradient-to-br from-emerald-50/70 via-slate-50/30 to-white hover:from-emerald-100/80 hover:via-emerald-50/50 hover:to-white border border-emerald-100/80 hover:border-emerald-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
+            <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-xs">
+                    <i class="fas fa-sitemap text-lg"></i>
                 </div>
-            </a>
-
-            <!-- 4. Chaveamentos -->
-            <a href="{% url 'chaveamento_admin_list' %}" class="group relative overflow-hidden bg-gradient-to-br from-emerald-50/70 via-slate-50/30 to-white hover:from-emerald-100/80 hover:via-emerald-50/50 hover:to-white border border-emerald-100/80 hover:border-emerald-300 p-6 rounded-3xl transition-all duration-300 shadow-xs hover:shadow-xl hover:-translate-y-1 active:scale-[0.98] flex flex-col justify-between">
-                <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors pointer-events-none"></div>
-                <div class="relative z-10">
-                    <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-300 shadow-xs">
-                        <i class="fas fa-sitemap text-lg"></i>
-                    </div>
-                    <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-emerald-600 transition-colors">Chaveamentos</h4>
-                    <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Organize os grupos, sorteios e tabelas das modalidades esportivas.</p>
-                </div>
-            </a>
-        </div>
+                <h4 class="text-sm font-extrabold text-slate-800 group-hover:text-emerald-600 transition-colors">Chaveamentos</h4>
+                <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">Organize os grupos, sorteios e tabelas das modalidades esportivas.</p>
+            </div>
+        </a>
     </div>
 
 {% else %}
