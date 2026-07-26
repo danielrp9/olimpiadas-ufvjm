@@ -197,23 +197,23 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                        <th class="px-6 py-4">ID & Título</th>
-                        <th class="px-6 py-3">Jogo / Modalidade</th>
+                        <th class="hidden sm:table-cell px-6 py-4">ID & Título</th>
+                        <th class="px-4 sm:px-6 py-3">Jogo / Modalidade</th>
                         {% if user.is_comissao %}
-                            <th class="px-6 py-3">Requerente</th>
+                            <th class="hidden sm:table-cell px-6 py-3">Requerente</th>
                         {% endif %}
-                        <th class="px-6 py-3">Status</th>
-                        <th class="px-6 py-3 text-right">Ação</th>
+                        <th class="px-4 sm:px-6 py-3">Status</th>
+                        <th class="px-4 sm:px-6 py-3 text-right">Ação</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
                     {% for recurso in recursos_encerrados %}
                     <tr class="hover:bg-slate-50/30 transition opacity-80">
-                        <td class="px-6 py-4 font-bold text-slate-800">
+                        <td class="hidden sm:table-cell px-6 py-4 font-bold text-slate-800">
                             <span>#{{ recurso.id }} - {{ recurso.titulo }}</span>
                             <span class="block text-[9px] text-slate-400 font-normal mt-0.5">Aberto em {{ recurso.data_criacao|date:"d/m/Y H:i" }}</span>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 sm:px-6 py-4">
                             <span class="font-semibold text-slate-600 block">
                                 {{ recurso.jogo.modalidade.nome }}
                             </span>
@@ -222,17 +222,17 @@
                             </span>
                         </td>
                         {% if user.is_comissao %}
-                            <td class="px-6 py-4">
+                            <td class="hidden sm:table-cell px-6 py-4">
                                 <span class="font-medium text-slate-600">{{ recurso.requerente.nome_delegacao|default:recurso.requerente.email }}</span>
                             </td>
                         {% endif %}
-                        <td class="px-6 py-4">
+                        <td class="px-4 sm:px-6 py-4">
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">
                                 Encerrado
                             </span>
                         </td>
-                        <td class="px-6 py-4 text-right">
-                            <a href="{% url 'recurso_detail' recurso.id %}" class="inline-flex items-center px-3 py-1.5 border border-slate-200 text-slate-500 hover:bg-slate-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1 focus:outline-none">
+                        <td class="px-4 sm:px-6 py-4 text-right">
+                            <a href="{% url 'recurso_detail' recurso.id %}" class="inline-flex items-center px-3 py-1.5 border border-slate-200 text-slate-500 hover:bg-slate-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1 focus:outline-none whitespace-nowrap">
                                 Ver Detalhes
                             </a>
                         </td>
