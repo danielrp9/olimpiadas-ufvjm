@@ -851,10 +851,10 @@ class APIPreSumulaDetailView(View):
         if not request.user.is_authenticated:
             return JsonResponse({'error': 'Não autorizado'}, status=401)
             
-        presumula = get_object_or_404(PreSumula, pk=pk)
-        if not request.user.is_comissao and presumula.representante != request.user.delegacao_ativa:
-            return JsonResponse({'error': 'Não autorizado'}, status=403)
+        if not (request.user.is_comissao or request.user.is_superuser or request.user.is_staff):
+            return JsonResponse({'error': 'Apenas a comissão organizadora pode excluir a pré-súmula.'}, status=403)
 
+        presumula = get_object_or_404(PreSumula, pk=pk)
         presumula.delete()
         return JsonResponse({'success': True})
 

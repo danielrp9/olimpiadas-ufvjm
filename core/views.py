@@ -858,15 +858,14 @@ class PreSumulaDeleteAllView(LoginRequiredMixin, View):
 class PreSumulaDeleteView(LoginRequiredMixin, View):
     """
     Exclui uma pré-súmula específica.
-    Disponível para a Comissão ou para o próprio representante responsável.
+    Disponível apenas para a Comissão Organizadora.
     """
     def post(self, request, pk):
         presumula = get_object_or_404(PreSumula, pk=pk)
         user = request.user
-        delegacao = getattr(user, 'delegacao_ativa', user)
         
-        if not (user.is_staff or user.is_comissao or presumula.representante == delegacao):
-            messages.error(request, "Você não tem permissão para remover esta pré-súmula.")
+        if not (user.is_staff or user.is_comissao):
+            messages.error(request, "Você não tem permissão para remover pré-súmulas. Apenas a comissão organizadora pode excluir.")
             return redirect('presumula_list')
             
         presumula.delete()

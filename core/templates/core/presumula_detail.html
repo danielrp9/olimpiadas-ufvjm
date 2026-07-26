@@ -32,7 +32,7 @@
                                     </a>
                                     {% endif %}
                                 {% endif %}
-                                {% if user.is_staff or user.is_comissao or presumula.representante == user.delegacao_ativa %}
+                                {% if user.is_staff or user.is_comissao %}
                                     <form action="{% url 'presumula_delete' presumula.id %}" method="post" class="inline" onsubmit="return confirm('Deseja realmente remover esta pré-súmula?');">
                                         {% csrf_token %}
                                         <button type="submit" class="inline-flex items-center px-3.5 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded-xl text-xs font-bold shadow-sm transition gap-1.5 active:scale-95 border border-red-500/30">
@@ -140,15 +140,18 @@
                             <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
                                 <th class="px-6 py-3.5 w-24 text-center">Camisa</th>
                                 <th class="px-6 py-3.5">Atleta / Gênero</th>
-                                <th class="px-6 py-3.5">Matrícula / Curso</th>
+                                <th class="px-6 py-3.5">CPF / Matrícula</th>
                                 <th class="px-6 py-3.5">Campus</th>
+                                {% if user.is_staff or user.is_comissao %}
+                                <th class="px-6 py-3.5 text-right w-20">Ações</th>
+                                {% endif %}
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-650 text-xs">
                             {% for pa in presumula.escalacao.all %}
                             <tr class="hover:bg-slate-50/20 transition">
                                 <td class="px-6 py-4 text-center font-black text-blue-600 text-base bg-slate-50/30 border-r border-slate-100">
-                                    #{{ pa.numero_camisa }}
+                                    {{ pa.numero_camisa }}
                                 </td>
                                 <td class="px-6 py-4">
                                     <h4 class="font-bold text-slate-800 leading-tight">{{ pa.atleta.nome_completo }}</h4>
@@ -157,16 +160,40 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-slate-700">Matrícula: {{ pa.atleta.matricula }}</p>
-                                    <p class="text-[10px] text-slate-400 mt-0.5">{{ pa.atleta.curso }}</p>
+                                    <p class="font-semibold text-slate-700">CPF: {{ pa.atleta.cpf|default:"-" }}</p>
+                                    <p class="text-[10px] text-slate-400 mt-0.5">Matrícula: {{ pa.atleta.matricula }}</p>
                                 </td>
                                 <td class="px-6 py-4 font-semibold text-slate-700">
-                                    {{ pa.atleta.campus }}
+                                    {{ pa.atleta.campus|default:"-" }}
                                 </td>
+                                {% if user.is_staff or user.is_comissao %}
+                                <td class="px-6 py-4 text-right">
+                                    <button type="button" 
+                                            onclick="openAtletaModal(this)"
+                                            data-nome="{{ pa.atleta.nome_completo|escapejs }}"
+                                            data-email="{{ pa.atleta.email|escapejs }}"
+                                            data-cpf="{{ pa.atleta.cpf|default:'-'|escapejs }}"
+                                            data-matricula="{{ pa.atleta.matricula|escapejs }}"
+                                            data-genero="{{ pa.atleta.get_genero_display|escapejs }}"
+                                            data-curso="{{ pa.atleta.curso|escapejs }}"
+                                            data-campus="{{ pa.atleta.campus|default:'-'|escapejs }}"
+                                            data-egresso="{% if pa.atleta.is_egresso %}Egresso{% else %}Regular{% endif %}"
+                                            data-tipo="{{ pa.atleta.get_tipo_atleta_display|escapejs }}"
+                                            data-link-doc="{{ pa.atleta.link_documento|default:'' }}"
+                                            data-link-egresso="{{ pa.atleta.link_documento_egresso|default:'' }}"
+                                            data-link-correcao="{{ pa.atleta.link_correcao|default:'' }}"
+                                            data-status="{{ pa.atleta.status_avaliacao|default:'pendente' }}"
+                                            data-justificativa="{{ pa.atleta.justificativa_inconformidade|default:''|escapejs }}"
+                                            class="text-slate-600 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition inline-flex items-center justify-center border border-slate-200 bg-white shadow-2xs focus:outline-none"
+                                            title="Ver dados do atleta">
+                                        <i class="far fa-eye text-xs"></i>
+                                    </button>
+                                </td>
+                                {% endif %}
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                                <td colspan="{% if user.is_staff or user.is_comissao %}5{% else %}4{% endif %}" class="px-6 py-12 text-center text-slate-400">
                                     <div class="w-10 h-10 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 border border-dashed border-slate-200">
                                         <i class="fas fa-user-slash text-sm"></i>
                                     </div>
@@ -182,4 +209,196 @@
         </div>
     </div>
 </div>
+
+{% if user.is_staff or user.is_comissao %}
+<!-- Modal de Detalhes do Atleta (Comissão) -->
+<div id="atleta-modal" class="fixed inset-0 z-50 hidden bg-slate-900/40 backdrop-blur-md flex items-center justify-center p-4" onclick="closeAtletaModal()">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl relative overflow-hidden flex flex-col max-h-[90vh]" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
+            <div>
+                <span class="text-[9px] text-blue-700 font-bold uppercase tracking-wider block">Ficha do Atleta</span>
+                <h4 id="atleta-modal-nome-title" class="font-bold text-slate-800 text-sm mt-0.5">Nome do Atleta</h4>
+            </div>
+            <button type="button" onclick="closeAtletaModal()" class="text-slate-400 hover:text-slate-600 transition p-1 rounded-lg hover:bg-slate-100 focus:outline-none">
+                <i class="fas fa-times text-base"></i>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 space-y-6 overflow-y-auto text-xs text-slate-600">
+            <!-- Status de Avaliação Badges -->
+            <div id="atleta-modal-deferido" class="hidden bg-green-50/50 border border-green-100/50 rounded-2xl p-4 flex items-center gap-3">
+                <span class="w-8 h-8 bg-green-100 text-green-700 rounded-xl flex items-center justify-center text-sm shrink-0 shadow-sm">
+                    <i class="fas fa-check-circle"></i>
+                </span>
+                <div>
+                    <h4 class="font-bold text-green-800 text-xs">Atleta Deferido</h4>
+                    <p class="text-[10px] text-green-700 mt-0.5">Ficha cadastral homologada e em conformidade.</p>
+                </div>
+            </div>
+
+            <div id="atleta-modal-indeferido" class="hidden bg-red-50 border border-red-100/50 rounded-2xl p-4 space-y-2">
+                <h4 class="font-bold text-red-800 flex items-center gap-1.5">
+                    <i class="fas fa-times-circle text-red-600 text-sm"></i> Atleta Indeferido
+                </h4>
+                <p class="font-semibold text-red-700">Motivo do Indeferimento:</p>
+                <p id="atleta-modal-justificativa" class="text-slate-700 bg-white/70 p-2.5 rounded-xl border border-red-100/30 leading-relaxed font-medium"></p>
+            </div>
+
+            <div id="atleta-modal-pendente" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
+                <span class="w-8 h-8 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center text-sm shrink-0 shadow-sm">
+                    <i class="fas fa-clock"></i>
+                </span>
+                <div>
+                    <h4 class="font-bold text-slate-700 text-xs">Pendente de Avaliação</h4>
+                    <p class="text-[10px] text-slate-500 mt-0.5">Este atleta ainda não teve sua avaliação concluída pela comissão.</p>
+                </div>
+            </div>
+
+            <!-- Dados Cadastrais Grid -->
+            <div class="space-y-4">
+                <h3 class="font-bold text-slate-800 text-xs border-b border-slate-100 pb-1.5">Dados Cadastrais</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">E-mail</span>
+                        <span id="atleta-modal-email" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">CPF</span>
+                        <span id="atleta-modal-cpf" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Matrícula/SIAPE</span>
+                        <span id="atleta-modal-matricula" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Gênero</span>
+                        <span id="atleta-modal-genero" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Curso / Lotação</span>
+                        <span id="atleta-modal-curso" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Campus</span>
+                        <span id="atleta-modal-campus" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Vínculo</span>
+                        <span id="atleta-modal-egresso" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                    <div>
+                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Categoria</span>
+                        <span id="atleta-modal-tipo" class="font-semibold text-slate-700 mt-0.5 block"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Links de Documentos -->
+            <div class="space-y-3">
+                <h3 class="font-bold text-slate-800 text-xs border-b border-slate-100 pb-1.5">Documentos do Atleta</h3>
+                <div class="flex flex-col gap-2.5">
+                    <a id="atleta-modal-link-doc" href="" target="_blank" class="hidden inline-flex items-center text-blue-600 hover:underline gap-1.5 font-semibold">
+                        <i class="fas fa-file-alt"></i> Visualizar Documentos do Atleta
+                    </a>
+                    <a id="atleta-modal-link-egresso" href="" target="_blank" class="hidden inline-flex items-center text-purple-600 hover:underline gap-1.5 font-semibold">
+                        <i class="fas fa-graduation-cap"></i> Visualizar Comprovante de Egresso
+                    </a>
+                    <a id="atleta-modal-link-correcao" href="" target="_blank" class="hidden inline-flex items-center text-amber-600 hover:underline gap-1.5 font-bold">
+                        <i class="fas fa-history"></i> Visualizar Documentação Complementar
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="closeAtletaModal()" class="px-4 py-2 border border-slate-200 hover:bg-slate-100 rounded-xl text-xs font-semibold text-slate-500 transition focus:outline-none">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+function openAtletaModal(btn) {
+    const nome = btn.getAttribute('data-nome');
+    const email = btn.getAttribute('data-email');
+    const cpf = btn.getAttribute('data-cpf');
+    const matricula = btn.getAttribute('data-matricula');
+    const genero = btn.getAttribute('data-genero');
+    const curso = btn.getAttribute('data-curso');
+    const campus = btn.getAttribute('data-campus');
+    const egresso = btn.getAttribute('data-egresso');
+    const tipo = btn.getAttribute('data-tipo');
+    const linkDoc = btn.getAttribute('data-link-doc');
+    const linkEgresso = btn.getAttribute('data-link-egresso');
+    const linkCorrecao = btn.getAttribute('data-link-correcao');
+    const status = btn.getAttribute('data-status');
+    const justificativa = btn.getAttribute('data-justificativa');
+
+    document.getElementById('atleta-modal-nome-title').textContent = nome;
+    document.getElementById('atleta-modal-email').textContent = email || '-';
+    document.getElementById('atleta-modal-cpf').textContent = cpf || '-';
+    document.getElementById('atleta-modal-matricula').textContent = matricula || '-';
+    document.getElementById('atleta-modal-genero').textContent = genero || '-';
+    document.getElementById('atleta-modal-curso').textContent = curso || '-';
+    document.getElementById('atleta-modal-campus').textContent = campus || '-';
+    document.getElementById('atleta-modal-egresso').textContent = egresso || '-';
+    document.getElementById('atleta-modal-tipo').textContent = tipo || '-';
+
+    const defBlock = document.getElementById('atleta-modal-deferido');
+    const indefBlock = document.getElementById('atleta-modal-indeferido');
+    const pendBlock = document.getElementById('atleta-modal-pendente');
+
+    if (status === 'deferido') {
+        defBlock.classList.remove('hidden');
+        indefBlock.classList.add('hidden');
+        pendBlock.classList.add('hidden');
+    } else if (status === 'indeferido') {
+        defBlock.classList.add('hidden');
+        indefBlock.classList.remove('hidden');
+        pendBlock.classList.add('hidden');
+        document.getElementById('atleta-modal-justificativa').textContent = justificativa || '(Nenhum motivo informado)';
+    } else {
+        defBlock.classList.add('hidden');
+        indefBlock.classList.add('hidden');
+        pendBlock.classList.remove('hidden');
+    }
+
+    const aDoc = document.getElementById('atleta-modal-link-doc');
+    if (linkDoc) {
+        aDoc.href = linkDoc;
+        aDoc.classList.remove('hidden');
+    } else {
+        aDoc.classList.add('hidden');
+    }
+
+    const aEgr = document.getElementById('atleta-modal-link-egresso');
+    if (linkEgresso) {
+        aEgr.href = linkEgresso;
+        aEgr.classList.remove('hidden');
+    } else {
+        aEgr.classList.add('hidden');
+    }
+
+    const aCorr = document.getElementById('atleta-modal-link-correcao');
+    if (linkCorrecao) {
+        aCorr.href = linkCorrecao;
+        aCorr.classList.remove('hidden');
+    } else {
+        aCorr.classList.add('hidden');
+    }
+
+    document.getElementById('atleta-modal').classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAtletaModal() {
+    document.getElementById('atleta-modal').classList.add('hidden');
+    document.body.style.overflow = '';
+}
+</script>
+{% endif %}
 {% endblock %}

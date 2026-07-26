@@ -26,21 +26,21 @@
         </div>
     </div>
 
-    <!-- Tabs de Navegação/Ações -->
-    <div class="flex flex-wrap items-center gap-2 mb-2">
-        <button type="button" id="tab-btn-andamento" onclick="switchTab('andamento')" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-slate-900 text-white shadow-sm flex items-center focus:outline-none">
-            <span class="w-1.5 h-1.5 inline-block rounded-full bg-blue-500 mr-2 animate-pulse"></span>
-            Recursos em Andamento
+       <!-- Tabs de Navegação/Ações -->
+    <div class="flex items-center gap-1.5 sm:gap-2 mb-2 overflow-x-auto no-scrollbar flex-nowrap sm:flex-wrap">
+        <button type="button" id="tab-btn-andamento" onclick="switchTab('andamento')" class="px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-slate-900 text-white shadow-sm flex items-center shrink-0 focus:outline-none">
+            <span class="w-2 h-2 inline-block rounded-full bg-blue-500 shrink-0 animate-pulse"></span>
+            <span id="tab-text-andamento" class="ml-2 font-bold whitespace-nowrap inline sm:inline">Recursos em Andamento</span>
         </button>
         {% if not user.is_comissao %}
-        <button type="button" id="tab-btn-interpor" onclick="switchTab('interpor')" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center focus:outline-none">
-            <i class="fas fa-plus mr-2 text-blue-600"></i>
-            Interpor Novo Recurso
+        <button type="button" id="tab-btn-interpor" onclick="switchTab('interpor')" class="px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center shrink-0 focus:outline-none">
+            <i class="fas fa-plus text-blue-600 shrink-0"></i>
+            <span id="tab-text-interpor" class="ml-2 font-bold whitespace-nowrap hidden sm:inline">Interpor Novo Recurso</span>
         </button>
         {% endif %}
-        <button type="button" id="tab-btn-historico" onclick="switchTab('historico')" class="px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center focus:outline-none">
-            <i class="fas fa-archive mr-2 text-slate-400"></i>
-            Histórico de Resolvidos
+        <button type="button" id="tab-btn-historico" onclick="switchTab('historico')" class="px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center shrink-0 focus:outline-none">
+            <i class="fas fa-archive text-slate-400 shrink-0"></i>
+            <span id="tab-text-historico" class="ml-2 font-bold whitespace-nowrap hidden sm:inline">Histórico de Resolvidos</span>
         </button>
     </div>
 
@@ -135,40 +135,43 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                        <th class="px-6 py-4">Modalidade & Confronto</th>
-                        <th class="px-6 py-3">Encerramento Real</th>
-                        <th class="px-6 py-3">Local</th>
-                        <th class="px-6 py-3 text-right">Ação</th>
+                        <th class="px-4 sm:px-6 py-4">Modalidade</th>
+                        <th class="px-4 sm:px-6 py-4">Confronto</th>
+                        <th class="hidden sm:table-cell px-6 py-3">Encerramento Real</th>
+                        <th class="hidden sm:table-cell px-6 py-3">Local</th>
+                        <th class="px-4 sm:px-6 py-3 text-right">Ação</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100 text-slate-655 text-xs">
                     {% for jogo in jogos_possiveis %}
                     <tr class="hover:bg-slate-50/30 transition">
-                        <td class="px-6 py-4 font-bold text-slate-800">
+                        <td class="px-4 sm:px-6 py-4 font-bold text-slate-800">
                             <span class="flex items-center gap-1.5">
-                                <i class="fas fa-running text-slate-500"></i> {{ jogo.modalidade.nome }}
-                            </span>
-                            <span class="text-[10px] text-slate-400 block font-normal mt-0.5">
-                                {{ jogo.time_a_display }} vs {{ jogo.time_b_display }}
+                                <i class="fas fa-running text-blue-500"></i> {{ jogo.modalidade.nome }}
                             </span>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="px-4 sm:px-6 py-4 font-bold text-slate-800">
+                            <span class="text-slate-800 block">
+                                {{ jogo.time_a_display }} <span class="text-slate-400 font-semibold text-[10px]">vs</span> {{ jogo.time_b_display }}
+                            </span>
+                        </td>
+                        <td class="hidden sm:table-cell px-6 py-4">
                             <span class="inline-flex items-center px-2 py-0.5 rounded bg-slate-50 text-slate-700 font-semibold border border-slate-100 text-[10px]">
                                 {{ jogo.data_hora_fim|date:"d/m/Y H:i:s" }}
                             </span>
                         </td>
-                        <td class="px-6 py-4">
+                        <td class="hidden sm:table-cell px-6 py-4">
                             <span class="text-slate-500"><i class="fas fa-map-marker-alt text-slate-400 mr-1.5"></i> {{ jogo.local|default:"-" }}</span>
                         </td>
-                        <td class="px-6 py-4 text-right">
-                            <a href="{% url 'recurso_create' jogo.id %}" class="inline-flex items-center px-3.5 py-1.5 bg-red-600 hover:bg-red-750 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95 focus:outline-none">
-                                <i class="fas fa-balance-scale"></i> Iniciar Recurso
+                        <td class="px-4 sm:px-6 py-4 text-right">
+                            <a href="{% url 'recurso_create' jogo.id %}" class="inline-flex items-center px-3.5 py-1.5 bg-red-600 hover:bg-red-750 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95 focus:outline-none whitespace-nowrap">
+                                <i class="fas fa-balance-scale"></i> Interpor Recurso
                             </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-slate-400">
+                        <td colspan="5" class="px-6 py-12 text-center text-slate-400">
                             <i class="far fa-clock text-3xl mb-2 text-slate-350"></i>
                             <p class="font-bold text-slate-700 text-sm">Nenhum jogo disponível para recurso</p>
                             <p class="text-[11px] text-slate-400 mt-1">Apenas partidas finalizadas há menos de 1 hora e vinculadas à sua atlética aparecem aqui.</p>
@@ -311,15 +314,18 @@
         // Exibe a seção ativa
         document.getElementById('section-' + tabId).classList.remove('hidden');
 
-        // Reseta o estilo dos botões das abas
+        // Reseta o estilo e texto dos botões das abas
         const tabs = ['andamento', 'interpor', 'historico'];
         tabs.forEach(tab => {
             const btn = document.getElementById('tab-btn-' + tab);
-            if (btn) {
+            const textSpan = document.getElementById('tab-text-' + tab);
+            if (btn && textSpan) {
                 if (tab === tabId) {
-                    btn.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-slate-900 text-white shadow-sm flex items-center focus:outline-none";
+                    btn.className = "px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-slate-900 text-white shadow-sm flex items-center shrink-0 focus:outline-none";
+                    textSpan.className = "ml-2 font-bold whitespace-nowrap inline sm:inline";
                 } else {
-                    btn.className = "px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center focus:outline-none";
+                    btn.className = "px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center shrink-0 focus:outline-none";
+                    textSpan.className = "ml-2 font-bold whitespace-nowrap hidden sm:inline";
                 }
             }
         });

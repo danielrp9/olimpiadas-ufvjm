@@ -223,11 +223,6 @@
                                                 </button>
                                             {% endif %}
                                             
-                                            <!-- Editar Jogo (Lápis) -->
-                                            <a href="{% url 'jogo_update' jogo.id %}" class="text-slate-600 hover:text-slate-800 hover:bg-slate-100/80 p-2 rounded-xl transition inline-flex items-center justify-center shrink-0 border border-slate-200/80 bg-white shadow-2xs focus:outline-none" title="Editar Jogo">
-                                                <i class="far fa-edit text-xs"></i>
-                                            </a>
-                                            
                                             <!-- Excluir Jogo (Lixeira) -->
                                             <a href="{% url 'jogo_delete' jogo.id %}" class="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 rounded-xl transition inline-flex items-center justify-center shrink-0 border border-red-200/80 bg-red-50/30 shadow-2xs focus:outline-none" title="Excluir Jogo">
                                                 <i class="far fa-trash-alt text-xs"></i>

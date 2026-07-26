@@ -256,7 +256,7 @@ class PreSumulaAtleta(models.Model):
         verbose_name_plural = "Atletas Escalados"
 
     def __str__(self):
-        return f"Atleta {self.atleta.nome_completo} - Camisa #{self.numero_camisa}"
+        return f"Atleta {self.atleta.nome_completo} - Camisa {self.numero_camisa}"
 
 
 class Inscricao(models.Model):

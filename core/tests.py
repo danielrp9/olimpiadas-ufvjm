@@ -1514,14 +1514,22 @@ class PreSumulaManagementTests(TestCase):
         self.assertEqual(PreSumula.objects.count(), 2)
         self.assertEqual(Jogo.objects.count(), 1)
 
-    def test_delete_single_presumula(self):
+    def test_delete_single_presumula_as_commission(self):
+        from django.urls import reverse
+        from core.models import PreSumula
+        self.client.force_login(self.staff)
+        response = self.client.post(reverse('presumula_delete', kwargs={'pk': self.presumula1.pk}))
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(PreSumula.objects.filter(pk=self.presumula1.pk).exists())
+        self.assertTrue(PreSumula.objects.filter(pk=self.presumula2.pk).exists())
+
+    def test_delete_single_presumula_denied_for_representative(self):
         from django.urls import reverse
         from core.models import PreSumula
         self.client.force_login(self.delegate)
         response = self.client.post(reverse('presumula_delete', kwargs={'pk': self.presumula1.pk}))
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(PreSumula.objects.filter(pk=self.presumula1.pk).exists())
-        self.assertTrue(PreSumula.objects.filter(pk=self.presumula2.pk).exists())
+        self.assertTrue(PreSumula.objects.filter(pk=self.presumula1.pk).exists())
 
     def test_chaveamento_generation_does_not_create_dummy_jogos_or_presumulas(self):
         from core.models import PreSumula, Jogo, PartidaChaveamento, ChaveamentoModalidade
