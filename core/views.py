@@ -45,6 +45,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
             context['total_atletas_global'] = Atleta.objects.count()
             context['total_usuarios'] = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True, inscricao__isnull=False).count()
             context['total_presumulas_global'] = PreSumula.objects.count()
+            context['total_inscricoes'] = Inscricao.objects.count()
             
             # Analytics data for the Commission
             from core.models import Campus
