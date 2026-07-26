@@ -22,17 +22,17 @@
         <table class="w-full text-left border-collapse">
             <thead>
                 <tr class="bg-slate-50/50 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                    <th class="px-6 py-4">Delegação / Representante</th>
-                    <th class="px-6 py-4">Atletas Cadastrados</th>
-                    <th class="px-6 py-4">Status da Delegação</th>
-                    <th class="px-6 py-4 text-right">Ações</th>
+                    <th class="px-4 sm:px-6 py-4">Delegação / Representante</th>
+                    <th class="px-6 py-4 hidden sm:table-cell">Atletas Cadastrados</th>
+                    <th class="px-6 py-4 hidden sm:table-cell">Status da Delegação</th>
+                    <th class="px-4 sm:px-6 py-4 text-right">Ações</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100 text-slate-650 text-xs">
                 {% for del in delegacoes %}
                 <tr class="hover:bg-slate-50/20 transition">
                     <!-- Delegação -->
-                    <td class="px-6 py-4">
+                    <td class="px-4 sm:px-6 py-4">
                         <div class="flex items-center gap-3">
                             {% if del.foto_url %}
                                 <img src="{{ del.foto_url }}" alt="{{ del.nome_completo }}" class="w-10 h-10 rounded-full border border-slate-200 shadow-sm object-cover shrink-0">
@@ -50,14 +50,14 @@
                     </td>
 
                     <!-- Atletas Cadastrados -->
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 hidden sm:table-cell">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
                             <i class="fas fa-users mr-1"></i> {{ del.atletas.count }} Atletas
                         </span>
                     </td>
 
                     <!-- Status da Delegação -->
-                    <td class="px-6 py-4">
+                    <td class="px-6 py-4 hidden sm:table-cell">
                         {% if del.status_delegacao == 'deferido' %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-150 uppercase tracking-wide">
                                 <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferida (Aprovada)
@@ -79,7 +79,7 @@
                     </td>
 
                     <!-- Ações -->
-                    <td class="px-6 py-4 text-right">
+                    <td class="px-4 sm:px-6 py-4 text-right">
                         <button onclick="toggleAthletes('{{ del.id }}')" 
                                 id="btn-toggle-athletes-{{ del.id }}"
                                 class="inline-flex items-center px-3 py-1.5 border border-slate-200 hover:border-slate-350 text-slate-650 hover:bg-slate-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-[0.98]">
@@ -91,7 +91,7 @@
 
                 <!-- Accordion Expandido -->
                 <tr id="athletes-row-{{ del.id }}" class="hidden bg-slate-50/30">
-                    <td colspan="4" class="px-6 py-4">
+                    <td colspan="4" class="px-2 sm:px-6 py-4">
                         <div class="bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
                             
                             <!-- Header do Accordion com Trigger para Avaliação de Delegação -->
@@ -223,19 +223,19 @@
                                         <table class="w-full text-left text-xs border-collapse">
                                             <thead>
                                                 <tr class="bg-slate-50/20 border-b border-slate-100 text-slate-500 text-[10px] font-bold uppercase tracking-wider">
-                                                    <th class="px-4 py-3">Jogador</th>
-                                                    <th class="px-4 py-3">Matrícula</th>
-                                                    <th class="px-4 py-3">Status da Decisão</th>
-                                                    <th class="px-4 py-3 text-right">Ação</th>
+                                                    <th class="px-3 sm:px-4 py-3">Jogador</th>
+                                                    <th class="px-4 py-3 hidden sm:table-cell">Matrícula</th>
+                                                    <th class="px-2 sm:px-4 py-3">Status da Decisão</th>
+                                                    <th class="px-3 sm:px-4 py-3 text-right">Ação</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-slate-100 text-slate-650">
                                                 {% for atleta in del.inscricao.atletas_inscritos %}
                                                 <!-- Row do Atleta -->
                                                 <tr class="transition border-l-4 {% if atleta.status_avaliacao == 'deferido' %} bg-green-50/5 hover:bg-green-50/15 border-l-green-500 {% elif atleta.status_avaliacao == 'indeferido' %} bg-red-50/5 hover:bg-red-50/15 border-l-red-500 {% else %} bg-amber-50/5 hover:bg-amber-50/15 border-l-amber-500 {% endif %}">
-                                                    <td class="px-4 py-3 font-bold text-slate-800">{{ atleta.nome_completo }}</td>
-                                                    <td class="px-4 py-3 font-semibold text-slate-700">{{ atleta.matricula }}</td>
-                                                    <td class="px-4 py-3">
+                                                    <td class="px-3 sm:px-4 py-3 font-bold text-slate-800">{{ atleta.nome_completo }}</td>
+                                                    <td class="px-4 py-3 font-semibold text-slate-700 hidden sm:table-cell">{{ atleta.matricula }}</td>
+                                                    <td class="px-2 sm:px-4 py-3">
                                                         {% if atleta.status_avaliacao == 'deferido' %}
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100 uppercase tracking-wide">
                                                                 <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido
@@ -250,7 +250,7 @@
                                                             </span>
                                                         {% endif %}
                                                     </td>
-                                                    <td class="px-4 py-3 text-right whitespace-nowrap">
+                                                    <td class="px-3 sm:px-4 py-3 text-right whitespace-nowrap">
                                                         <button onclick="openEvalModal(this)"
                                                                 data-id="{{ atleta.id }}"
                                                                 data-nome="{{ atleta.nome_completo }}"
