@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatório Oficial de Refeições Servidas - UFVJM</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 12mm 15mm 15mm 15mm;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        /* NA TELA (Mídia Screen): Oculta o documento para evitar vazamento visual atrás do pop-up de impressão */
+        @media screen {
+            html, body {
+                background-color: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden !important;
+            }
+            .relatorio-container {
+                display: none !important;
+            }
+            .print-loading {
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                font-family: Arial, sans-serif;
+                color: #64748b;
+                font-size: 13px;
+                font-weight: bold;
+            }
+        }
+
+        /* NA IMPRESSÃO / PDF (Mídia Print): Exibe exclusivamente o relatório oficial A4 */
+        @media print {
+            .print-loading {
+                display: none !important;
+            }
+            html, body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .relatorio-container {
+                display: block !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        /* Formatação de Documento Oficial */
+        .doc-header {
+            text-align: center;
+            border-bottom: 2px solid #000000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .doc-header h1 {
+            font-size: 10.5pt;
+            font-weight: bold;
+            margin: 0;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .doc-header h2 {
+            font-size: 9.5pt;
+            font-weight: bold;
+            margin: 3px 0 0 0;
+            color: #333333;
+            text-transform: uppercase;
+        }
+
+        .doc-header h3 {
+            font-size: 11pt;
+            font-weight: bold;
+            margin: 6px 0 0 0;
+            text-transform: uppercase;
+            text-decoration: underline;
+        }
+
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 9.5pt;
+        }
+
+        .meta-table td {
+            padding: 4px 8px;
+            border: 1px solid #cccccc;
+        }
+
+        .meta-table .label {
+            font-weight: bold;
+            background-color: #f8fafc;
+            width: 25%;
+            text-transform: uppercase;
+            font-size: 8.5pt;
+        }
+
+        /* Resumo Totalizador */
+        .summary-box {
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-size: 10.5pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #000000;
+            padding-bottom: 2px;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            font-size: 10pt;
+        }
+
+        .summary-table th {
+            background-color: #0f172a;
+            color: #ffffff;
+            font-weight: bold;
+            padding: 6px;
+            border: 1px solid #0f172a;
+            text-transform: uppercase;
+            font-size: 8.5pt;
+        }
+
+        .summary-table td {
+            padding: 8px;
+            border: 1px solid #cccccc;
+            font-weight: bold;
+            font-size: 12pt;
+        }
+
+        /* Listagem por Campus */
+        .campus-block {
+            margin-bottom: 20px;
+        }
+
+        .campus-header {
+            background-color: #1e293b;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 10pt;
+            padding: 6px 10px;
+            text-transform: uppercase;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 9pt;
+        }
+
+        .students-table th {
+            background-color: #f1f5f9;
+            color: #000000;
+            font-weight: bold;
+            padding: 5px 6px;
+            border: 1px solid #94a3b8;
+            text-align: left;
+            text-transform: uppercase;
+            font-size: 8pt;
+        }
+
+        .students-table td {
+            padding: 5px 6px;
+            border: 1px solid #cbd5e1;
+            vertical-align: middle;
+        }
+
+        .students-table tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .font-mono { font-family: 'Courier New', Courier, monospace; }
+
+        /* Rodapé de Assinatura */
+        .doc-footer {
+            margin-top: 40px;
+            padding-top: 15px;
+            border-top: 1px solid #cccccc;
+            font-size: 8pt;
+            color: #666666;
+            text-align: center;
+        }
+
+        .signature-area {
+            margin-top: 35px;
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            font-size: 9pt;
+        }
+
+        .signature-line {
+            border-top: 1px solid #000000;
+            width: 220px;
+            padding-top: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENSAGEM LIMPA EXIBIDA APENAS NA TELA DE FUNDO -->
+    <div class="print-loading">
+        <p>Aguarde, gerando documento oficial em PDF...</p>
+    </div>
+
+    <!-- DOCUMENTO OFICIAL A4 (Exibido estritamente na Impressão/PDF) -->
+    <div class="relatorio-container" id="relatorio-container">
+        <!-- Cabeçalho Oficial do Relatório -->
+        <div class="doc-header">
+            <h1>Universidade Federal dos Vales do Jequitinhonha e Mucuri — UFVJM</h1>
+            <h2>Comissão Organizadora das Olimpíadas Universitárias UFVJM</h2>
+            <h3>Relatório Oficial de Registro de Refeições Servidas</h3>
+        </div>
+
+        <!-- Metadados do Documento -->
+        <table class="meta-table">
+            <tr>
+                <td class="label">Data de Referência:</td>
+                <td><strong>{{ data_filtro|date:"d/m/Y" }}</strong></td>
+                <td class="label">Data de Emissão:</td>
+                <td>{{ data_emissao|date:"d/m/Y H:i:s" }}</td>
+            </tr>
+            <tr>
+                <td class="label">Emissor / Operador:</td>
+                <td colspan="3">{{ gerado_por.nome_completo|default:gerado_por.email }}</td>
+            </tr>
+        </table>
+
+        <!-- RESUMO DO QUANTITATIVO DE REFEIÇÕES SERVIDAS NO INÍCIO -->
+        <div class="summary-box">
+            <div class="summary-title">Resumo do Quantitativo de Refeições Servidas</div>
+            <table class="summary-table">
+                <thead>
+                    <tr>
+                        <th>Total Geral Servido</th>
+                        <th>Café da Manhã</th>
+                        <th>Almoço</th>
+                        <th>Jantar</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>{{ total_geral }}</td>
+                        <td>{{ total_cafe }}</td>
+                        <td>{{ total_almoco }}</td>
+                        <td>{{ total_jantar }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- LISTAGEM CONTÍNUA CLASSIFICADA E AGRUPADA POR CAMPUS -->
+        <div class="summary-title" style="margin-top: 25px;">Listagem de Retiradas de Estudantes (Classificados por Campus)</div>
+
+        {% for campus_nome, itens in registros_agrupados.items %}
+            <div class="campus-block">
+                <div class="campus-header">
+                    <span>CAMPUS: {{ campus_nome }}</span>
+                    <span>Total Retirado: {{ itens|length }}</span>
+                </div>
+
+                <table class="students-table">
+                    <thead>
+                        <tr>
+                            <th class="text-center" style="width: 25px;">#</th>
+                            <th>Nome do Estudante</th>
+                            {% if exibir_matricula %}<th style="width: 95px;">Matrícula</th>{% endif %}
+                            {% if exibir_cpf %}<th style="width: 115px;">CPF</th>{% endif %}
+                            {% if exibir_refeicao %}<th style="width: 110px;">Refeição</th>{% endif %}
+                            {% if exibir_horario %}<th class="text-center" style="width: 85px;">Horário</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in itens %}
+                            <tr>
+                                <td class="text-center font-mono" style="color: #64748b;">{{ forloop.counter }}</td>
+                                <td><strong>{{ item.registro.atleta.nome_completo }}</strong></td>
+                                {% if exibir_matricula %}<td class="font-mono">{{ item.registro.atleta.matricula }}</td>{% endif %}
+                                {% if exibir_cpf %}<td class="font-mono" style="color: #475569; white-space: nowrap;">{{ item.registro.atleta.cpf|default:"-" }}</td>{% endif %}
+                                {% if exibir_refeicao %}<td><strong>{{ item.registro.refeicao.get_tipo_display }}</strong></td>{% endif %}
+                                {% if exibir_horario %}<td class="text-center font-mono"><strong>{{ item.registro.data_retirada|date:"H:i:s" }}</strong></td>{% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% empty %}
+            <div style="text-align: center; padding: 20px; border: 1px dashed #cccccc; color: #666666; font-style: italic;">
+                Nenhum registro de refeição encontrado para a data e parâmetros selecionados.
+            </div>
+        {% endfor %}
+
+        <!-- RODAPÉ DO DOCUMENTO -->
+        <div class="doc-footer">
+            Documento gerado automaticamente pelo Sistema Oficial de Gestão de Refeições — Olimpíadas UFVJM em {{ data_emissao|date:"d/m/Y H:i:s" }}.
+        </div>
+    </div>
+
+    <!-- DISPARO IMEDIATO DA TELA NATIVA DE IMPRESSÃO / SALVAR PDF -->
+    <script>
+        window.addEventListener('load', function() {
+            setTimeout(function() {
+                window.print();
+            }, 300);
+        });
+
+        window.addEventListener('afterprint', function() {
+            window.close();
+        });
+    </script>
+</body>
+</html>

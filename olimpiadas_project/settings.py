@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'theme',
     'users',
     'core',
+    'refeicoes',
 ]
 
 # Adiciona o reload apenas se o pacote estiver instalado (desenvolvimento)

@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}Registro de Refeições Servidas - Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="space-y-6 max-w-full">
+    <!-- Cabeçalho -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white p-6 rounded-3xl border border-slate-200/60 shadow-sm">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Registro de Refeições Servidas</h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium">Consulte o quantitativo de refeições fornecidas e o histórico completo de retiradas.</p>
+        </div>
+        
+        <!-- Filtro por Data, Campus e Tipo de Refeição -->
+        <form method="get" class="flex flex-wrap items-center gap-2 bg-slate-50 p-2 sm:p-2.5 rounded-2xl border border-slate-200">
+            <!-- Data -->
+            <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
+                <label class="text-[10px] font-black uppercase text-slate-400">Data:</label>
+                <input type="date" name="data" value="{{ data_filtro|date:'Y-m-d' }}" class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none">
+            </div>
+
+            <!-- Campus -->
+            <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
+                <label class="text-[10px] font-black uppercase text-slate-400">Campus:</label>
+                <select name="campus" class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+                    <option value="">Todos os Campi</option>
+                    {% for c in campi %}
+                        <option value="{{ c.id }}" {% if campus_filtro == c.id|stringformat:"s" %}selected{% endif %}>{{ c.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Refeição -->
+            <div class="flex items-center gap-1.5 bg-white px-2.5 py-1 rounded-xl border border-slate-200">
+                <label class="text-[10px] font-black uppercase text-slate-400">Refeição:</label>
+                <select name="tipo" class="bg-transparent text-xs font-bold text-slate-800 focus:outline-none cursor-pointer">
+                    <option value="">Todas</option>
+                    <option value="cafe" {% if tipo_filtro == 'cafe' %}selected{% endif %}>Café da Manhã</option>
+                    <option value="almoco" {% if tipo_filtro == 'almoco' %}selected{% endif %}>Almoço</option>
+                    <option value="jantar" {% if tipo_filtro == 'jantar' %}selected{% endif %}>Jantar</option>
+                </select>
+            </div>
+
+            <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm active:scale-95 flex items-center gap-1">
+                <i class="fas fa-filter"></i> Filtrar
+            </button>
+            {% if campus_filtro or tipo_filtro %}
+                <a href="{% url 'refeicoes_relatorio' %}?data={{ data_filtro|date:'Y-m-d' }}" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
+                    Limpar
+                </a>
+            {% endif %}
+
+            <!-- Botão de Exportação DESKTOP -->
+            <div class="hidden md:flex items-center pl-2 border-l border-slate-200">
+                <button type="button" onclick="abrirModalOpcoesEmissao()" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition shadow-sm active:scale-95 flex items-center gap-1.5" title="Opções de Emissão de Relatório PDF">
+                    <i class="fas fa-file-pdf text-amber-400"></i> Relatório PDF
+                </button>
+            </div>
+        </form>
+
+        <!-- Botão Sanfona / Arrow de Emissão de Relatórios para MOBILE (Inicia Fechado por Padrão) -->
+        <div class="block md:hidden pt-2 border-t border-slate-100">
+            <button type="button" onclick="toggleEmissaoRelatoriosMobile()" class="w-full flex items-center justify-between px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-200 transition active:scale-98">
+                <span class="flex items-center gap-1.5">
+                    <i class="fas fa-file-export text-indigo-600"></i>
+                    <span>Emissão de Relatórios</span>
+                </span>
+                <i id="seta-emissao-mobile" class="fas fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+            </button>
+
+            <!-- Opção de Exportação MOBILE (Oculta por padrão) -->
+            <div id="container-emissao-mobile" class="hidden pt-2 space-y-2">
+                <button type="button" onclick="abrirModalOpcoesEmissao()" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center gap-2">
+                    <i class="fas fa-file-pdf text-amber-400"></i> Gerar Relatório PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CARDS DE RESUMO TOTALIZADOR -->
+    <!-- DESKTOP: Sempre visível em 4 colunas em telas médias e grandes -->
+    <div class="hidden md:block">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Total Servido -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Servido</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_geral }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Café da Manhã -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Café da Manhã</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_cafe }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-coffee"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Almoço -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Almoço</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_almoco }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-drumstick-bite"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jantar -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Jantar</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_jantar }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MOBILE: Sanfona acionada por botão de seta -->
+    <div class="block md:hidden space-y-3">
+        <!-- Botão Toggle para Celulares -->
+        <button type="button" onclick="toggleContadoresMobile()" class="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200/60 shadow-sm font-extrabold text-xs text-slate-800 transition active:scale-98">
+            <span class="flex items-center gap-2">
+                <i class="fas fa-chart-pie text-indigo-600 text-sm"></i>
+                <span>Ver Resumo de Refeições Servidas</span>
+            </span>
+            <i id="seta-contadores-mobile" class="fas fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+        </button>
+
+        <!-- Container do Mobile (Oculto por padrão via JS) -->
+        <div id="container-contadores-mobile" class="hidden space-y-3">
+            <!-- Total Servido -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Servido</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_geral }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-utensils"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Café da Manhã -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Café da Manhã</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_cafe }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-coffee"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Almoço -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Almoço</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_almoco }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-drumstick-bite"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jantar -->
+            <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-sm space-y-1">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Jantar</span>
+                <div class="flex items-center justify-between">
+                    <span class="text-3xl font-black text-slate-900">{{ total_jantar }}</span>
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg font-bold">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabela Detalhada de Histórico de Retiradas -->
+    <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 w-full">
+        <h2 class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            <i class="fas fa-history text-emerald-600"></i>
+            Histórico Detalhado de Retiradas ({{ data_filtro|date:"d/m/Y" }})
+        </h2>
+
+        {% if registros %}
+            <!-- LISTA COMPACTA NO MOBILE (Nome, Data/Horário, Refeição e Botão Ver) -->
+            <div class="block md:hidden space-y-2 max-h-[500px] overflow-y-auto">
+                {% for reg in registros %}
+                    <div class="p-3.5 rounded-2xl border border-slate-200/80 bg-slate-50/50 flex items-center justify-between gap-3 shadow-xs">
+                        <div class="min-w-0 flex-1">
+                            <h3 class="font-extrabold text-slate-900 text-xs sm:text-sm truncate">{{ reg.atleta.nome_completo }}</h3>
+                            <div class="flex items-center gap-2 text-[11px] text-slate-500 font-semibold mt-0.5">
+                                <span><i class="fas fa-utensils text-amber-500 mr-1"></i>{{ reg.refeicao.get_tipo_display }}</span>
+                                <span>&bull;</span>
+                                <span class="font-mono text-slate-700 font-bold"><i class="fas fa-clock text-slate-400 mr-1"></i>{{ reg.data_retirada|date:"H:i:s" }}</span>
+                            </div>
+                        </div>
+
+                        <!-- Botão VER (Abre Modal com todas as informações) -->
+                        <button type="button" onclick="abrirModalDetalhesRegistro('{{ reg.atleta.nome_completo }}', '{{ reg.atleta.matricula }}', '{{ reg.atleta.cpf|default:"-" }}', '{{ reg.atleta.campus.nome|default:"-" }}', '{{ reg.refeicao.get_tipo_display }}', '{{ reg.data_retirada|date:"d/m/Y H:i:s" }}')" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 font-extrabold text-xs rounded-xl transition shadow-2xs shrink-0 active:scale-95 flex items-center gap-1">
+                            <i class="fas fa-eye"></i>
+                            <span>Ver</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- TABELA COMPLETA NO DESKTOP -->
+            <div class="hidden md:block overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-slate-100 text-[11px] font-bold text-slate-400 uppercase tracking-wider sticky top-0 bg-white z-10">
+                            <th class="py-2.5 px-3">Horário</th>
+                            <th class="py-2.5 px-3">Atleta</th>
+                            <th class="py-2.5 px-3">Campus</th>
+                            <th class="py-2.5 px-3">Refeição</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for reg in registros %}
+                            <tr class="hover:bg-slate-50 transition">
+                                <td class="py-3 px-3 font-mono font-bold text-slate-800 whitespace-nowrap">
+                                    {{ reg.data_retirada|date:"H:i:s" }}
+                                </td>
+                                <td class="py-3 px-3">
+                                    <span class="font-bold text-slate-900 block">{{ reg.atleta.nome_completo }}</span>
+                                    <span class="text-[10px] text-slate-400 block font-medium">Matrícula: {{ reg.atleta.matricula }} | CPF: {{ reg.atleta.cpf|default:"-" }}</span>
+                                </td>
+                                <td class="py-3 px-3 font-semibold text-slate-700 whitespace-nowrap">
+                                    {{ reg.atleta.campus.nome|default:"-" }}
+                                </td>
+                                <td class="py-3 px-3 font-bold text-slate-800 whitespace-nowrap">
+                                    {{ reg.refeicao.get_tipo_display }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-12 text-slate-400 italic text-xs">
+                Nenhum registro de refeição encontrado para a data {{ data_filtro|date:"d/m/Y" }}.
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal Pop-up VER Detalhes do Registro de Refeição -->
+<div id="modal-detalhes-registro" onclick="fecharModalDetalhesRegistro()" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300" style="background-color: rgba(15, 23, 42, 0.88) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-3xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 ring-1 ring-slate-900/10 animate-fadeIn">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                <i class="fas fa-id-card text-indigo-600"></i>
+                Detalhes da Retirada
+            </h3>
+            <button type="button" onclick="fecharModalDetalhesRegistro()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="space-y-2 text-xs font-semibold text-slate-700">
+            <div class="bg-slate-50 p-3 rounded-2xl border border-slate-200/80 space-y-1.5">
+                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Atleta</span>
+                <span id="modal-reg-nome" class="font-black text-sm text-slate-900 block leading-tight"></span>
+                <div class="grid grid-cols-2 gap-1 pt-1 text-[11px]">
+                    <div>
+                        <span class="text-slate-400 block text-[9px]">Matrícula</span>
+                        <span id="modal-reg-matricula" class="font-bold text-slate-800"></span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[9px]">CPF</span>
+                        <span id="modal-reg-cpf" class="font-bold text-slate-800"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                <span class="text-slate-400 font-bold uppercase text-[10px]">Campus:</span>
+                <span id="modal-reg-campus" class="font-bold text-slate-800"></span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                <span class="text-slate-400 font-bold uppercase text-[10px]">Refeição:</span>
+                <span id="modal-reg-refeicao" class="font-black text-indigo-700"></span>
+            </div>
+            <div class="flex justify-between py-1.5 border-b border-slate-100">
+                <span class="text-slate-400 font-bold uppercase text-[10px]">Data & Horário:</span>
+                <span id="modal-reg-horario" class="font-mono font-bold text-slate-900"></span>
+            </div>
+        </div>
+
+        <button type="button" onclick="fecharModalDetalhesRegistro()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-2xl transition">
+            Fechar
+        </button>
+    </div>
+</div>
+
+<script>
+    function abrirModalDetalhesRegistro(nome, matricula, cpf, campus, refeicao, horario) {
+        document.getElementById('modal-reg-nome').innerText = nome;
+        document.getElementById('modal-reg-matricula').innerText = matricula;
+        document.getElementById('modal-reg-cpf').innerText = cpf;
+        document.getElementById('modal-reg-campus').innerText = campus;
+        document.getElementById('modal-reg-refeicao').innerText = refeicao;
+        document.getElementById('modal-reg-horario').innerText = horario;
+
+        document.getElementById('modal-detalhes-registro').classList.remove('hidden');
+    }
+
+    function fecharModalDetalhesRegistro() {
+        document.getElementById('modal-detalhes-registro').classList.add('hidden');
+    }
+
+    function toggleContadoresMobile() {
+        const container = document.getElementById('container-contadores-mobile');
+        const seta = document.getElementById('seta-contadores-mobile');
+
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+            seta.classList.add('rotate-180');
+        } else {
+            container.classList.add('hidden');
+            seta.classList.remove('rotate-180');
+        }
+    }
+
+    function toggleEmissaoRelatoriosMobile() {
+        const container = document.getElementById('container-emissao-mobile');
+        const seta = document.getElementById('seta-emissao-mobile');
+
+        if (container.classList.contains('hidden')) {
+            container.classList.remove('hidden');
+            seta.classList.add('rotate-180');
+        } else {
+            container.classList.add('hidden');
+            seta.classList.remove('rotate-180');
+        }
+    }
+
+    function abrirModalOpcoesEmissao() {
+        document.getElementById('modal-opcoes-emissao').classList.remove('hidden');
+    }
+
+    function fecharModalOpcoesEmissao() {
+        document.getElementById('modal-opcoes-emissao').classList.add('hidden');
+    }
+
+    function aplicarPresetRelatorio(preset) {
+        const mat = document.getElementById('chk-opt-matricula');
+        const cpf = document.getElementById('chk-opt-cpf');
+        const ref = document.getElementById('chk-opt-refeicao');
+        const hor = document.getElementById('chk-opt-horario');
+
+        if (preset === 'completo') {
+            mat.checked = true;
+            cpf.checked = true;
+            ref.checked = true;
+            hor.checked = true;
+        } else if (preset === 'sem_cpf') {
+            mat.checked = true;
+            cpf.checked = false;
+            ref.checked = true;
+            hor.checked = true;
+        } else if (preset === 'apenas_nome') {
+            mat.checked = false;
+            cpf.checked = false;
+            ref.checked = true;
+            hor.checked = true;
+        }
+    }
+
+    function confirmarGerarRelatorioPDF() {
+        const mat = document.getElementById('chk-opt-matricula').checked ? '1' : '0';
+        const cpf = document.getElementById('chk-opt-cpf').checked ? '1' : '0';
+        const ref = document.getElementById('chk-opt-refeicao').checked ? '1' : '0';
+        const hor = document.getElementById('chk-opt-horario').checked ? '1' : '0';
+
+        const baseUrl = "{% url 'refeicoes_relatorio_exportar' %}";
+        const params = new URLSearchParams({
+            data: "{{ data_filtro|date:'Y-m-d' }}",
+            campus: "{{ campus_filtro }}",
+            tipo: "{{ tipo_filtro }}",
+            exibir_matricula: mat,
+            exibir_cpf: cpf,
+            exibir_refeicao: ref,
+            exibir_horario: hor
+        });
+
+        window.open(`${baseUrl}?${params.toString()}`, '_blank');
+        fecharModalOpcoesEmissao();
+    }
+</script>
+
+<!-- Modal Pop-up Opções de Emissão de Relatório PDF -->
+<div id="modal-opcoes-emissao" onclick="fecharModalOpcoesEmissao()" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-300" style="background-color: rgba(15, 23, 42, 0.88) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div onclick="event.stopPropagation()" class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 ring-1 ring-slate-900/10 animate-fadeIn">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div>
+                <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
+                    <i class="fas fa-sliders-h text-indigo-600"></i>
+                    Opções de Emissão de Relatório
+                </h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Selecione as informações a serem exibidas no documento.</p>
+            </div>
+            <button type="button" onclick="fecharModalOpcoesEmissao()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- Atalhos Rápido de Predefinições -->
+        <div class="space-y-1.5">
+            <span class="text-[10px] font-black uppercase text-slate-400 block">Predefinições Rápidas:</span>
+            <div class="flex flex-wrap gap-1.5">
+                <button type="button" onclick="aplicarPresetRelatorio('completo')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl transition">
+                    Completo
+                </button>
+                <button type="button" onclick="aplicarPresetRelatorio('sem_cpf')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl transition">
+                    Ocultar CPF
+                </button>
+                <button type="button" onclick="aplicarPresetRelatorio('apenas_nome')" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl transition">
+                    Apenas Nomes
+                </button>
+            </div>
+        </div>
+
+        <!-- Opções de Seleção de Colunas -->
+        <div class="space-y-2 pt-2 border-t border-slate-100">
+            <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-id-badge text-slate-400"></i> Número de Matrícula
+                </span>
+                <input type="checkbox" id="chk-opt-matricula" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+            </label>
+
+            <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-address-card text-slate-400"></i> CPF do Estudante
+                </span>
+                <input type="checkbox" id="chk-opt-cpf" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+            </label>
+
+            <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-utensils text-slate-400"></i> Tipo de Refeição
+                </span>
+                <input type="checkbox" id="chk-opt-refeicao" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+            </label>
+
+            <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
+                <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-clock text-slate-400"></i> Horário da Retirada
+                </span>
+                <input type="checkbox" id="chk-opt-horario" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
+            </label>
+        </div>
+
+        <div class="flex items-center gap-2 pt-3 border-t border-slate-100">
+            <button type="button" onclick="fecharModalOpcoesEmissao()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold text-xs rounded-2xl transition">
+                Cancelar
+            </button>
+            <button type="button" onclick="confirmarGerarRelatorioPDF()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-2xl transition shadow-md flex items-center justify-center gap-1.5">
+                <i class="fas fa-file-pdf text-amber-400"></i> Gerar PDF
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}

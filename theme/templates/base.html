@@ -48,6 +48,20 @@
         .sidebar-collapsed #main-content-wrapper {
             padding-left: 6.5rem !important; /* 104px */
         }
+        @media print {
+            #desktop-sidebar, #mobile-sidebar, header, nav, #toast-container, button, form, .no-print {
+                display: none !important;
+            }
+            #main-content-wrapper {
+                padding: 0 !important;
+                margin: 0 !important;
+                width: 100% !important;
+            }
+            body {
+                background: #ffffff !important;
+                color: #000000 !important;
+            }
+        }
     </style>
     <script>
         (function() {
@@ -121,6 +135,17 @@
                             <a href="{% url 'admin_whitelist' %}" title="Autorizar Comissão" class="sidebar-item {% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-envelope-open-text mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Autorizar Comissão</span>
+                            </a>
+                            <div class="pt-3 pb-1 sidebar-text">
+                                <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alimentação</span>
+                            </div>
+                            <a href="{% url 'refeicoes_validar' %}" title="Validar Refeições" class="sidebar-item {% if 'refeicoes/validar' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-check-circle mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Validar Refeições</span>
+                            </a>
+                            <a href="{% url 'refeicoes_gerenciar' %}" title="Gerenciar Refeições" class="sidebar-item {% if 'refeicoes/gerenciar' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-utensils mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Gerenciar Refeições</span>
                             </a>
                             <!-- Menus do Representante -->
                             {% else %}
@@ -241,6 +266,17 @@
                                     <i class="fas fa-envelope-open-text mr-3 text-base"></i>
                                     Autorizar Comissão
                                 </a>
+                                <div class="pt-3 pb-1">
+                                    <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alimentação</span>
+                                </div>
+                                <a href="{% url 'refeicoes_validar' %}" class="{% if 'refeicoes/validar' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-check-circle mr-3 text-base"></i>
+                                    Validar Refeições
+                                </a>
+                                <a href="{% url 'refeicoes_gerenciar' %}" class="{% if 'refeicoes/gerenciar' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-utensils mr-3 text-base"></i>
+                                    Gerenciar Refeições
+                                </a>
                             {% else %}
                                 <div class="pt-3 pb-1">
                                     <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
@@ -341,7 +377,7 @@
 
             <!-- Rodapé (Apenas para telas autenticadas/comuns) -->
             {% if request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'register' and request.resolver_match.url_name != 'complete_profile' %}
-                <footer class="w-full max-w-[1440px] mx-auto md:ml-0 md:mr-auto bg-slate-900 border border-slate-800 rounded-3xl py-6 px-6 shadow-sm text-center space-y-3 mt-auto">
+                <footer class="w-full bg-slate-900 border border-slate-800 rounded-3xl py-6 px-6 shadow-sm text-center space-y-3 mt-auto">
                     <h3 class="text-sm font-bold text-white tracking-wide">
                         Olimpíadas Universitárias
                     </h3>

@@ -8,6 +8,7 @@ urlpatterns = [
     path('api/', include('core.api_urls')),
     path('', include('users.urls')),
     path('', include('core.urls')),
+    path('refeicoes/', include('refeicoes.urls')),
 ]
 
 # Adiciona o reload apenas se estiver nas apps instaladas

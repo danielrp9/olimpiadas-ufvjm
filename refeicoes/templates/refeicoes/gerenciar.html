@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Gerenciar Refeições - Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="space-y-4 sm:space-y-6 max-w-full">
+    <!-- Cabeçalho -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm">
+        <div>
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Gerenciar Refeições</h1>
+            <p class="text-xs sm:text-sm text-slate-500 font-medium">Agende café da manhã, almoço ou jantar e controle quais campi têm permissão.</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <a href="{% url 'refeicoes_validar' %}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm active:scale-95">
+                <i class="fas fa-check-circle"></i>
+                Validar
+            </a>
+            <a href="{% url 'refeicoes_relatorio' %}" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition active:scale-95">
+                <i class="fas fa-list-alt"></i>
+                Registros
+            </a>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <!-- Formulário de Agendamento -->
+        <div class="lg:col-span-1 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col justify-between">
+            <div>
+                <h2 class="text-base font-bold text-slate-900 tracking-tight mb-4 flex items-center gap-2">
+                    <i class="fas fa-calendar-plus text-amber-500"></i>
+                    Agendar Nova Refeição
+                </h2>
+
+                <form method="post" class="space-y-4">
+                    {% csrf_token %}
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Data da Refeição</label>
+                        {{ form.data }}
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tipo de Refeição</label>
+                        {{ form.tipo }}
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Campi Liberados</label>
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2 max-h-48 overflow-y-auto">
+                            {{ form.campi_liberados }}
+                        </div>
+                        <p class="text-[10px] text-slate-400 mt-1 font-medium">Selecione os campi autorizados.</p>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 pt-1">
+                        {{ form.ativo }}
+                        <label for="{{ form.ativo.id_for_label }}" class="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                            Ativar imediatamente para validação
+                        </label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 px-4 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs sm:text-sm rounded-2xl transition shadow-sm active:scale-95 flex items-center justify-center gap-2 mt-4">
+                        <i class="fas fa-plus-circle"></i>
+                        Confirmar Agendamento
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Lista de Refeições Agendadas -->
+        <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h2 class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+                    <i class="fas fa-utensils text-blue-600"></i>
+                    Refeições Cadastradas
+                </h2>
+            </div>
+
+            {% if refeicoes_todas %}
+                <!-- VIEW MOBILE: Lista Compacta de Cards (Sem barra de rolagem horizontal) -->
+                <div class="block md:hidden space-y-2.5">
+                    {% for r in refeicoes_todas %}
+                        <div class="p-3.5 rounded-2xl border transition {% if r.data < hoje %}bg-slate-100/70 border-slate-200 text-slate-400 opacity-60{% else %}border-slate-200/80 bg-slate-50/50{% endif %} flex items-center justify-between gap-2 shadow-xs">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="font-extrabold text-xs sm:text-sm {% if r.data < hoje %}text-slate-500 line-through{% else %}text-slate-900{% endif %}">{{ r.get_tipo_display }}</span>
+                                    {% if r.data == hoje %}
+                                        <span class="text-[9px] px-1.5 py-0.2 rounded bg-blue-100 text-blue-700 font-extrabold uppercase">Hoje</span>
+                                    {% elif r.data < hoje %}
+                                        <span class="text-[9px] px-1.5 py-0.2 rounded bg-slate-200 text-slate-600 font-extrabold uppercase">Encerrada</span>
+                                    {% endif %}
+                                </div>
+                                <span class="text-xs font-semibold text-slate-500 block mt-0.5">{{ r.data|date:"d/m/Y" }}</span>
+                            </div>
+
+                            <!-- Botões de Ação Compactos no Mobile: Ver, Editar, Desativar/Ativar -->
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <!-- Botão VER -->
+                                <button type="button" onclick="abrirModalVer('{{ r.id }}', '{{ r.get_tipo_display }}', '{{ r.data|date:"d/m/Y" }}', '{% if r.campi_liberados.exists %}{% for c in r.campi_liberados.all %}{{ c.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}Todos os Campi{% endif %}', {{ r.ativo|lower }})" class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold text-xs transition active:scale-95" title="Ver Detalhes">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+
+                                <!-- Botão EDITAR -->
+                                <button type="button" onclick="abrirModalEditar('{{ r.id }}')" class="p-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-bold text-xs transition active:scale-95" title="Editar Refeição">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+
+                                <!-- Botão DESATIVAR/ATIVAR ou TRAVADO -->
+                                {% if r.data < hoje %}
+                                    <span class="p-2 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed inline-block" title="Encerrada (Data passada)">
+                                        <i class="fas fa-lock"></i>
+                                    </span>
+                                {% else %}
+                                    <form method="post" action="{% url 'refeicoes_toggle_ativa' r.id %}" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="p-2 rounded-xl font-bold text-xs transition active:scale-95 {% if r.ativo %}bg-red-50 hover:bg-red-100 text-red-700{% else %}bg-emerald-50 hover:bg-emerald-100 text-emerald-700{% endif %}" title="{% if r.ativo %}Desativar{% else %}Ativar{% endif %}">
+                                            <i class="fas {% if r.ativo %}fa-power-off{% else %}fa-check{% endif %}"></i>
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- VIEW DESKTOP: Tabela Completa -->
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                <th class="py-2.5 px-2.5">Data</th>
+                                <th class="py-2.5 px-2.5">Tipo</th>
+                                <th class="py-2.5 px-2.5">Campi Liberados</th>
+                                <th class="py-2.5 px-2.5 text-center">Status</th>
+                                <th class="py-2.5 px-2.5 text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-xs">
+                            {% for r in refeicoes_todas %}
+                                <tr class="transition {% if r.data < hoje %}bg-slate-100/50 opacity-60 text-slate-400{% else %}hover:bg-slate-50{% endif %}">
+                                    <td class="py-3 px-2.5 font-bold whitespace-nowrap {% if r.data < hoje %}text-slate-500{% else %}text-slate-800{% endif %}">
+                                        {{ r.data|date:"d/m/Y" }}
+                                        {% if r.data == hoje %}
+                                            <span class="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-extrabold uppercase">Hoje</span>
+                                        {% elif r.data < hoje %}
+                                            <span class="ml-1 text-[9px] px-1.5 py-0.5 rounded bg-slate-200 text-slate-600 font-extrabold uppercase">Encerrada</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-2.5 font-bold whitespace-nowrap {% if r.data < hoje %}text-slate-500 line-through{% else %}text-slate-700{% endif %}">
+                                        {{ r.get_tipo_display }}
+                                    </td>
+                                    <td class="py-3 px-2.5 max-w-xs">
+                                        <div class="flex flex-wrap gap-1">
+                                            {% for c in r.campi_liberados.all %}
+                                                <span class="px-2 py-0.5 text-[9px] font-bold bg-slate-100 text-slate-700 rounded-md border border-slate-200">
+                                                    {{ c.nome }}
+                                                </span>
+                                            {% empty %}
+                                                <span class="text-[10px] text-slate-400 italic">Todos os Campi</span>
+                                            {% endfor %}
+                                        </div>
+                                    </td>
+                                    <td class="py-3 px-2.5 text-center whitespace-nowrap">
+                                        {% if r.data < hoje %}
+                                            <span class="px-2.5 py-0.5 text-[9px] font-extrabold text-slate-600 bg-slate-200 border border-slate-300 rounded-full">
+                                                Encerrada
+                                            </span>
+                                        {% elif r.ativo %}
+                                            <span class="px-2.5 py-0.5 text-[9px] font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-100 rounded-full">
+                                                Ativo
+                                            </span>
+                                        {% else %}
+                                            <span class="px-2.5 py-0.5 text-[9px] font-extrabold text-slate-500 bg-slate-100 border border-slate-200 rounded-full">
+                                                Inativo
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="py-3 px-2.5 text-right whitespace-nowrap">
+                                        <div class="flex items-center justify-end gap-1.5">
+                                            <!-- VER (Desktop) -->
+                                            <button type="button" onclick="abrirModalVer('{{ r.id }}', '{{ r.get_tipo_display }}', '{{ r.data|date:"d/m/Y" }}', '{% if r.campi_liberados.exists %}{% for c in r.campi_liberados.all %}{{ c.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}Todos os Campi{% endif %}', {{ r.ativo|lower }})" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Ver Detalhes">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+
+                                            <!-- EDITAR (Desktop) -->
+                                            <button type="button" onclick="abrirModalEditar('{{ r.id }}')" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Editar">
+                                                <i class="fas fa-pen"></i>
+                                            </button>
+
+                                            <!-- ATIVAR/DESATIVAR ou TRAVADO (Desktop) -->
+                                            {% if r.data < hoje %}
+                                                <span class="px-2.5 py-1 text-xs font-bold rounded-lg border border-slate-200 bg-slate-100 text-slate-400 cursor-not-allowed inline-block" title="Encerrada (Data passada)">
+                                                    Encerrada
+                                                </span>
+                                            {% else %}
+                                                <form method="post" action="{% url 'refeicoes_toggle_ativa' r.id %}" class="inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="px-2.5 py-1 text-xs font-bold rounded-lg border transition shadow-sm {% if r.ativo %}border-red-200 bg-red-50 text-red-700 hover:bg-red-100{% else %}border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100{% endif %}">
+                                                        {% if r.ativo %}Desativar{% else %}Ativar{% endif %}
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
+                    <i class="fas fa-utensils text-3xl text-slate-300 mb-2"></i>
+                    <h3 class="text-xs font-bold text-slate-700">Nenhuma refeição agendada</h3>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal VER Detalhes -->
+<div id="modal-ver-refeicao" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color: rgba(15, 23, 42, 0.88) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 animate-fadeIn">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                <i class="fas fa-info-circle text-blue-600"></i>
+                Detalhes da Refeição
+            </h3>
+            <button type="button" onclick="fecharModalVer()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+            <div class="flex justify-between py-1 border-b border-slate-100">
+                <span class="font-bold text-slate-400 uppercase">Tipo:</span>
+                <span id="ver-modal-tipo" class="font-black text-slate-800"></span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-100">
+                <span class="font-bold text-slate-400 uppercase">Data:</span>
+                <span id="ver-modal-data" class="font-bold text-slate-800"></span>
+            </div>
+            <div class="flex justify-between py-1 border-b border-slate-100">
+                <span class="font-bold text-slate-400 uppercase">Status:</span>
+                <span id="ver-modal-status" class="font-bold"></span>
+            </div>
+            <div class="py-1 space-y-1">
+                <span class="font-bold text-slate-400 uppercase block">Campi Liberados:</span>
+                <p id="ver-modal-campi" class="font-semibold text-slate-700 bg-slate-50 p-2.5 rounded-xl border border-slate-200 leading-relaxed"></p>
+            </div>
+        </div>
+
+        <div class="pt-2">
+            <button type="button" onclick="fecharModalVer()" class="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal EDITAR Refeição -->
+<div id="modal-editar-refeicao" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4" style="background-color: rgba(15, 23, 42, 0.88) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);">
+    <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 animate-fadeIn">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
+                <i class="fas fa-edit text-amber-500"></i>
+                Editar Refeição
+            </h3>
+            <button type="button" onclick="fecharModalEditar()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="form-editar-refeicao" method="post" action="" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Data da Refeição</label>
+                <input type="date" id="edit-data" name="data" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition text-xs font-bold" required>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Tipo de Refeição</label>
+                <select id="edit-tipo" name="tipo" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition text-xs font-bold" required>
+                    <option value="cafe">Café da Manhã</option>
+                    <option value="almoco">Almoço</option>
+                    <option value="jantar">Jantar</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1.5">Campi Liberados</label>
+                <div id="edit-campi-container" class="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-2 max-h-48 overflow-y-auto">
+                    {{ form.campi_liberados }}
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2.5 pt-1">
+                <input type="checkbox" id="edit-ativo" name="ativo" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-5 h-5">
+                <label for="edit-ativo" class="text-xs font-bold text-slate-700 cursor-pointer select-none">
+                    Ativo para validação
+                </label>
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <button type="button" onclick="fecharModalEditar()" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                    Cancelar
+                </button>
+                <button type="submit" class="flex-1 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl transition shadow-sm">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function abrirModalVer(id, tipo, data, campi, ativo) {
+        document.getElementById('ver-modal-tipo').innerText = tipo;
+        document.getElementById('ver-modal-data').innerText = data;
+        document.getElementById('ver-modal-campi').innerText = campi;
+        
+        const statusSpan = document.getElementById('ver-modal-status');
+        if (ativo) {
+            statusSpan.className = "font-extrabold text-emerald-600";
+            statusSpan.innerText = "Ativo";
+        } else {
+            statusSpan.className = "font-extrabold text-slate-500";
+            statusSpan.innerText = "Inativo";
+        }
+
+        document.getElementById('modal-ver-refeicao').classList.remove('hidden');
+    }
+
+    function fecharModalVer() {
+        document.getElementById('modal-ver-refeicao').classList.add('hidden');
+    }
+
+    function abrirModalEditar(id) {
+        const form = document.getElementById('form-editar-refeicao');
+        form.action = `/refeicoes/editar/${id}/`;
+
+        fetch(`/refeicoes/editar/${id}/?json=1`, {
+            headers: { "X-Requested-With": "XMLHttpRequest" }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('edit-data').value = data.data;
+            document.getElementById('edit-tipo').value = data.tipo;
+            document.getElementById('edit-ativo').checked = data.ativo;
+
+            // Marcar checkboxes dos campi liberados
+            const container = document.getElementById('edit-campi-container');
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => {
+                cb.checked = data.campi_liberados.includes(parseInt(cb.value));
+            });
+
+            document.getElementById('modal-editar-refeicao').classList.remove('hidden');
+        })
+        .catch(err => console.error("Erro ao carregar dados da refeição:", err));
+    }
+
+    function fecharModalEditar() {
+        document.getElementById('modal-editar-refeicao').classList.add('hidden');
+    }
+</script>
+{% endblock %}
