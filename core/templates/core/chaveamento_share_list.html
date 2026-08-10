@@ -29,22 +29,22 @@
         </div>
     </div>
 
-    <!-- Header Limpo & Elegante Arredondado (Sem Menu Lateral) -->
+    <!-- Header Dark Elegante e Arredondado -->
     <header class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6 no-print">
-        <div class="bg-white border border-slate-200/90 rounded-3xl p-3.5 sm:p-6 shadow-sm flex items-center justify-between gap-3">
+        <div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white border border-slate-800 rounded-3xl p-4 sm:p-6 shadow-md flex items-center justify-between gap-3 overflow-hidden">
             <!-- Brand & Title -->
             <div class="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
                 <img src="{% static 'logo.png' %}" alt="Logo UFVJM" class="w-8 h-8 sm:w-10 sm:h-10 object-contain shrink-0">
                 <div class="min-w-0">
-                    <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-blue-600 truncate block leading-tight">Olimpíadas UFVJM</span>
-                    <h1 class="text-sm sm:text-2xl font-black text-slate-800 tracking-tight leading-tight truncate">Chaveamentos e Tabelas</h1>
+                    <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-blue-400 truncate block leading-tight">Olimpíadas Universitárias UFVJM</span>
+                    <h1 class="text-sm sm:text-2xl font-black text-white tracking-tight leading-tight truncate">Chaveamentos e Tabelas de Partidas</h1>
                 </div>
             </div>
 
             <!-- Botões de Ação da Tela -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 no-print">
                 <button type="button" onclick="abrirModalCompartilhamento(window.location.href, 'Todas as Modalidades - UFVJM')" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Compartilhar Página">
-                    <i class="fas fa-share-nodes text-xs"></i>
+                    <i class="fas fa-share-nodes text-xs text-amber-300"></i>
                     <span class="hidden sm:inline">Compartilhar Página</span>
                 </button>
             </div>
@@ -53,19 +53,6 @@
 
     <!-- Conteúdo Principal -->
     <main class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6 sm:space-y-8">
-
-        <!-- Banner de Boas-Vindas -->
-        <div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-10 border border-slate-800 shadow-md overflow-hidden">
-            <div class="relative z-10 max-w-2xl space-y-2">
-                <span class="text-[10px] font-extrabold uppercase tracking-widest text-blue-400 bg-blue-500/20 border border-blue-400/30 px-3 py-1 rounded-full inline-block">
-                    Painel Público de Consulta
-                </span>
-                <h2 class="text-2xl sm:text-3xl font-black tracking-tight">Selecione uma Modalidade Esportiva</h2>
-                <p class="text-xs sm:text-sm text-slate-300 leading-relaxed font-medium">
-                    Acompanhe em tempo real a classificação dos grupos, resultados de jogos e a árvore de mata-mata de todas as modalidades das Olimpíadas Universitárias UFVJM.
-                </p>
-            </div>
-        </div>
 
         <!-- Grid de Modalidades -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

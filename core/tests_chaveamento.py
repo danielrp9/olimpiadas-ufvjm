@@ -550,7 +550,7 @@ class ChaveamentoModuleTestCase(TestCase):
         self.client.logout()
         res = self.client.get(reverse('chaveamento_share_list'))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Selecione uma Modalidade Esportiva")
+        self.assertContains(res, "Chaveamentos e Tabelas de Partidas")
         self.assertContains(res, self.futsal.nome)
 
     def test_chaveamento_share_view_unauthenticated(self):
