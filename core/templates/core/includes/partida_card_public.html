@@ -50,7 +50,7 @@
             {% for c in partida.cartoes.all %}
                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {% if c.tipo == 'AMARELO' %}bg-amber-50 text-amber-800 border-amber-300{% elif c.tipo == 'SEGUNDO_AMARELO' %}bg-orange-50 text-orange-900 border-orange-300{% else %}bg-red-50 text-red-800 border-red-300{% endif %}">
                     {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
-                    {{ c.atleta.nome_completo }} ({% if c.tipo == 'AMARELO' %}Amarelo{% elif c.tipo == 'SEGUNDO_AMARELO' %}2º Amarelo{% else %}Vermelho Direto{% endif %}{% if c.minuto %}, {{ c.minuto }}'{% endif %})
+                    {{ c.atleta.nome_completo }} ({{ c.get_tipo_display }})
                 </span>
             {% endfor %}
         </div>

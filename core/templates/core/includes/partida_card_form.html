@@ -55,18 +55,18 @@
             </button>
         </div>
 
-        <!-- Exibição de Cartões Aplicados na Partida -->
-        {% if partida.cartoes.exists %}
-            <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[11px]">
-                <span class="text-slate-400 font-medium">Cartões:</span>
+        <!-- Exibição de Cartões Aplicados na Partida (Modo Leitura) -->
+        <div id="cartoes-read-container-{{ partida.pk }}" class="pt-2 border-t border-slate-100 {% if not partida.cartoes.exists %}hidden{% endif %} flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span class="text-slate-400 font-medium">Cartões:</span>
+            <div id="cartoes-read-list-{{ partida.pk }}" class="inline-flex flex-wrap items-center gap-1.5">
                 {% for c in partida.cartoes.all %}
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {% if c.tipo == 'AMARELO' %}bg-amber-50 text-amber-800 border-amber-300{% elif c.tipo == 'SEGUNDO_AMARELO' %}bg-orange-50 text-orange-900 border-orange-300{% else %}bg-red-50 text-red-800 border-red-300{% endif %}">
                         {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
-                        {{ c.atleta.nome_completo }} ({% if c.tipo == 'AMARELO' %}Amarelo{% elif c.tipo == 'SEGUNDO_AMARELO' %}2º Amarelo{% else %}Vermelho Direto{% endif %}{% if c.minuto %}, {{ c.minuto }}'{% endif %})
+                        {{ c.atleta.nome_completo }} ({{ c.get_tipo_display }})
                     </span>
                 {% endfor %}
             </div>
-        {% endif %}
+        </div>
     </div>
 
     <!-- MODO DE EDIÇÃO (Oculto até clicar no lápis) -->
@@ -123,13 +123,13 @@
 
             <!-- Botões de Ação: Salvar e Cancelar -->
             <div class="flex items-center gap-1.5 ml-auto">
-                <button type="submit" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Salvar Alterações">
+                <button type="submit" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Salvar Alterações do Placar">
                     <i class="fas fa-save text-xs"></i>
                     <span>Salvar</span>
                 </button>
-                <button type="button" onclick="togglePartidaEdit({{ partida.pk }}, false)" class="px-2 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1" title="Cancelar Edição">
+                <button type="button" onclick="togglePartidaEdit({{ partida.pk }}, false)" class="px-2 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1" title="Fechar Edição">
                     <i class="fas fa-times text-xs"></i>
-                    <span>Cancelar</span>
+                    <span>Fechar</span>
                 </button>
             </div>
         </div>
@@ -143,24 +143,26 @@
                     </span>
                 </div>
 
-                {% if partida.cartoes.exists %}
-                    <div class="space-y-1">
-                        <span class="text-[10px] text-slate-500 font-semibold uppercase">Cartões Aplicados nesta Partida:</span>
-                        <div class="flex flex-wrap gap-1.5">
+                <div class="space-y-1">
+                    <span class="text-[10px] text-slate-500 font-semibold uppercase">Cartões Aplicados nesta Partida:</span>
+                    <div id="cartoes-edit-list-{{ partida.pk }}" class="flex flex-wrap gap-1.5">
+                        {% if partida.cartoes.exists %}
                             {% for c in partida.cartoes.all %}
                                 <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold border bg-white shadow-2xs">
                                     <span>
                                         {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
                                         <strong>{{ c.atleta.nome_completo }}</strong> ({{ c.get_tipo_display }})
                                     </span>
-                                    <button type="button" onclick="removerCartaoDirect({{ c.pk }})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs" title="Remover Cartão">&times;</button>
+                                    <button type="button" onclick="removerCartaoAjax({{ c.pk }}, {{ partida.pk }})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs" title="Remover Cartão">&times;</button>
                                 </div>
                             {% endfor %}
-                        </div>
+                        {% else %}
+                            <span class="text-[10px] text-slate-400 italic">Nenhum cartão nesta partida</span>
+                        {% endif %}
                     </div>
-                {% endif %}
+                </div>
 
-                <!-- Form de adição rápida de cartão -->
+                <!-- Form de adição rápida de cartão sem recarregar tela -->
                 <div class="flex flex-wrap items-center gap-1.5 pt-1">
                     <select id="atleta_id_{{ partida.pk }}" class="flex-1 text-[11px] bg-white border border-slate-300 rounded-lg p-1 font-medium focus:ring-1 focus:ring-blue-500">
                         <option value="">-- Selecione o Atleta --</option>
@@ -185,9 +187,7 @@
                         <option value="VERMELHO">🟥 Vermelho</option>
                     </select>
 
-                    <input type="number" min="1" max="120" id="minuto_{{ partida.pk }}" placeholder="Min" class="w-12 text-[11px] bg-white border border-slate-300 rounded-lg p-1 text-center font-medium">
-
-                    <button type="button" onclick="adicionarCartao({{ partida.pk }})" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+                    <button type="button" onclick="adicionarCartaoAjax({{ partida.pk }})" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Lançar cartão instantaneamente (+)">
                         <i class="fas fa-plus text-[10px]"></i> Lançar
                     </button>
                 </div>
@@ -197,67 +197,116 @@
 </div>
 
 <script>
-if (typeof window.adicionarCartao === 'undefined') {
-    window.adicionarCartao = function(partidaId) {
-        const atletaId = document.getElementById('atleta_id_' + partidaId).value;
+if (typeof window.adicionarCartaoAjax === 'undefined') {
+    window.adicionarCartaoAjax = function(partidaId) {
+        const selectAtleta = document.getElementById('atleta_id_' + partidaId);
+        const atletaId = selectAtleta.value;
         const tipoCartao = document.getElementById('tipo_cartao_' + partidaId).value;
-        const minuto = document.getElementById('minuto_' + partidaId).value;
 
         if (!atletaId) {
             alert('Selecione um atleta para aplicar o cartão.');
             return;
         }
 
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/comissao/chaveamento/partida/' + partidaId + '/cartao/salvar/';
+        const formData = new FormData();
+        formData.append('atleta_id', atletaId);
+        formData.append('tipo_cartao', tipoCartao);
         
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = csrfToken;
-        form.appendChild(csrfInput);
+        formData.append('csrfmiddlewaretoken', csrfToken);
 
-        const aInput = document.createElement('input');
-        aInput.type = 'hidden';
-        aInput.name = 'atleta_id';
-        aInput.value = atletaId;
-        form.appendChild(aInput);
-
-        const tInput = document.createElement('input');
-        tInput.type = 'hidden';
-        tInput.name = 'tipo_cartao';
-        tInput.value = tipoCartao;
-        form.appendChild(tInput);
-
-        if (minuto) {
-            const mInput = document.createElement('input');
-            mInput.type = 'hidden';
-            mInput.name = 'minuto';
-            mInput.value = minuto;
-            form.appendChild(mInput);
-        }
-
-        document.body.appendChild(form);
-        form.submit();
+        fetch('/comissao/chaveamento/partida/' + partidaId + '/cartao/salvar/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                atualizarCartoesBadge(partidaId, data.cartoes);
+                selectAtleta.value = ''; // limpa seleção para poder lançar outro atleta imediatamente
+            } else {
+                alert(data.error || 'Erro ao registrar cartão.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Erro de conexão ao registrar cartão.');
+        });
     };
 
-    window.removerCartaoDirect = function(cartaoId) {
+    window.removerCartaoAjax = function(cartaoId, partidaId) {
         if (!confirm('Deseja realmente remover este cartão?')) return;
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '/comissao/chaveamento/cartao/' + cartaoId + '/remover/';
-        
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        const csrfInput = document.createElement('input');
-        csrfInput.type = 'hidden';
-        csrfInput.name = 'csrfmiddlewaretoken';
-        csrfInput.value = csrfToken;
-        form.appendChild(csrfInput);
 
-        document.body.appendChild(form);
-        form.submit();
+        const formData = new FormData();
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        formData.append('csrfmiddlewaretoken', csrfToken);
+
+        fetch('/comissao/chaveamento/cartao/' + cartaoId + '/remover/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                atualizarCartoesBadge(partidaId, data.cartoes);
+            } else {
+                alert(data.error || 'Erro ao remover cartão.');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Erro de conexão ao remover cartão.');
+        });
+    };
+
+    window.atualizarCartoesBadge = function(partidaId, cartoes) {
+        const readContainer = document.getElementById('cartoes-read-container-' + partidaId);
+        const readList = document.getElementById('cartoes-read-list-' + partidaId);
+        const editList = document.getElementById('cartoes-edit-list-' + partidaId);
+
+        if (!cartoes || cartoes.length === 0) {
+            if (readContainer) readContainer.classList.add('hidden');
+            if (readList) readList.innerHTML = '';
+            if (editList) editList.innerHTML = '<span class="text-[10px] text-slate-400 italic">Nenhum cartão nesta partida</span>';
+            return;
+        }
+
+        if (readContainer) readContainer.classList.remove('hidden');
+
+        let readHtml = '';
+        let editHtml = '';
+
+        cartoes.forEach(c => {
+            let badgeClass = 'bg-amber-50 text-amber-800 border-amber-300';
+            let icon = '🟨';
+            if (c.tipo === 'SEGUNDO_AMARELO') {
+                badgeClass = 'bg-orange-50 text-orange-900 border-orange-300';
+                icon = '🟨🟥';
+            } else if (c.tipo === 'VERMELHO') {
+                badgeClass = 'bg-red-50 text-red-800 border-red-300';
+                icon = '🟥';
+            }
+
+            readHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${badgeClass}">
+                ${icon} ${c.atleta_nome} (${c.tipo_display})
+            </span> `;
+
+            editHtml += `<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold border bg-white shadow-2xs">
+                <span>
+                    ${icon} <strong>${c.atleta_nome}</strong> (${c.tipo_display})
+                </span>
+                <button type="button" onclick="removerCartaoAjax(${c.id}, ${partidaId})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs" title="Remover Cartão">&times;</button>
+            </div> `;
+        });
+
+        if (readList) readList.innerHTML = readHtml;
+        if (editList) editList.innerHTML = editHtml;
     };
 }
 </script>

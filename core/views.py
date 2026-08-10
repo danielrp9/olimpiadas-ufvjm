@@ -2068,25 +2068,41 @@ def salvar_fase_data_view(request, pk):
 @user_passes_test(lambda u: u.is_staff)
 def salvar_cartao_partida_view(request, pk):
     """
-    Registra um cartão para um atleta em uma partida.
+    Registra um cartão para um atleta em uma partida (suporta POST normal e AJAX).
     """
     if request.method == 'POST':
         partida = get_object_or_404(PartidaChaveamento, pk=pk)
         atleta_id = request.POST.get('atleta_id')
         tipo_cartao = request.POST.get('tipo_cartao')
-        minuto_raw = request.POST.get('minuto')
         observacao = request.POST.get('observacao', '').strip()
+
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
 
         if atleta_id and tipo_cartao:
             atleta = get_object_or_404(Atleta, pk=atleta_id)
-            minuto = int(minuto_raw) if minuto_raw and minuto_raw.isdigit() else None
             try:
                 from core.disciplinar_services import registrar_cartao_atleta
-                cartao = registrar_cartao_atleta(partida, atleta, tipo_cartao, minuto, observacao)
+                cartao = registrar_cartao_atleta(partida, atleta, tipo_cartao, observacao=observacao)
+                if is_ajax:
+                    cartoes_list = [
+                        {
+                            'id': c.id,
+                            'atleta_nome': c.atleta.nome_completo,
+                            'tipo': c.tipo,
+                            'tipo_display': c.get_tipo_display()
+                        }
+                        for c in partida.cartoes.all().select_related('atleta')
+                    ]
+                    return JsonResponse({'success': True, 'cartoes': cartoes_list})
+
                 messages.success(request, f"Cartão {cartao.get_tipo_display()} registrado para {atleta.nome_completo} com sucesso!")
             except Exception as e:
+                if is_ajax:
+                    return JsonResponse({'success': False, 'error': str(e)}, status=400)
                 messages.error(request, f"Erro ao registrar cartão: {str(e)}")
         else:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': 'Selecione o atleta e o tipo de cartão.'}, status=400)
             messages.error(request, "Selecione o atleta e o tipo de cartão.")
 
         return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
@@ -2096,14 +2112,31 @@ def salvar_cartao_partida_view(request, pk):
 @user_passes_test(lambda u: u.is_staff)
 def remover_cartao_partida_view(request, pk):
     """
-    Remove um cartão aplicado a um atleta.
+    Remove um cartão aplicado a um atleta (suporta POST normal e AJAX).
     """
     if request.method == 'POST':
         from core.disciplinar_services import remover_cartao_atleta
         from core.models import CartaoPartida
         cartao = get_object_or_404(CartaoPartida, pk=pk)
+        partida = cartao.partida
         modalidade_pk = cartao.modalidade.pk
         remover_cartao_atleta(pk)
+
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        if is_ajax:
+            cartoes_list = []
+            if partida:
+                cartoes_list = [
+                    {
+                        'id': c.id,
+                        'atleta_nome': c.atleta.nome_completo,
+                        'tipo': c.tipo,
+                        'tipo_display': c.get_tipo_display()
+                    }
+                    for c in partida.cartoes.all().select_related('atleta')
+                ]
+            return JsonResponse({'success': True, 'cartoes': cartoes_list})
+
         messages.success(request, "Cartão removido com sucesso!")
         return redirect('chaveamento_admin_detail', pk=modalidade_pk)
     return redirect('chaveamento_admin_list')
