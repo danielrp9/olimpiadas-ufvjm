@@ -37,7 +37,7 @@
                 <img src="{% static 'logo.png' %}" alt="Logo UFVJM" class="w-8 h-8 sm:w-10 sm:h-10 object-contain shrink-0">
                 <div class="min-w-0">
                     <span class="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-blue-600 truncate block leading-tight">Olimpíadas Universitárias UFVJM</span>
-                    <h1 class="text-sm sm:text-2xl font-black text-slate-800 tracking-tight leading-tight truncate">Chaveamentos e Tabelas de Partidas</h1>
+                    <h1 class="text-sm sm:text-2xl font-black text-slate-800 tracking-tight leading-tight truncate">Chaveamentos Oficiais</h1>
                 </div>
             </div>
 
@@ -97,7 +97,7 @@
                 <div class="mt-6 pt-4 border-t border-slate-100">
                     {% if item.chaveamento %}
                         <a href="{% url 'chaveamento_share' pk=item.modalidade.pk %}" class="w-full text-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-eye text-xs"></i> Visualizar Chaveamento e Tabelas
+                            <i class="fas fa-eye text-xs"></i> Ver Jogos
                         </a>
                     {% else %}
                         <button disabled class="w-full py-2.5 px-4 bg-slate-100 text-slate-400 font-bold text-xs rounded-2xl cursor-not-allowed text-center">
