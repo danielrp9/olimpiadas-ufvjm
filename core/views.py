@@ -2115,9 +2115,20 @@ class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
         })
 
 
+def chaveamento_share_list_view(request):
+    """
+    Visualização pública e independente de todas as modalidades para compartilhamento externo.
+    Não exige login e permite que o público escolha qual modalidade consultar.
+    """
+    modalidades_info = obter_resumo_chaveamentos_publico(None)
+    return render(request, 'core/chaveamento_share_list.html', {
+        'modalidades_info': modalidades_info,
+    })
+
+
 def chaveamento_share_view(request, pk):
     """
-    Visualização pública e independente para compartilhamento externo do Chaveamento.
+    Visualização pública e independente para compartilhamento externo do Chaveamento de uma modalidade.
     Não exibe menu lateral nem barras de navegação do sistema para evitar sensação de layout quebrado.
     """
     modalidade = get_object_or_404(Modalidade, pk=pk)
@@ -2125,9 +2136,7 @@ def chaveamento_share_view(request, pk):
 
     if not chaveamento:
         messages.info(request, "O chaveamento desta modalidade ainda não foi gerado.")
-        if request.user.is_authenticated:
-            return redirect('chaveamento_public_list')
-        return redirect('login')
+        return redirect('chaveamento_share_list')
 
     grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
     partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
@@ -2152,6 +2161,7 @@ def chaveamento_share_view(request, pk):
         'grupos': grupos,
         'partidas_por_fase': partidas_por_fase,
     })
+
 
 
 

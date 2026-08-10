@@ -542,6 +542,17 @@ class ChaveamentoModuleTestCase(TestCase):
         grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local'))
         self.assertEqual(len(grupos_locais), 2)
 
+    def test_chaveamento_share_list_view_unauthenticated(self):
+        """
+        Testa se a lista pública de chaveamentos (/chaveamentos/compartilhar/)
+        é acessível sem autenticação e lista as modalidades.
+        """
+        self.client.logout()
+        res = self.client.get(reverse('chaveamento_share_list'))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, "Selecione uma Modalidade Esportiva")
+        self.assertContains(res, self.futsal.nome)
+
     def test_chaveamento_share_view_unauthenticated(self):
         """
         Testa se a view de compartilhamento público (/chaveamento/compartilhar/<pk>/)
@@ -554,6 +565,7 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, "Visualização Pública do Chaveamento")
         self.assertContains(res, self.futsal.nome)
+
 
 
 

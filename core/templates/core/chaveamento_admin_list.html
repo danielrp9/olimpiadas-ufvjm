@@ -30,19 +30,26 @@
             <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Chaveamento de partidas</h1>
         </div>
         
-        <!-- Perfil / Badge Direita -->
-        <div class="relative z-10 flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-2 px-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
-            <div class="text-right">
-                <span class="text-xs font-bold text-white block leading-tight">{{ user.nome_completo|default:user.email }}</span>
-                <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">{{ user.get_role_display }}</span>
-            </div>
-            {% if user.foto_url %}
-                <img src="{{ user.foto_url }}" alt="Perfil" class="w-9 h-9 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
-            {% else %}
-                <div class="w-9 h-9 rounded-full bg-blue-600/30 border border-blue-400/20 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
-                    {{ user.nome_completo|slice:":1"|default:user.email|slice:":1" }}
+        <div class="relative z-10 flex flex-wrap items-center gap-3">
+            <!-- Botão de Compartilhar (Padrão de estilo 'Imprimir Relatório') -->
+            <button type="button" onclick="copiarLinkCompartilhamentoGeral('{% url 'chaveamento_share_list' %}')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
+                <i class="fas fa-share-nodes text-amber-400 text-sm"></i> Compartilhar Chaveamentos
+            </button>
+
+            <!-- Perfil / Badge Direita -->
+            <div class="flex items-center gap-3 bg-white/5 border border-white/10 rounded-2xl p-2 px-3.5 select-none backdrop-blur-sm shadow-inner shrink-0">
+                <div class="text-right">
+                    <span class="text-xs font-bold text-white block leading-tight">{{ user.nome_completo|default:user.email }}</span>
+                    <span class="text-[9px] text-blue-300 block font-semibold uppercase tracking-wider mt-0.5">{{ user.get_role_display }}</span>
                 </div>
-            {% endif %}
+                {% if user.foto_url %}
+                    <img src="{{ user.foto_url }}" alt="Perfil" class="w-9 h-9 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
+                {% else %}
+                    <div class="w-9 h-9 rounded-full bg-blue-600/30 border border-blue-400/20 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
+                        {{ user.nome_completo|slice:":1"|default:user.email|slice:":1" }}
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
@@ -120,4 +127,15 @@
         {% endfor %}
     </div>
 </div>
+
+<script>
+    function copiarLinkCompartilhamentoGeral(relativePath) {
+        const fullUrl = window.location.origin + relativePath;
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            alert("Link de compartilhamento de todas as modalidades copiado!\n\nURL: " + fullUrl);
+        }).catch(() => {
+            prompt("Copie o link abaixo para compartilhar:", fullUrl);
+        });
+    }
+</script>
 {% endblock %}

@@ -19,12 +19,6 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <button type="button" onclick="copiarLinkCompartilhamentoDirect('{% url 'chaveamento_share' modalidade.pk %}')" class="py-2 px-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl transition border border-blue-600 shadow-2xs flex items-center gap-2 cursor-pointer" title="Copiar link da versão compartilhável">
-                <i class="fas fa-share-alt"></i> Compartilhar Chaveamento
-            </button>
-            <a href="{% url 'chaveamento_share' modalidade.pk %}" target="_blank" class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition border border-slate-200 shadow-2xs flex items-center gap-2" title="Visualizar chaveamento sem menus">
-                <i class="fas fa-external-link-alt text-slate-400"></i> Visualizar Limpo
-            </a>
             <form action="{% url 'chaveamento_resetar' pk=modalidade.pk %}" method="POST" onsubmit="return confirm('Tem certeza que deseja resetar todo o chaveamento desta modalidade?');">
                 {% csrf_token %}
                 <button type="submit" class="py-2 px-3.5 bg-slate-100 hover:bg-slate-200/80 text-slate-600 hover:text-slate-800 font-semibold text-xs rounded-xl transition border border-slate-200/80 shadow-2xs flex items-center gap-2" title="Resetar todo o chaveamento">
@@ -462,15 +456,6 @@
             editForm.classList.remove('flex');
             readView.classList.remove('hidden');
         }
-    }
-
-    function copiarLinkCompartilhamentoDirect(relativePath) {
-        const fullUrl = window.location.origin + relativePath;
-        navigator.clipboard.writeText(fullUrl).then(() => {
-            alert("Link de compartilhamento copiado para a área de transferência!\n\nURL: " + fullUrl);
-        }).catch(() => {
-            prompt("Copie o link abaixo para compartilhar:", fullUrl);
-        });
     }
 </script>
 {% endblock %}
