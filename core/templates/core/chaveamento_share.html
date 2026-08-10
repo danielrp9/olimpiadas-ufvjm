@@ -65,27 +65,23 @@
     <!-- Conteúdo do Chaveamento Standalone -->
     <main class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-8 space-y-8">
 
-        <!-- Status do Chaveamento Banner -->
-        <div class="bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white rounded-3xl p-6 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <span class="text-[10px] font-bold text-blue-300 uppercase tracking-widest block mb-1">Visualização Pública do Chaveamento</span>
-                <h2 class="text-lg font-black tracking-tight flex items-center gap-2">
-                    <i class="fas fa-sitemap text-blue-400"></i> Estrutura Oficial das Disputas
-                </h2>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-300 font-medium">Fase Atual:</span>
-                <span class="px-3.5 py-1.5 text-xs font-black rounded-xl bg-blue-500/30 text-blue-200 border border-blue-400/40 uppercase tracking-wider">
-                    {{ chaveamento.get_fase_atual_display }}
-                </span>
-            </div>
-        </div>
-
         <!-- SEÇÃO 1: FASE DE GRUPOS & CLASSIFICATÓRIAS -->
         <div class="space-y-6">
-            <h2 class="text-xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2.5">
-                <i class="fas fa-users-class text-blue-600"></i> Fase de Grupos & Classificatórias por Campus
-            </h2>
+            <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                        <i class="fas fa-users-class text-base"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest block">Etapa 1</span>
+                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Fase de Grupos & Classificatórias por Campus</h2>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 self-start sm:self-auto">
+                    <span class="font-medium text-slate-300">Fase Atual:</span>
+                    <span class="font-bold text-white uppercase text-[11px]">{{ chaveamento.get_fase_atual_display }}</span>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 {% for grupo in grupos %}
@@ -193,10 +189,18 @@
         </div>
 
         <!-- SEÇÃO 2: MATA-MATA & FASE GERAL -->
-        <div class="space-y-8 pt-8 border-t border-slate-200">
-            <h2 class="text-xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                <i class="fas fa-trophy text-amber-500"></i> Árvore de Mata-Mata & Fase Geral
-            </h2>
+        <div class="space-y-6 pt-4 border-t border-slate-200/80">
+            <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+                        <i class="fas fa-trophy text-base"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Etapa 2</span>
+                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Árvore de Mata-Mata & Fase Geral</h2>
+                    </div>
+                </div>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
