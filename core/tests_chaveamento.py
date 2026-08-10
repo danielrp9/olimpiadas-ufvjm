@@ -563,7 +563,7 @@ class ChaveamentoModuleTestCase(TestCase):
 
         res = self.client.get(reverse('chaveamento_share', kwargs={'pk': self.futsal.pk}))
         self.assertEqual(res.status_code, 200)
-        self.assertContains(res, "Fase de Grupos & Classificatórias por Campus")
+        self.assertContains(res, "Fase de Grupos e Classificatórias por Campus")
         self.assertContains(res, self.futsal.nome)
 
 

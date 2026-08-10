@@ -65,16 +65,16 @@
     <!-- Conteúdo do Chaveamento Standalone -->
     <main class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-8 space-y-8">
 
-        <!-- SEÇÃO 1: FASE DE GRUPOS & CLASSIFICATÓRIAS -->
+        <!-- SEÇÃO 1: FASE DE GRUPOS E CLASSIFICATÓRIAS -->
         <div class="space-y-6">
             <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3.5">
                     <div class="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-                        <i class="fas fa-users-class text-base"></i>
+                        <i class="fas fa-users text-base"></i>
                     </div>
                     <div>
                         <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest block">Etapa 1</span>
-                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Fase de Grupos & Classificatórias por Campus</h2>
+                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Fase de Grupos e Classificatórias por Campus</h2>
                     </div>
                 </div>
                 <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 self-start sm:self-auto">
@@ -83,7 +83,7 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 {% if grupos.count > 1 %}lg:grid-cols-2{% endif %} gap-8">
                 {% for grupo in grupos %}
                 <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 print-shadow-none">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
@@ -188,7 +188,7 @@
             </div>
         </div>
 
-        <!-- SEÇÃO 2: MATA-MATA & FASE GERAL -->
+        <!-- SEÇÃO 2: MATA-MATA E FASE GERAL -->
         <div class="space-y-6 pt-4 border-t border-slate-200/80">
             <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div class="flex items-center gap-3.5">
@@ -197,7 +197,7 @@
                     </div>
                     <div>
                         <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Etapa 2</span>
-                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Árvore de Mata-Mata & Fase Geral</h2>
+                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Árvore de Mata-Mata e Fase Geral</h2>
                     </div>
                 </div>
             </div>
@@ -295,12 +295,12 @@
                 </div>
                 {% endif %}
 
-                <!-- Grande Final Geral & Chave Bronze -->
+                <!-- Grande Final Geral e Chave Bronze -->
                 {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
                 <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-xs ring-2 ring-amber-500/20 space-y-6 flex flex-col justify-between print-shadow-none">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
-                            <span>Final Geral & Chave Bronze</span>
+                            <span>Final Geral e Chave Bronze</span>
                             <i class="fas fa-trophy text-amber-500"></i>
                         </h3>
                         <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-2xl mt-3 mb-4 text-xs text-slate-600">
