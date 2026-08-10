@@ -30,11 +30,11 @@
         </div>
     </div>
 
-    <!-- Header Limpo & Elegante (Sem Menu Lateral) -->
-    <header class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-40">
-        <div class="max-w-[1400px] mx-auto px-4 sm:px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+    <!-- Header Limpo & Elegante Arredondado (Sem Menu Lateral) -->
+    <header class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-4 sm:pt-6 no-print">
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <!-- Brand & Modalidade Title -->
-            <div class="flex items-center gap-3.5 text-center sm:text-left">
+            <div class="flex items-center gap-3.5 text-center sm:text-left flex-wrap">
                 <a href="{% url 'chaveamento_share_list' %}" class="w-9 h-9 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition shrink-0 no-print" title="Voltar para todas as modalidades">
                     <i class="fas fa-arrow-left text-xs"></i>
                 </a>
@@ -63,7 +63,7 @@
     </header>
 
     <!-- Conteúdo do Chaveamento Standalone -->
-    <main class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-8 space-y-8">
+    <main class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-6 space-y-6 sm:space-y-8">
 
         <!-- SEÇÃO 1: FASE DE GRUPOS E CLASSIFICATÓRIAS -->
         <div class="space-y-6">
@@ -83,12 +83,12 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 {% if grupos.count > 1 %}lg:grid-cols-2{% endif %} gap-8">
+            <div class="grid grid-cols-1 {% if grupos.count > 1 %}lg:grid-cols-2{% endif %} gap-6 sm:gap-8">
                 {% for grupo in grupos %}
-                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 print-shadow-none">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs space-y-5 sm:space-y-6 print-shadow-none">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-3 gap-2">
                         <div>
-                            <h3 class="text-lg font-extrabold text-slate-800 tracking-tight">{{ grupo.nome }}</h3>
+                            <h3 class="text-base sm:text-lg font-extrabold text-slate-800 tracking-tight">{{ grupo.nome }}</h3>
                             <span class="text-xs text-slate-500 font-medium">{{ grupo.get_tipo_display }} • Passam {{ grupo.vagas_classificacao }} time(s)</span>
                         </div>
                         <span class="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
@@ -100,34 +100,34 @@
                     <div class="overflow-x-auto rounded-2xl border border-slate-200/80 shadow-2xs bg-white">
                         <table class="w-full text-left border-collapse text-xs">
                             <thead>
-                                <tr class="bg-slate-800 text-white font-bold tracking-wider text-[10px]">
-                                    <th class="py-2.5 px-3 text-center sm:text-left">Pos</th>
-                                    <th class="py-2.5 px-3">Delegação</th>
-                                    <th class="py-2.5 px-2 text-center">Pts</th>
-                                    <th class="py-2.5 px-2 text-center">J</th>
-                                    <th class="py-2.5 px-2 text-center">V</th>
-                                    <th class="py-2.5 px-2 text-center">E</th>
-                                    <th class="py-2.5 px-2 text-center">D</th>
-                                    <th class="py-2.5 px-2 text-center">SG</th>
-                                    <th class="py-2.5 px-3 text-right">Status</th>
+                                <tr class="bg-slate-800 text-white font-bold tracking-wider text-[9px] sm:text-[10px]">
+                                    <th class="py-2 px-1.5 sm:px-3 text-center sm:text-left">Pos</th>
+                                    <th class="py-2 px-1.5 sm:px-3">Delegação</th>
+                                    <th class="py-2 px-1 text-center">Pts</th>
+                                    <th class="py-2 px-1 text-center">J</th>
+                                    <th class="py-2 px-1 text-center">V</th>
+                                    <th class="py-2 px-1 text-center">E</th>
+                                    <th class="py-2 px-1 text-center">D</th>
+                                    <th class="py-2 px-1 text-center">SG</th>
+                                    <th class="py-2 px-1.5 sm:px-3 text-right">Status</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100 bg-white">
                                 {% for tg in grupo.times.all %}
                                 <tr class="{% if tg.classificado %}bg-emerald-50/60 font-semibold{% else %}hover:bg-slate-50{% endif %} transition">
-                                    <td class="py-2.5 px-3 font-bold text-slate-700 text-center sm:text-left">{{ forloop.counter }}º</td>
-                                    <td class="py-2.5 px-3 font-bold text-slate-800">
+                                    <td class="py-2 px-1.5 sm:px-3 font-bold text-slate-700 text-center sm:text-left text-[11px]">{{ forloop.counter }}º</td>
+                                    <td class="py-2 px-1.5 sm:px-3 font-bold text-slate-800 text-[11px] truncate max-w-[90px] sm:max-w-none">
                                         {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
                                     </td>
-                                    <td class="py-2.5 px-2 text-center font-black text-blue-600 text-sm">{{ tg.pontos }}</td>
-                                    <td class="py-2.5 px-2 text-center text-slate-500 font-medium">{{ tg.jogos }}</td>
-                                    <td class="py-2.5 px-2 text-center text-slate-700 font-bold">{{ tg.vitorias }}</td>
-                                    <td class="py-2.5 px-2 text-center text-slate-500 font-medium">{{ tg.empates }}</td>
-                                    <td class="py-2.5 px-2 text-center text-slate-700 font-bold">{{ tg.derrotas }}</td>
-                                    <td class="py-2.5 px-2 text-center text-slate-500 font-medium">{{ tg.saldo_gols }}</td>
-                                    <td class="py-2.5 px-3 text-right font-bold">
+                                    <td class="py-2 px-1 text-center font-black text-blue-600 text-xs sm:text-sm">{{ tg.pontos }}</td>
+                                    <td class="py-2 px-1 text-center text-slate-500 font-medium text-[11px]">{{ tg.jogos }}</td>
+                                    <td class="py-2 px-1 text-center text-slate-700 font-bold text-[11px]">{{ tg.vitorias }}</td>
+                                    <td class="py-2 px-1 text-center text-slate-500 font-medium text-[11px]">{{ tg.empates }}</td>
+                                    <td class="py-2 px-1 text-center text-slate-700 font-bold text-[11px]">{{ tg.derrotas }}</td>
+                                    <td class="py-2 px-1 text-center text-slate-500 font-medium text-[11px]">{{ tg.saldo_gols }}</td>
+                                    <td class="py-2 px-1.5 sm:px-3 text-right font-bold">
                                         {% if tg.classificado %}
-                                            <span class="text-emerald-700 text-[10px] bg-emerald-100 px-2.5 py-1 rounded-full border border-emerald-200 font-extrabold shadow-2xs">
+                                            <span class="text-emerald-700 text-[9px] sm:text-[10px] bg-emerald-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-200 font-extrabold shadow-2xs inline-block">
                                                 Classificado
                                             </span>
                                         {% else %}
@@ -202,11 +202,11 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
 
                 <!-- Quartas de Final (Diamantina) -->
                 {% if partidas_por_fase.QUARTAS_LOCAL %}
-                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                             Quartas de Final (Diamantina)
@@ -227,7 +227,7 @@
 
                 <!-- Semifinais Locais (Diamantina) -->
                 {% if partidas_por_fase.SEMI_LOCAL %}
-                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                             Semifinais (Diamantina)
@@ -248,7 +248,7 @@
 
                 <!-- Final Local & 3º Lugar (Diamantina) -->
                 {% if partidas_por_fase.FINAL_LOCAL or partidas_por_fase.DISPUTA_3_LOCAL %}
-                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                             Finais Locais (Diamantina)
@@ -275,7 +275,7 @@
 
                 <!-- Semifinais Gerais -->
                 {% if partidas_por_fase.SEMI_GERAL %}
-                <div class="bg-white border border-blue-200/90 rounded-3xl p-6 shadow-xs ring-2 ring-blue-500/20 space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
+                <div class="bg-white border border-blue-200/90 rounded-3xl p-4 sm:p-6 shadow-xs ring-2 ring-blue-500/20 space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
                             <span>Semifinais Gerais</span>
@@ -297,7 +297,7 @@
 
                 <!-- Grande Final Geral e Chave Bronze -->
                 {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
-                <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-xs ring-2 ring-amber-500/20 space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
+                <div class="bg-white border border-amber-300 rounded-3xl p-4 sm:p-6 shadow-xs ring-2 ring-amber-500/20 space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
                             <span>Final Geral e Chave Bronze</span>
