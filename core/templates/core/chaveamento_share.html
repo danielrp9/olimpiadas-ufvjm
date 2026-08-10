@@ -206,7 +206,7 @@
 
                 <!-- Quartas de Final (Diamantina) -->
                 {% if partidas_por_fase.QUARTAS_LOCAL %}
-                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                             Quartas de Final (Diamantina)
@@ -227,7 +227,7 @@
 
                 <!-- Semifinais Locais (Diamantina) -->
                 {% if partidas_por_fase.SEMI_LOCAL %}
-                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                             Semifinais (Diamantina)
@@ -248,7 +248,7 @@
 
                 <!-- Final Local & 3º Lugar (Diamantina) -->
                 {% if partidas_por_fase.FINAL_LOCAL or partidas_por_fase.DISPUTA_3_LOCAL %}
-                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none">
+                <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-xs space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
                             Finais Locais (Diamantina)
@@ -275,7 +275,7 @@
 
                 <!-- Semifinais Gerais -->
                 {% if partidas_por_fase.SEMI_GERAL %}
-                <div class="bg-white border border-blue-200/90 rounded-3xl p-6 shadow-xs ring-2 ring-blue-500/20 space-y-6 flex flex-col justify-between print-shadow-none">
+                <div class="bg-white border border-blue-200/90 rounded-3xl p-6 shadow-xs ring-2 ring-blue-500/20 space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
                             <span>Semifinais Gerais</span>
@@ -297,7 +297,7 @@
 
                 <!-- Grande Final Geral e Chave Bronze -->
                 {% if partidas_por_fase.FINAL_GERAL or partidas_por_fase.BRONZE %}
-                <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-xs ring-2 ring-amber-500/20 space-y-6 flex flex-col justify-between print-shadow-none">
+                <div class="bg-white border border-amber-300 rounded-3xl p-6 shadow-xs ring-2 ring-amber-500/20 space-y-6 flex flex-col justify-between print-shadow-none lg:odd:last:col-span-2">
                     <div>
                         <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
                             <span>Final Geral e Chave Bronze</span>
