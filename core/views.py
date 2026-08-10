@@ -2115,4 +2115,44 @@ class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
         })
 
 
+def chaveamento_share_view(request, pk):
+    """
+    Visualização pública e independente para compartilhamento externo do Chaveamento.
+    Não exibe menu lateral nem barras de navegação do sistema para evitar sensação de layout quebrado.
+    """
+    modalidade = get_object_or_404(Modalidade, pk=pk)
+    chaveamento = getattr(modalidade, 'chaveamento', None)
+
+    if not chaveamento:
+        messages.info(request, "O chaveamento desta modalidade ainda não foi gerado.")
+        if request.user.is_authenticated:
+            return redirect('chaveamento_public_list')
+        return redirect('login')
+
+    grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
+    partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
+
+    partidas_por_fase = {
+        'QUARTAS_LOCAL': [],
+        'SEMI_LOCAL': [],
+        'FINAL_LOCAL': [],
+        'DISPUTA_3_LOCAL': [],
+        'SEMI_GERAL': [],
+        'FINAL_GERAL': [],
+        'BRONZE': [],
+    }
+
+    for p in partidas_mata_mata:
+        if p.fase in partidas_por_fase:
+            partidas_por_fase[p.fase].append(p)
+
+    return render(request, 'core/chaveamento_share.html', {
+        'modalidade': modalidade,
+        'chaveamento': chaveamento,
+        'grupos': grupos,
+        'partidas_por_fase': partidas_por_fase,
+    })
+
+
+
 

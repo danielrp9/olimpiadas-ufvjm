@@ -85,4 +85,5 @@ urlpatterns = [
     # Módulo de Chaveamento (Delegações & Público)
     path('chaveamentos/', views.ChaveamentoPublicListView.as_view(), name='chaveamento_public_list'),
     path('chaveamento/<int:pk>/', views.ChaveamentoPublicDetailView.as_view(), name='chaveamento_public_detail'),
+    path('chaveamento/compartilhar/<int:pk>/', views.chaveamento_share_view, name='chaveamento_share'),
 ]
