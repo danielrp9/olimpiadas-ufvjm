@@ -546,8 +546,81 @@ class PartidaChaveamento(models.Model):
         h = self.horario_partida or (self.jogo.horario_jogo if self.jogo else None)
         return h.strftime('%H:%M') if h else ''
 
+    @property
+    def atletas_time_a(self):
+        if not self.time_a:
+            return []
+        modalidade = self.chaveamento.modalidade if self.chaveamento else None
+        if not modalidade:
+            return []
+        return Atleta.objects.filter(cadastrado_por=self.time_a, modalidades_inscritas__modalidade=modalidade).distinct().order_by('nome_completo')
+
+    @property
+    def atletas_time_b(self):
+        if not self.time_b:
+            return []
+        modalidade = self.chaveamento.modalidade if self.chaveamento else None
+        if not modalidade:
+            return []
+        return Atleta.objects.filter(cadastrado_por=self.time_b, modalidades_inscritas__modalidade=modalidade).distinct().order_by('nome_completo')
+
     def __str__(self):
         ta = self.time_a.nome_delegacao if self.time_a else "A definir"
         tb = self.time_b.nome_delegacao if self.time_b else "A definir"
         return f"[{self.get_fase_display()}] {ta} vs {tb}"
+
+
+class RegistroDisciplinarAtleta(models.Model):
+    """
+    Controle disciplinar acumulado e suspensões de um atleta por modalidade.
+    """
+    atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='registros_disciplinares')
+    modalidade = models.ForeignKey(Modalidade, on_delete=models.CASCADE, related_name='registros_disciplinares_atletas')
+    cartoes_amarelos_acumulados = models.PositiveIntegerField(default=0, help_text="Amarelos ativos para acúmulo")
+    suspenso_jogos_pendentes = models.PositiveIntegerField(default=0, help_text="Jogos de suspensão pendentes de cumprimento")
+    total_amarelos_historico = models.PositiveIntegerField(default=0)
+    total_vermelhos_historico = models.PositiveIntegerField(default=0)
+    total_jogos_suspensao_cumpridos = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Registro Disciplinar do Atleta"
+        verbose_name_plural = "Registros Disciplinares dos Atletas"
+        unique_together = ('atleta', 'modalidade')
+
+    def __str__(self):
+        return f"{self.atleta.nome_completo} - {self.modalidade.nome} (Acumulados: {self.cartoes_amarelos_acumulados}, Suspenso: {self.suspenso_jogos_pendentes})"
+
+    @property
+    def esta_suspenso(self):
+        return self.suspenso_jogos_pendentes > 0
+
+
+class CartaoPartida(models.Model):
+    """
+    Registro individual de cartão aplicado em uma partida.
+    """
+    TIPO_CHOICES = [
+        ('AMARELO', 'Cartão Amarelo'),
+        ('SEGUNDO_AMARELO', 'Segundo Amarelo (Expulsão)'),
+        ('VERMELHO', 'Cartão Vermelho Direto'),
+    ]
+
+    partida = models.ForeignKey(PartidaChaveamento, on_delete=models.CASCADE, related_name='cartoes', null=True, blank=True)
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='cartoes', null=True, blank=True)
+    atleta = models.ForeignKey(Atleta, on_delete=models.CASCADE, related_name='cartoes_partida')
+    delegacao = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='cartoes_recebidos')
+    modalidade = models.ForeignKey(Modalidade, on_delete=models.CASCADE, related_name='cartoes')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES)
+    minuto = models.PositiveIntegerField(null=True, blank=True)
+    observacao = models.CharField(max_length=255, blank=True, null=True)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Cartão de Partida"
+        verbose_name_plural = "Cartões de Partidas"
+        ordering = ['criado_em']
+
+    def __str__(self):
+        return f"[{self.get_tipo_display()}] {self.atleta.nome_completo} ({self.modalidade.nome})"
+
 

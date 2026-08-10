@@ -1,0 +1,132 @@
+<div class="bg-white rounded-2xl border border-slate-200/90 shadow-sm p-4 sm:p-6 space-y-6">
+    <!-- Cabeçalho do Módulo Disciplinar -->
+    <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
+                <i class="fas fa-shield-alt text-lg"></i>
+            </div>
+            <div>
+                <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Painel Disciplinar & Suspensões</h3>
+                <p class="text-xs text-slate-500 font-medium">Controle automatizado de cartões e cumprimentos de suspensão para {{ modalidade.nome }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards de Resumo Rápido -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Card 1: Atletas Suspensos (Bloqueados para jogo) -->
+        <div class="bg-red-50/50 border border-red-200/80 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-red-700 flex items-center gap-1.5">
+                    <i class="fas fa-user-slash text-red-600"></i> Atletas Suspensos
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-black bg-red-600 text-white">
+                    {{ relatorio_disciplinar.atletas_suspensos|length }}
+                </span>
+            </div>
+
+            {% if relatorio_disciplinar.atletas_suspensos %}
+                <div class="space-y-1.5 pt-1">
+                    {% for reg in relatorio_disciplinar.atletas_suspensos %}
+                        <div class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-red-200 text-xs shadow-2xs">
+                            <div>
+                                <strong class="text-slate-900 font-extrabold block">{{ reg.atleta.nome_completo }}</strong>
+                                <span class="text-[10px] text-slate-500 font-medium">{{ reg.atleta.cadastrado_por.nome_delegacao|default:reg.atleta.cadastrado_por.email }}</span>
+                            </div>
+                            <span class="px-2.5 py-1 bg-red-100 text-red-800 border border-red-200 rounded-md font-extrabold text-[11px] flex items-center gap-1">
+                                🟥 {{ reg.suspenso_jogos_pendentes }} jogo(s) pendente(s)
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-xs text-slate-500 italic py-1">Nenhum atleta suspenso nesta modalidade.</p>
+            {% endif %}
+        </div>
+
+        <!-- Card 2: Atletas Pendurados (1 Amarelo Acumulado) -->
+        <div class="bg-amber-50/50 border border-amber-200/80 rounded-xl p-3.5 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
+                    <i class="fas fa-exclamation-triangle text-amber-600"></i> Pendurados (1 Cartão Amarelo)
+                </span>
+                <span class="px-2 py-0.5 rounded-full text-xs font-black bg-amber-500 text-white">
+                    {{ relatorio_disciplinar.atletas_com_amarelos|length }}
+                </span>
+            </div>
+
+            {% if relatorio_disciplinar.atletas_com_amarelos %}
+                <div class="space-y-1.5 pt-1">
+                    {% for reg in relatorio_disciplinar.atletas_com_amarelos %}
+                        <div class="flex items-center justify-between bg-white px-3 py-2 rounded-lg border border-amber-200 text-xs shadow-2xs">
+                            <div>
+                                <strong class="text-slate-900 font-extrabold block">{{ reg.atleta.nome_completo }}</strong>
+                                <span class="text-[10px] text-slate-500 font-medium">{{ reg.atleta.cadastrado_por.nome_delegacao|default:reg.atleta.cadastrado_por.email }}</span>
+                            </div>
+                            <span class="px-2.5 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-md font-extrabold text-[11px] flex items-center gap-1">
+                                🟨 1 Cartão Acumulado
+                            </span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-xs text-slate-500 italic py-1">Nenhum atleta pendurado nesta modalidade.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tabela Geral de Cartões por Atleta -->
+    {% if relatorio_disciplinar.registros %}
+        <div class="space-y-2">
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <i class="fas fa-list-ol text-blue-600"></i> Histórico Disciplinar Completo
+            </h4>
+            <div class="overflow-x-auto rounded-xl border border-slate-200">
+                <table class="w-full text-left text-xs text-slate-700">
+                    <thead class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200">
+                        <tr>
+                            <th class="px-3.5 py-2.5">Atleta</th>
+                            <th class="px-3.5 py-2.5">Delegação</th>
+                            <th class="px-3.5 py-2.5 text-center">Amarelos Acumulados</th>
+                            <th class="px-3.5 py-2.5 text-center">Status</th>
+                            <th class="px-3.5 py-2.5 text-center">Total Histórico</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 font-medium">
+                        {% for reg in relatorio_disciplinar.registros %}
+                            <tr class="hover:bg-slate-50/80 transition">
+                                <td class="px-3.5 py-2.5 font-bold text-slate-900">
+                                    {{ reg.atleta.nome_completo }}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-slate-600">
+                                    {{ reg.atleta.cadastrado_por.nome_delegacao|default:reg.atleta.cadastrado_por.email }}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center font-extrabold">
+                                    {% if reg.cartoes_amarelos_acumulados > 0 %}
+                                        <span class="text-amber-600">🟨 {{ reg.cartoes_amarelos_acumulados }}</span>
+                                    {% else %}
+                                        <span class="text-slate-400">0</span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center">
+                                    {% if reg.suspenso_jogos_pendentes > 0 %}
+                                        <span class="px-2 py-0.5 bg-red-100 text-red-800 rounded font-extrabold text-[10px]">
+                                            SUSPENSO ({{ reg.suspenso_jogos_pendentes }} Jogo(s))
+                                        </span>
+                                    {% else %}
+                                        <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 rounded font-bold text-[10px]">
+                                            APT / LIBERADO
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-3.5 py-2.5 text-center text-slate-500 text-[11px]">
+                                    🟨 {{ reg.total_amarelos_historico }} | 🟥 {{ reg.total_vermelhos_historico }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    {% endif %}
+</div>

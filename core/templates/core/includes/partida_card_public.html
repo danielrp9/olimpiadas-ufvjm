@@ -42,5 +42,18 @@
             </span>
         </div>
     </div>
+
+    <!-- Exibição de Cartões Aplicados na Partida -->
+    {% if partida.cartoes.exists %}
+        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span class="text-slate-400 font-medium">Cartões:</span>
+            {% for c in partida.cartoes.all %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {% if c.tipo == 'AMARELO' %}bg-amber-50 text-amber-800 border-amber-300{% elif c.tipo == 'SEGUNDO_AMARELO' %}bg-orange-50 text-orange-900 border-orange-300{% else %}bg-red-50 text-red-800 border-red-300{% endif %}">
+                    {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
+                    {{ c.atleta.nome_completo }} ({% if c.tipo == 'AMARELO' %}Amarelo{% elif c.tipo == 'SEGUNDO_AMARELO' %}2º Amarelo{% else %}Vermelho Direto{% endif %}{% if c.minuto %}, {{ c.minuto }}'{% endif %})
+                </span>
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>
 

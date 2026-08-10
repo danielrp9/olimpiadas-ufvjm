@@ -614,6 +614,10 @@ def registrar_resultado_partida(partida, placar_a, placar_b):
         dest.save()
         _sincronizar_jogo_partida(dest, "Chave Bronze / 3º Lugar")
 
+    # Processa cumprimento de suspensões disciplinares para esta modalidade
+    from core.disciplinar_services import processar_cumprimento_suspensao_partida
+    processar_cumprimento_suspensao_partida(partida)
+
     return partida
 
 

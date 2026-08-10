@@ -756,6 +756,18 @@ class APIPreSumulasView(View):
             if PreSumula.objects.filter(jogo=jogo, representante=delegacao).exists():
                 return JsonResponse({'error': 'Você já enviou uma pré-súmula para este jogo.'}, status=400)
                 
+            from core.models import RegistroDisciplinarAtleta
+            for item in atletas_escalados:
+                atleta_id = item.get('atleta_id')
+                if atleta_id:
+                    atleta_obj = Atleta.objects.filter(pk=atleta_id).first()
+                    if atleta_obj:
+                        reg = RegistroDisciplinarAtleta.objects.filter(atleta=atleta_obj, modalidade=jogo.modalidade).first()
+                        if reg and reg.suspenso_jogos_pendentes > 0:
+                            return JsonResponse({
+                                'error': f'Impossível escalar: O atleta {atleta_obj.nome_completo} está suspenso na modalidade {jogo.modalidade.nome} ({reg.suspenso_jogos_pendentes} jogo(s) de suspensão pendente).'
+                            }, status=400)
+
             presumula = PreSumula.objects.create(
                 jogo=jogo,
                 representante=delegacao,
@@ -826,6 +838,18 @@ class APIPreSumulaDetailView(View):
             atletas_escalados = data.get('atletas', []) # lista de objetos { atleta_id: ..., camisa: ... }
             tecnico = data.get('tecnico', '')
             
+            from core.models import RegistroDisciplinarAtleta
+            for item in atletas_escalados:
+                atleta_id = item.get('atleta_id')
+                if atleta_id:
+                    atleta_obj = Atleta.objects.filter(pk=atleta_id).first()
+                    if atleta_obj:
+                        reg = RegistroDisciplinarAtleta.objects.filter(atleta=atleta_obj, modalidade=presumula.jogo.modalidade).first()
+                        if reg and reg.suspenso_jogos_pendentes > 0:
+                            return JsonResponse({
+                                'error': f'Impossível escalar: O atleta {atleta_obj.nome_completo} está suspenso na modalidade {presumula.jogo.modalidade.nome} ({reg.suspenso_jogos_pendentes} jogo(s) de suspensão pendente).'
+                            }, status=400)
+
             # Limpa escalações antigas
             PreSumulaAtleta.objects.filter(presumula=presumula).delete()
             

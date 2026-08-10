@@ -1949,12 +1949,16 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
 
         buckets = classificar_delegacoes_por_campus(modalidade)
 
+        from core.disciplinar_services import obter_relatorio_disciplinar_modalidade
+        relatorio_disciplinar = obter_relatorio_disciplinar_modalidade(modalidade)
+
         return render(request, 'core/chaveamento_admin_detail.html', {
             'modalidade': modalidade,
             'chaveamento': chaveamento,
             'grupos': grupos,
             'partidas_por_fase': partidas_por_fase,
-            'buckets': buckets
+            'buckets': buckets,
+            'relatorio_disciplinar': relatorio_disciplinar
         })
 
 
@@ -2061,6 +2065,50 @@ def salvar_fase_data_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
+@user_passes_test(lambda u: u.is_staff)
+def salvar_cartao_partida_view(request, pk):
+    """
+    Registra um cartão para um atleta em uma partida.
+    """
+    if request.method == 'POST':
+        partida = get_object_or_404(PartidaChaveamento, pk=pk)
+        atleta_id = request.POST.get('atleta_id')
+        tipo_cartao = request.POST.get('tipo_cartao')
+        minuto_raw = request.POST.get('minuto')
+        observacao = request.POST.get('observacao', '').strip()
+
+        if atleta_id and tipo_cartao:
+            atleta = get_object_or_404(Atleta, pk=atleta_id)
+            minuto = int(minuto_raw) if minuto_raw and minuto_raw.isdigit() else None
+            try:
+                from core.disciplinar_services import registrar_cartao_atleta
+                cartao = registrar_cartao_atleta(partida, atleta, tipo_cartao, minuto, observacao)
+                messages.success(request, f"Cartão {cartao.get_tipo_display()} registrado para {atleta.nome_completo} com sucesso!")
+            except Exception as e:
+                messages.error(request, f"Erro ao registrar cartão: {str(e)}")
+        else:
+            messages.error(request, "Selecione o atleta e o tipo de cartão.")
+
+        return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_staff)
+def remover_cartao_partida_view(request, pk):
+    """
+    Remove um cartão aplicado a um atleta.
+    """
+    if request.method == 'POST':
+        from core.disciplinar_services import remover_cartao_atleta
+        from core.models import CartaoPartida
+        cartao = get_object_or_404(CartaoPartida, pk=pk)
+        modalidade_pk = cartao.modalidade.pk
+        remover_cartao_atleta(pk)
+        messages.success(request, "Cartão removido com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+    return redirect('chaveamento_admin_list')
+
+
 class ChaveamentoPublicListView(LoginRequiredMixin, View):
     """
     Lista de Chaveamentos acessível para Representantes de Delegações e membros (Otimizado em lote).
@@ -2106,12 +2154,16 @@ class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
 
         delegacao_user = request.user.delegacao_ativa
 
+        from core.disciplinar_services import obter_relatorio_disciplinar_modalidade
+        relatorio_disciplinar = obter_relatorio_disciplinar_modalidade(modalidade)
+
         return render(request, 'core/chaveamento_public_detail.html', {
             'modalidade': modalidade,
             'chaveamento': chaveamento,
             'grupos': grupos,
             'partidas_por_fase': partidas_por_fase,
-            'delegacao': delegacao_user
+            'delegacao': delegacao_user,
+            'relatorio_disciplinar': relatorio_disciplinar
         })
 
 

@@ -54,6 +54,19 @@
                 <span class="hidden sm:inline text-[11px]">Editar</span>
             </button>
         </div>
+
+        <!-- Exibição de Cartões Aplicados na Partida -->
+        {% if partida.cartoes.exists %}
+            <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[11px]">
+                <span class="text-slate-400 font-medium">Cartões:</span>
+                {% for c in partida.cartoes.all %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {% if c.tipo == 'AMARELO' %}bg-amber-50 text-amber-800 border-amber-300{% elif c.tipo == 'SEGUNDO_AMARELO' %}bg-orange-50 text-orange-900 border-orange-300{% else %}bg-red-50 text-red-800 border-red-300{% endif %}">
+                        {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
+                        {{ c.atleta.nome_completo }} ({% if c.tipo == 'AMARELO' %}Amarelo{% elif c.tipo == 'SEGUNDO_AMARELO' %}2º Amarelo{% else %}Vermelho Direto{% endif %}{% if c.minuto %}, {{ c.minuto }}'{% endif %})
+                    </span>
+                {% endfor %}
+            </div>
+        {% endif %}
     </div>
 
     <!-- MODO DE EDIÇÃO (Oculto até clicar no lápis) -->
@@ -65,7 +78,7 @@
             <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1 shadow-2xs">
                 <i class="fas fa-pencil-alt text-[9px]"></i> Modo de Edição
             </span>
-            <span class="text-[10px] text-slate-500 font-medium">Edite o placar e horários</span>
+            <span class="text-[10px] text-slate-500 font-medium">Edite o placar, horários e cartões</span>
         </div>
 
         <!-- Equipes + Inputs de Placar -->
@@ -94,7 +107,7 @@
             </div>
         </div>
 
-        <!-- Inputs de Data e Horário + Botões de Ação -->
+        <!-- Inputs de Data e Horário -->
         <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-blue-100 bg-blue-50/30 p-2 rounded-xl">
             <div class="flex items-center gap-2 flex-wrap">
                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
@@ -120,7 +133,134 @@
                 </button>
             </div>
         </div>
+
+        <!-- Seção de Aplicação de Cartões Disciplinares -->
+        {% if partida.time_a or partida.time_b %}
+            <div class="pt-2 border-t border-blue-100 space-y-2 bg-slate-50 p-2.5 rounded-xl">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
+                        <i class="fas fa-id-card text-amber-500"></i> Lançar Cartão a Atleta
+                    </span>
+                </div>
+
+                {% if partida.cartoes.exists %}
+                    <div class="space-y-1">
+                        <span class="text-[10px] text-slate-500 font-semibold uppercase">Cartões Aplicados nesta Partida:</span>
+                        <div class="flex flex-wrap gap-1.5">
+                            {% for c in partida.cartoes.all %}
+                                <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold border bg-white shadow-2xs">
+                                    <span>
+                                        {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
+                                        <strong>{{ c.atleta.nome_completo }}</strong> ({{ c.get_tipo_display }})
+                                    </span>
+                                    <button type="button" onclick="removerCartaoDirect({{ c.pk }})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs" title="Remover Cartão">&times;</button>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Form de adição rápida de cartão -->
+                <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                    <select id="atleta_id_{{ partida.pk }}" class="flex-1 text-[11px] bg-white border border-slate-300 rounded-lg p-1 font-medium focus:ring-1 focus:ring-blue-500">
+                        <option value="">-- Selecione o Atleta --</option>
+                        {% if partida.time_a %}
+                            <optgroup label="{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}">
+                                {% for at in partida.atletas_time_a %}
+                                    <option value="{{ at.pk }}">{{ at.nome_completo }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endif %}
+                        {% if partida.time_b %}
+                            <optgroup label="{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
+                                {% for at in partida.atletas_time_b %}
+                                    <option value="{{ at.pk }}">{{ at.nome_completo }}</option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endif %}
+                    </select>
+
+                    <select id="tipo_cartao_{{ partida.pk }}" class="w-28 text-[11px] bg-white border border-slate-300 rounded-lg p-1 font-medium focus:ring-1 focus:ring-blue-500">
+                        <option value="AMARELO">🟨 Amarelo</option>
+                        <option value="SEGUNDO_AMARELO">🟨🟥 2º Amarelo</option>
+                        <option value="VERMELHO">🟥 Vermelho</option>
+                    </select>
+
+                    <input type="number" min="1" max="120" id="minuto_{{ partida.pk }}" placeholder="Min" class="w-12 text-[11px] bg-white border border-slate-300 rounded-lg p-1 text-center font-medium">
+
+                    <button type="button" onclick="adicionarCartao({{ partida.pk }})" class="px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs">
+                        <i class="fas fa-plus text-[10px]"></i> Lançar
+                    </button>
+                </div>
+            </div>
+        {% endif %}
     </form>
 </div>
+
+<script>
+if (typeof window.adicionarCartao === 'undefined') {
+    window.adicionarCartao = function(partidaId) {
+        const atletaId = document.getElementById('atleta_id_' + partidaId).value;
+        const tipoCartao = document.getElementById('tipo_cartao_' + partidaId).value;
+        const minuto = document.getElementById('minuto_' + partidaId).value;
+
+        if (!atletaId) {
+            alert('Selecione um atleta para aplicar o cartão.');
+            return;
+        }
+
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/comissao/chaveamento/partida/' + partidaId + '/cartao/salvar/';
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        const aInput = document.createElement('input');
+        aInput.type = 'hidden';
+        aInput.name = 'atleta_id';
+        aInput.value = atletaId;
+        form.appendChild(aInput);
+
+        const tInput = document.createElement('input');
+        tInput.type = 'hidden';
+        tInput.name = 'tipo_cartao';
+        tInput.value = tipoCartao;
+        form.appendChild(tInput);
+
+        if (minuto) {
+            const mInput = document.createElement('input');
+            mInput.type = 'hidden';
+            mInput.name = 'minuto';
+            mInput.value = minuto;
+            form.appendChild(mInput);
+        }
+
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    window.removerCartaoDirect = function(cartaoId) {
+        if (!confirm('Deseja realmente remover este cartão?')) return;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/comissao/chaveamento/cartao/' + cartaoId + '/remover/';
+        
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+
+        document.body.appendChild(form);
+        form.submit();
+    };
+}
+</script>
 
 
