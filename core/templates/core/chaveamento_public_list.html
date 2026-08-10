@@ -32,7 +32,7 @@
         
         <div class="relative z-10 flex flex-wrap items-center gap-3">
             <!-- Botão de Compartilhar (Padrão de estilo 'Imprimir Relatório') -->
-            <button type="button" onclick="copiarLinkCompartilhamentoGeral('{% url 'chaveamento_share_list' %}')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
+            <button type="button" onclick="abrirModalCompartilhamento('{% url 'chaveamento_share_list' %}', 'Todas as Modalidades - UFVJM')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
                 <i class="fas fa-share-nodes text-amber-400 text-sm"></i> Compartilhar Chaveamentos
             </button>
 
@@ -105,14 +105,5 @@
     </div>
 </div>
 
-<script>
-    function copiarLinkCompartilhamentoGeral(relativePath) {
-        const fullUrl = window.location.origin + relativePath;
-        navigator.clipboard.writeText(fullUrl).then(() => {
-            alert("Link de compartilhamento de todas as modalidades copiado!\n\nURL: " + fullUrl);
-        }).catch(() => {
-            prompt("Copie o link abaixo para compartilhar:", fullUrl);
-        });
-    }
-</script>
+{% include "core/includes/modal_compartilhar.html" %}
 {% endblock %}

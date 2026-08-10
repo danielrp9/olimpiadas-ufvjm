@@ -1,0 +1,159 @@
+<!-- Modal de Compartilhamento Elegante e Padronizado -->
+<div id="share-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 transition-all duration-300 opacity-0 pointer-events-none" onclick="fecharModalCompartilhamento(event)">
+    <div class="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-2xl max-w-md w-full space-y-6 transform scale-95 transition-all duration-300" onclick="event.stopPropagation()">
+        <!-- Cabeçalho do Modal -->
+        <div class="flex items-start justify-between gap-4">
+            <div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-blue-600 block mb-1">Compartilhar Chaveamentos</span>
+                <h3 id="share-modal-title" class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight leading-snug">Olimpíadas Universitárias UFVJM</h3>
+                <p class="text-xs text-slate-500 font-medium mt-0.5">Escolha como deseja compartilhar a estrutura das disputas</p>
+            </div>
+            <button type="button" onclick="fecharModalCompartilhamento()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition shrink-0 cursor-pointer" title="Fechar">
+                <i class="fas fa-times text-xs"></i>
+            </button>
+        </div>
+
+        <!-- Seção 1: Campo com Link e Botão Copiar -->
+        <div class="space-y-2">
+            <label class="text-xs font-bold text-slate-700 block">Link de Acesso Direto</label>
+            <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-1.5 pl-3.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition">
+                <i class="fas fa-link text-slate-400 text-xs shrink-0"></i>
+                <input type="text" id="share-modal-url-input" readonly class="w-full bg-transparent text-xs font-semibold text-slate-800 focus:outline-none truncate select-all" value="">
+                <button type="button" id="share-modal-copy-btn" onclick="copiarLinkModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition shrink-0 flex items-center gap-1.5 cursor-pointer">
+                    <i id="share-modal-copy-icon" class="fas fa-copy text-xs"></i>
+                    <span id="share-modal-copy-text">Copiar</span>
+                </button>
+            </div>
+            <p id="share-modal-copied-feedback" class="text-[11px] font-bold text-emerald-600 hidden flex items-center gap-1 mt-1.5">
+                <i class="fas fa-check-circle"></i> <span id="share-modal-feedback-msg">Link copiado para a área de transferência!</span>
+            </p>
+        </div>
+
+        <!-- Seção 2: Opções de Redes Sociais -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+            <label class="text-xs font-bold text-slate-700 block">Enviar via Redes Sociais</label>
+            <div class="grid grid-cols-2 gap-3">
+                <!-- WhatsApp -->
+                <a id="share-btn-whatsapp" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs shadow-xs transition">
+                    <i class="fab fa-whatsapp text-lg"></i>
+                    <span>WhatsApp</span>
+                </a>
+
+                <!-- X (Twitter) -->
+                <a id="share-btn-x" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-slate-900 hover:bg-black active:scale-95 text-white font-bold text-xs shadow-xs transition">
+                    <i class="fab fa-x-twitter text-base"></i>
+                    <span>X (Twitter)</span>
+                </a>
+
+                <!-- Instagram -->
+                <button type="button" onclick="compartilharInstagram()" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 active:scale-95 text-white font-bold text-xs shadow-xs transition cursor-pointer">
+                    <i class="fab fa-instagram text-lg"></i>
+                    <span>Instagram</span>
+                </button>
+
+                <!-- E-mail -->
+                <a id="share-btn-email" href="#" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs border border-slate-200 transition">
+                    <i class="fas fa-envelope text-base text-slate-500"></i>
+                    <span>E-mail</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function abrirModalCompartilhamento(urlPath, tituloModal) {
+        const modal = document.getElementById('share-modal');
+        const inputUrl = document.getElementById('share-modal-url-input');
+        const titleElem = document.getElementById('share-modal-title');
+        const copyText = document.getElementById('share-modal-copy-text');
+        const copyIcon = document.getElementById('share-modal-copy-icon');
+        const feedback = document.getElementById('share-modal-copied-feedback');
+
+        let fullUrl = urlPath;
+        if (!urlPath || urlPath.startsWith('/')) {
+            fullUrl = window.location.origin + (urlPath || window.location.pathname);
+        }
+
+        const titleText = tituloModal || "Chaveamentos Oficial UFVJM";
+
+        if (inputUrl) inputUrl.value = fullUrl;
+        if (titleElem) titleElem.textContent = titleText;
+        if (feedback) feedback.classList.add('hidden');
+        if (copyText) copyText.textContent = 'Copiar';
+        if (copyIcon) copyIcon.className = 'fas fa-copy text-xs';
+
+        // Prepara Links das Redes Sociais
+        const encodedUrl = encodeURIComponent(fullUrl);
+        const encodedMsg = encodeURIComponent(`Confira a estrutura oficial dos chaveamentos das Olimpíadas UFVJM (${titleText}):`);
+
+        const btnWa = document.getElementById('share-btn-whatsapp');
+        if (btnWa) btnWa.href = `https://api.whatsapp.com/send?text=${encodedMsg}%20${encodedUrl}`;
+
+        const btnX = document.getElementById('share-btn-x');
+        if (btnX) btnX.href = `https://twitter.com/intent/tweet?text=${encodedMsg}&url=${encodedUrl}`;
+
+        const btnMail = document.getElementById('share-btn-email');
+        if (btnMail) btnMail.href = `mailto:?subject=${encodeURIComponent('Chaveamento Oficial - UFVJM')}&body=${encodedMsg}%20${encodedUrl}`;
+
+        if (modal) {
+            modal.classList.remove('opacity-0', 'pointer-events-none');
+            modal.classList.add('opacity-100');
+            const card = modal.querySelector('div');
+            if (card) {
+                card.classList.remove('scale-95');
+                card.classList.add('scale-100');
+            }
+        }
+    }
+
+    function fecharModalCompartilhamento(event) {
+        if (event && event.target !== event.currentTarget) return;
+        const modal = document.getElementById('share-modal');
+        if (modal) {
+            modal.classList.remove('opacity-100');
+            modal.classList.add('opacity-0', 'pointer-events-none');
+            const card = modal.querySelector('div');
+            if (card) {
+                card.classList.remove('scale-100');
+                card.classList.add('scale-95');
+            }
+        }
+    }
+
+    function copiarLinkModal() {
+        const inputUrl = document.getElementById('share-modal-url-input');
+        const copyText = document.getElementById('share-modal-copy-text');
+        const copyIcon = document.getElementById('share-modal-copy-icon');
+        const feedback = document.getElementById('share-modal-copied-feedback');
+        const feedbackMsg = document.getElementById('share-modal-feedback-msg');
+
+        if (inputUrl && inputUrl.value) {
+            if (feedbackMsg) feedbackMsg.textContent = 'Link copiado para a área de transferência!';
+            
+            navigator.clipboard.writeText(inputUrl.value).then(() => {
+                if (copyText) copyText.textContent = 'Copiado!';
+                if (copyIcon) copyIcon.className = 'fas fa-check text-xs';
+                if (feedback) feedback.classList.remove('hidden');
+                setTimeout(() => {
+                    if (copyText) copyText.textContent = 'Copiar';
+                    if (copyIcon) copyIcon.className = 'fas fa-copy text-xs';
+                }, 3000);
+            }).catch(() => {
+                inputUrl.select();
+                document.execCommand('copy');
+                if (copyText) copyText.textContent = 'Copiado!';
+                if (copyIcon) copyIcon.className = 'fas fa-check text-xs';
+                if (feedback) feedback.classList.remove('hidden');
+            });
+        }
+    }
+
+    function compartilharInstagram() {
+        copiarLinkModal();
+        const feedback = document.getElementById('share-modal-copied-feedback');
+        const feedbackMsg = document.getElementById('share-modal-feedback-msg');
+        if (feedbackMsg) feedbackMsg.textContent = 'Link copiado! Cole na bio ou nos Stories do Instagram.';
+        if (feedback) feedback.classList.remove('hidden');
+    }
+</script>

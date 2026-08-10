@@ -50,9 +50,9 @@
 
             <!-- Botões de Ação da Tela -->
             <div class="flex items-center gap-2.5 no-print">
-                <button type="button" onclick="copiarLinkCompartilhamento()" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-2xl shadow-sm transition flex items-center gap-2 cursor-pointer">
-                    <i class="fas fa-link text-xs"></i>
-                    <span>Copiar Link</span>
+                <button type="button" onclick="abrirModalCompartilhamento(window.location.href, '{{ modalidade.nome }} - Olimpíadas UFVJM')" class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-2xl shadow-sm transition flex items-center gap-2 cursor-pointer">
+                    <i class="fas fa-share-nodes text-xs"></i>
+                    <span>Compartilhar</span>
                 </button>
                 <button type="button" onclick="window.print()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 font-bold text-xs rounded-2xl border border-slate-200 transition flex items-center gap-2 cursor-pointer">
                     <i class="fas fa-print text-xs"></i>
@@ -337,24 +337,6 @@
         <p>Olimpíadas Universitárias UFVJM • Módulo de Chaveamentos Oficiais</p>
     </footer>
 
-    <!-- Script de Cópia e Toast -->
-    <script>
-        function copiarLinkCompartilhamento() {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                const toast = document.getElementById('toast-share');
-                if (toast) {
-                    toast.classList.remove('translate-x-12', 'opacity-0', 'pointer-events-none');
-                    toast.classList.add('translate-x-0', 'opacity-100');
-                    setTimeout(() => {
-                        toast.classList.remove('translate-x-0', 'opacity-100');
-                        toast.classList.add('translate-x-12', 'opacity-0', 'pointer-events-none');
-                    }, 3500);
-                }
-            }).catch(err => {
-                alert("Copie este link para compartilhar: " + url);
-            });
-        }
-    </script>
+    {% include "core/includes/modal_compartilhar.html" %}
 </body>
 </html>
