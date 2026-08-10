@@ -309,4 +309,239 @@ class ChaveamentoModuleTestCase(TestCase):
         final_geral.refresh_from_db()
         self.assertEqual(final_geral.time_b, d_muc1)
 
+    def test_excecao_1_handebol_feminino_5_dia_1_ext(self):
+        """
+        Teste 1 — Handebol Feminino excepcional (5 Diamantina + 1 Externo)
+        Esperado: 1 grupo com 5 equipes, 3 classificados, sem mata-mata local,
+        3 equipes na Fase Geral + 1 externa.
+        Valida que 4º e 5º não são classificados e que os perdedores das Semis Gerais vão para o Bronze.
+        """
+        handebol_fem = Modalidade.objects.create(
+            nome="Handebol Feminino",
+            genero="F",
+            limite_minimo_jogadores=7,
+            limite_maximo_jogadores=14
+        )
+        d_muc = self._create_delegation_for_mod("h_muc@ufvjm.edu.br", "Del Mucuri Hand", self.campus_muc, handebol_fem)
+        d_dias = [
+            self._create_delegation_for_mod(f"h_dia{i}@ufvjm.edu.br", f"Del Dia Hand {i}", self.campus_dia, handebol_fem)
+            for i in range(1, 6)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(handebol_fem)
+
+        # 1. Deve haver exatamente 1 grupo de Diamantina com 5 equipes
+        grupos_locais = chaveamento.grupos.filter(tipo='grupo_local')
+        self.assertEqual(grupos_locais.count(), 1)
+        grupo_unico = grupos_locais.first()
+        self.assertEqual(grupo_unico.times.count(), 5)
+        self.assertEqual(grupo_unico.vagas_classificacao, 3)
+
+        # 2. NÃO deve ser criado mata-mata local de Diamantina
+        self.assertEqual(chaveamento.partidas.filter(fase__in=['QUARTAS_LOCAL', 'SEMI_LOCAL', 'FINAL_LOCAL']).count(), 0)
+
+        # 3. Deve haver Semifinais Gerais criadas
+        semis_geral = chaveamento.partidas.filter(fase='SEMI_GERAL').order_by('id')
+        self.assertEqual(semis_geral.count(), 2)
+
+        # 4. Finalizar todas as partidas do grupo único atribuindo vitórias determinísticas para d_dias[0] > d_dias[1] > d_dias[2] > d_dias[3] > d_dias[4]
+        partidas = list(grupo_unico.partidas.all())
+        for p in partidas:
+            # Pega índice dos times d_dias
+            idx_a = d_dias.index(p.time_a)
+            idx_b = d_dias.index(p.time_b)
+            if idx_a < idx_b:
+                registrar_resultado_partida(p, 10, 5)
+            else:
+                registrar_resultado_partida(p, 5, 10)
+
+        chaveamento.refresh_from_db()
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        # 5. Valida classificação do grupo: exatamente 3 classificados (1º, 2º e 3º), 4º e 5º NÃO classificados
+        times_ordenados = list(grupo_unico.times.order_by('-pontos', '-vitorias', '-saldo_gols', '-gols_pro'))
+        self.assertTrue(times_ordenados[0].classificado)
+        self.assertTrue(times_ordenados[1].classificado)
+        self.assertTrue(times_ordenados[2].classificado)
+        self.assertFalse(times_ordenados[3].classificado)
+        self.assertFalse(times_ordenados[4].classificado)
+
+        self.assertEqual(times_ordenados[0].delegacao, d_dias[0])
+        self.assertEqual(times_ordenados[1].delegacao, d_dias[1])
+        self.assertEqual(times_ordenados[2].delegacao, d_dias[2])
+
+        sg1 = semis_geral[0]
+        sg2 = semis_geral[1]
+        sg1.refresh_from_db()
+        sg2.refresh_from_db()
+
+        self.assertEqual(sg1.time_a, d_dias[0]) # 1º Diamantina
+        self.assertEqual(sg1.time_b, d_muc)     # 1º Externo
+        self.assertEqual(sg2.time_a, d_dias[1]) # 2º Diamantina
+        self.assertEqual(sg2.time_b, d_dias[2]) # 3º Diamantina
+
+        # 6. Simula realização das Semifinais Gerais e verifica progressão para Final Geral e Chave Bronze
+        registrar_resultado_partida(sg1, 15, 10) # Vencedor d_dias[0], Perdedor d_muc
+        registrar_resultado_partida(sg2, 12, 14) # Vencedor d_dias[2], Perdedor d_dias[1]
+
+        final_geral = chaveamento.partidas.filter(fase='FINAL_GERAL').first()
+        bronze = chaveamento.partidas.filter(fase='BRONZE').first()
+
+        final_geral.refresh_from_db()
+        bronze.refresh_from_db()
+
+        self.assertEqual(final_geral.time_a, d_dias[0])
+        self.assertEqual(final_geral.time_b, d_dias[2])
+        self.assertEqual(bronze.time_a, d_muc)
+        self.assertEqual(bronze.time_b, d_dias[1])
+
+    def test_excecao_2_tenis_de_mesa_feminino_7_dia_2_ext(self):
+        """
+        Teste 2 — Tênis de Mesa Feminino excepcional (7 Diamantina + 2 Externos)
+        Esperado: 2 grupos (4 + 3), exatamente 2 classificados por grupo (total 4),
+        Mata-mata local, Campeão + Vice nas Semifinais Gerais com os 2 externos.
+        Simula fluxo completo até as Semifinais Gerais.
+        """
+        tm_fem = Modalidade.objects.create(
+            nome="Tênis de Mesa Feminino",
+            genero="F",
+            limite_minimo_jogadores=1,
+            limite_maximo_jogadores=2
+        )
+        d_muc = self._create_delegation_for_mod("tm_muc@ufvjm.edu.br", "Del Mucuri TM", self.campus_muc, tm_fem)
+        d_unai = self._create_delegation_for_mod("tm_unai@ufvjm.edu.br", "Del Unaí TM", self.campus_unai, tm_fem)
+        d_dias = [
+            self._create_delegation_for_mod(f"tm_dia{i}@ufvjm.edu.br", f"Del Dia TM {i}", self.campus_dia, tm_fem)
+            for i in range(1, 8)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(tm_fem)
+
+        # 1. Duas vagas externas e 2 grupos locais
+        self.assertEqual(chaveamento.vagas_externas, 2)
+        grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        self.assertEqual(len(grupos_locais), 2)
+
+        g_a = grupos_locais[0]
+        g_b = grupos_locais[1]
+
+        # Exatamente 2 vagas por grupo
+        self.assertEqual(g_a.vagas_classificacao, 2)
+        self.assertEqual(g_b.vagas_classificacao, 2)
+
+        # 2. Registra resultados de todas as partidas dos grupos
+        for g in grupos_locais:
+            partidas = list(g.partidas.all())
+            for p in partidas:
+                # Time A vence sempre
+                registrar_resultado_partida(p, 3, 0)
+
+        chaveamento.refresh_from_db()
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        # Valida que em cada grupo EXATAMENTE 2 são classificados
+        self.assertEqual(g_a.times.filter(classificado=True).count(), 2)
+        self.assertEqual(g_b.times.filter(classificado=True).count(), 2)
+
+        # 3. Mata-mata local deve ter Semifinais locais preenchidas
+        semis_local = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        self.assertEqual(len(semis_local), 2)
+        self.assertIsNotNone(semis_local[0].time_a)
+        self.assertIsNotNone(semis_local[0].time_b)
+        self.assertIsNotNone(semis_local[1].time_a)
+        self.assertIsNotNone(semis_local[1].time_b)
+
+        # 4. Executa Semifinais locais e Final local de Diamantina
+        sl1, sl2 = semis_local[0], semis_local[1]
+        registrar_resultado_partida(sl1, 3, 1) # Winner sl1.time_a
+        registrar_resultado_partida(sl2, 3, 2) # Winner sl2.time_a
+
+        final_local = chaveamento.partidas.filter(fase='FINAL_LOCAL').first()
+        self.assertIsNotNone(final_local)
+        final_local.refresh_from_db()
+        self.assertEqual(final_local.time_a, sl1.time_a)
+        self.assertEqual(final_local.time_b, sl2.time_a)
+
+        # Executa Final Local
+        registrar_resultado_partida(final_local, 3, 0) # Winner sl1.time_a (Campeão), Perdedor sl2.time_a (Vice)
+
+        # 5. Verifica avanço para Semifinais Gerais
+        semis_geral = list(chaveamento.partidas.filter(fase='SEMI_GERAL').order_by('id'))
+        self.assertEqual(len(semis_geral), 2)
+
+        sg1, sg2 = semis_geral[0], semis_geral[1]
+        sg1.refresh_from_db()
+        sg2.refresh_from_db()
+
+        self.assertEqual(sg1.time_a, sl1.time_a) # Campeão Diamantina
+        self.assertEqual(sg1.time_b, d_muc)      # Externo 1
+        self.assertEqual(sg2.time_a, sl2.time_a) # Vice Diamantina
+        self.assertEqual(sg2.time_b, d_unai)     # Externo 2
+
+    def test_handebol_fora_da_condicao_excepcional(self):
+        """
+        Teste 3 — Handebol Feminino fora da condição (ex: 6 Diamantina + 1 Externo)
+        Esperado: utilizar a regra padrão existente.
+        """
+        handebol_fem = Modalidade.objects.create(
+            nome="Handebol Feminino",
+            genero="F",
+            limite_minimo_jogadores=7,
+            limite_maximo_jogadores=14
+        )
+        d_muc = self._create_delegation_for_mod("h_muc2@ufvjm.edu.br", "Del Mucuri Hand 2", self.campus_muc, handebol_fem)
+        d_dias = [
+            self._create_delegation_for_mod(f"h_dia6_{i}@ufvjm.edu.br", f"Del Dia Hand6 {i}", self.campus_dia, handebol_fem)
+            for i in range(1, 7)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(handebol_fem)
+
+        # Na regra padrão com 6 equipes em Diamantina: grupos de 3 + 3, com 2 vagas cada (4 no mata-mata local)
+        grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local'))
+        self.assertEqual(len(grupos_locais), 2)
+        semis_local = chaveamento.partidas.filter(fase='SEMI_LOCAL')
+        self.assertEqual(semis_local.count(), 2)
+
+    def test_tenis_de_mesa_fora_da_condicao_excepcional(self):
+        """
+        Teste 4 — Tênis de Mesa Feminino fora da condição (ex: 7 Diamantina + 1 Externo)
+        Esperado: utilizar a regra padrão existente (grupo de 4 passa 3, grupo de 3 passa 2 -> total 5).
+        """
+        tm_fem = Modalidade.objects.create(
+            nome="Tênis de Mesa Feminino",
+            genero="F",
+            limite_minimo_jogadores=1,
+            limite_maximo_jogadores=2
+        )
+        d_muc = self._create_delegation_for_mod("tm_muc1@ufvjm.edu.br", "Del Mucuri TM 1", self.campus_muc, tm_fem)
+        d_dias = [
+            self._create_delegation_for_mod(f"tm_dia7_{i}@ufvjm.edu.br", f"Del Dia TM7 {i}", self.campus_dia, tm_fem)
+            for i in range(1, 8)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(tm_fem)
+
+        self.assertEqual(chaveamento.vagas_externas, 1)
+        grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local'))
+        vagas = [g.vagas_classificacao for g in grupos_locais]
+        self.assertIn(3, vagas) # No padrão, grupo de 4 dá 3 vagas
+
+    def test_outra_modalidade_padrao(self):
+        """
+        Teste 5 — Outra modalidade (Futsal Masculino)
+        Esperado: chaveamento 100% de acordo com a regra padrão.
+        """
+        d_muc = self._create_delegation_for_mod("futsal_muc@ufvjm.edu.br", "Del Mucuri Futsal", self.campus_muc, self.futsal)
+        d_dias = [
+            self._create_delegation_for_mod(f"futsal_dia_{i}@ufvjm.edu.br", f"Del Dia Futsal {i}", self.campus_dia, self.futsal)
+            for i in range(1, 6)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(self.futsal)
+        grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local'))
+        self.assertEqual(len(grupos_locais), 2)
+
+
+
 

@@ -13,6 +13,33 @@ from core.models import (
 User = get_user_model()
 
 
+def _is_handebol_feminino(modalidade):
+    if not modalidade:
+        return False
+    nome = (modalidade.nome or '').lower()
+    esporte_ok = 'handebol' in nome or 'handball' in nome
+    genero_ok = 'feminino' in nome or modalidade.genero == 'F'
+    return esporte_ok and genero_ok
+
+
+def _is_tenis_de_mesa_feminino(modalidade):
+    if not modalidade:
+        return False
+    nome = (modalidade.nome or '').lower()
+    esporte_ok = 'tênis de mesa' in nome or 'tenis de mesa' in nome
+    genero_ok = 'feminino' in nome or modalidade.genero == 'F'
+    return esporte_ok and genero_ok
+
+
+def _is_excecao_handebol_fem(modalidade, n_diamantina, total_vagas_externas):
+    return _is_handebol_feminino(modalidade) and n_diamantina == 5 and total_vagas_externas == 1
+
+
+def _is_excecao_tenis_mesa_fem(modalidade, n_diamantina, total_vagas_externas):
+    return _is_tenis_de_mesa_feminino(modalidade) and n_diamantina == 7 and total_vagas_externas == 2
+
+
+
 def obter_resumo_chaveamentos_admin():
     """
     Retorna a lista de modalidades com estatísticas de delegações otimizada em apenas 3 queries (Zero N+1).
@@ -300,9 +327,27 @@ def gerar_chaveamento_modalidade(modalidade):
 
     # -------------------------------------------------------------
     # 3. Regras do Campus Sede (Diamantina)
-    # Formato Híbrido (Grupos + Mata-mata)
     # -------------------------------------------------------------
     n_diamantina = len(diamantina)
+
+    # Exceção 1: Handebol Feminino + 5 Diamantina + 1 Vaga Externa
+    if _is_excecao_handebol_fem(modalidade, n_diamantina, total_vagas_externas):
+        grupo_unico = GrupoChaveamento.objects.create(
+            chaveamento=chaveamento,
+            nome="Grupo Único",
+            campus=campus_diamantina,
+            tipo="grupo_local",
+            vagas_classificacao=3
+        )
+        shuffled_teams = list(diamantina)
+        random.shuffle(shuffled_teams)
+        for team in shuffled_teams:
+            TimeGrupo.objects.create(grupo=grupo_unico, delegacao=team)
+        _gerar_partidas_grupo(grupo_unico, fase_nome='GRUPO_LOCAL')
+
+        _montar_fase_geral_excecao_handebol(chaveamento, classificados_externos_iniciais)
+        return chaveamento
+
     if n_diamantina > 1:
         _construir_fase_grupos_diamantina(chaveamento, diamantina, campus_diamantina)
 
@@ -331,6 +376,8 @@ def _construir_fase_grupos_diamantina(chaveamento, teams, campus_diamantina):
       garantindo soma PAR de classificados.
     """
     n = len(teams)
+    is_excecao2 = _is_excecao_tenis_mesa_fem(chaveamento.modalidade, n, chaveamento.vagas_externas)
+
     # Randomiza times para distribuição justa
     shuffled_teams = list(teams)
     random.shuffle(shuffled_teams)
@@ -339,7 +386,9 @@ def _construir_fase_grupos_diamantina(chaveamento, teams, campus_diamantina):
     # Desejamos grupos de tamanho 3 ou 4.
     grupos_sizes = []
 
-    if n <= 2:
+    if is_excecao2:
+        grupos_sizes = [4, 3]
+    elif n <= 2:
         grupos_sizes = [n]
     elif n == 3:
         grupos_sizes = [3]  # passa 2 (par!)
@@ -383,10 +432,10 @@ def _construir_fase_grupos_diamantina(chaveamento, teams, campus_diamantina):
         letra_code += 1
 
         # Regra de classificação:
-        # Grupos de 4 times: passam 3
-        # Grupos de 3 times: passam 2
-        # Grupos de 2 times: passam 2
-        if size == 4:
+        # Exceção 2 (Tênis de Mesa Feminino 7 Diamantina + 2 Externos): 2 vagas por grupo
+        if is_excecao2:
+            vagas = 2
+        elif size == 4:
             vagas = 3
         elif size == 3:
             vagas = 2
@@ -633,14 +682,25 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
         _sincronizar_jogo_partida(final_local, "Final de Diamantina")
 
     if semis_geral:
-        if len(semis_geral) >= 1:
+        if not final_local and not semis_local and not quartas and len(classificados_diamantina) >= 3:
+            semis_geral[0].time_a = classificados_diamantina[0] if len(classificados_diamantina) >= 1 else None
             semis_geral[0].time_b = classificados_externos[0] if len(classificados_externos) >= 1 else None
             semis_geral[0].save()
             _sincronizar_jogo_partida(semis_geral[0], "Semifinal Geral 1")
-        if len(semis_geral) >= 2:
-            semis_geral[1].time_b = classificados_externos[1] if len(classificados_externos) >= 2 else None
+
+            semis_geral[1].time_a = classificados_diamantina[1] if len(classificados_diamantina) >= 2 else None
+            semis_geral[1].time_b = classificados_diamantina[2] if len(classificados_diamantina) >= 3 else None
             semis_geral[1].save()
             _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
+        else:
+            if len(semis_geral) >= 1:
+                semis_geral[0].time_b = classificados_externos[0] if len(classificados_externos) >= 1 else None
+                semis_geral[0].save()
+                _sincronizar_jogo_partida(semis_geral[0], "Semifinal Geral 1")
+            if len(semis_geral) >= 2:
+                semis_geral[1].time_b = classificados_externos[1] if len(classificados_externos) >= 2 else None
+                semis_geral[1].save()
+                _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
 
 
 def encerrar_fase_grupos_e_gerar_mata_mata(chaveamento):
@@ -869,6 +929,58 @@ def _montar_fase_geral(chaveamento, final_local, disputa_3_local, classificados_
             disputa_3_local.proxima_partida = semi_geral_2
             disputa_3_local.posicao_proxima_partida = 'B'
             disputa_3_local.save()
+
+
+def _montar_fase_geral_excecao_handebol(chaveamento, classificados_externos):
+    """
+    Integra a Fase Geral para a Exceção de Handebol Feminino (5 equipes de Diamantina + 1 vaga externa).
+    Os 3 primeiros colocados de Diamantina vão direto para a Fase Geral sem mata-mata local.
+    """
+    ext1 = classificados_externos[0] if len(classificados_externos) > 0 else None
+
+    chave_bronze = PartidaChaveamento.objects.create(
+        chaveamento=chaveamento,
+        fase='BRONZE'
+    )
+    _sincronizar_jogo_partida(chave_bronze, "Disputa de 3º Lugar (Chave Bronze Geral)")
+
+    final_geral = PartidaChaveamento.objects.create(
+        chaveamento=chaveamento,
+        fase='FINAL_GERAL'
+    )
+    _sincronizar_jogo_partida(final_geral, "Grande Final Geral")
+
+    semi_geral_1 = PartidaChaveamento.objects.create(
+        chaveamento=chaveamento,
+        fase='SEMI_GERAL',
+        time_b=ext1,
+        proxima_partida=final_geral,
+        posicao_proxima_partida='A',
+        partida_perdedor_destino=chave_bronze,
+        posicao_perdedor_destino='A'
+    )
+    _sincronizar_jogo_partida(semi_geral_1, "Semifinal Geral 1")
+
+    semi_geral_2 = PartidaChaveamento.objects.create(
+        chaveamento=chaveamento,
+        fase='SEMI_GERAL',
+        proxima_partida=final_geral,
+        posicao_proxima_partida='B',
+        partida_perdedor_destino=chave_bronze,
+        posicao_perdedor_destino='B'
+    )
+    _sincronizar_jogo_partida(semi_geral_2, "Semifinal Geral 2")
+
+    # Conecta partidas de eliminatória externa à Semi Geral 1 (posição B) se aplicável
+    partidas_ext = PartidaChaveamento.objects.filter(
+        chaveamento=chaveamento,
+        fase='EXTERNO_ELIMINATORIA'
+    )
+    for p_ext in partidas_ext:
+        p_ext.proxima_partida = semi_geral_1
+        p_ext.posicao_proxima_partida = 'B'
+        p_ext.save()
+
 
 
 def _sincronizar_jogo_partida(partida, descricao_local="Quadra Principal"):
