@@ -3,13 +3,25 @@ from core.models import RegistroDisciplinarAtleta, CartaoPartida, PartidaChaveam
 def registrar_cartao_atleta(partida, atleta, tipo_cartao, minuto=None, observacao=None):
     """
     Registra um cartão para um atleta em uma partida e recalcula a situação disciplinar.
-    Tipos: 'AMARELO', 'SEGUNDO_AMARELO', 'VERMELHO'
+    A comissão/mesário seleciona apenas 'AMARELO' ou 'VERMELHO'.
+    O sistema detecta automaticamente se o atleta já possuía um amarelo NESTA MESMA partida
+    e converte para 'SEGUNDO_AMARELO' (expulsão e suspensão de 1 jogo).
     """
     modalidade = partida.chaveamento.modalidade if partida.chaveamento else (partida.jogo.modalidade if partida.jogo else None)
     if not modalidade:
         raise ValueError("A partida deve possuir uma modalidade vinculada.")
 
     delegacao = atleta.cadastrado_por
+
+    # Se o cartão for amarelo, verifica se já existe um amarelo lançado para este atleta nesta mesma partida
+    if tipo_cartao == 'AMARELO':
+        ja_tem_amarelo = CartaoPartida.objects.filter(
+            partida=partida,
+            atleta=atleta,
+            tipo__in=['AMARELO', 'SEGUNDO_AMARELO']
+        ).exists()
+        if ja_tem_amarelo:
+            tipo_cartao = 'SEGUNDO_AMARELO'
 
     cartao = CartaoPartida.objects.create(
         partida=partida,
@@ -69,7 +81,7 @@ def recalcular_disciplinar_atleta_modalidade(atleta, modalidade):
     ).order_by('id').distinct()
 
     for partida in partidas:
-        cartoes_nesta_partida = list(CartaoPartida.objects.filter(partida=partida, atleta=atleta).order_by('criado_em'))
+        cartoes_nesta_partida = list(CartaoPartida.objects.filter(partida=partida, atleta=atleta).order_by('criado_em', 'id'))
 
         # Se o atleta tinha suspensão pendente ANTES desta partida e ela foi finalizada,
         # ele cumpre 1 jogo de suspensão nesta partida (desde que não tenha recebido cartão nela)
@@ -77,20 +89,30 @@ def recalcular_disciplinar_atleta_modalidade(atleta, modalidade):
             registro.suspenso_jogos_pendentes -= 1
             registro.total_jogos_suspensao_cumpridos += 1
 
-        # Processa os cartões aplicados nesta partida
+        # Processa os cartões aplicados nesta partida com inteligência de contagem
+        amarelos_na_partida = 0
         for cartao in cartoes_nesta_partida:
-            if cartao.tipo == 'AMARELO':
-                registro.total_amarelos_historico += 1
-                registro.cartoes_amarelos_acumulados += 1
-                if registro.cartoes_amarelos_acumulados >= 2:
+            if cartao.tipo in ['AMARELO', 'SEGUNDO_AMARELO']:
+                amarelos_na_partida += 1
+                if amarelos_na_partida == 1:
+                    # 1º Amarelo no jogo
+                    if cartao.tipo != 'AMARELO':
+                        cartao.tipo = 'AMARELO'
+                        cartao.save(update_fields=['tipo'])
+                    registro.total_amarelos_historico += 1
+                    registro.cartoes_amarelos_acumulados += 1
+                    if registro.cartoes_amarelos_acumulados >= 2:
+                        registro.suspenso_jogos_pendentes += 1
+                        registro.cartoes_amarelos_acumulados = 0  # Zerado após gerar suspensão por 2º amarelo acumulado em partidas diferentes
+                else:
+                    # 2º Amarelo no MESMO jogo (Expulsão por 2º amarelo)
+                    if cartao.tipo != 'SEGUNDO_AMARELO':
+                        cartao.tipo = 'SEGUNDO_AMARELO'
+                        cartao.save(update_fields=['tipo'])
+                    registro.total_amarelos_historico += 1
+                    registro.total_vermelhos_historico += 1
                     registro.suspenso_jogos_pendentes += 1
-                    registro.cartoes_amarelos_acumulados = 0  # Zerado após gerar suspensão por 2º amarelo acumulado
-
-            elif cartao.tipo == 'SEGUNDO_AMARELO':
-                registro.total_amarelos_historico += 1
-                registro.total_vermelhos_historico += 1
-                registro.suspenso_jogos_pendentes += 1
-                # O 2º amarelo na mesma partida gera suspensão de 1 jogo mas NÃO incrementa acúmulo de amarelos para outra suspensão
+                    # Não incrementa cartoes_amarelos_acumulados para outra suspensão
 
             elif cartao.tipo == 'VERMELHO':
                 registro.total_vermelhos_historico += 1

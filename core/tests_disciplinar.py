@@ -151,9 +151,12 @@ class ModuloDisciplinarTests(TestCase):
         self.assertEqual(reg.total_vermelhos_historico, 1)
 
     def test_segundo_amarelo_na_mesma_partida(self):
-        """2º Amarelo na mesma partida -> expulsão + 1 jogo de suspensão. Não incrementa acúmulo de amarelos para outra suspensão."""
-        registrar_cartao_atleta(self.partida1, self.atleta1, 'AMARELO')
-        registrar_cartao_atleta(self.partida1, self.atleta1, 'SEGUNDO_AMARELO')
+        """Lançar 'AMARELO' 2 vezes no mesmo jogo -> sistema converte 2º para 'SEGUNDO_AMARELO' (expulsão + 1 jogo suspensão)."""
+        c1 = registrar_cartao_atleta(self.partida1, self.atleta1, 'AMARELO', minuto=10)
+        c2 = registrar_cartao_atleta(self.partida1, self.atleta1, 'AMARELO', minuto=35)
+
+        self.assertEqual(c1.tipo, 'AMARELO')
+        self.assertEqual(c2.tipo, 'SEGUNDO_AMARELO')
 
         reg = RegistroDisciplinarAtleta.objects.get(atleta=self.atleta1, modalidade=self.futsal)
         self.assertEqual(reg.suspenso_jogos_pendentes, 1)
