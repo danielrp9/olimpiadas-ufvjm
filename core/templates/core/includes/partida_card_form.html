@@ -74,7 +74,7 @@
                 {% for c in partida.cartoes.all %}
                     <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border {% if c.tipo == 'AMARELO' %}bg-amber-50 text-amber-800 border-amber-300{% elif c.tipo == 'SEGUNDO_AMARELO' %}bg-orange-50 text-orange-900 border-orange-300{% else %}bg-red-50 text-red-800 border-red-300{% endif %}">
                         {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
-                        {{ c.atleta.nome_completo }} ({{ c.get_tipo_display }})
+                        {{ c.atleta.nome_completo }} ({{ c.delegacao.nome_delegacao|default:c.delegacao.email }}) ({{ c.get_tipo_display }})
                     </span>
                 {% endfor %}
             </div>
@@ -148,24 +148,45 @@
 
         <!-- Seção de Aplicação de Cartões Disciplinares -->
         {% if partida.time_a or partida.time_b %}
-            <div class="pt-2 border-t border-blue-100 space-y-2 bg-slate-50 p-2.5 rounded-xl">
+            <div class="pt-2 border-t border-blue-100 space-y-2.5 bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
                 <div class="flex items-center justify-between">
-                    <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1">
-                        <i class="fas fa-id-card text-amber-500"></i> Lançar Cartão a Atleta
+                    <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1.5">
+                        <i class="fas fa-id-card text-amber-500"></i> Lançar Cartão Disciplinar
                     </span>
+                    <span class="text-[9px] text-slate-400 font-medium">Apenas delegações da partida</span>
+                </div>
+
+                <!-- Seletor de Filtro por Delegação -->
+                <div class="flex flex-wrap items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 text-[10px] font-semibold">
+                    <span class="text-slate-400 px-1 font-bold">Filtrar Delegação:</span>
+                    <button type="button" onclick="filtrarDelegacaoCartao({{ partida.pk }}, 'todos')" id="btn-del-todos-{{ partida.pk }}" class="px-2 py-0.5 rounded-md bg-blue-600 text-white font-bold transition shadow-2xs cursor-pointer">
+                        Todas
+                    </button>
+                    {% if partida.time_a %}
+                        <button type="button" onclick="filtrarDelegacaoCartao({{ partida.pk }}, 'a')" id="btn-del-a-{{ partida.pk }}" class="px-2 py-0.5 rounded-md text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer">
+                            🔵 {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
+                        </button>
+                    {% endif %}
+                    {% if partida.time_b %}
+                        <button type="button" onclick="filtrarDelegacaoCartao({{ partida.pk }}, 'b')" id="btn-del-b-{{ partida.pk }}" class="px-2 py-0.5 rounded-md text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer">
+                            🟢 {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
+                        </button>
+                    {% endif %}
                 </div>
 
                 <div class="space-y-1">
-                    <span class="text-[10px] text-slate-500 font-semibold uppercase">Cartões Aplicados nesta Partida:</span>
+                    <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Cartões Aplicados nesta Partida:</span>
                     <div id="cartoes-edit-list-{{ partida.pk }}" class="flex flex-wrap gap-1.5">
                         {% if partida.cartoes.exists %}
                             {% for c in partida.cartoes.all %}
                                 <div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold border bg-white shadow-2xs">
                                     <span>
                                         {% if c.tipo == 'AMARELO' %}🟨{% elif c.tipo == 'SEGUNDO_AMARELO' %}🟨🟥{% else %}🟥{% endif %}
-                                        <strong>{{ c.atleta.nome_completo }}</strong> ({{ c.get_tipo_display }})
+                                        <strong>{{ c.atleta.nome_completo }}</strong>
+                                        <span class="text-[9px] text-slate-500">({{ c.delegacao.nome_delegacao|default:c.delegacao.email }})</span>
+                                        - {{ c.get_tipo_display }}
                                     </span>
-                                    <button type="button" onclick="removerCartaoAjax({{ c.pk }}, {{ partida.pk }})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs" title="Remover Cartão">&times;</button>
+                                    <button type="button" onclick="removerCartaoAjax({{ c.pk }}, {{ partida.pk }})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs cursor-pointer" title="Remover Cartão">&times;</button>
                                 </div>
                             {% endfor %}
                         {% else %}
@@ -179,16 +200,16 @@
                     <select id="atleta_id_{{ partida.pk }}" class="flex-1 text-[11px] bg-white border border-slate-300 rounded-lg p-1 font-medium focus:ring-1 focus:ring-blue-500">
                         <option value="">-- Selecione o Atleta --</option>
                         {% if partida.time_a %}
-                            <optgroup label="{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}">
+                            <optgroup label="🔵 {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}">
                                 {% for at in partida.atletas_time_a %}
-                                    <option value="{{ at.pk }}">{{ at.nome_completo }}</option>
+                                    <option value="{{ at.pk }}" data-team="a">[🔵 {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}] {{ at.nome_completo }}</option>
                                 {% endfor %}
                             </optgroup>
                         {% endif %}
                         {% if partida.time_b %}
-                            <optgroup label="{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
+                            <optgroup label="🟢 {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
                                 {% for at in partida.atletas_time_b %}
-                                    <option value="{{ at.pk }}">{{ at.nome_completo }}</option>
+                                    <option value="{{ at.pk }}" data-team="b">[🟢 {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}] {{ at.nome_completo }}</option>
                                 {% endfor %}
                             </optgroup>
                         {% endif %}
@@ -209,6 +230,42 @@
 </div>
 
 <script>
+if (typeof window.filtrarDelegacaoCartao === 'undefined') {
+    window.filtrarDelegacaoCartao = function(partidaId, teamFilter) {
+        const select = document.getElementById('atleta_id_' + partidaId);
+        if (!select) return;
+        const options = select.querySelectorAll('option[data-team]');
+
+        options.forEach(opt => {
+            if (teamFilter === 'todos') {
+                opt.style.display = '';
+                opt.disabled = false;
+            } else if (opt.getAttribute('data-team') === teamFilter) {
+                opt.style.display = '';
+                opt.disabled = false;
+            } else {
+                opt.style.display = 'none';
+                opt.disabled = true;
+            }
+        });
+
+        if (select.selectedOptions.length > 0 && select.selectedOptions[0].disabled) {
+            select.value = '';
+        }
+
+        const btnTodos = document.getElementById(`btn-del-todos-${partidaId}`);
+        const btnA = document.getElementById(`btn-del-a-${partidaId}`);
+        const btnB = document.getElementById(`btn-del-b-${partidaId}`);
+
+        const activeClass = 'px-2 py-0.5 rounded-md bg-blue-600 text-white font-bold transition shadow-2xs cursor-pointer';
+        const inactiveClass = 'px-2 py-0.5 rounded-md text-slate-600 hover:bg-slate-100 font-bold transition cursor-pointer';
+
+        if (btnTodos) btnTodos.className = (teamFilter === 'todos') ? activeClass : inactiveClass;
+        if (btnA) btnA.className = (teamFilter === 'a') ? activeClass : inactiveClass;
+        if (btnB) btnB.className = (teamFilter === 'b') ? activeClass : inactiveClass;
+    };
+}
+
 if (typeof window.adicionarCartaoAjax === 'undefined') {
     window.adicionarCartaoAjax = function(partidaId) {
         const selectAtleta = document.getElementById('atleta_id_' + partidaId);
@@ -238,7 +295,7 @@ if (typeof window.adicionarCartaoAjax === 'undefined') {
         .then(data => {
             if (data.success) {
                 atualizarCartoesBadge(partidaId, data.cartoes);
-                selectAtleta.value = ''; // limpa seleção para poder lançar outro atleta imediatamente
+                selectAtleta.value = '';
             } else {
                 alert(data.error || 'Erro ao registrar cartão.');
             }
@@ -305,15 +362,17 @@ if (typeof window.adicionarCartaoAjax === 'undefined') {
                 icon = '🟥';
             }
 
+            const delLabel = c.delegacao_nome ? ` (${c.delegacao_nome})` : '';
+
             readHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border ${badgeClass}">
-                ${icon} ${c.atleta_nome} (${c.tipo_display})
+                ${icon} ${c.atleta_nome}${delLabel} (${c.tipo_display})
             </span> `;
 
             editHtml += `<div class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[10px] font-semibold border bg-white shadow-2xs">
                 <span>
-                    ${icon} <strong>${c.atleta_nome}</strong> (${c.tipo_display})
+                    ${icon} <strong>${c.atleta_nome}</strong> <span class="text-[9px] text-slate-500">${delLabel}</span> - ${c.tipo_display}
                 </span>
-                <button type="button" onclick="removerCartaoAjax(${c.id}, ${partidaId})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs" title="Remover Cartão">&times;</button>
+                <button type="button" onclick="removerCartaoAjax(${c.id}, ${partidaId})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs cursor-pointer" title="Remover Cartão">&times;</button>
             </div> `;
         });
 

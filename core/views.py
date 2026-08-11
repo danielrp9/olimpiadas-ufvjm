@@ -2088,10 +2088,11 @@ def salvar_cartao_partida_view(request, pk):
                         {
                             'id': c.id,
                             'atleta_nome': c.atleta.nome_completo,
+                            'delegacao_nome': c.delegacao.nome_delegacao or c.delegacao.email,
                             'tipo': c.tipo,
                             'tipo_display': c.get_tipo_display()
                         }
-                        for c in partida.cartoes.all().select_related('atleta')
+                        for c in partida.cartoes.all().select_related('atleta', 'delegacao')
                     ]
                     return JsonResponse({'success': True, 'cartoes': cartoes_list})
 
@@ -2130,10 +2131,11 @@ def remover_cartao_partida_view(request, pk):
                     {
                         'id': c.id,
                         'atleta_nome': c.atleta.nome_completo,
+                        'delegacao_nome': c.delegacao.nome_delegacao or c.delegacao.email,
                         'tipo': c.tipo,
                         'tipo_display': c.get_tipo_display()
                     }
-                    for c in partida.cartoes.all().select_related('atleta')
+                    for c in partida.cartoes.all().select_related('atleta', 'delegacao')
                 ]
             return JsonResponse({'success': True, 'cartoes': cartoes_list})
 

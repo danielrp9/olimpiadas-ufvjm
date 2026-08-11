@@ -547,22 +547,32 @@ class PartidaChaveamento(models.Model):
         return h.strftime('%H:%M') if h else ''
 
     @property
+    def modalidade(self):
+        if hasattr(self, 'chaveamento') and self.chaveamento and getattr(self.chaveamento, 'modalidade', None):
+            return self.chaveamento.modalidade
+        if hasattr(self, 'grupo') and self.grupo and getattr(self.grupo, 'chaveamento', None) and getattr(self.grupo.chaveamento, 'modalidade', None):
+            return self.grupo.chaveamento.modalidade
+        if hasattr(self, 'jogo') and self.jogo and getattr(self.jogo, 'modalidade', None):
+            return self.jogo.modalidade
+        return None
+
+    @property
     def atletas_time_a(self):
         if not self.time_a:
             return []
-        modalidade = self.chaveamento.modalidade if self.chaveamento else None
-        if not modalidade:
+        mod = self.modalidade
+        if not mod:
             return []
-        return Atleta.objects.filter(cadastrado_por=self.time_a, modalidades_inscritas__modalidade=modalidade).distinct().order_by('nome_completo')
+        return Atleta.objects.filter(cadastrado_por=self.time_a, modalidades_inscritas__modalidade=mod).distinct().order_by('nome_completo')
 
     @property
     def atletas_time_b(self):
         if not self.time_b:
             return []
-        modalidade = self.chaveamento.modalidade if self.chaveamento else None
-        if not modalidade:
+        mod = self.modalidade
+        if not mod:
             return []
-        return Atleta.objects.filter(cadastrado_por=self.time_b, modalidades_inscritas__modalidade=modalidade).distinct().order_by('nome_completo')
+        return Atleta.objects.filter(cadastrado_por=self.time_b, modalidades_inscritas__modalidade=mod).distinct().order_by('nome_completo')
 
     @property
     def cartoes_time_a_amarelos(self):

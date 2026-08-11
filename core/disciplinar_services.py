@@ -7,9 +7,16 @@ def registrar_cartao_atleta(partida, atleta, tipo_cartao, minuto=None, observaca
     O sistema detecta automaticamente se o atleta já possuía um amarelo NESTA MESMA partida
     e converte para 'SEGUNDO_AMARELO' (expulsão e suspensão de 1 jogo).
     """
-    modalidade = partida.chaveamento.modalidade if partida.chaveamento else (partida.jogo.modalidade if partida.jogo else None)
+    modalidade = partida.modalidade if hasattr(partida, 'modalidade') and partida.modalidade else (
+        partida.chaveamento.modalidade if getattr(partida, 'chaveamento', None) else (partida.jogo.modalidade if getattr(partida, 'jogo', None) else None)
+    )
     if not modalidade:
         raise ValueError("A partida deve possuir uma modalidade vinculada.")
+
+    times_partida = [t for t in [getattr(partida, 'time_a', None), getattr(partida, 'time_b', None)] if t]
+    if times_partida and atleta.cadastrado_por not in times_partida:
+        nomes = " ou ".join([getattr(t, 'nome_delegacao', None) or t.email for t in times_partida])
+        raise ValueError(f"O atleta '{atleta.nome_completo}' não pertence às delegações desta partida ({nomes}).")
 
     delegacao = atleta.cadastrado_por
 

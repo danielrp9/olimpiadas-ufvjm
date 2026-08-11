@@ -222,3 +222,50 @@ class ModuloDisciplinarTests(TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json().get('success'))
+
+    def test_cartao_atleta_fora_da_partida_rejeitado(self):
+        """Tentar registrar cartão para um atleta de uma delegação que não joga a partida lança ValueError."""
+        delegacao_c = User.objects.create_user(
+            email='delegacao_c@ufvjm.edu.br',
+            nome_delegacao='Delegação Gama',
+            role='REPRESENTANTE',
+            status_delegacao='deferido',
+            perfil_completo=True,
+            cpf='529.982.247-25'
+        )
+        atleta_fora = Atleta.objects.create(
+            nome_completo='Atleta de Outra Delegação',
+            email='fora@ufvjm.edu.br',
+            matricula='999999',
+            curso='Curso X',
+            campus=self.campus,
+            cadastrado_por=delegacao_c
+        )
+        insc = Inscricao.objects.create(delegacao=delegacao_c)
+        im = InscricaoModalidade.objects.create(inscricao=insc, modalidade=self.futsal)
+        im.atletas.add(atleta_fora)
+
+        with self.assertRaises(ValueError) as ctx:
+            registrar_cartao_atleta(self.partida1, atleta_fora, 'AMARELO')
+        self.assertIn("não pertence às delegações desta partida", str(ctx.exception))
+
+    def test_atletas_time_a_e_b_retornam_apenas_equipes_da_partida(self):
+        """Verifica se atletas_time_a e atletas_time_b retornam somente os atletas da respectiva delegação cadastrados na modalidade."""
+        atleta_b = Atleta.objects.create(
+            nome_completo='Carlos Oliveira',
+            cadastrado_por=self.delegacao_b,
+            campus=self.campus,
+            em_conformidade=True
+        )
+        insc_b = Inscricao.objects.create(delegacao=self.delegacao_b, status='deferido')
+        im_b = InscricaoModalidade.objects.create(inscricao=insc_b, modalidade=self.futsal)
+        im_b.atletas.add(atleta_b)
+
+        atletas_a = list(self.partida1.atletas_time_a)
+        atletas_b = list(self.partida1.atletas_time_b)
+
+        self.assertIn(self.atleta1, atletas_a)
+        self.assertNotIn(atleta_b, atletas_a)
+
+        self.assertIn(atleta_b, atletas_b)
+        self.assertNotIn(self.atleta1, atletas_b)
