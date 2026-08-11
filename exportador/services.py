@@ -6,6 +6,33 @@ from openpyxl.utils import get_column_letter
 from core.models import Modalidade, ChaveamentoModalidade, PartidaChaveamento, Jogo
 
 
+FASE_ORDEM = {
+    'EXTERNO_ELIMINATORIA': 1,
+    'GRUPO_LOCAL': 2,
+    'QUARTAS_LOCAL': 3,
+    'SEMI_LOCAL': 4,
+    'DISPUTA_3_LOCAL': 5,
+    'FINAL_LOCAL': 6,
+    'SEMI_GERAL': 7,
+    'BRONZE': 8,
+    'FINAL_GERAL': 9,
+}
+
+
+def obter_chave_ordenacao_partida(p):
+    """
+    Retorna a tupla de ordenação cronológica do campeonato:
+    1. Fase do campeonato (Eliminatórias -> Grupos -> Quartas -> Semis -> 3º Lugar -> Final)
+    2. Nome do Grupo / Chave
+    3. Rodada
+    4. ID do jogo
+    """
+    fase_prio = FASE_ORDEM.get(p.fase, 99)
+    grupo_nome = p.grupo.nome if p.grupo else ''
+    rodada = p.rodada or 1
+    return (fase_prio, grupo_nome, rodada, p.id)
+
+
 def formatar_time_display(time_obj, partida, posicao='a'):
     """
     Retorna o nome formatado da delegação/time para a planilha.
@@ -123,6 +150,7 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
         num_grupos = ch.grupos.count() if ch else 0
         
         partidas_mod = list(PartidaChaveamento.objects.filter(chaveamento=ch).select_related('time_a', 'time_b', 'jogo', 'grupo')) if ch else []
+        partidas_mod.sort(key=obter_chave_ordenacao_partida)
         jogos_diretos = list(Jogo.objects.filter(modalidade=mod, partida_chaveamento__isnull=True).select_related('time_a', 'time_b'))
         
         all_matches_count = len(partidas_mod) + len(jogos_diretos)
