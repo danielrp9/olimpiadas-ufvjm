@@ -564,6 +564,42 @@ class PartidaChaveamento(models.Model):
             return []
         return Atleta.objects.filter(cadastrado_por=self.time_b, modalidades_inscritas__modalidade=modalidade).distinct().order_by('nome_completo')
 
+    @property
+    def cartoes_time_a_amarelos(self):
+        if not self.time_a:
+            return 0
+        return self.cartoes.filter(delegacao=self.time_a, tipo='AMARELO').count()
+
+    @property
+    def cartoes_time_a_vermelhos(self):
+        if not self.time_a:
+            return 0
+        return self.cartoes.filter(delegacao=self.time_a, tipo__in=['SEGUNDO_AMARELO', 'VERMELHO']).count()
+
+    @property
+    def cartoes_time_b_amarelos(self):
+        if not self.time_b:
+            return 0
+        return self.cartoes.filter(delegacao=self.time_b, tipo='AMARELO').count()
+
+    @property
+    def cartoes_time_b_vermelhos(self):
+        if not self.time_b:
+            return 0
+        return self.cartoes.filter(delegacao=self.time_b, tipo__in=['SEGUNDO_AMARELO', 'VERMELHO']).count()
+
+    @property
+    def cartoes_time_a_list(self):
+        if not self.time_a:
+            return []
+        return list(self.cartoes.filter(delegacao=self.time_a).select_related('atleta'))
+
+    @property
+    def cartoes_time_b_list(self):
+        if not self.time_b:
+            return []
+        return list(self.cartoes.filter(delegacao=self.time_b).select_related('atleta'))
+
     def __str__(self):
         ta = self.time_a.nome_delegacao if self.time_a else "A definir"
         tb = self.time_b.nome_delegacao if self.time_b else "A definir"

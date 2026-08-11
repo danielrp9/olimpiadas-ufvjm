@@ -4,10 +4,16 @@
         <!-- Equipes e Placar -->
         <div class="flex items-center justify-between gap-2">
             <!-- Time A -->
-            <div class="flex-1 font-bold text-slate-800 text-right truncate min-w-0">
+            <div class="flex-1 font-bold text-slate-800 text-right truncate min-w-0 flex items-center justify-end gap-1.5">
                 {% if partida.time_a %}
-                    <span class="text-slate-900 font-extrabold tracking-tight">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
-                    {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 ml-1 text-xs" title="Vencedor"></i>{% endif %}
+                    {% if partida.cartoes_time_a_amarelos > 0 or partida.cartoes_time_a_vermelhos > 0 %}
+                        <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'a')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}">
+                            {% if partida.cartoes_time_a_amarelos > 0 %}<span>🟨 {{ partida.cartoes_time_a_amarelos }}</span>{% endif %}
+                            {% if partida.cartoes_time_a_vermelhos > 0 %}<span>🟥 {{ partida.cartoes_time_a_vermelhos }}</span>{% endif %}
+                        </button>
+                    {% endif %}
+                    <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+                    {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
                 {% endif %}
@@ -25,10 +31,16 @@
             </div>
 
             <!-- Time B -->
-            <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0">
+            <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0 flex items-center justify-start gap-1.5">
                 {% if partida.time_b %}
-                    <span class="text-slate-900 font-extrabold tracking-tight">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
-                    {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 ml-1 text-xs" title="Vencedor"></i>{% endif %}
+                    <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+                    {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
+                    {% if partida.cartoes_time_b_amarelos > 0 or partida.cartoes_time_b_vermelhos > 0 %}
+                        <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
+                            {% if partida.cartoes_time_b_amarelos > 0 %}<span>🟨 {{ partida.cartoes_time_b_amarelos }}</span>{% endif %}
+                            {% if partida.cartoes_time_b_vermelhos > 0 %}<span>🟥 {{ partida.cartoes_time_b_vermelhos }}</span>{% endif %}
+                        </button>
+                    {% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
                 {% endif %}
@@ -309,6 +321,19 @@ if (typeof window.adicionarCartaoAjax === 'undefined') {
         if (editList) editList.innerHTML = editHtml;
     };
 }
+
+if (typeof window.abrirModalCartoesEquipe === 'undefined') {
+    window.abrirModalCartoesEquipe = function(partidaId, teamPos) {
+        const el = document.getElementById(`modal-cartoes-${partidaId}-${teamPos}`);
+        if (el) el.classList.remove('hidden');
+    };
+    window.fecharModalCartoesEquipe = function(partidaId, teamPos) {
+        const el = document.getElementById(`modal-cartoes-${partidaId}-${teamPos}`);
+        if (el) el.classList.add('hidden');
+    };
+}
 </script>
+
+{% include "core/includes/modal_cartoes_detalhes.html" %}
 
 
