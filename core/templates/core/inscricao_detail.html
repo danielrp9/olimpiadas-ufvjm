@@ -334,7 +334,7 @@
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 uppercase tracking-wide">
                                                     <i class="fas fa-times-circle mr-1 text-red-600"></i> Recusado
                                                 </span>
-                                                <button type="button" onclick="openRejeicaoModal('{{ atleta.nome_completo }}', '{{ atleta.justificativa_inconformidade|escapejs }}', {{ atleta.permite_correcao|yesno:'true,false' }}, '{% url 'enviar_correcao_documento' atleta.id %}')" 
+                                                <button type="button" onclick="openRejeicaoModal('{{ atleta.nome_completo }}', '{{ atleta.justificativa_inconformidade|escapejs }}', {{ atleta.permite_correcao|yesno:'true,false' }}, '{% url 'enviar_correcao_atleta' atleta.id %}')" 
                                                         class="text-[9px] text-blue-600 hover:text-blue-800 font-bold hover:underline transition"
                                                         onclick="event.stopPropagation();">
                                                     Ver Detalhes

@@ -253,7 +253,13 @@ def finalizar_jogo(request, pk):
 
 @login_required
 def enviar_correcao_atleta(request, pk):
-    atleta = get_object_or_404(Atleta, pk=pk, cadastrado_por=request.user.delegacao_ativa)
+    atleta = get_object_or_404(Atleta, pk=pk)
+    delegacao_user = request.user.delegacao_ativa
+    delegacao_atleta = atleta.cadastrado_por.delegacao_ativa if hasattr(atleta.cadastrado_por, 'delegacao_ativa') else atleta.cadastrado_por
+    if not (request.user.is_comissao or request.user.is_staff or delegacao_user == delegacao_atleta or atleta.cadastrado_por == request.user):
+        messages.error(request, "Você não tem permissão para alterar este atleta.")
+        return redirect(request.META.get('HTTP_REFERER', 'dashboard'))
+
     if not atleta.permite_correcao:
         messages.error(request, "Este atleta não está habilitado para correções.")
         return redirect(request.META.get('HTTP_REFERER', 'dashboard'))

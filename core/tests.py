@@ -1549,6 +1549,31 @@ class PreSumulaManagementTests(TestCase):
         self.assertEqual(partida.jogo.time_a, self.delegate)
         self.assertEqual(partida.jogo.time_b, self.delegate_b)
 
+    def test_inscricao_detail_com_atleta_indeferido(self):
+        from django.urls import reverse
+        from core.models import Atleta, Inscricao, InscricaoModalidade
+        atleta_ind = Atleta.objects.create(
+            nome_completo='Atleta Indeferido Teste',
+            cadastrado_por=self.delegate,
+            em_conformidade=False,
+            status_avaliacao='indeferido',
+            justificativa_inconformidade='Documento ilegível',
+            permite_correcao=True
+        )
+        insc = Inscricao.objects.filter(delegacao=self.delegate).first()
+        if not insc:
+            insc = Inscricao.objects.create(delegacao=self.delegate, status='deferido')
+        im, _ = InscricaoModalidade.objects.get_or_create(inscricao=insc, modalidade=self.modalidade)
+        im.atletas.add(atleta_ind)
+
+        self.client.force_login(self.delegate)
+        response = self.client.get(reverse('inscricao_detail'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Atleta Indeferido Teste')
+        self.assertContains(response, 'Recusado')
+        self.assertContains(response, 'openRejeicaoModal')
+
+
 
 
 
