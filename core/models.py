@@ -556,59 +556,89 @@ class PartidaChaveamento(models.Model):
             return self.jogo.modalidade
         return None
 
+    def _obter_equipe_ids(self, equipe):
+        if not equipe:
+            return []
+        ids = [equipe.id]
+        if getattr(equipe, 'parent_delegate_id', None):
+            ids.append(equipe.parent_delegate_id)
+        if hasattr(equipe, 'sub_delegados'):
+            ids.extend(list(equipe.sub_delegados.values_list('id', flat=True)))
+        return ids
+
     @property
     def atletas_time_a(self):
         if not self.time_a:
             return []
         mod = self.modalidade
-        if not mod:
-            return []
-        return Atleta.objects.filter(cadastrado_por=self.time_a, modalidades_inscritas__modalidade=mod).distinct().order_by('nome_completo')
+        ids = self._obter_equipe_ids(self.time_a)
+        if mod:
+            qs = Atleta.objects.filter(
+                models.Q(cadastrado_por_id__in=ids) |
+                models.Q(modalidades_inscritas__inscricao__delegacao_id__in=ids),
+                modalidades_inscritas__modalidade=mod
+            ).distinct().order_by('nome_completo')
+            if qs.exists():
+                return qs
+        return Atleta.objects.filter(cadastrado_por_id__in=ids).distinct().order_by('nome_completo')
 
     @property
     def atletas_time_b(self):
         if not self.time_b:
             return []
         mod = self.modalidade
-        if not mod:
-            return []
-        return Atleta.objects.filter(cadastrado_por=self.time_b, modalidades_inscritas__modalidade=mod).distinct().order_by('nome_completo')
+        ids = self._obter_equipe_ids(self.time_b)
+        if mod:
+            qs = Atleta.objects.filter(
+                models.Q(cadastrado_por_id__in=ids) |
+                models.Q(modalidades_inscritas__inscricao__delegacao_id__in=ids),
+                modalidades_inscritas__modalidade=mod
+            ).distinct().order_by('nome_completo')
+            if qs.exists():
+                return qs
+        return Atleta.objects.filter(cadastrado_por_id__in=ids).distinct().order_by('nome_completo')
 
     @property
     def cartoes_time_a_amarelos(self):
         if not self.time_a:
             return 0
-        return self.cartoes.filter(delegacao=self.time_a, tipo='AMARELO').count()
+        ids = self._obter_equipe_ids(self.time_a)
+        return self.cartoes.filter(delegacao_id__in=ids, tipo='AMARELO').count()
 
     @property
     def cartoes_time_a_vermelhos(self):
         if not self.time_a:
             return 0
-        return self.cartoes.filter(delegacao=self.time_a, tipo__in=['SEGUNDO_AMARELO', 'VERMELHO']).count()
+        ids = self._obter_equipe_ids(self.time_a)
+        return self.cartoes.filter(delegacao_id__in=ids, tipo__in=['SEGUNDO_AMARELO', 'VERMELHO']).count()
 
     @property
     def cartoes_time_b_amarelos(self):
         if not self.time_b:
             return 0
-        return self.cartoes.filter(delegacao=self.time_b, tipo='AMARELO').count()
+        ids = self._obter_equipe_ids(self.time_b)
+        return self.cartoes.filter(delegacao_id__in=ids, tipo='AMARELO').count()
 
     @property
     def cartoes_time_b_vermelhos(self):
         if not self.time_b:
             return 0
-        return self.cartoes.filter(delegacao=self.time_b, tipo__in=['SEGUNDO_AMARELO', 'VERMELHO']).count()
+        ids = self._obter_equipe_ids(self.time_b)
+        return self.cartoes.filter(delegacao_id__in=ids, tipo__in=['SEGUNDO_AMARELO', 'VERMELHO']).count()
 
     @property
     def cartoes_time_a_list(self):
         if not self.time_a:
             return []
-        return list(self.cartoes.filter(delegacao=self.time_a).select_related('atleta'))
+        ids = self._obter_equipe_ids(self.time_a)
+        return list(self.cartoes.filter(delegacao_id__in=ids).select_related('atleta'))
 
     @property
     def cartoes_time_b_list(self):
         if not self.time_b:
             return []
-        return list(self.cartoes.filter(delegacao=self.time_b).select_related('atleta'))
+        ids = self._obter_equipe_ids(self.time_b)
+        return list(self.cartoes.filter(delegacao_id__in=ids).select_related('atleta'))
 
     def __str__(self):
         ta = self.time_a.nome_delegacao if self.time_a else "A definir"

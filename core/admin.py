@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao, Inscricao, InscricaoModalidade, ConfiguracaoPeriodoInscricao, SubstituicaoAtleta
+from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao, Inscricao, InscricaoModalidade, ConfiguracaoPeriodoInscricao, SubstituicaoAtleta, CartaoPartida, RegistroDisciplinarAtleta
 
 
 @admin.register(ConfiguracaoPeriodoInscricao)
@@ -126,4 +126,19 @@ class SubstituicaoAtletaAdmin(admin.ModelAdmin):
     list_display = ('inscricao', 'atleta_saiu', 'atleta_entrou', 'data_substituicao')
     list_filter = ('data_substituicao',)
     search_fields = ('inscricao__delegacao__email', 'atleta_saiu__nome_completo', 'atleta_entrou__nome_completo')
+
+
+@admin.register(CartaoPartida)
+class CartaoPartidaAdmin(admin.ModelAdmin):
+    list_display = ('atleta', 'tipo', 'modalidade', 'delegacao', 'partida', 'minuto', 'criado_em')
+    list_filter = ('tipo', 'modalidade', 'criado_em')
+    search_fields = ('atleta__nome_completo', 'delegacao__nome_delegacao', 'delegacao__email')
+
+
+@admin.register(RegistroDisciplinarAtleta)
+class RegistroDisciplinarAtletaAdmin(admin.ModelAdmin):
+    list_display = ('atleta', 'modalidade', 'cartoes_amarelos_acumulados', 'suspenso_jogos_pendentes', 'total_amarelos_historico', 'total_vermelhos_historico')
+    list_filter = ('modalidade', 'suspenso_jogos_pendentes')
+    search_fields = ('atleta__nome_completo', 'atleta__matricula')
+
 

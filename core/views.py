@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
@@ -1962,7 +1963,7 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
         })
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def gerar_chaveamento_view(request, pk):
     if request.method == 'POST':
         modalidade = get_object_or_404(Modalidade, pk=pk)
@@ -1972,7 +1973,7 @@ def gerar_chaveamento_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def encerrar_fase_grupos_view(request, pk):
     if request.method == 'POST':
         modalidade = get_object_or_404(Modalidade, pk=pk)
@@ -1983,7 +1984,7 @@ def encerrar_fase_grupos_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def resetar_chaveamento_view(request, pk):
     if request.method == 'POST':
         modalidade = get_object_or_404(Modalidade, pk=pk)
@@ -1997,7 +1998,7 @@ def resetar_chaveamento_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def salvar_resultado_partida_view(request, pk):
     if request.method == 'POST':
         partida = get_object_or_404(PartidaChaveamento, pk=pk)
@@ -2047,7 +2048,7 @@ def salvar_resultado_partida_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def salvar_fase_data_view(request, pk):
     if request.method == 'POST':
         chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
@@ -2065,7 +2066,7 @@ def salvar_fase_data_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def salvar_cartao_partida_view(request, pk):
     """
     Registra um cartão para um atleta em uma partida (suporta POST normal e AJAX).
@@ -2076,7 +2077,7 @@ def salvar_cartao_partida_view(request, pk):
         tipo_cartao = request.POST.get('tipo_cartao')
         observacao = request.POST.get('observacao', '').strip()
 
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
 
         if atleta_id and tipo_cartao:
             atleta = get_object_or_404(Atleta, pk=atleta_id)
@@ -2088,7 +2089,7 @@ def salvar_cartao_partida_view(request, pk):
                         {
                             'id': c.id,
                             'atleta_nome': c.atleta.nome_completo,
-                            'delegacao_nome': c.delegacao.nome_delegacao or c.delegacao.email,
+                            'delegacao_nome': (c.delegacao.nome_delegacao or c.delegacao.email) if c.delegacao else '',
                             'tipo': c.tipo,
                             'tipo_display': c.get_tipo_display()
                         }
@@ -2110,7 +2111,7 @@ def salvar_cartao_partida_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
-@user_passes_test(lambda u: u.is_staff)
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def remover_cartao_partida_view(request, pk):
     """
     Remove um cartão aplicado a um atleta (suporta POST normal e AJAX).
@@ -2120,10 +2121,10 @@ def remover_cartao_partida_view(request, pk):
         from core.models import CartaoPartida
         cartao = get_object_or_404(CartaoPartida, pk=pk)
         partida = cartao.partida
-        modalidade_pk = cartao.modalidade.pk
+        modalidade_pk = cartao.modalidade.pk if cartao.modalidade else (partida.chaveamento.modalidade.pk if partida and partida.chaveamento else None)
         remover_cartao_atleta(pk)
 
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
         if is_ajax:
             cartoes_list = []
             if partida:
@@ -2131,7 +2132,7 @@ def remover_cartao_partida_view(request, pk):
                     {
                         'id': c.id,
                         'atleta_nome': c.atleta.nome_completo,
-                        'delegacao_nome': c.delegacao.nome_delegacao or c.delegacao.email,
+                        'delegacao_nome': (c.delegacao.nome_delegacao or c.delegacao.email) if c.delegacao else '',
                         'tipo': c.tipo,
                         'tipo_display': c.get_tipo_display()
                     }
@@ -2140,7 +2141,9 @@ def remover_cartao_partida_view(request, pk):
             return JsonResponse({'success': True, 'cartoes': cartoes_list})
 
         messages.success(request, "Cartão removido com sucesso!")
-        return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+        if modalidade_pk:
+            return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+        return redirect('chaveamento_admin_list')
     return redirect('chaveamento_admin_list')
 
 

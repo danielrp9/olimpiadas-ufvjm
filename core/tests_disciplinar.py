@@ -269,3 +269,63 @@ class ModuloDisciplinarTests(TestCase):
 
         self.assertIn(atleta_b, atletas_b)
         self.assertNotIn(self.atleta1, atletas_b)
+
+    def test_salvar_cartao_view_ajax_comissao_sem_staff(self):
+        """Usuário da comissão sem is_staff consegue salvar cartão via AJAX com sucesso."""
+        comissao_sem_staff = User.objects.create_user(
+            email='comissao2@ufvjm.edu.br',
+            role='COMISSAO',
+            is_staff=False
+        )
+        self.client.force_login(comissao_sem_staff)
+
+        response = self.client.post(
+            f'/comissao/chaveamento/partida/{self.partida1.pk}/cartao/salvar/',
+            data={
+                'atleta_id': self.atleta1.pk,
+                'tipo_cartao': 'AMARELO'
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get('success'))
+        self.assertEqual(len(data.get('cartoes', [])), 1)
+        self.assertEqual(data['cartoes'][0]['tipo'], 'AMARELO')
+
+    def test_remover_cartao_view_ajax(self):
+        """Comissão consegue remover cartão via AJAX com sucesso."""
+        cartao = registrar_cartao_atleta(self.partida1, self.atleta1, 'AMARELO')
+        self.client.force_login(self.comissao)
+
+        response = self.client.post(
+            f'/comissao/chaveamento/cartao/{cartao.pk}/remover/',
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertTrue(data.get('success'))
+        self.assertEqual(len(data.get('cartoes', [])), 0)
+
+    def test_salvar_cartao_atleta_cadastrado_por_subdelegado(self):
+        """Atleta cadastrado por co-delegado (subdelegado) é aceito na partida do delegado principal."""
+        co_delegado = User.objects.create_user(
+            email='codelegado@ufvjm.edu.br',
+            parent_delegate=self.delegacao_a,
+            role='REPRESENTANTE',
+            perfil_completo=True
+        )
+        atleta_co = Atleta.objects.create(
+            nome_completo='Atleta do Co-delegado',
+            cadastrado_por=co_delegado,
+            campus=self.campus,
+            em_conformidade=True
+        )
+        
+        # Registra cartão para o atleta do co-delegado na partida da delegacao_a
+        cartao = registrar_cartao_atleta(self.partida1, atleta_co, 'AMARELO')
+        self.assertEqual(cartao.tipo, 'AMARELO')
+        self.assertEqual(cartao.delegacao, self.delegacao_a)
+

@@ -1,3 +1,4 @@
+from django.db import models
 from core.models import RegistroDisciplinarAtleta, CartaoPartida, PartidaChaveamento, Atleta, Modalidade
 
 def registrar_cartao_atleta(partida, atleta, tipo_cartao, minuto=None, observacao=None):
@@ -14,11 +15,28 @@ def registrar_cartao_atleta(partida, atleta, tipo_cartao, minuto=None, observaca
         raise ValueError("A partida deve possuir uma modalidade vinculada.")
 
     times_partida = [t for t in [getattr(partida, 'time_a', None), getattr(partida, 'time_b', None)] if t]
-    if times_partida and atleta.cadastrado_por not in times_partida:
-        nomes = " ou ".join([getattr(t, 'nome_delegacao', None) or t.email for t in times_partida])
-        raise ValueError(f"O atleta '{atleta.nome_completo}' não pertence às delegações desta partida ({nomes}).")
+    if times_partida:
+        times_ids = set()
+        for t in times_partida:
+            times_ids.add(t.id)
+            if getattr(t, 'parent_delegate_id', None):
+                times_ids.add(t.parent_delegate_id)
+            if hasattr(t, 'sub_delegados'):
+                times_ids.update(t.sub_delegados.values_list('id', flat=True))
 
-    delegacao = atleta.cadastrado_por
+        atleta_del_ids = {atleta.cadastrado_por_id}
+        if getattr(atleta.cadastrado_por, 'parent_delegate_id', None):
+            atleta_del_ids.add(atleta.cadastrado_por.parent_delegate_id)
+
+        # Checar se o atleta está inscrito em alguma delegação desta partida
+        inscricao_del_ids = set(atleta.modalidades_inscritas.values_list('inscricao__delegacao_id', flat=True))
+        atleta_del_ids.update(inscricao_del_ids)
+
+        if not (atleta_del_ids & times_ids):
+            nomes = " ou ".join([getattr(t, 'nome_delegacao', None) or t.email for t in times_partida])
+            raise ValueError(f"O atleta '{atleta.nome_completo}' não pertence às delegações desta partida ({nomes}).")
+
+    delegacao = atleta.cadastrado_por.delegacao_ativa if hasattr(atleta.cadastrado_por, 'delegacao_ativa') else atleta.cadastrado_por
 
     # Se o cartão for amarelo, verifica se já existe um amarelo lançado para este atleta nesta mesma partida
     if tipo_cartao == 'AMARELO':
@@ -52,9 +70,10 @@ def remover_cartao_atleta(cartao_id):
     try:
         cartao = CartaoPartida.objects.get(pk=cartao_id)
         atleta = cartao.atleta
-        modalidade = cartao.modalidade
+        modalidade = cartao.modalidade or (cartao.partida.chaveamento.modalidade if cartao.partida and cartao.partida.chaveamento else None)
         cartao.delete()
-        recalcular_disciplinar_atleta_modalidade(atleta, modalidade)
+        if atleta and modalidade:
+            recalcular_disciplinar_atleta_modalidade(atleta, modalidade)
         return True
     except CartaoPartida.DoesNotExist:
         return False
@@ -79,12 +98,20 @@ def recalcular_disciplinar_atleta_modalidade(atleta, modalidade):
     registro.total_vermelhos_historico = 0
     registro.total_jogos_suspensao_cumpridos = 0
 
-    delegacao = atleta.cadastrado_por
+    delegacao = atleta.cadastrado_por.delegacao_ativa if hasattr(atleta.cadastrado_por, 'delegacao_ativa') else atleta.cadastrado_por
+
+    delegacao_ids = {delegacao.id}
+    if hasattr(delegacao, 'sub_delegados'):
+        delegacao_ids.update(delegacao.sub_delegados.values_list('id', flat=True))
+    if getattr(delegacao, 'parent_delegate_id', None):
+        delegacao_ids.add(delegacao.parent_delegate_id)
+    if atleta.cadastrado_por_id:
+        delegacao_ids.add(atleta.cadastrado_por_id)
 
     # Buscar todas as partidas do chaveamento desta modalidade envolvendo a delegação do atleta
     partidas = (
-        PartidaChaveamento.objects.filter(chaveamento__modalidade=modalidade, time_a=delegacao) |
-        PartidaChaveamento.objects.filter(chaveamento__modalidade=modalidade, time_b=delegacao)
+        PartidaChaveamento.objects.filter(chaveamento__modalidade=modalidade, time_a_id__in=delegacao_ids) |
+        PartidaChaveamento.objects.filter(chaveamento__modalidade=modalidade, time_b_id__in=delegacao_ids)
     ).order_by('id').distinct()
 
     for partida in partidas:
@@ -143,9 +170,16 @@ def processar_cumprimento_suspensao_partida(partida):
     for team in times:
         if not team:
             continue
+        team_ids = [team.id]
+        if getattr(team, 'parent_delegate_id', None):
+            team_ids.append(team.parent_delegate_id)
+        if hasattr(team, 'sub_delegados'):
+            team_ids.extend(list(team.sub_delegados.values_list('id', flat=True)))
+
         atletas = Atleta.objects.filter(
-            modalidades_inscritas__modalidade=modalidade,
-            cadastrado_por=team
+            models.Q(cadastrado_por_id__in=team_ids) |
+            models.Q(modalidades_inscritas__inscricao__delegacao_id__in=team_ids),
+            modalidades_inscritas__modalidade=modalidade
         ).distinct()
         for atleta in atletas:
             recalcular_disciplinar_atleta_modalidade(atleta, modalidade)
@@ -174,4 +208,3 @@ def obter_relatorio_disciplinar_modalidade(modalidade):
         'atletas_suspensos': atletas_suspensos,
         'atletas_com_amarelos': atletas_com_amarelos,
     }
-

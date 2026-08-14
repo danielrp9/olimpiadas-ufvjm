@@ -230,6 +230,25 @@
 </div>
 
 <script>
+if (typeof window.getCsrfTokenCartao === 'undefined') {
+    window.getCsrfTokenCartao = function() {
+        const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (csrfInput && csrfInput.value) {
+            return csrfInput.value;
+        }
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, 10) === 'csrftoken=') {
+                    return decodeURIComponent(cookie.substring(10));
+                }
+            }
+        }
+        return '';
+    };
+}
+
 if (typeof window.filtrarDelegacaoCartao === 'undefined') {
     window.filtrarDelegacaoCartao = function(partidaId, teamFilter) {
         const select = document.getElementById('atleta_id_' + partidaId);
@@ -269,68 +288,112 @@ if (typeof window.filtrarDelegacaoCartao === 'undefined') {
 if (typeof window.adicionarCartaoAjax === 'undefined') {
     window.adicionarCartaoAjax = function(partidaId) {
         const selectAtleta = document.getElementById('atleta_id_' + partidaId);
+        if (!selectAtleta) {
+            alert('Elemento de seleção de atletas não encontrado.');
+            return;
+        }
         const atletaId = selectAtleta.value;
-        const tipoCartao = document.getElementById('tipo_cartao_' + partidaId).value;
+        const selectTipo = document.getElementById('tipo_cartao_' + partidaId);
+        const tipoCartao = selectTipo ? selectTipo.value : 'AMARELO';
 
         if (!atletaId) {
             alert('Selecione um atleta para aplicar o cartão.');
             return;
         }
 
+        const csrfToken = window.getCsrfTokenCartao();
         const formData = new FormData();
         formData.append('atleta_id', atletaId);
         formData.append('tipo_cartao', tipoCartao);
-        
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        formData.append('csrfmiddlewaretoken', csrfToken);
+        if (csrfToken) {
+            formData.append('csrfmiddlewaretoken', csrfToken);
+        }
+
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        };
+        if (csrfToken) {
+            headers['X-CSRFToken'] = csrfToken;
+        }
 
         fetch('/comissao/chaveamento/partida/' + partidaId + '/cartao/salvar/', {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: headers
         })
-        .then(res => res.json())
+        .then(async res => {
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (e) {
+                data = null;
+            }
+            if (!res.ok) {
+                const errorMsg = (data && data.error) ? data.error : `Erro HTTP ${res.status}: Falha ao salvar cartão.`;
+                throw new Error(errorMsg);
+            }
+            return data;
+        })
         .then(data => {
-            if (data.success) {
-                atualizarCartoesBadge(partidaId, data.cartoes);
+            if (data && data.success) {
+                window.atualizarCartoesBadge(partidaId, data.cartoes);
                 selectAtleta.value = '';
             } else {
-                alert(data.error || 'Erro ao registrar cartão.');
+                alert((data && data.error) || 'Erro ao registrar cartão.');
             }
         })
         .catch(err => {
-            console.error(err);
-            alert('Erro de conexão ao registrar cartão.');
+            console.error('Erro ao registrar cartão:', err);
+            alert(err.message || 'Erro de conexão ao registrar cartão.');
         });
     };
 
     window.removerCartaoAjax = function(cartaoId, partidaId) {
         if (!confirm('Deseja realmente remover este cartão?')) return;
 
+        const csrfToken = window.getCsrfTokenCartao();
         const formData = new FormData();
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        formData.append('csrfmiddlewaretoken', csrfToken);
+        if (csrfToken) {
+            formData.append('csrfmiddlewaretoken', csrfToken);
+        }
+
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+        };
+        if (csrfToken) {
+            headers['X-CSRFToken'] = csrfToken;
+        }
 
         fetch('/comissao/chaveamento/cartao/' + cartaoId + '/remover/', {
             method: 'POST',
             body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            headers: headers
         })
-        .then(res => res.json())
+        .then(async res => {
+            let data = null;
+            try {
+                data = await res.json();
+            } catch (e) {
+                data = null;
+            }
+            if (!res.ok) {
+                const errorMsg = (data && data.error) ? data.error : `Erro HTTP ${res.status}: Falha ao remover cartão.`;
+                throw new Error(errorMsg);
+            }
+            return data;
+        })
         .then(data => {
-            if (data.success) {
-                atualizarCartoesBadge(partidaId, data.cartoes);
+            if (data && data.success) {
+                window.atualizarCartoesBadge(partidaId, data.cartoes);
             } else {
-                alert(data.error || 'Erro ao remover cartão.');
+                alert((data && data.error) || 'Erro ao remover cartão.');
             }
         })
         .catch(err => {
-            console.error(err);
-            alert('Erro de conexão ao remover cartão.');
+            console.error('Erro ao remover cartão:', err);
+            alert(err.message || 'Erro de conexão ao remover cartão.');
         });
     };
 
