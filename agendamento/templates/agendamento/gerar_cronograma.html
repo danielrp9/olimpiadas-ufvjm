@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Gerar Cronograma | Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-8 pb-10">
+    
+    <!-- Header Padrão do Sistema -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1.5" title="Voltar ao Painel">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <span class="p-3 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
+                <i class="fas fa-play text-lg"></i>
+            </span>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Gerar Cronograma</h1>
+                <p class="text-slate-600 mt-1 text-xs sm:text-sm">Distribuição automática de partidas com base nas regras cadastradas.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards Resumo de Parâmetros com Espaçamento Amplo -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <!-- Datas Disponíveis -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Datas Disponíveis</span>
+                <span class="p-2.5 bg-amber-50 text-amber-600 rounded-2xl">
+                    <i class="fas fa-calendar-alt text-sm"></i>
+                </span>
+            </div>
+            <div>
+                <p class="text-3xl font-black text-slate-900">{{ configuracao.datas.filter.count }} <span class="text-xs font-semibold text-slate-500">dias cadastrados</span></p>
+                <p class="text-xs text-slate-500 mt-1">Datas ativas no sistema</p>
+            </div>
+        </div>
+
+        <!-- Locais / Quadras -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Quadras e Locais</span>
+                <span class="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl">
+                    <i class="fas fa-map-marker-alt text-sm"></i>
+                </span>
+            </div>
+            <div>
+                <p class="text-3xl font-black text-slate-900">{{ configuracao.recursos.filter.count }} <span class="text-xs font-semibold text-slate-500">espaços ativos</span></p>
+                <p class="text-xs text-slate-500 mt-1">Capacidade física simultânea</p>
+            </div>
+        </div>
+
+        <!-- Partidas a Alocar -->
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-7 shadow-sm flex flex-col justify-between space-y-4">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Partidas a Alocar</span>
+                <span class="p-2.5 bg-purple-50 text-purple-600 rounded-2xl">
+                    <i class="fas fa-trophy text-sm"></i>
+                </span>
+            </div>
+            <div>
+                <p class="text-3xl font-black text-slate-900">{{ total_partidas }} <span class="text-xs font-semibold text-slate-500">jogos pendentes</span></p>
+                <p class="text-xs text-slate-500 mt-1">Aguardando definição de horário</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulário de Execução com Espaçamento Amplo -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-10 shadow-sm space-y-8">
+        <form method="post" class="space-y-8">
+            {% csrf_token %}
+
+            <div class="space-y-2">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Título do Cronograma *
+                </label>
+                <input type="text" name="titulo" value="Cronograma Oficial {{ now|date:'Y' }}" placeholder="Ex: Cronograma Oficial"
+                    class="w-full px-5 py-3.5 bg-slate-50/50 border border-slate-200 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 rounded-2xl text-sm font-bold text-slate-900 transition">
+            </div>
+
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Modalidades no Agendamento:
+                    </label>
+                    <span class="text-xs text-slate-500">Selecione as modalidades participantes</span>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 p-5 sm:p-6 bg-slate-50/70 rounded-3xl border border-slate-200/80 max-h-72 overflow-y-auto">
+                    {% for m in modalidades %}
+                    <label class="flex items-center p-4 rounded-2xl border border-slate-200 bg-white hover:border-blue-400 hover:shadow-xs cursor-pointer transition">
+                        <input type="checkbox" name="modalidades" value="{{ m.id }}" checked
+                            class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 mr-3">
+                        <span class="text-xs font-bold text-slate-800">{{ m.nome }} ({{ m.get_genero_display }})</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-6">
+                <p class="text-xs text-slate-600 flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-emerald-600 text-sm shrink-0"></i>
+                    <span>A simulação é gerada de forma segura e não altera partidas oficiais até a sua aprovação.</span>
+                </p>
+
+                <!-- Botão com padding generoso e espaçamento interno -->
+                <button type="submit" 
+                    style="padding: 14px 36px; gap: 12px;"
+                    class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-sm hover:shadow transition active:scale-[0.98] flex items-center justify-center cursor-pointer shrink-0 text-xs sm:text-sm">
+                    <i class="fas fa-magic text-sm shrink-0"></i>
+                    <span class="whitespace-nowrap">Executar Agendamento Automático</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Local de Jogo | Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-6">
+    
+    <!-- Header Padrão do Sistema -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'agendamento_recursos' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1" title="Voltar para Locais">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <span class="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl shrink-0">
+                <i class="fas fa-edit text-base"></i>
+            </span>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">Editar Local: {{ recurso.nome }}</h1>
+                <p class="text-slate-600 mt-1 text-xs">Atualize os dados e modalidades permitidas para este recurso.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm">
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nome do Local *</label>
+                {{ form.nome }}
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Descrição / Observação</label>
+                {{ form.descricao }}
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Modalidades Suportadas</label>
+                    <span class="text-[11px] text-slate-500 font-medium">Vazio = Todas</span>
+                </div>
+                <p class="text-[11px] text-slate-500 mb-2">Marque as modalidades permitidas neste local:</p>
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-2xl max-h-56 overflow-y-auto space-y-1.5">
+                    {% for choice in form.modalidades_permitidas %}
+                    <label class="flex items-center p-2 rounded-xl bg-white border border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/20 cursor-pointer transition text-xs font-semibold text-slate-800">
+                        <span class="mr-2.5 flex items-center">{{ choice.tag }}</span>
+                        <span>{{ choice.choice_label }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-1">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Prioridade / Ordem</label>
+                    {{ form.ordem }}
+                </div>
+                <div class="flex items-center pt-6 gap-2">
+                    {{ form.ativo }}
+                    <label for="{{ form.ativo.id_for_label }}" class="text-xs font-bold text-slate-800 cursor-pointer">
+                        Local Ativo
+                    </label>
+                </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                <a href="{% url 'agendamento_recursos' %}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-[0.98] cursor-pointer">
+                    Salvar Alterações
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

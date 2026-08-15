@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Restrições por Fase | Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-6">
+    
+    <!-- Header Padrão do Sistema -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1" title="Voltar ao Painel">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <span class="p-2.5 bg-purple-50 text-purple-600 rounded-2xl shrink-0">
+                <i class="fas fa-layer-group text-base"></i>
+            </span>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">Restrições por Fase</h1>
+                <p class="text-slate-600 mt-1 text-xs">Defina em quais datas específicas cada fase deve acontecer.</p>
+            </div>
+        </div>
+        <div>
+            <a href="{% url 'agendamento_fase_create' %}" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98] flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-plus text-[10px]"></i> Nova Fase
+            </a>
+        </div>
+    </div>
+
+    <!-- Alert Informativo Limpo -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm flex items-start gap-4">
+        <span class="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <i class="fas fa-info-circle text-base"></i>
+        </span>
+        <div class="text-xs text-slate-700 space-y-1.5 leading-relaxed">
+            <h4 class="font-bold text-slate-900 text-sm">Como funcionam as restrições:</h4>
+            <p>• <strong>Fase com datas marcadas:</strong> Os jogos ocorrem <strong>apenas</strong> nos dias selecionados.</p>
+            <p>• <strong>Fase sem datas marcadas:</strong> Pode utilizar qualquer dia cadastrado na competição.</p>
+            <p>• <strong>Precedência:</strong> Fases classificatórias (ex: Semifinais) sempre acontecem antes da fase seguinte (ex: Final).</p>
+        </div>
+    </div>
+
+    {% if not datas_disponiveis %}
+    <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 text-amber-900 text-center space-y-3">
+        <i class="fas fa-exclamation-triangle text-2xl text-amber-600"></i>
+        <h3 class="font-bold text-sm">Nenhuma data cadastrada</h3>
+        <p class="text-xs text-amber-800">Cadastre primeiro as datas da competição para poder vinculá-las às fases.</p>
+        <a href="{% url 'agendamento_datas' %}" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
+            <i class="fas fa-calendar-plus text-xs"></i> Cadastrar Datas
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Matriz de Restrições por Fase -->
+    <form method="post" class="space-y-4">
+        {% csrf_token %}
+
+        <div class="space-y-4">
+            {% for rest in restricoes %}
+            <div class="bg-white border border-slate-200/80 rounded-3xl p-6 shadow-sm hover:border-slate-300 transition space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <span class="w-8 h-8 rounded-xl bg-purple-50 text-purple-700 border border-purple-200 flex items-center justify-center font-bold text-xs shrink-0">
+                            {{ rest.ordem_precedencia }}
+                        </span>
+                        <div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <h3 class="font-bold text-slate-900 text-sm">{{ rest.fase_nome|default:rest.fase_codigo }}</h3>
+                                <span class="px-2 py-0.5 text-[10px] font-bold font-mono bg-slate-100 text-slate-700 rounded border border-slate-200">
+                                    {{ rest.fase_codigo }}
+                                </span>
+                                {% if rest.modalidade %}
+                                    <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-50 text-blue-700 rounded border border-blue-200">
+                                        {{ rest.modalidade.nome }}
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <span class="text-[11px] text-slate-500">Ordem de precedência: {{ rest.ordem_precedencia }}</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3 self-end sm:self-center">
+                        {% if rest.datas_permitidas.all %}
+                            <span class="px-3 py-1 bg-purple-50 text-purple-800 border border-purple-200 text-xs font-bold rounded-full">
+                                <i class="fas fa-lock text-[10px] mr-1"></i> {{ rest.datas_permitidas.count }} data(s) permitida(s)
+                            </span>
+                        {% else %}
+                            <span class="px-3 py-1 bg-slate-100 text-slate-700 border border-slate-200 text-xs font-semibold rounded-full">
+                                <i class="fas fa-globe text-[10px] mr-1"></i> Qualquer data
+                            </span>
+                        {% endif %}
+
+                        <a href="{% url 'agendamento_fase_delete' rest.pk %}" onclick="return confirm('Deseja remover esta restrição de fase?');" class="p-2 text-slate-400 hover:text-rose-600 rounded-xl transition" title="Excluir">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Checkbox Matrix com Alto Contraste -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5">
+                        Datas Permitidas:
+                    </label>
+                    
+                    {% if datas_disponiveis %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
+                        {% for d in datas_disponiveis %}
+                        <label class="flex items-center p-3 rounded-2xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:border-blue-400 cursor-pointer transition">
+                            <input type="checkbox" name="fase_datas_{{ rest.id }}" value="{{ d.id }}" 
+                                {% if d in rest.datas_permitidas.all %}checked{% endif %}
+                                class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 mr-2.5">
+                            <div class="text-xs">
+                                <p class="font-bold text-slate-900">{{ d.data|date:"d/m/Y" }}</p>
+                                <p class="text-[11px] text-slate-600">{{ d.data|date:"l"|slice:":3" }} ({{ d.horario_inicio|time:"H:i" }}-{{ d.horario_fim|time:"H:i" }})</p>
+                            </div>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-xs text-slate-500">Nenhuma data geral cadastrada.</p>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="pt-6 pb-2 flex justify-end">
+            <button type="submit" 
+                style="padding: 14px 36px; gap: 12px;"
+                class="w-full sm:w-auto bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-2xl text-sm transition shadow-sm hover:shadow active:scale-[0.98] flex items-center justify-center cursor-pointer">
+                <i class="fas fa-save text-base shrink-0"></i>
+                <span class="whitespace-nowrap">Salvar Restrições</span>
+            </button>
+        </div>
+    </form>
+
+</div>
+{% endblock %}

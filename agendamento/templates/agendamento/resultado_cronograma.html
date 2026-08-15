@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ cenario.titulo }} | Cronograma | Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-6">
+    
+    <!-- Header Padrão do Sistema -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1" title="Voltar ao Painel">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
+                <i class="fas fa-calendar-check text-base"></i>
+            </span>
+            <div>
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">{{ cenario.titulo }}</h1>
+                    {% if cenario.status == 'aplicado' %}
+                        <span class="px-3 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full uppercase">
+                            <i class="fas fa-check-double mr-1"></i> Aplicado
+                        </span>
+                    {% elif cenario.status == 'sucesso' %}
+                        <span class="px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full uppercase">
+                            <i class="fas fa-check mr-1"></i> Viável
+                        </span>
+                    {% else %}
+                        <span class="px-3 py-1 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full uppercase">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Inviável
+                        </span>
+                    {% endif %}
+                </div>
+                <p class="text-slate-600 mt-1 text-xs">{{ cenario.criado_em|date:"d/m/Y \à\s H:i" }} • {{ total_alocacoes }} partidas alocadas.</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 flex-wrap">
+            {% if cenario.status == 'sucesso' %}
+            <form method="post" action="{% url 'agendamento_aplicar_cenario' cenario.pk %}" onsubmit="return confirm('Deseja realmente aplicar este cronograma às partidas oficiais? As datas, horários e quadras serão gravados no sistema.');">
+                {% csrf_token %}
+                <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98] flex items-center gap-2 cursor-pointer">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Aplicar ao Oficial</span>
+                </button>
+            </form>
+            {% endif %}
+
+            <button onclick="window.print();" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fas fa-print"></i>
+                <span>Imprimir</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Painel de Diagnóstico (se houver impedimentos) -->
+    {% if cenario.mensagem_diagnostico and cenario.status == 'inviavel' %}
+    <div class="bg-white border border-rose-200 rounded-3xl p-6 shadow-sm space-y-4">
+        <div class="flex items-start gap-3.5">
+            <span class="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-2xl shrink-0">
+                <i class="fas fa-exclamation-triangle text-base"></i>
+            </span>
+            <div class="space-y-2 flex-grow">
+                <h3 class="font-bold text-base text-rose-900">Diagnóstico de Inviabilidade</h3>
+                <div class="text-xs text-slate-800 whitespace-pre-line font-medium leading-relaxed bg-rose-50/50 p-4 rounded-2xl border border-rose-100">
+                    {{ cenario.mensagem_diagnostico }}
+                </div>
+                <div class="pt-2 flex items-center gap-3 flex-wrap">
+                    <a href="{% url 'agendamento_fases' %}" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
+                        <i class="fas fa-layer-group mr-1"></i> Revisar Fases
+                    </a>
+                    <a href="{% url 'agendamento_datas' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition">
+                        <i class="fas fa-calendar-alt mr-1"></i> Ajustar Datas
+                    </a>
+                    <a href="{% url 'agendamento_recursos' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition">
+                        <i class="fas fa-map-pin mr-1"></i> Cadastrar Quadras
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Resumo de Métricas -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-5">
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Total de Jogos</span>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ total_alocacoes }} <span class="text-xs font-semibold text-slate-500">partidas</span></p>
+        </div>
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Dias Utilizados</span>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ cenario.metricas.dates_used_count|default:datas_agrupadas|length }} <span class="text-xs font-semibold text-slate-500">dias</span></p>
+        </div>
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Locais em Uso</span>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ cenario.metricas.resources_used_count|default:"-" }} <span class="text-xs font-semibold text-slate-500">quadras</span></p>
+        </div>
+        <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Situação</span>
+            <p class="text-sm font-bold {% if cenario.status == 'aplicado' %}text-emerald-700{% elif cenario.status == 'sucesso' %}text-blue-700{% else %}text-rose-700{% endif %} mt-2.5">
+                {{ cenario.get_status_display }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Lista de Jogos por Dia -->
+    {% if datas_agrupadas %}
+    <div class="space-y-6">
+        {% for dia, itens in datas_agrupadas.items %}
+        <div class="bg-white border border-slate-200/80 rounded-3xl shadow-sm overflow-hidden">
+            
+            <!-- Cabeçalho do Dia -->
+            <div class="px-6 py-4 bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-white/10 flex flex-col items-center justify-center font-bold">
+                        <span class="text-xs leading-tight">{{ dia|date:"d" }}</span>
+                        <span class="text-[9px] uppercase tracking-wider text-blue-300 font-extrabold">{{ dia|date:"M" }}</span>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base">{{ dia|date:"l, d \d\e F \d\e Y" }}</h3>
+                        <p class="text-xs text-slate-300">{{ itens|length }} partida(s) programada(s)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela dos Jogos -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                        <tr>
+                            <th class="py-3 px-6">Horário</th>
+                            <th class="py-3 px-4">Local / Quadra</th>
+                            <th class="py-3 px-4">Modalidade</th>
+                            <th class="py-3 px-4">Fase</th>
+                            <th class="py-3 px-6">Confronto</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-slate-800">
+                        {% for item in itens %}
+                        <tr class="hover:bg-slate-50/80 transition">
+                            <td class="py-4 px-6 whitespace-nowrap">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 text-blue-800 font-bold font-mono text-xs border border-blue-200">
+                                    <i class="far fa-clock text-[10px]"></i>
+                                    {{ item.horario_inicio|time:"H:i" }} - {{ item.horario_fim|time:"H:i" }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-4 whitespace-nowrap">
+                                <span class="font-bold text-slate-900 flex items-center gap-1.5">
+                                    <i class="fas fa-map-marker-alt text-slate-500 text-xs"></i>
+                                    {{ item.recurso_nome }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-4 whitespace-nowrap">
+                                <span class="px-2.5 py-1 rounded-lg bg-slate-100 font-bold text-slate-800 border border-slate-200">
+                                    {{ item.modalidade_nome }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-4 whitespace-nowrap">
+                                <span class="px-2.5 py-1 rounded-lg bg-purple-50 text-purple-800 font-bold border border-purple-200">
+                                    {{ item.fase_display }}
+                                </span>
+                            </td>
+                            <td class="py-4 px-6">
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold text-slate-900 text-sm">{{ item.time_a_nome }}</span>
+                                    <span class="text-slate-400 font-bold text-xs uppercase px-1">vs</span>
+                                    <span class="font-bold text-slate-900 text-sm">{{ item.time_b_nome }}</span>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% elif cenario.status == 'sucesso' %}
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-12 text-center text-slate-500">
+        <i class="far fa-calendar-check text-4xl mb-3 text-slate-300"></i>
+        <p class="text-sm font-bold text-slate-700">Nenhuma partida pendente de alocação.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

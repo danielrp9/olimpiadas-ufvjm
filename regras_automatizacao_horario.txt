@@ -1,0 +1,460 @@
+Sim. Isso precisa entrar como **restrição de fase**, não apenas como mais uma preferência de data.
+
+O ideal é o sistema permitir configurar, por fase, **quais datas são permitidas**. Assim, o administrador pode dizer, por exemplo:
+
+* Fase classificatória → qualquer data cadastrada;
+* Semifinal → somente 25/09;
+* Final → somente 27/09.
+
+E o algoritmo entende que uma semifinal **não pode ser antecipada para uma data anterior**, mesmo que exista espaço.
+
+Também é importante que isso seja genérico: não codificar “semifinal” e “final” diretamente. A configuração deve funcionar para qualquer fase.
+
+Eu acrescentaria ao documento:
+
+# Restrição de Datas por Fase da Competição
+
+Além das datas gerais disponíveis para a competição, o sistema deverá permitir definir **quais datas são permitidas para cada fase do chaveamento**.
+
+Essa configuração deverá ser utilizada pelo algoritmo como uma **restrição obrigatória de alocação**.
+
+O objetivo é permitir que a organização determine previamente em quais datas determinadas fases deverão acontecer, especialmente fases como semifinais e finais.
+
+## 1. Datas gerais e datas específicas por fase
+
+O sistema deverá possuir dois níveis de disponibilidade:
+
+### Disponibilidade geral
+
+Define todas as datas em que a competição poderá ter jogos.
+
+Exemplo:
+
+* 04/09/2026;
+* 05/09/2026;
+* 06/09/2026;
+* 11/09/2026;
+* 12/09/2026;
+* 13/09/2026;
+* 18/09/2026;
+* 19/09/2026;
+* 20/09/2026;
+* 25/09/2026;
+* 26/09/2026;
+* 27/09/2026.
+
+### Disponibilidade específica da fase
+
+Define quais dessas datas podem receber determinada fase.
+
+Exemplo:
+
+**Fase classificatória**
+→ qualquer data disponível.
+
+**Quartas de final**
+→ 19/09 ou 20/09.
+
+**Semifinal**
+→ 26/09.
+
+**Final**
+→ 27/09.
+
+A data específica da fase deverá restringir as possibilidades do algoritmo.
+
+---
+
+# 2. Configuração pelo usuário
+
+Na configuração da competição, o usuário deverá poder selecionar uma fase e definir suas datas permitidas.
+
+Exemplo:
+
+```text
+Fase: Semifinal
+
+Datas permitidas:
+☑ 26/09/2026
+```
+
+E:
+
+```text
+Fase: Final
+
+Datas permitidas:
+☑ 27/09/2026
+```
+
+O sistema deverá armazenar essa relação.
+
+Conceitualmente:
+
+```text
+fase
+→ datas_permitidas
+```
+
+---
+
+# 3. Regra obrigatória
+
+Se uma fase possuir datas específicas configuradas, o algoritmo **não poderá alocar partidas daquela fase fora dessas datas**.
+
+Exemplo:
+
+```text
+Semifinal
+Data permitida: 26/09
+```
+
+Mesmo que exista espaço disponível em:
+
+```text
+19/09
+20/09
+25/09
+```
+
+a semifinal não poderá ser agendada nesses dias.
+
+Ela deverá permanecer restrita a:
+
+```text
+26/09
+```
+
+---
+
+# 4. Fases sem restrição específica
+
+Se uma fase não possuir uma data específica configurada, ela poderá utilizar qualquer data compatível com as demais regras da competição.
+
+Exemplo:
+
+```text
+Fase classificatória
+Datas específicas: nenhuma
+```
+
+Nesse caso, o algoritmo poderá utilizar qualquer uma das datas gerais disponíveis.
+
+Isso evita a necessidade de configurar manualmente todas as fases.
+
+---
+
+# 5. Semifinais e finais
+
+O sistema deverá permitir explicitamente que o administrador selecione a data das semifinais e das finais.
+
+Exemplo:
+
+```text
+Semifinais
+Data: 26/09/2026
+
+Finais
+Data: 27/09/2026
+```
+
+A partir disso, o algoritmo deverá reservar a possibilidade de realização dessas fases nessas datas.
+
+As partidas das fases anteriores deverão ser distribuídas de maneira que seus resultados estejam disponíveis antes da data definida para a fase seguinte.
+
+---
+
+# 6. Dependência entre fases
+
+O algoritmo deverá considerar a ordem e as dependências entre as fases.
+
+Por exemplo:
+
+```text
+Quartas de final
+        ↓
+Semifinal
+        ↓
+Final
+```
+
+Se a semifinal estiver definida para 26/09, todas as partidas necessárias para determinar os participantes da semifinal deverão ocorrer antes dessa data.
+
+Da mesma forma, se a final estiver definida para 27/09, as semifinais deverão ser concluídas antes da final.
+
+O sistema deverá impedir uma configuração logicamente impossível.
+
+Exemplo inválido:
+
+```text
+Semifinal → 27/09
+Final → 26/09
+```
+
+Caso exista essa configuração, o sistema deverá informar que as datas das fases são incompatíveis com a ordem do chaveamento.
+
+---
+
+# 7. Mais de uma data permitida
+
+Uma fase poderá possuir mais de uma data permitida.
+
+Exemplo:
+
+```text
+Quartas de final:
+19/09
+20/09
+```
+
+Nesse caso, o algoritmo poderá escolher entre essas datas.
+
+A escolha deverá considerar as demais restrições e preferências.
+
+Já uma fase com apenas uma data:
+
+```text
+Final:
+27/09
+```
+
+deverá obrigatoriamente ocorrer nessa data.
+
+---
+
+# 8. Vários jogos da mesma fase
+
+Uma fase poderá possuir vários jogos.
+
+Por exemplo:
+
+```text
+Semifinal
+
+Jogo 1
+Equipe A × Equipe B
+
+Jogo 2
+Equipe C × Equipe D
+```
+
+Se a fase estiver configurada para 26/09, ambos os jogos deverão ser alocados nessa data, desde que existam recursos e horários suficientes.
+
+Se não houver capacidade suficiente na data definida, o sistema deverá informar a insuficiência em vez de mover automaticamente uma das semifinais para outra data não permitida.
+
+---
+
+# 9. Integração com o chaveamento
+
+As fases utilizadas nessa configuração deverão ser as mesmas fases existentes no sistema de ranqueamento/chaveamento.
+
+O gerador não deverá criar uma classificação paralela.
+
+Por exemplo, se o chaveamento gerar:
+
+```text
+Fase classificatória
+Quartas de final
+Semifinal
+Final
+```
+
+essas mesmas fases deverão ser utilizadas pelo gerador de horários.
+
+O fluxo será:
+
+```text
+Ranqueamento
+      ↓
+Chaveamento
+      ↓
+Fases e jogos previstos
+      ↓
+Datas permitidas por fase
+      ↓
+Gerador de horários
+      ↓
+Cronograma
+```
+
+---
+
+# 10. Datas insuficientes para uma fase
+
+O sistema deverá detectar também a insuficiência de capacidade dentro de uma fase específica.
+
+Exemplo:
+
+```text
+Semifinal
+Data permitida: 26/09
+```
+
+Existem:
+
+```text
+4 jogos de semifinal
+```
+
+mas a configuração permite somente:
+
+```text
+2 jogos
+```
+
+naquela data.
+
+O sistema não deverá mover automaticamente os dois jogos restantes para outra data.
+
+Deverá informar:
+
+> **Não foi possível alocar todas as partidas da semifinal na data definida.**
+>
+> A data 26/09/2026 não possui capacidade suficiente para acomodar todos os jogos dessa fase respeitando as regras configuradas.
+>
+> Selecione uma data adicional para esta fase ou revise a configuração de recursos e horários.
+
+---
+
+# 11. Data da fase como restrição mais forte
+
+A prioridade das regras deverá considerar a data específica da fase como uma **restrição obrigatória**.
+
+Exemplo:
+
+```text
+Final → somente 27/09
+```
+
+Não importa se existe espaço disponível em 25/09.
+
+O algoritmo deverá manter a final em 27/09.
+
+A lógica deverá ser:
+
+```text
+Data geral disponível?
+        ↓
+Data permitida para a fase?
+        ↓
+Recurso disponível?
+        ↓
+Equipe disponível?
+        ↓
+Intervalo respeitado?
+        ↓
+Horário válido?
+        ↓
+Alocar
+```
+
+---
+
+# 12. Configuração genérica
+
+Não implementar regras específicas como:
+
+```text
+if fase == "semifinal":
+    data = ...
+```
+
+ou:
+
+```text
+if fase == "final":
+    data = ...
+```
+
+A configuração deverá ser genérica:
+
+```text
+Fase X
+→ datas permitidas
+```
+
+Isso permite utilizar o mesmo mecanismo para:
+
+* fase classificatória;
+* oitavas;
+* quartas;
+* semifinais;
+* final;
+* disputa de terceiro lugar;
+* qualquer outra fase criada no futuro.
+
+---
+
+# 13. Integração com a geração completa
+
+O fluxo completo deverá ser:
+
+```text
+1. Usuário configura a competição.
+
+2. Usuário seleciona as datas gerais disponíveis.
+
+3. Usuário define horário inicial e limite de cada data.
+
+4. Usuário configura os recursos/quadras.
+
+5. Usuário define recursos exclusivos.
+
+6. Usuário define regras de simultaneidade.
+
+7. Sistema obtém os jogos do ranqueamento/chaveamento.
+
+8. Sistema identifica as fases dos jogos.
+
+9. Usuário pode definir datas específicas permitidas para cada fase.
+
+10. Algoritmo identifica as possíveis datas de cada jogo.
+
+11. Algoritmo elimina datas incompatíveis com a fase.
+
+12. Algoritmo verifica recursos e horários.
+
+13. Algoritmo verifica conflitos de equipes.
+
+14. Algoritmo verifica dependências entre partidas.
+
+15. Algoritmo gera uma solução válida.
+
+16. Algoritmo tenta melhorar a distribuição.
+
+17. Sistema apresenta o cronograma.
+
+18. Caso não seja possível:
+    informar exatamente qual restrição ou disponibilidade
+    impediu a alocação e orientar o usuário sobre o que
+    precisa ser alterado.
+```
+
+---
+
+# 14. Princípio
+
+A configuração de datas deverá permitir ao organizador dizer:
+
+> **"Estes são os dias em que a competição pode acontecer e, para determinadas fases, estes são os dias em que elas devem acontecer."**
+
+O algoritmo será responsável por descobrir **como encaixar os jogos dentro dessas condições**.
+
+Portanto:
+
+**Datas gerais** definem quando a competição pode acontecer.
+
+**Datas específicas por fase** definem quando determinada fase pode acontecer.
+
+**Horários** definem dentro de qual janela os jogos podem começar.
+
+**Recursos** definem onde os jogos podem acontecer.
+
+**Ranqueamento/chaveamento** define quais jogos precisam acontecer.
+
+**Restrições** definem quais combinações são permitidas.
+
+**Otimização** define qual é a melhor distribuição possível.
+
+Essa separação deve ser preservada na implementação para manter o gerador genérico e reutilizável.
+

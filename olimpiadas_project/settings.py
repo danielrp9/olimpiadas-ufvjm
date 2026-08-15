@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'core',
     'refeicoes',
     'exportador',
+    'agendamento',
 ]
 
 # Adiciona o reload apenas se o pacote estiver instalado (desenvolvimento)

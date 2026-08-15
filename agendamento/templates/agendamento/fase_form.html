@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Nova Restrição de Fase | Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-6">
+    
+    <!-- Header Padrão do Sistema -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <a href="{% url 'agendamento_fases' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1" title="Voltar para Restrições">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <span class="p-2.5 bg-purple-50 text-purple-600 rounded-2xl shrink-0">
+                <i class="fas fa-plus text-base"></i>
+            </span>
+            <div>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">Nova Restrição de Fase</h1>
+                <p class="text-slate-600 mt-1 text-xs">Vincule datas permitidas a uma fase específica.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm">
+        <form method="post" class="space-y-5">
+            {% csrf_token %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Código da Fase *</label>
+                    {{ form.fase_codigo }}
+                    <p class="text-[11px] text-slate-500 mt-1">Ex: QUARTAS_LOCAL, SEMI_GERAL, OITAVAS, etc.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nome de Exibição *</label>
+                    {{ form.fase_nome }}
+                    <p class="text-[11px] text-slate-500 mt-1">Ex: Quartas de Final, Semifinal Geral</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Modalidade (Opcional)</label>
+                    {{ form.modalidade }}
+                    <p class="text-[11px] text-slate-500 mt-1">Vazio = aplica a todas as modalidades.</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Ordem de Precedência *</label>
+                    {{ form.ordem_precedencia }}
+                    <p class="text-[11px] text-slate-500 mt-1">1=Grupos, 2=Quartas, 3=Semis, 4=Finais</p>
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Datas Permitidas</label>
+                <div class="p-4 bg-slate-50/70 border border-slate-200 rounded-2xl max-h-48 overflow-y-auto space-y-2">
+                    {{ form.datas_permitidas }}
+                </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-end gap-3 border-t border-slate-100">
+                <a href="{% url 'agendamento_fases' %}" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition">
+                    Cancelar
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition active:scale-[0.98] cursor-pointer">
+                    Salvar Fase
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}
