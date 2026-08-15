@@ -25,6 +25,8 @@ class ScheduleSolver:
         matches: List[MatchRequest],
         min_team_rest_minutes: int = 60,
         default_buffer_minutes: int = 10,
+        max_daily_matches_per_team: int = 2,
+        group_net_sports: bool = True,
         time_slot_step_minutes: int = 15,
         max_backtrack_nodes: int = 50000
     ):
@@ -34,6 +36,8 @@ class ScheduleSolver:
         self.matches = matches
         self.min_team_rest_minutes = min_team_rest_minutes
         self.default_buffer_minutes = default_buffer_minutes
+        self.max_daily_matches_per_team = max_daily_matches_per_team
+        self.group_net_sports = group_net_sports
         self.time_slot_step_minutes = max(5, time_slot_step_minutes)
         self.max_backtrack_nodes = max_backtrack_nodes
 
@@ -138,13 +142,13 @@ class ScheduleSolver:
                 return len(pc.allowed_dates)
             return len(self.days) + 10  # Não restringido = domínio maior
 
-        # 3. Topological sorting com desempate por restrição de data e precedência
+        # 3. Topological sorting com desempate por restrição de data, agrupamento de rede e precedência
         ready = [m for m in matches if in_degree[m.id] == 0]
         sorted_list: List[MatchRequest] = []
 
         while ready:
-            # Seleciona o elemento mais restrito (menor domínio de datas, menor precedencia_order)
-            ready.sort(key=lambda m: (m.precedence_order, domain_size(m), m.id))
+            # Seleciona o elemento mais restrito (menor domínio de datas, menor precedencia_order, agrupando rede)
+            ready.sort(key=lambda m: (m.precedence_order, 0 if m.is_net_sport else 1, domain_size(m), m.modality_id or 0, m.id))
             current = ready.pop(0)
             sorted_list.append(current)
 
@@ -156,7 +160,7 @@ class ScheduleSolver:
         # Caso haja ciclos ou partidas restantes não alcançadas
         if len(sorted_list) < len(matches):
             remaining = [m for m in matches if m not in sorted_list]
-            remaining.sort(key=lambda m: (m.precedence_order, domain_size(m), m.id))
+            remaining.sort(key=lambda m: (m.precedence_order, 0 if m.is_net_sport else 1, domain_size(m), m.modality_id or 0, m.id))
             sorted_list.extend(remaining)
 
         return sorted_list
@@ -201,6 +205,8 @@ class ScheduleSolver:
             'resource_busy': 0,
             'team_conflict': 0,
             'team_rest': 0,
+            'max_daily_matches': 0,
+            'net_sport_grouping': 0,
             'precedence': 0,
             'time_window': 0
         }
@@ -293,17 +299,50 @@ class ScheduleSolver:
         - Recurso não ocupado (considerando buffer)
         - Times não jogando simultaneamente
         - Intervalo de descanso respeitado para os times
+        - Limite de partidas por dia por equipe respeitado
+        - Bloco contínuo de modalidades de rede (vôlei) respeitado na mesma quadra
         - Precedência de dependências respeitada
         """
         rest_duration = timedelta(minutes=self.min_team_rest_minutes)
         match_teams = match.teams
+
+        # 1. Limite de partidas por dia por equipe (Prevenção de desgaste excessivo)
+        if self.max_daily_matches_per_team > 0:
+            target_date = slot_start.date()
+            for t_id in match_teams:
+                daily_matches = sum(
+                    1 for alloc in current_allocations
+                    if alloc.date == target_date and t_id in alloc.match_request.teams
+                )
+                if daily_matches >= self.max_daily_matches_per_team:
+                    return False, 'max_daily_matches'
+
+        # 2. Agrupamento em bloco contínuo de modalidades de rede (ex: Vôlei) na mesma quadra
+        if self.group_net_sports:
+            res_date_allocs = [
+                alloc for alloc in current_allocations
+                if alloc.resource_id == resource.id and alloc.date == slot_start.date()
+            ]
+            if res_date_allocs:
+                timeline = [(a.start_time, a.match_request.is_net_sport) for a in res_date_allocs]
+                timeline.append((slot_start.time(), match.is_net_sport))
+                timeline.sort(key=lambda item: item[0])
+                
+                transitions = 0
+                for i in range(1, len(timeline)):
+                    if timeline[i][1] != timeline[i-1][1]:
+                        transitions += 1
+                
+                # Mais de 1 transição causaria montagem/desmontagem de rede repetida no mesmo dia
+                if transitions > 1:
+                    return False, 'net_sport_grouping'
 
         for alloc in current_allocations:
             alloc_start = alloc.start_datetime
             alloc_end = alloc.end_datetime
             alloc_buffer = timedelta(minutes=alloc.match_request.buffer_minutes)
 
-            # 1. Conflito no mesmo Recurso
+            # 3. Conflito no mesmo Recurso
             if alloc.resource_id == resource.id:
                 # Ocupação do recurso inclui a duração da partida + buffer
                 res_busy_start = alloc_start
@@ -314,7 +353,7 @@ class ScheduleSolver:
                 if (cand_busy_start < res_busy_end) and (cand_busy_end > res_busy_start):
                     return False, 'resource_busy'
 
-            # 2. Conflito de Equipes (mesma equipe jogando ao mesmo tempo)
+            # 4. Conflito de Equipes (mesma equipe jogando ao mesmo tempo)
             alloc_teams = alloc.match_request.teams
             common_teams = match_teams.intersection(alloc_teams)
             if common_teams:
@@ -322,12 +361,10 @@ class ScheduleSolver:
                 if (slot_start < alloc_end) and (slot_end > alloc_start):
                     return False, 'team_conflict'
 
-                # 3. Intervalo de Descanso da Equipe
-                # Se slot_start ocorre após alloc_end, deve ter pelo menos rest_duration
+                # 5. Intervalo de Descanso da Equipe
                 if slot_start >= alloc_end and (slot_start - alloc_end) < rest_duration:
                     return False, 'team_rest'
 
-                # Se alloc_start ocorre após slot_end, deve ter pelo menos rest_duration
                 if alloc_start >= slot_end and (alloc_start - slot_end) < rest_duration:
                     return False, 'team_rest'
 

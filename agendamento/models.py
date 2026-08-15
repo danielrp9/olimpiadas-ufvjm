@@ -24,6 +24,16 @@ class ConfiguracaoGeral(models.Model):
         verbose_name="Duração padrão de jogo (minutos)",
         help_text="Duração estimada da partida caso a modalidade não possua duração específica"
     )
+    max_jogos_diarios_por_equipe = models.PositiveIntegerField(
+        default=2,
+        verbose_name="Máximo de jogos por dia por equipe",
+        help_text="Limite de partidas que uma mesma equipe/delegação pode disputar no mesmo dia para evitar desgaste excessivo"
+    )
+    agrupar_modalidades_rede = models.BooleanField(
+        default=True,
+        verbose_name="Agrupar Vôlei em bloco contínuo",
+        help_text="Garante que jogos de voleibol aconteçam em sequência contínua no mesmo turno/dia para evitar montagens e desmontagens repetidas de rede"
+    )
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 

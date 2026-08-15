@@ -143,3 +143,60 @@ class ScheduleSolverEngineTests(TestCase):
         q_end = datetime.combine(q.date, q.end_time)
         s_start = datetime.combine(s.date, s.start_time)
         self.assertGreaterEqual(s_start, q_end)
+
+    def test_max_daily_matches_per_team_constraint(self):
+        """
+        Garante que uma equipe não ultrapasse o limite diário de jogos (ex: máx 2 jogos por dia).
+        Se a equipe tem 3 jogos e há 2 dias disponíveis, o 3º jogo DEVE ir para o 2º dia.
+        """
+        matches = [
+            MatchRequest(id=1, modality_id=1, modality_name="Futsal", phase_code="G", time_a_id=10, time_b_id=20, duration_minutes=50, buffer_minutes=10),
+            MatchRequest(id=2, modality_id=1, modality_name="Futsal", phase_code="G", time_a_id=10, time_b_id=30, duration_minutes=50, buffer_minutes=10),
+            MatchRequest(id=3, modality_id=1, modality_name="Futsal", phase_code="G", time_a_id=10, time_b_id=40, duration_minutes=50, buffer_minutes=10),
+        ]
+        # 2 dias disponíveis, 1 quadra, max 2 jogos por dia
+        solver = ScheduleSolver(
+            days=[self.d1, self.d2],
+            resources=[self.r1],
+            phase_constraints=[],
+            matches=matches,
+            min_team_rest_minutes=30,
+            max_daily_matches_per_team=2
+        )
+        result = solver.solve()
+        self.assertTrue(result.success)
+        
+        # Conta jogos no dia 1 e dia 2
+        d1_matches = [a for a in result.allocations if a.date == self.d1.date]
+        d2_matches = [a for a in result.allocations if a.date == self.d2.date]
+        self.assertLessEqual(len(d1_matches), 2)
+        self.assertGreaterEqual(len(d2_matches), 1)
+
+    def test_net_sport_contiguous_grouping_on_shared_court(self):
+        """
+        Garante que em uma mesma quadra compartilhada, os jogos de Vôlei fiquem agrupados
+        em sequência contínua (sem intercalar Vôlei -> Futsal -> Vôlei).
+        """
+        matches = [
+            MatchRequest(id=1, modality_id=1, modality_name="Voleibol Masc", phase_code="G", time_a_id=1, time_b_id=2, duration_minutes=50, buffer_minutes=10),
+            MatchRequest(id=2, modality_id=2, modality_name="Futsal", phase_code="G", time_a_id=3, time_b_id=4, duration_minutes=50, buffer_minutes=10),
+            MatchRequest(id=3, modality_id=1, modality_name="Voleibol Fem", phase_code="G", time_a_id=5, time_b_id=6, duration_minutes=50, buffer_minutes=10),
+        ]
+        solver = ScheduleSolver(
+            days=[self.d1],
+            resources=[self.r1],
+            phase_constraints=[],
+            matches=matches,
+            min_team_rest_minutes=10,
+            group_net_sports=True
+        )
+        result = solver.solve()
+        self.assertTrue(result.success)
+
+        # Ordena alocações por horário de início
+        ordered = sorted(result.allocations, key=lambda a: a.start_time)
+        types = [a.match_request.is_net_sport for a in ordered]
+        
+        # Verifica número de alternâncias de tipo
+        transitions = sum(1 for i in range(1, len(types)) if types[i] != types[i-1])
+        self.assertLessEqual(transitions, 1, "Vôlei deve acontecer em bloco contínuo na quadra")

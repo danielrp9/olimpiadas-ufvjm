@@ -30,6 +30,10 @@ class DiagnosticsFormatter:
                 reasons_text.append("intervalo de descanso obrigatório entre partidas da mesma equipe")
             if reason_summary.get("precedence", 0) > 0:
                 reasons_text.append("jogos classificatórios anteriores necessários ainda não concluídos a tempo")
+            if reason_summary.get("max_daily_matches", 0) > 0:
+                reasons_text.append("limite de partidas diárias por equipe atingido para evitar desgaste")
+            if reason_summary.get("net_sport_grouping", 0) > 0:
+                reasons_text.append("regra de bloco contínuo para modalidades de rede (vôlei) na mesma quadra")
             if reason_summary.get("time_window", 0) > 0:
                 reasons_text.append("limite de horário de funcionamento do dia excedido")
 

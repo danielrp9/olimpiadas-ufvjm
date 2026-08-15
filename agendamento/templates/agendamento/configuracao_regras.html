@@ -33,7 +33,7 @@
                 <h2 class="text-sm font-bold text-slate-800">Parâmetros Gerais</h2>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div>
                     <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                         Descanso da Equipe *
@@ -42,7 +42,18 @@
                         {{ form.descanso_minimo_equipe_minutos }}
                         <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">min</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Intervalo mínimo entre dois jogos da mesma delegação.</p>
+                    <p class="text-[11px] text-slate-500 mt-1.5">Intervalo mínimo entre dois jogos da mesma equipe.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Máx. Jogos/Dia (Equipe) *
+                    </label>
+                    <div class="relative">
+                        {{ form.max_jogos_diarios_por_equipe }}
+                        <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">jogos</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1.5">Limite diário por equipe para prevenir desgaste físico.</p>
                 </div>
 
                 <div>
@@ -53,7 +64,7 @@
                         {{ form.intervalo_padrao_minutos }}
                         <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">min</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Intervalo de aquecimento e saída na mesma quadra.</p>
+                    <p class="text-[11px] text-slate-500 mt-1.5">Tempo de aquecimento e saída na mesma quadra.</p>
                 </div>
 
                 <div>
@@ -64,7 +75,20 @@
                         {{ form.duracao_padrao_jogo_minutos }}
                         <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">min</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Tempo estimado se a modalidade não tiver duração própria.</p>
+                    <p class="text-[11px] text-slate-500 mt-1.5">Tempo estimado se a modalidade não tiver duração.</p>
+                </div>
+            </div>
+
+            <!-- Otimização de Troca de Rede / Vôlei -->
+            <div class="pt-4 border-t border-slate-100 flex items-start gap-3">
+                {{ form.agrupar_modalidades_rede }}
+                <div>
+                    <label for="{{ form.agrupar_modalidades_rede.id_for_label }}" class="text-xs font-bold text-slate-800 cursor-pointer block">
+                        Agrupar Vôlei em bloco contínuo (no mesmo turno ou dia)
+                    </label>
+                    <p class="text-[11px] text-slate-500 mt-0.5">
+                        Quando ativado, os jogos de vôlei acontecem em sequência contínua na quadra para que a rede seja montada e desmontada apenas uma vez.
+                    </p>
                 </div>
             </div>
         </div>

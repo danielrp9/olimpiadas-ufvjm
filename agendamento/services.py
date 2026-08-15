@@ -205,7 +205,9 @@ def executar_agendamento(
         phase_constraints=phase_constraints,
         matches=matches,
         min_team_rest_minutes=configuracao.descanso_minimo_equipe_minutos,
-        default_buffer_minutes=configuracao.intervalo_padrao_minutos
+        default_buffer_minutes=configuracao.intervalo_padrao_minutos,
+        max_daily_matches_per_team=configuracao.max_jogos_diarios_por_equipe,
+        group_net_sports=configuracao.agrupar_modalidades_rede
     )
 
     result = solver.solve()

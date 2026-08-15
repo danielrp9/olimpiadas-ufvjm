@@ -84,6 +84,13 @@ class MatchRequest:
             res.add(self.time_b_id)
         return res
 
+    @property
+    def is_net_sport(self) -> bool:
+        """Indica se a modalidade exige montagem de rede (ex: Vôlei, Peteca, etc.)"""
+        m_lower = self.modality_name.lower()
+        return ('volei' in m_lower or 'vôlei' in m_lower or 'peteca' in m_lower or 
+                'futevolei' in m_lower or 'futevôlei' in m_lower)
+
 
 @dataclass
 class AllocatedSlot:
