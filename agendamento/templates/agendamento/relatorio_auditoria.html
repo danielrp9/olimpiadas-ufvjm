@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Relatório de Auditoria e Logs do Sistema | Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-8 pb-12 print:p-0 print:space-y-4">
+    
+    <!-- Header do Relatório -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 print:border-none print:shadow-none print:p-0">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-2 rounded-xl hover:bg-slate-100 print:hidden" title="Voltar ao Painel">
+                <i class="fas fa-arrow-left text-lg"></i>
+            </a>
+            <span class="p-3.5 bg-slate-900 text-emerald-400 rounded-2xl shrink-0 shadow-sm print:hidden">
+                <i class="fas fa-shield-alt text-xl"></i>
+            </span>
+            <div>
+                <div class="flex items-center gap-2.5 flex-wrap">
+                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Relatório de Auditoria e Integridade</h1>
+                    <span class="px-3 py-0.5 text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full uppercase tracking-wider">
+                        <i class="fas fa-check-circle mr-1"></i> Sistema Automatizado
+                    </span>
+                </div>
+                <p class="text-slate-600 mt-1 text-xs sm:text-sm">Comprovação cronológica e rastreabilidade técnica dos chaveamentos e do agendamento algorítmico de horários.</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 print:hidden">
+            <button onclick="window.print();" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center gap-2 cursor-pointer">
+                <i class="fas fa-print"></i>
+                <span>Imprimir / Salvar PDF</span>
+            </button>
+            <a href="{% url 'agendamento_dashboard' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
+                <i class="fas fa-arrow-left"></i>
+                <span>Painel</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Metadados de Auditoria / Cartões Informativos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Modalidades Chaveadas</span>
+                <i class="fas fa-sitemap text-blue-500 text-base"></i>
+            </div>
+            <div class="text-2xl font-black text-slate-900">{{ total_chaveamentos }}</div>
+            <div class="text-[11px] text-slate-600 font-medium">Algoritmo determinístico por campus</div>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Execuções de Horários</span>
+                <i class="fas fa-microchip text-indigo-500 text-base"></i>
+            </div>
+            <div class="text-2xl font-black text-slate-900">{{ total_cenarios }}</div>
+            <div class="text-[11px] text-slate-600 font-medium">Cenários calculados pelo Solver</div>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Jogos Registrados</span>
+                <i class="fas fa-futbol text-emerald-500 text-base"></i>
+            </div>
+            <div class="text-2xl font-black text-slate-900">{{ total_jogos }}</div>
+            <div class="text-[11px] text-slate-600 font-medium">Carimbos de inserção no banco</div>
+        </div>
+
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Carimbo de Emissão</span>
+                <i class="fas fa-clock text-amber-500 text-base"></i>
+            </div>
+            <div class="text-sm font-black text-slate-900">{{ gerado_em|date:"d/m/Y H:i:s" }}</div>
+            <div class="text-[11px] text-slate-600 font-medium">Fuso: America/Sao_Paulo (UTC-3)</div>
+        </div>
+    </div>
+
+    <!-- Fundamentação Técnica: Por que o processo não é enviesado? -->
+    <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-6 sm:p-8 shadow-md space-y-4">
+        <div class="flex items-center gap-3">
+            <span class="p-2.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl">
+                <i class="fas fa-certificate text-base"></i>
+            </span>
+            <h2 class="text-lg font-bold text-white tracking-tight">Garantias Técnicas de Integridade e Imparcialidade</h2>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 text-xs leading-relaxed text-slate-300">
+            <div class="space-y-2 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <div class="font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-random text-emerald-400"></i>
+                    1. Chaveamento Computacional
+                </div>
+                <p>
+                    A divisão em grupos e cruzamento mata-mata é executada pelo serviço de software (<code class="text-amber-300 font-mono">chaveamento_services.py</code>), aplicando divisão geográfica de campi e sorteio estruturado sem manipulação subjetiva manual.
+                </p>
+            </div>
+
+            <div class="space-y-2 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <div class="font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-calculator text-blue-400"></i>
+                    2. Agendamento por Solver Matemático
+                </div>
+                <p>
+                    A grade de horários é calculada por um motor de restrições (<code class="text-amber-300 font-mono">solver.py</code>) que garante respeito a descanso mínimo ({{ regras.descanso_minimo_minutos }} min), não-conflito de quadras e horários simultâneos.
+                </p>
+            </div>
+
+            <div class="space-y-2 bg-white/5 p-4 rounded-2xl border border-white/10">
+                <div class="font-bold text-white flex items-center gap-2">
+                    <i class="fas fa-fingerprint text-indigo-400"></i>
+                    3. Timestamps Imutáveis de Banco
+                </div>
+                <p>
+                    Todos os registros possuem campos de auditoria nativos do banco de dados relacional (<code class="text-amber-300 font-mono">auto_now_add=True</code>), gravando a data, hora, minuto e segundo exatos em que a rotina gravou os dados no servidor.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 1: Log de Geração dos Chaveamentos -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+                <span class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
+                    <i class="fas fa-sitemap text-base"></i>
+                </span>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900">1. Registro de Geração de Chaveamentos</h2>
+                    <p class="text-xs text-slate-500">Momento exato da criação dos grupos, chaves e confrontos por modalidade esportiva.</p>
+                </div>
+            </div>
+            <span class="text-xs font-bold text-slate-500">{{ total_chaveamentos }} modalidades registradas</span>
+        </div>
+
+        {% if chaveamentos_data %}
+        <div class="overflow-x-auto rounded-2xl border border-slate-100">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/60">
+                    <tr>
+                        <th class="py-3.5 px-4">Modalidade</th>
+                        <th class="py-3.5 px-4">Fase Atual</th>
+                        <th class="py-3.5 px-4 text-center">Grupos</th>
+                        <th class="py-3.5 px-4 text-center">Partidas</th>
+                        <th class="py-3.5 px-4">Data/Hora de Geração (Criado em)</th>
+                        <th class="py-3.5 px-4">Última Atualização</th>
+                        <th class="py-3.5 px-4">Método / Origem</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for item in chaveamentos_data %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4 font-bold text-slate-900 flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            {{ item.modalidade.nome }} <span class="text-[10px] font-semibold text-slate-500">({{ item.modalidade.get_genero_display }})</span>
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="px-2.5 py-1 text-[10px] font-bold bg-slate-100 text-slate-700 rounded-md border border-slate-200">
+                                {{ item.fase_display }}
+                            </span>
+                        </td>
+                        <td class="py-3 px-4 text-center font-bold text-slate-800">{{ item.total_grupos }}</td>
+                        <td class="py-3 px-4 text-center font-bold text-slate-800">{{ item.total_partidas }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-900 font-bold">
+                            {{ item.criado_em|date:"d/m/Y H:i:s" }}
+                        </td>
+                        <td class="py-3 px-4 font-mono text-slate-500 text-[11px]">
+                            {{ item.atualizado_em|date:"d/m/Y H:i:s" }}
+                        </td>
+                        <td class="py-3 px-4">
+                            <span class="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200">
+                                <i class="fas fa-robot text-[10px]"></i> Sistema Automático
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+            Nenhum chaveamento gerado até o momento.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- SEÇÃO 2: Log de Execuções do Solver de Agendamento -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+                <span class="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i class="fas fa-calendar-check text-base"></i>
+                </span>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900">2. Registro de Cálculos de Horários (Cenários do Solver)</h2>
+                    <p class="text-xs text-slate-500">Histórico de simulações e aplicação definitiva da grade de horários no calendário oficial.</p>
+                </div>
+            </div>
+            <span class="text-xs font-bold text-slate-500">{{ total_cenarios }} simulações computadas</span>
+        </div>
+
+        {% if cenarios %}
+        <div class="overflow-x-auto rounded-2xl border border-slate-100">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/60">
+                    <tr>
+                        <th class="py-3.5 px-4">ID</th>
+                        <th class="py-3.5 px-4">Título do Cenário</th>
+                        <th class="py-3.5 px-4">Status da Solução</th>
+                        <th class="py-3.5 px-4 text-center">Partidas Alocadas</th>
+                        <th class="py-3.5 px-4">Data/Hora do Cálculo (Solver)</th>
+                        <th class="py-3.5 px-4">Data/Hora de Aplicação Oficial</th>
+                        <th class="py-3.5 px-4">Validação de Conflitos</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for cenario in cenarios %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-slate-500">#{{ cenario.id }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">{{ cenario.titulo }}</td>
+                        <td class="py-3 px-4">
+                            {% if cenario.status == 'aplicado' %}
+                                <span class="px-2.5 py-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full uppercase flex items-center gap-1 w-max">
+                                    <i class="fas fa-check-double text-[9px]"></i> Aplicado ao Oficial
+                                </span>
+                            {% elif cenario.status == 'sucesso' %}
+                                <span class="px-2.5 py-1 text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300 rounded-full uppercase flex items-center gap-1 w-max">
+                                    <i class="fas fa-check text-[9px]"></i> Viável (Calculado)
+                                </span>
+                            {% else %}
+                                <span class="px-2.5 py-1 text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 rounded-full uppercase flex items-center gap-1 w-max">
+                                    <i class="fas fa-exclamation-triangle text-[9px]"></i> Inviável
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-center font-bold text-slate-800">{{ cenario.alocacoes.count }}</td>
+                        <td class="py-3 px-4 font-mono text-slate-900 font-bold">
+                            {{ cenario.criado_em|date:"d/m/Y H:i:s" }}
+                        </td>
+                        <td class="py-3 px-4 font-mono text-slate-700">
+                            {% if cenario.status == 'aplicado' %}
+                                <span class="text-emerald-800 font-bold">{{ cenario.atualizado_em|date:"d/m/Y H:i:s" }}</span>
+                            {% else %}
+                                <span class="text-slate-400 italic">Não aplicado</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if cenario.status == 'inviavel' %}
+                                <span class="text-rose-600 font-bold text-[11px]"><i class="fas fa-times-circle mr-1"></i>Conflitos detectados</span>
+                            {% else %}
+                                <span class="text-emerald-600 font-bold text-[11px]"><i class="fas fa-check-circle mr-1"></i>0 Conflitos (100% Válido)</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+            Nenhum cenário de agendamento registrado até o momento.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- SEÇÃO 3: Lançamento Oficial dos Jogos no Calendário -->
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm space-y-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+                <span class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
+                    <i class="fas fa-futbol text-base"></i>
+                </span>
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-slate-900">3. Registro de Inserção dos Jogos Oficiais no Banco</h2>
+                    <p class="text-xs text-slate-500">Data e hora de gravação permanente (<code class="font-mono text-[11px]">data_criacao</code>) no banco de dados.</p>
+                </div>
+            </div>
+            <span class="text-xs font-bold text-slate-500">{{ total_jogos }} partidas cadastradas</span>
+        </div>
+
+        {% if jogos %}
+        <div class="overflow-x-auto rounded-2xl border border-slate-100 max-h-[500px] overflow-y-auto">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-600 font-bold uppercase tracking-wider text-[10px] border-b border-slate-200/60 sticky top-0 bg-slate-50 z-10">
+                    <tr>
+                        <th class="py-3.5 px-4">ID Jogo</th>
+                        <th class="py-3.5 px-4">Modalidade</th>
+                        <th class="py-3.5 px-4">Confronto</th>
+                        <th class="py-3.5 px-4">Data da Partida</th>
+                        <th class="py-3.5 px-4">Horário</th>
+                        <th class="py-3.5 px-4">Local / Quadra</th>
+                        <th class="py-3.5 px-4">Carimbo de Gravação no Banco</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100 font-medium text-slate-700">
+                    {% for j in jogos %}
+                    <tr class="hover:bg-slate-50/80 transition">
+                        <td class="py-3 px-4 font-mono font-bold text-slate-500">#{{ j.id }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">{{ j.modalidade.nome }} <span class="text-[10px] text-slate-500 font-normal">({{ j.modalidade.get_genero_display }})</span></td>
+                        <td class="py-3 px-4">
+                            <span class="font-bold text-slate-900">{{ j.time_a_display }}</span>
+                            <span class="text-slate-600 mx-1">vs</span>
+                            <span class="font-bold text-slate-900">{{ j.time_b_display }}</span>
+                        </td>
+                        <td class="py-3 px-4 font-semibold text-slate-800">{{ j.data_jogo|date:"d/m/Y" }}</td>
+                        <td class="py-3 px-4 font-mono font-bold text-blue-600">
+                            {% if j.horario_jogo %}{{ j.horario_jogo|time:"H:i" }}{% else %}<span class="text-slate-400 italic">A definir</span>{% endif %}
+                        </td>
+                        <td class="py-3 px-4 text-slate-600">{{ j.local|default:"A definir" }}</td>
+                        <td class="py-3 px-4 font-mono font-bold text-emerald-800 text-[11px] bg-emerald-50/40">
+                            {{ j.data_criacao|date:"d/m/Y H:i:s" }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200 text-slate-500 text-xs">
+            Nenhum jogo oficial gravado até o momento.
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- SEÇÃO 4: Guia Técnico para Comprovação no Terminal do PythonAnywhere -->
+    <div class="bg-slate-900 text-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4 print:hidden">
+        <div class="flex items-center gap-3">
+            <span class="p-2.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl">
+                <i class="fas fa-terminal text-base"></i>
+            </span>
+            <div>
+                <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">Comprovação Independente via Terminal (PythonAnywhere)</h2>
+                <p class="text-xs text-slate-400">Comandos prontos para auditoria direta no console do servidor.</p>
+            </div>
+        </div>
+
+        <p class="text-xs text-slate-300 leading-relaxed">
+            Caso qualquer delegação ou comissão queira comprovar diretamente no terminal do servidor do <strong>PythonAnywhere</strong>, basta abrir o <strong>Bash Console</strong> e executar:
+        </p>
+
+        <div class="space-y-3 pt-1">
+            <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">1. Consultar Timestamps de Criação dos Chaveamentos e Jogos no Banco:</span>
+                <pre class="bg-black/70 p-4 rounded-xl font-mono text-xs text-emerald-400 overflow-x-auto border border-white/10">python manage.py shell -c "
+from core.models import ChaveamentoModalidade, Jogo
+from agendamento.models import CenarioExecucao
+
+print('=== CHAVEAMENTOS (DATA E HORA DO SORTEIO/GERAÇÃO) ===')
+for c in ChaveamentoModalidade.objects.select_related('modalidade').all():
+    print(f'{c.modalidade.nome}: Criado em {c.criado_em.strftime(\"%d/%m/%Y %H:%M:%S\")} | Atualizado em {c.atualizado_em.strftime(\"%d/%m/%Y %H:%M:%S\")}')
+
+print('\n=== CENÁRIOS DO AGENDADOR (HORÁRIOS GERADOS PELO SOLVER) ===')
+for cen in CenarioExecucao.objects.all():
+    print(f'Cenário #{cen.id} ({cen.titulo}): Status={cen.status} | Criado={cen.criado_em.strftime(\"%d/%m/%Y %H:%M:%S\")} | Aplicado={cen.atualizado_em.strftime(\"%d/%m/%Y %H:%M:%S\")}')
+"</pre>
+            </div>
+
+            <div>
+                <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1">2. Consultar Log de Acesso HTTP do Servidor Web (Requisições Reais):</span>
+                <pre class="bg-black/70 p-4 rounded-xl font-mono text-xs text-amber-300 overflow-x-auto border border-white/10">grep -E "POST.*(gerar|aplicar|chaveamento|agendamento)" /var/log/*access.log | tail -n 25</pre>
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

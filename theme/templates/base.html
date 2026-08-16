@@ -120,9 +120,13 @@
                                 <i class="fas fa-sitemap mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Chaveamentos</span>
                             </a>
-                            <a href="{% url 'agendamento_dashboard' %}" title="Gerador de Horários" class="sidebar-item {% if 'agendamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                            <a href="{% url 'agendamento_dashboard' %}" title="Gerador de Horários" class="sidebar-item {% if 'agendamento' in request.path and 'auditoria' not in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-calendar-check mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Gerador de Horários</span>
+                            </a>
+                            <a href="{% url 'agendamento_auditoria' %}" title="Auditoria e Logs" class="sidebar-item {% if 'agendamento/auditoria' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i class="fas fa-shield-alt mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Auditoria & Logs</span>
                             </a>
                             <a href="{% url 'presumula_list' %}" title="Pré-Súmulas" class="sidebar-item {% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
                                 <i class="fas fa-file-signature mr-3 text-base sidebar-icon shrink-0"></i>
@@ -254,9 +258,13 @@
                                     <i class="fas fa-sitemap mr-3 text-base"></i>
                                     Chaveamentos
                                 </a>
-                                <a href="{% url 'agendamento_dashboard' %}" class="{% if 'agendamento' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                <a href="{% url 'agendamento_dashboard' %}" class="{% if 'agendamento' in request.path and 'auditoria' not in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-calendar-check mr-3 text-base"></i>
                                     Gerador de Horários
+                                </a>
+                                <a href="{% url 'agendamento_auditoria' %}" class="{% if 'agendamento/auditoria' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                    <i class="fas fa-shield-alt mr-3 text-base"></i>
+                                    Auditoria & Logs
                                 </a>
                                 <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i class="fas fa-file-signature mr-3 text-base"></i>

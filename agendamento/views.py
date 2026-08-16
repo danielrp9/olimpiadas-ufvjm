@@ -384,3 +384,74 @@ def cenario_delete_view(request, pk):
     cenario.delete()
     messages.success(request, f"Cenário '{titulo}' excluído!")
     return redirect('agendamento_dashboard')
+
+
+@user_passes_test(_is_comissao_or_admin)
+def relatorio_auditoria_view(request):
+    """
+    Página oficial de auditoria técnica e integridade cronológica do sistema.
+    Exibe os registros de data/hora (timestamps com precisão de segundos) de:
+    1. Geração dos Chaveamentos por modalidade
+    2. Execução e aplicação dos Cenários de Agendamento de Horários
+    3. Criação dos Jogos Oficiais no banco de dados
+    4. Métricas e parâmetros anti-viés aplicados pelo algoritmo
+    """
+    from core.models import ChaveamentoModalidade, Jogo, PartidaChaveamento
+
+    configuracao = obter_ou_criar_configuracao()
+
+    # 1. Chaveamentos
+    chaveamentos = ChaveamentoModalidade.objects.select_related('modalidade').prefetch_related('grupos__times', 'partidas').order_by('modalidade__nome')
+    chaveamentos_data = []
+    for ch in chaveamentos:
+        total_times = sum(g.times.count() for g in ch.grupos.all())
+        total_partidas = ch.partidas.count()
+        chaveamentos_data.append({
+            'obj': ch,
+            'modalidade': ch.modalidade,
+            'fase_display': ch.get_fase_atual_display(),
+            'criado_em': ch.criado_em,
+            'atualizado_em': ch.atualizado_em,
+            'total_grupos': ch.grupos.count(),
+            'total_times': total_times,
+            'total_partidas': total_partidas,
+            'metodo': 'Algoritmo Determinístico (Sistema)'
+        })
+
+    # 2. Cenários de Agendamento (Solver / Motor de Horários)
+    cenarios = CenarioExecucao.objects.select_related('configuracao').prefetch_related('alocacoes').order_by('-criado_em')
+
+    # 3. Jogos Oficiais Cadastrados no Banco
+    jogos = Jogo.objects.select_related('modalidade', 'time_a', 'time_b').order_by('data_jogo', 'horario_jogo', 'id')
+
+    # Estatísticas e Métricas
+    total_chaveamentos = len(chaveamentos_data)
+    total_cenarios = cenarios.count()
+    total_jogos = jogos.count()
+    total_partidas = PartidaChaveamento.objects.count()
+
+    # Detalhes das regras aplicadas pelo algoritmo
+    regras = {
+        'descanso_minimo_minutos': configuracao.descanso_minimo_equipe_minutos,
+        'intervalo_jogos_minutos': configuracao.intervalo_jogos_minutos,
+        'turno_bloco_rede': configuracao.turno_bloco_rede,
+        'agrupar_modalidades_rede': configuracao.agrupar_modalidades_rede,
+        'total_recursos_ativos': configuracao.recursos.filter(ativo=True).count(),
+        'total_datas_ativas': configuracao.datas.filter(ativo=True).count(),
+        'total_restricoes_fase': configuracao.restricoes_fases.count(),
+    }
+
+    context = {
+        'configuracao': configuracao,
+        'chaveamentos_data': chaveamentos_data,
+        'cenarios': cenarios,
+        'jogos': jogos,
+        'total_chaveamentos': total_chaveamentos,
+        'total_cenarios': total_cenarios,
+        'total_jogos': total_jogos,
+        'total_partidas': total_partidas,
+        'regras': regras,
+        'gerado_em': timezone.localtime(),
+    }
+    return render(request, 'agendamento/relatorio_auditoria.html', context)
+
