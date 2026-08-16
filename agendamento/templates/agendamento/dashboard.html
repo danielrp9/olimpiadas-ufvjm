@@ -112,10 +112,25 @@
                 <h2 class="text-base font-bold text-slate-800">Histórico de Cronogramas</h2>
                 <p class="text-xs text-slate-500 mt-0.5">Execuções geradas e status de aplicação.</p>
             </div>
-            <a href="{% url 'agendamento_gerar' %}" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98] flex items-center gap-2 self-start sm:self-auto cursor-pointer">
-                <i class="fas fa-play text-xs"></i>
-                <span>Gerar Cronograma</span>
-            </a>
+            <div class="flex items-center gap-2.5 self-start sm:self-auto flex-wrap">
+                {% if tem_jogos_gerados %}
+                <form method="post" action="{% url 'agendamento_resetar_horarios' %}" onsubmit="return confirm('Atenção: Deseja realmente resetar e limpar todos os horários e quadras das partidas não finalizadas?');">
+                    {% csrf_token %}
+                    <button type="submit" 
+                        style="padding: 10px 18px; gap: 8px;"
+                        class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 font-bold rounded-xl text-xs transition active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-xs" title="Limpar todos os horários e quadras atribuídos">
+                        <i class="fas fa-undo-alt text-xs shrink-0"></i>
+                        <span class="whitespace-nowrap">Resetar Horários</span>
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{% url 'agendamento_gerar' %}" 
+                    style="padding: 10px 20px; gap: 8px;"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98] flex items-center justify-center cursor-pointer">
+                    <i class="fas fa-play text-xs shrink-0"></i>
+                    <span class="whitespace-nowrap">Gerar Cronograma</span>
+                </a>
+            </div>
         </div>
 
         <!-- Aviso Informativo de Configuração Prévia -->

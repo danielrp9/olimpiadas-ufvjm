@@ -5,6 +5,8 @@ from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from datetime import datetime, date, time
 
+from django.db.models import Q
+
 from core.models import Modalidade, PartidaChaveamento, Jogo
 from .models import (
     ConfiguracaoGeral, DataDisponivel, RecursoLocal,
@@ -16,7 +18,8 @@ from .forms import (
 )
 from .services import (
     obter_ou_criar_configuracao, executar_agendamento,
-    aplicar_cenario_ao_oficial, FASE_NOMES_PADRAO, FASE_ORDEM_PADRAO
+    aplicar_cenario_ao_oficial, resetar_todos_horarios,
+    FASE_NOMES_PADRAO, FASE_ORDEM_PADRAO
 )
 
 
@@ -37,6 +40,11 @@ def dashboard_agendamento_view(request):
     partidas_pendentes = PartidaChaveamento.objects.filter(finalizada=False).exclude(chaveamento__modalidade__nome__icontains='atletismo').count()
     cenarios = configuracao.cenarios.all()[:8]
 
+    # Verifica se existem partidas com horários já atribuídos ou simulações geradas
+    tem_jogos_gerados = PartidaChaveamento.objects.filter(finalizada=False).filter(
+        Q(data_partida__isnull=False) | Q(horario_partida__isnull=False)
+    ).exists() or configuracao.cenarios.exists()
+
     context = {
         'configuracao': configuracao,
         'datas_count': datas_count,
@@ -44,8 +52,21 @@ def dashboard_agendamento_view(request):
         'fases_count': fases_count,
         'partidas_pendentes': partidas_pendentes,
         'cenarios': cenarios,
+        'tem_jogos_gerados': tem_jogos_gerados,
     }
     return render(request, 'agendamento/dashboard.html', context)
+
+
+@user_passes_test(_is_comissao_or_admin)
+def resetar_horarios_view(request):
+    """
+    Limpa as datas, horários e quadras de todas as partidas pendentes do torneio.
+    """
+    if request.method == 'POST':
+        configuracao = obter_ou_criar_configuracao()
+        total_resetadas = resetar_todos_horarios(configuracao)
+        messages.success(request, f"Todos os horários e locais foram resetados com sucesso ({total_resetadas} partidas atualizadas)!")
+    return redirect('agendamento_dashboard')
 
 
 @user_passes_test(_is_comissao_or_admin)

@@ -14,6 +14,7 @@ urlpatterns = [
     path('fases/<int:pk>/delete/', views.fase_delete_view, name='agendamento_fase_delete'),
     path('regras/', views.regras_config_view, name='agendamento_regras'),
     path('gerar/', views.gerar_cronograma_view, name='agendamento_gerar'),
+    path('resetar/', views.resetar_horarios_view, name='agendamento_resetar_horarios'),
     path('cenarios/<int:pk>/', views.cenario_detalhe_view, name='agendamento_cenario_detalhe'),
     path('cenarios/<int:pk>/aplicar/', views.aplicar_cenario_view, name='agendamento_aplicar_cenario'),
     path('cenarios/<int:pk>/delete/', views.cenario_delete_view, name='agendamento_cenario_delete'),

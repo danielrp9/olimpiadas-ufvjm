@@ -101,3 +101,9 @@ class AgendamentoViewsTests(TestCase):
         detalhe_resp = self.client.get(reverse('agendamento_cenario_detalhe', args=[cenario.pk]))
         self.assertEqual(detalhe_resp.status_code, 200)
         self.assertContains(detalhe_resp, 'Cenário Teste View')
+
+    def test_resetar_horarios_view(self):
+        self.client.force_login(self.comissao_user)
+        response = self.client.post(reverse('agendamento_resetar_horarios'))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('agendamento_dashboard'))

@@ -302,3 +302,37 @@ def aplicar_cenario_ao_oficial(cenario: CenarioExecucao) -> Tuple[int, List[str]
 
     mensagens.append(f"{atualizados} partida(s) foram atualizadas no calendário oficial com sucesso!")
     return atualizados, mensagens
+
+
+def resetar_todos_horarios(configuracao: Optional[ConfiguracaoGeral] = None) -> int:
+    """
+    Remove as datas, horários e quadras/locais de todas as partidas não finalizadas no sistema,
+    permitindo redefinir e reexecutar a grade de agendamento do zero com segurança.
+    """
+    count = 0
+    with transaction.atomic():
+        partidas_qs = PartidaChaveamento.objects.filter(finalizada=False).select_related('jogo')
+        for p in partidas_qs:
+            teve_alteracao = False
+            if p.data_partida is not None or p.horario_partida is not None:
+                p.data_partida = None
+                p.horario_partida = None
+                p.save()
+                teve_alteracao = True
+
+            if p.jogo and not p.jogo.finalizado:
+                p.jogo.horario_jogo = None
+                p.jogo.local = None
+                p.jogo.save()
+                teve_alteracao = True
+
+            if teve_alteracao:
+                count += 1
+
+        # Atualiza status dos cenários aplicados para 'sucesso' (não aplicados)
+        if configuracao:
+            configuracao.cenarios.filter(status='aplicado').update(status='sucesso')
+        else:
+            CenarioExecucao.objects.filter(status='aplicado').update(status='sucesso')
+
+    return count

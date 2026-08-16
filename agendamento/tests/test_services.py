@@ -116,3 +116,23 @@ class ScheduleServicesTests(TestCase):
         self.assertIsNotNone(self.p_semi1.jogo)
         self.assertEqual(self.p_semi1.jogo.data_jogo, date(2026, 9, 26))
         self.assertEqual(self.p_semi1.jogo.local, "Ginásio Poliesportivo")
+
+        # 3. Testa o reset completo de horários e quadras
+        from agendamento.services import resetar_todos_horarios
+        total_resetadas = resetar_todos_horarios(self.config)
+        self.assertGreaterEqual(total_resetadas, 3)
+
+        self.p_semi1.refresh_from_db()
+        self.p_semi2.refresh_from_db()
+        self.p_final.refresh_from_db()
+
+        self.assertIsNone(self.p_semi1.data_partida)
+        self.assertIsNone(self.p_semi1.horario_partida)
+        self.assertIsNone(self.p_final.data_partida)
+        self.assertIsNone(self.p_final.horario_partida)
+
+        # Verifica que o jogo teve local e horário zerados
+        if self.p_semi1.jogo:
+            self.p_semi1.jogo.refresh_from_db()
+            self.assertIsNone(self.p_semi1.jogo.horario_jogo)
+            self.assertIsNone(self.p_semi1.jogo.local)
