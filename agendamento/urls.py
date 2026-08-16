@@ -19,4 +19,5 @@ urlpatterns = [
     path('cenarios/<int:pk>/aplicar/', views.aplicar_cenario_view, name='agendamento_aplicar_cenario'),
     path('cenarios/<int:pk>/delete/', views.cenario_delete_view, name='agendamento_cenario_delete'),
     path('auditoria/', views.relatorio_auditoria_view, name='agendamento_auditoria'),
+    path('auditoria/imprimir/', views.relatorio_auditoria_print_view, name='agendamento_auditoria_print'),
 ]

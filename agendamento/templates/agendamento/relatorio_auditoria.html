@@ -26,10 +26,10 @@
         </div>
 
         <div class="flex items-center gap-3 print:hidden">
-            <button onclick="window.print();" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center gap-2 cursor-pointer">
-                <i class="fas fa-print"></i>
-                <span>Imprimir / Salvar PDF</span>
-            </button>
+            <a href="{% url 'agendamento_auditoria_print' %}" target="_blank" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center gap-2 cursor-pointer">
+                <i class="fas fa-file-pdf text-rose-400"></i>
+                <span>Gerar Laudo para Impressão (A4)</span>
+            </a>
             <a href="{% url 'agendamento_dashboard' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
                 <i class="fas fa-arrow-left"></i>
                 <span>Painel</span>

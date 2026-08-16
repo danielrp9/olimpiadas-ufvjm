@@ -386,16 +386,7 @@ def cenario_delete_view(request, pk):
     return redirect('agendamento_dashboard')
 
 
-@user_passes_test(_is_comissao_or_admin)
-def relatorio_auditoria_view(request):
-    """
-    Página oficial de auditoria técnica e integridade cronológica do sistema.
-    Exibe os registros de data/hora (timestamps com precisão de segundos) de:
-    1. Geração dos Chaveamentos por modalidade
-    2. Execução e aplicação dos Cenários de Agendamento de Horários
-    3. Criação dos Jogos Oficiais no banco de dados
-    4. Métricas e parâmetros anti-viés aplicados pelo algoritmo
-    """
+def _get_auditoria_context():
     from core.models import ChaveamentoModalidade, Jogo, PartidaChaveamento
 
     configuracao = obter_ou_criar_configuracao()
@@ -443,7 +434,7 @@ def relatorio_auditoria_view(request):
         'total_restricoes_fase': configuracao.restricoes_fases.count() if hasattr(configuracao, 'restricoes_fases') else 0,
     }
 
-    context = {
+    return {
         'configuracao': configuracao,
         'chaveamentos_data': chaveamentos_data,
         'cenarios': cenarios,
@@ -455,5 +446,23 @@ def relatorio_auditoria_view(request):
         'regras': regras,
         'gerado_em': timezone.localtime(),
     }
+
+
+@user_passes_test(_is_comissao_or_admin)
+def relatorio_auditoria_view(request):
+    """
+    Página oficial de auditoria técnica e integridade cronológica do sistema (Visualização Web).
+    """
+    context = _get_auditoria_context()
     return render(request, 'agendamento/relatorio_auditoria.html', context)
+
+
+@user_passes_test(_is_comissao_or_admin)
+def relatorio_auditoria_print_view(request):
+    """
+    Página independente e formatada exclusivamente para Impressão / Exportação em PDF (A4 Oficial).
+    """
+    context = _get_auditoria_context()
+    return render(request, 'agendamento/relatorio_auditoria_print.html', context)
+
 

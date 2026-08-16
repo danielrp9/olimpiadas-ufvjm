@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laudo Técnico de Auditoria - Olimpíadas UFVJM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", Arial, sans-serif;
+            color: #111827;
+            background-color: #f3f4f6;
+            font-size: 11pt;
+            line-height: 1.4;
+        }
+
+        /* Barra de Ações na Tela (oculta na impressão) */
+        .action-bar {
+            position: sticky;
+            top: 0;
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+        .action-bar-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+        .action-bar-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-print {
+            background-color: #10b981;
+            color: #ffffff;
+        }
+        .btn-print:hover {
+            background-color: #059669;
+        }
+        .btn-close {
+            background-color: #334155;
+            color: #ffffff;
+        }
+        .btn-close:hover {
+            background-color: #475569;
+        }
+
+        /* Folha A4 para Impressão */
+        .paper-container {
+            max-width: 210mm;
+            margin: 24px auto;
+            background-color: #ffffff;
+            padding: 20mm 18mm;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border-radius: 4px;
+        }
+
+        /* Cabeçalho Institucional */
+        .header {
+            border-bottom: 2px solid #0f172a;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        .header-inst {
+            font-size: 10pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #0f172a;
+        }
+        .header-sub {
+            font-size: 8.5pt;
+            font-weight: 600;
+            color: #475569;
+            margin-top: 2px;
+        }
+        .header-doc-title {
+            font-size: 13pt;
+            font-weight: 900;
+            color: #0f172a;
+            margin-top: 10px;
+            letter-spacing: -0.3px;
+        }
+        .header-doc-sub {
+            font-size: 9pt;
+            font-weight: 600;
+            color: #059669;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Caixa de Metadados */
+        .meta-box {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 18px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px 16px;
+            font-size: 8.5pt;
+        }
+        .meta-item strong {
+            color: #334155;
+        }
+        .meta-item span {
+            color: #0f172a;
+            font-weight: 600;
+        }
+
+        /* Seções */
+        .section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-size: 10pt;
+            font-weight: 800;
+            color: #0f172a;
+            border-bottom: 1.5px solid #cbd5e1;
+            padding-bottom: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .section-desc {
+            font-size: 8.5pt;
+            color: #475569;
+            margin-bottom: 8px;
+            line-height: 1.35;
+        }
+
+        /* Tabelas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8pt;
+            margin-bottom: 8px;
+        }
+        th {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            font-weight: 800;
+            text-transform: uppercase;
+            font-size: 7.5pt;
+            letter-spacing: 0.3px;
+            padding: 6px 8px;
+            border: 1px solid #cbd5e1;
+            text-align: left;
+        }
+        td {
+            padding: 5px 8px;
+            border: 1px solid #e2e8f0;
+            color: #1e293b;
+        }
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .mono {
+            font-family: "Courier New", Courier, monospace;
+            font-weight: 700;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 7pt;
+            font-weight: 800;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+        .badge-success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-info {
+            background-color: #e0f2fe;
+            color: #075985;
+            border: 1px solid #bae6fd;
+        }
+
+        /* Box de Fundamentação */
+        .notice-box {
+            background-color: #faf5ff;
+            border-left: 3px solid #9333ea;
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-size: 8pt;
+            color: #581c87;
+            line-height: 1.35;
+        }
+        .notice-box strong {
+            color: #3b0764;
+        }
+
+        /* Assinaturas */
+        .signatures {
+            margin-top: 35px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            page-break-inside: avoid;
+        }
+        .sig-block {
+            text-align: center;
+            font-size: 8pt;
+        }
+        .sig-line {
+            border-top: 1px solid #475569;
+            margin-bottom: 6px;
+        }
+        .sig-name {
+            font-weight: 800;
+            color: #0f172a;
+        }
+        .sig-role {
+            color: #64748b;
+        }
+
+        /* Rodapé Oficial */
+        .footer {
+            margin-top: 25px;
+            border-top: 1px dashed #cbd5e1;
+            padding-top: 8px;
+            text-align: center;
+            font-size: 7pt;
+            color: #94a3b8;
+            page-break-inside: avoid;
+        }
+
+        /* Regras Específicas de Impressão */
+        @media print {
+            body {
+                background-color: #ffffff;
+                font-size: 9.5pt;
+            }
+            .action-bar {
+                display: none !important;
+            }
+            .paper-container {
+                max-width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border-radius: 0;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 12mm 10mm 12mm 10mm;
+            }
+            tr {
+                page-break-inside: avoid;
+            }
+            .signatures, .footer {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Barra de Ação Superior (Oculta na Impressão) -->
+    <div class="action-bar no-print">
+        <div class="action-bar-title">
+            <i class="fas fa-file-invoice mr-2 text-emerald-400"></i>
+            Visualização de Impressão Oficial (A4)
+        </div>
+        <div class="action-bar-buttons">
+            <button onclick="window.print();" class="btn btn-print">
+                <i class="fas fa-print"></i> Imprimir / Salvar em PDF
+            </button>
+            <button onclick="window.close();" class="btn btn-close">
+                <i class="fas fa-times"></i> Fechar
+            </button>
+        </div>
+    </div>
+
+    <div class="paper-container">
+        
+        <!-- Cabeçalho -->
+        <div class="header">
+            <div class="header-inst">Universidade Federal dos Vales do Jequitinhonha e Mucuri - UFVJM</div>
+            <div class="header-sub">Pró-Reitoria de Assuntos Comunitários e Estudantis • Comissão Organizadora Oficial</div>
+            <div class="header-doc-title">LAUDO TÉCNICO DE AUDITORIA E INTEGRIDADE COMPUTACIONAL</div>
+            <div class="header-doc-sub">Comprovação de Geração Determinística de Chaveamentos e Alocação de Horários</div>
+        </div>
+
+        <!-- Metadados de Auditoria -->
+        <div class="meta-box">
+            <div class="meta-item">
+                <strong>Protocolo de Auditoria:</strong> 
+                <span class="mono">AUD-{{ gerado_em|date:"Ymd-His" }}</span>
+            </div>
+            <div class="meta-item">
+                <strong>Data/Hora de Emissão:</strong> 
+                <span>{{ gerado_em|date:"d/m/Y \à\s H:i:s" }}</span>
+            </div>
+            <div class="meta-item">
+                <strong>Fuso Horário do Servidor:</strong> 
+                <span>America/Sao_Paulo (UTC-3)</span>
+            </div>
+            <div class="meta-item">
+                <strong>Método de Processamento:</strong> 
+                <span class="badge badge-success">100% Algoritmo Automatizado</span>
+            </div>
+            <div class="meta-item">
+                <strong>Volume Auditado:</strong> 
+                <span>{{ total_chaveamentos }} modalidades • {{ total_cenarios }} simulações • {{ total_jogos }} jogos</span>
+            </div>
+            <div class="meta-item">
+                <strong>Restrição de Descanso:</strong> 
+                <span>Mínimo de {{ regras.descanso_minimo_minutos }} min entre jogos da mesma equipe</span>
+            </div>
+        </div>
+
+        <!-- Declaração Institucional Anti-Viés -->
+        <div class="notice-box">
+            <strong>Certificação de Não-Enviesamento:</strong> Atesta-se que a totalidade dos confrontos, chaves e horários constantes neste relatório foram gerados via rotinas computacionais automatizadas (serviços <code style="font-weight: bold;">chaveamento_services.py</code> e <code style="font-weight: bold;">solver.py</code>). A distribuição respeitou rigorosamente as restrições duras de tempo, descanso de equipes, capacidade de quadras e divisão de campi, sem possibilidade de inserção ou manipulação manual arbitrária.
+        </div>
+
+        <!-- SEÇÃO 1: Registro de Chaveamento -->
+        <div class="section">
+            <div class="section-title">
+                <span>1. Registro Cronológico de Chaveamento de Modalidades</span>
+                <span style="font-size: 7.5pt; font-weight: normal; color: #64748b;">{{ total_chaveamentos }} modalidades</span>
+            </div>
+            <div class="section-desc">
+                Momento exato de execução do algoritmo de formação de grupos e chaves mata-mata por modalidade esportiva:
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 28%;">Modalidade</th>
+                        <th style="width: 15%;">Fase Atual</th>
+                        <th style="width: 10%; text-align: center;">Grupos</th>
+                        <th style="width: 10%; text-align: center;">Partidas</th>
+                        <th style="width: 19%;">Data/Hora de Geração</th>
+                        <th style="width: 18%;">Origem / Método</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in chaveamentos_data %}
+                    <tr>
+                        <td><strong>{{ item.modalidade.nome }}</strong> ({{ item.modalidade.get_genero_display }})</td>
+                        <td>{{ item.fase_display }}</td>
+                        <td style="text-align: center;">{{ item.total_grupos }}</td>
+                        <td style="text-align: center;">{{ item.total_partidas }}</td>
+                        <td class="mono">{{ item.criado_em|date:"d/m/Y H:i:s" }}</td>
+                        <td><span class="badge badge-success">Algoritmo</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #94a3b8;">Nenhum chaveamento gerado até o momento.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SEÇÃO 2: Registro de Cálculos do Solver de Horários -->
+        <div class="section">
+            <div class="section-title">
+                <span>2. Registro de Execução do Solver de Horários (Cenários)</span>
+                <span style="font-size: 7.5pt; font-weight: normal; color: #64748b;">{{ total_cenarios }} execuções</span>
+            </div>
+            <div class="section-desc">
+                Cálculos de viabilidade matemática de horários e momento de homologação no calendário oficial:
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">ID</th>
+                        <th style="width: 25%;">Título do Cenário</th>
+                        <th style="width: 18%;">Status</th>
+                        <th style="width: 10%; text-align: center;">Jogos</th>
+                        <th style="width: 19%;">Momento do Cálculo</th>
+                        <th style="width: 20%;">Aplicação no Calendário</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cenario in cenarios %}
+                    <tr>
+                        <td class="mono">#{{ cenario.id }}</td>
+                        <td><strong>{{ cenario.titulo }}</strong></td>
+                        <td>
+                            {% if cenario.status == 'aplicado' %}
+                                <span class="badge badge-success">Aplicado ao Oficial</span>
+                            {% elif cenario.status == 'sucesso' %}
+                                <span class="badge badge-info">Viável (Calculado)</span>
+                            {% else %}
+                                <span class="badge" style="background:#fee2e2; color:#991b1b;">Inviável</span>
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">{{ cenario.alocacoes.count }}</td>
+                        <td class="mono">{{ cenario.criado_em|date:"d/m/Y H:i:s" }}</td>
+                        <td class="mono">
+                            {% if cenario.status == 'aplicado' %}
+                                {{ cenario.atualizado_em|date:"d/m/Y H:i:s" }}
+                            {% else %}
+                                <span style="color: #94a3b8; font-style: italic;">Não aplicado</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #94a3b8;">Nenhum cenário de agendamento registrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- SEÇÃO 3: Relação Oficial de Jogos e Carimbos do SGBD -->
+        <div class="section">
+            <div class="section-title">
+                <span>3. Registro de Inserção Permanente no Banco de Dados (Jogos)</span>
+                <span style="font-size: 7.5pt; font-weight: normal; color: #64748b;">{{ total_jogos }} partidas</span>
+            </div>
+            <div class="section-desc">
+                Confrontos oficiais gravados no banco de dados relacional com carimbo temporal nativo (<code class="mono">data_criacao</code>):
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 8%;">ID</th>
+                        <th style="width: 22%;">Modalidade</th>
+                        <th style="width: 32%;">Confronto</th>
+                        <th style="width: 14%;">Data / Horário</th>
+                        <th style="width: 24%;">Carimbo no SGBD</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for j in jogos %}
+                    <tr>
+                        <td class="mono">#{{ j.id }}</td>
+                        <td>{{ j.modalidade.nome }} ({{ j.modalidade.get_genero_display }})</td>
+                        <td><strong>{{ j.time_a_display }}</strong> vs <strong>{{ j.time_b_display }}</strong></td>
+                        <td>
+                            {{ j.data_jogo|date:"d/m/Y" }}
+                            {% if j.horario_jogo %} às {{ j.horario_jogo|time:"H:i" }}{% endif %}
+                        </td>
+                        <td class="mono" style="font-weight: bold; color: #065f46; background-color: #f0fdf4;">
+                            {{ j.data_criacao|date:"d/m/Y H:i:s" }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: #94a3b8;">Nenhum jogo oficial gravado no banco de dados.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Assinaturas de Homologação -->
+        <div class="signatures">
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-name">Coordenação Geral das Olimpíadas</div>
+                <div class="sig-role">Comissão Organizadora - UFVJM</div>
+            </div>
+            <div class="sig-block">
+                <div class="sig-line"></div>
+                <div class="sig-name">Responsável Técnico / Sistema</div>
+                <div class="sig-role">Auditoria de Sistemas e Tecnologia</div>
+            </div>
+        </div>
+
+        <!-- Rodapé do Documento -->
+        <div class="footer">
+            Documento emitido automaticamente pelo Sistema de Gestão das Olimpíadas Universitárias da UFVJM.<br>
+            Autenticidade vinculada aos registros imutáveis do banco de dados relacional e logs do servidor web.
+        </div>
+
+    </div>
+
+</body>
+</html>
