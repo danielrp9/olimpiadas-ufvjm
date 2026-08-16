@@ -6,7 +6,7 @@
 <div class="w-full space-y-8 pb-12 print:p-0 print:space-y-4">
     
     <!-- Header do Relatório -->
-    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 print:border-none print:shadow-none print:p-0">
+    <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-2 print:border-none print:shadow-none print:p-0">
         <div class="flex items-center gap-4">
             <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-2 rounded-xl hover:bg-slate-100 print:hidden" title="Voltar ao Painel">
                 <i class="fas fa-arrow-left text-lg"></i>
@@ -15,13 +15,7 @@
                 <i class="fas fa-shield-alt text-xl"></i>
             </span>
             <div>
-                <div class="flex items-center gap-2.5 flex-wrap">
-                    <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Relatório de Auditoria e Integridade</h1>
-                    <span class="px-3 py-0.5 text-[11px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full uppercase tracking-wider">
-                        <i class="fas fa-check-circle mr-1"></i> Sistema Automatizado
-                    </span>
-                </div>
-                <p class="text-slate-600 mt-1 text-xs sm:text-sm">Comprovação cronológica e rastreabilidade técnica dos chaveamentos e do agendamento algorítmico de horários.</p>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Relatório de Auditoria e Integridade</h1>
             </div>
         </div>
 
@@ -30,15 +24,11 @@
                 <i class="fas fa-file-pdf text-rose-400"></i>
                 <span>Gerar Laudo para Impressão (A4)</span>
             </a>
-            <a href="{% url 'agendamento_dashboard' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
-                <i class="fas fa-arrow-left"></i>
-                <span>Painel</span>
-            </a>
         </div>
     </div>
 
     <!-- Metadados de Auditoria / Cartões Informativos -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
         <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Modalidades Chaveadas</span>
