@@ -19,18 +19,6 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <!-- Alternador de Visualização (Tabelas vs Tournament Bracket) -->
-            <div class="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/80 gap-1 select-none shadow-2xs">
-                <button type="button" id="btn-view-tabelas" onclick="switchChaveamentoView('tabelas')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 bg-white text-slate-900 shadow-sm flex items-center gap-2 cursor-pointer">
-                    <i class="fas fa-list-ul text-blue-600"></i>
-                    <span>Tabelas & Jogos</span>
-                </button>
-                <button type="button" id="btn-view-bracket" onclick="switchChaveamentoView('bracket')" class="px-3.5 py-1.5 rounded-xl text-xs font-extrabold transition-all duration-200 text-slate-500 hover:text-slate-800 flex items-center gap-2 cursor-pointer">
-                    <i class="fas fa-sitemap text-indigo-500"></i>
-                    <span>Árvore de Torneio (Bracket)</span>
-                </button>
-            </div>
-
             <a href="{% url 'exportador:exportar_jogos_excel' %}?modalidade_id={{ modalidade.id }}" class="py-2 px-3.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 text-xs font-extrabold rounded-xl transition border border-emerald-200/80 shadow-2xs flex items-center gap-2 shrink-0 cursor-pointer" title="Extrair Planilha Excel desta modalidade">
                 <i class="fas fa-file-excel text-emerald-600 text-sm"></i> Extrair
             </a>
@@ -43,8 +31,7 @@
         </div>
     </div>
 
-    <!-- VIEW 1: TABELAS E JOGOS (PADRÃO) -->
-    <div id="view-tabelas" class="space-y-8">
+    <!-- SEÇÃO 1: FASE DE GRUPOS E CLASSIFICATÓRIAS -->
     <div class="space-y-6">
         <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3.5">
@@ -452,54 +439,11 @@
 
         </div>
     </div>
-    </div>
-
-    <!-- VIEW 2: TOURNAMENT BRACKET (DIAGRAMA EM ÁRVORE) -->
-    <div id="view-bracket" class="hidden space-y-8">
-        {% include "core/includes/tournament_bracket.html" %}
-    </div>
 
 </div>
 
-<!-- Scripts de Interatividade para o Modo de Edição e Alternância de Visualização -->
+<!-- Scripts de Interatividade para o Modo de Edição -->
 <script>
-    function switchChaveamentoView(view) {
-        const tabelasDiv = document.getElementById('view-tabelas');
-        const bracketDiv = document.getElementById('view-bracket');
-        const btnTabelas = document.getElementById('btn-view-tabelas');
-        const btnBracket = document.getElementById('btn-view-bracket');
-
-        if (!tabelasDiv || !bracketDiv) return;
-
-        if (view === 'bracket') {
-            tabelasDiv.classList.add('hidden');
-            bracketDiv.classList.remove('hidden');
-            
-            btnBracket.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
-            btnBracket.classList.remove('text-slate-500');
-            
-            btnTabelas.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
-            btnTabelas.classList.add('text-slate-500');
-            window.location.hash = 'bracket';
-        } else {
-            bracketDiv.classList.add('hidden');
-            tabelasDiv.classList.remove('hidden');
-            
-            btnTabelas.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
-            btnTabelas.classList.remove('text-slate-500');
-            
-            btnBracket.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
-            btnBracket.classList.add('text-slate-500');
-            window.location.hash = 'tabelas';
-        }
-    }
-
-    // Restaura visualização a partir do hash da URL
-    document.addEventListener('DOMContentLoaded', () => {
-        if (window.location.hash === '#bracket') {
-            switchChaveamentoView('bracket');
-        }
-    });
 
     function togglePartidaEdit(partidaId, enable) {
         const container = document.getElementById(`partida-card-${partidaId}`);
