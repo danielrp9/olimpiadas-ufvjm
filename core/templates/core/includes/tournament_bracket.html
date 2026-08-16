@@ -1,0 +1,451 @@
+<!-- Tournament Bracket (Árvore de Torneio Interativa) -->
+<div class="space-y-8 w-full">
+    
+    <!-- Resumo Didático e Estrutura da Competição -->
+    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-700/80 space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-5">
+            <div class="flex items-center gap-3.5">
+                <span class="p-3 bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 rounded-2xl shrink-0">
+                    <i class="fas fa-info-circle text-lg"></i>
+                </span>
+                <div>
+                    <h2 class="text-lg sm:text-xl font-black text-white tracking-tight">Como Funciona a Disputa • {{ modalidade.nome }}</h2>
+                    <p class="text-xs text-slate-300 mt-0.5">Formato oficial, divisão de campi, critérios de avanço e caminho até o título.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="px-3 py-1 bg-white/10 text-white border border-white/15 rounded-xl text-xs font-bold">
+                    <i class="fas fa-map-marker-alt text-amber-400 mr-1.5"></i> Sede: Diamantina
+                </span>
+                <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold">
+                    <i class="fas fa-ticket-alt mr-1.5"></i> {{ chaveamento.vagas_externas }} vaga(s) externa(s) na Semifinal Geral
+                </span>
+            </div>
+        </div>
+
+        <!-- Etapas da Competição -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-4.5 space-y-2.5">
+                <div class="flex items-center gap-2 font-bold text-amber-300 uppercase tracking-wider text-[11px]">
+                    <span class="w-5 h-5 rounded-full bg-amber-400/20 text-amber-300 flex items-center justify-center text-[10px] font-black">1</span>
+                    Fase Classificatória / Grupos
+                </div>
+                <p class="text-slate-300 leading-relaxed">
+                    As equipes do campus sede jogam todos contra todos em seus respectivos grupos. Os melhores colocados garantem vaga no mata-mata local de Diamantina.
+                </p>
+                <div class="pt-1 text-[11px] text-slate-400 font-medium border-t border-white/5">
+                    Critérios: Pontos > Vitórias > Saldo de Gols/Sets > Gols Pró.
+                </div>
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-4.5 space-y-2.5">
+                <div class="flex items-center gap-2 font-bold text-blue-300 uppercase tracking-wider text-[11px]">
+                    <span class="w-5 h-5 rounded-full bg-blue-400/20 text-blue-300 flex items-center justify-center text-[10px] font-black">2</span>
+                    Mata-Mata Local (Diamantina)
+                </div>
+                <p class="text-slate-300 leading-relaxed">
+                    Confrontos eliminatórios diretos afunilam as equipes de Diamantina (Quartas e Semifinais Locais) para definir o Campeão e o Vice da sede que avançam às Finais Gerais.
+                </p>
+                <div class="pt-1 text-[11px] text-slate-400 font-medium border-t border-white/5">
+                    Eliminatória simples: o vencedor avança de chave.
+                </div>
+            </div>
+
+            <div class="bg-white/5 border border-white/10 rounded-2xl p-4.5 space-y-2.5">
+                <div class="flex items-center gap-2 font-bold text-emerald-300 uppercase tracking-wider text-[11px]">
+                    <span class="w-5 h-5 rounded-full bg-emerald-400/20 text-emerald-300 flex items-center justify-center text-[10px] font-black">3</span>
+                    Fase Geral & Decisão do Título
+                </div>
+                <p class="text-slate-300 leading-relaxed">
+                    Os classificados de Diamantina cruzam com os campeões dos campi externos (Mucuri / Unaí / Janaúba) nas Semifinais Gerais, culminando na <strong>Grande Final</strong> e <strong>Chave Bronze</strong>.
+                </p>
+                <div class="pt-1 text-[11px] text-slate-400 font-medium border-t border-white/5">
+                    Definição oficial do Campeão Geral e 3º Lugar.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Barra de Ferramentas do Diagrama Bracket (Zoom & Ações) -->
+    <div class="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+            <span class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <i class="fas fa-sitemap text-indigo-600"></i>
+                Estrutura em Árvore do Torneio
+            </span>
+            <span class="hidden sm:inline-block text-xs text-slate-400">•</span>
+            <span class="hidden sm:inline-block text-xs text-slate-500">Arraste horizontalmente para navegar entre as fases</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button type="button" onclick="ajustarZoomBracket(-0.1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-95" title="Diminuir Zoom">
+                <i class="fas fa-search-minus"></i>
+            </button>
+            <button type="button" onclick="ajustarZoomBracket(0)" class="px-2.5 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95" title="Resetar Zoom">
+                <span id="zoom-bracket-label">100%</span>
+            </button>
+            <button type="button" onclick="ajustarZoomBracket(0.1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-95" title="Aumentar Zoom">
+                <i class="fas fa-search-plus"></i>
+            </button>
+            <button type="button" onclick="window.print()" class="h-8 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition active:scale-95 flex items-center gap-1.5 ml-2" title="Imprimir / Salvar PDF">
+                <i class="fas fa-print text-xs"></i>
+                <span class="hidden sm:inline">Imprimir</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Área de Visualização do Tournament Bracket com Scroll Horizontal -->
+    <div id="bracket-scroll-container" class="w-full overflow-x-auto pb-8 pt-4 rounded-3xl bg-slate-50/80 border border-slate-200/90 p-4 sm:p-6 shadow-inner cursor-grab active:cursor-grabbing">
+        
+        <div id="bracket-canvas" class="flex items-start gap-8 sm:gap-12 min-w-max transition-transform duration-200 origin-top-left">
+            
+            <!-- COLUNA 1: FASE DE GRUPOS & ELIMINATÓRIAS EXTERNAS -->
+            <div class="w-[300px] sm:w-[330px] shrink-0 space-y-6">
+                <div class="bg-slate-900 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-xs border border-slate-800">
+                    <span class="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                        1. Classificatórias
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-semibold uppercase">{{ grupos.count }} grupo(s)</span>
+                </div>
+
+                <!-- Lista de Grupos -->
+                {% for grupo in grupos %}
+                <div class="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-sm space-y-3 relative hover:border-blue-300 transition">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <h4 class="text-xs font-extrabold text-slate-800 tracking-tight">{{ grupo.nome }}</h4>
+                        <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                            Passam {{ grupo.vagas_classificacao }}
+                        </span>
+                    </div>
+
+                    <!-- Mini Tabela do Grupo -->
+                    <div class="space-y-1.5 text-xs">
+                        {% for tg in grupo.times.all %}
+                        <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if tg.classificado %}bg-emerald-50 text-emerald-900 font-bold border border-emerald-200/80{% else %}bg-slate-50 text-slate-700{% endif %}">
+                            <div class="flex items-center gap-2 truncate pr-2">
+                                <span class="text-[10px] font-black {% if tg.classificado %}text-emerald-700{% else %}text-slate-400{% endif %}">{{ forloop.counter }}º</span>
+                                <span class="truncate">{{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}</span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0 font-mono">
+                                <span class="text-[11px] font-black {% if tg.classificado %}text-emerald-800{% else %}text-slate-600{% endif %}">{{ tg.pontos }} pts</span>
+                                {% if tg.classificado %}
+                                <i class="fas fa-check-circle text-emerald-500 text-xs" title="Classificado para a próxima fase"></i>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-[11px] text-slate-400 italic py-2 text-center">Nenhum time alocado</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="bg-white border border-dashed border-slate-300 rounded-2xl p-6 text-center text-xs text-slate-400">
+                    Sem grupos na fase inicial.
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- COLUNA 2: QUARTAS DE FINAL (MATA-MATA LOCAL) OU SEMIFINAIS LOCAIS -->
+            {% if partidas_por_fase.QUARTAS_LOCAL %}
+            <div class="w-[300px] sm:w-[320px] shrink-0 space-y-6">
+                <div class="bg-slate-900 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-xs border border-slate-800">
+                    <span class="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+                        2. Quartas de Final
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-semibold uppercase">Sede</span>
+                </div>
+
+                <div class="space-y-6">
+                    {% for p in partidas_por_fase.QUARTAS_LOCAL %}
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-sm space-y-2.5 hover:border-purple-300 hover:shadow-md transition">
+                        <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold border-b border-slate-100 pb-1.5">
+                            <span>Jogo #{{ forloop.counter }} • Quartas</span>
+                            <span>{% if p.horario_partida %}{{ p.data_partida|date:"d/m" }} {{ p.horario_partida|time:"H:i" }}{% else %}A definir{% endif %}</span>
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <!-- Time A -->
+                            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_a and p.time_a %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
+                                <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                                <span class="font-mono text-sm font-black {% if p.vencedor == p.time_a and p.time_a %}text-emerald-700{% else %}text-slate-700{% endif %}">
+                                    {{ p.placar_a|default_if_none:"-" }}
+                                </span>
+                            </div>
+                            <!-- Time B -->
+                            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_b and p.time_b %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
+                                <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                                <span class="font-mono text-sm font-black {% if p.vencedor == p.time_b and p.time_b %}text-emerald-700{% else %}text-slate-700{% endif %}">
+                                    {{ p.placar_b|default_if_none:"-" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if p.finalizada and p.vencedor %}
+                        <div class="text-[10px] text-emerald-700 font-extrabold flex items-center gap-1 pt-1">
+                            <i class="fas fa-arrow-right text-[9px]"></i>
+                            Classificado: {{ p.vencedor.nome_delegacao|default:p.vencedor.email }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- COLUNA 3: SEMIFINAIS LOCAIS (SEDE DIAMANTINA) -->
+            {% if partidas_por_fase.SEMI_LOCAL %}
+            <div class="w-[300px] sm:w-[320px] shrink-0 space-y-6">
+                <div class="bg-slate-900 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-xs border border-slate-800">
+                    <span class="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+                        Semifinais da Sede
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-semibold uppercase">Diamantina</span>
+                </div>
+
+                <div class="space-y-6">
+                    {% for p in partidas_por_fase.SEMI_LOCAL %}
+                    <div class="bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-sm space-y-2.5 hover:border-indigo-300 hover:shadow-md transition">
+                        <div class="flex items-center justify-between text-[10px] text-slate-500 font-semibold border-b border-slate-100 pb-1.5">
+                            <span>Semifinal Local #{{ forloop.counter }}</span>
+                            <span>{% if p.horario_partida %}{{ p.data_partida|date:"d/m" }} {{ p.horario_partida|time:"H:i" }}{% else %}A definir{% endif %}</span>
+                        </div>
+                        
+                        <div class="space-y-1.5">
+                            <!-- Time A -->
+                            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_a and p.time_a %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
+                                <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                                <span class="font-mono text-sm font-black {% if p.vencedor == p.time_a and p.time_a %}text-emerald-700{% else %}text-slate-700{% endif %}">
+                                    {{ p.placar_a|default_if_none:"-" }}
+                                </span>
+                            </div>
+                            <!-- Time B -->
+                            <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_b and p.time_b %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
+                                <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                                <span class="font-mono text-sm font-black {% if p.vencedor == p.time_b and p.time_b %}text-emerald-700{% else %}text-slate-700{% endif %}">
+                                    {{ p.placar_b|default_if_none:"-" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if p.finalizada and p.vencedor %}
+                        <div class="text-[10px] text-indigo-700 font-extrabold flex items-center gap-1 pt-1">
+                            <i class="fas fa-star text-amber-500 text-[9px]"></i>
+                            Finalista Local: {{ p.vencedor.nome_delegacao|default:p.vencedor.email }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- COLUNA 4: SEMIFINAIS GERAIS -->
+            {% if partidas_por_fase.SEMI_GERAL %}
+            <div class="w-[300px] sm:w-[330px] shrink-0 space-y-6">
+                <div class="bg-blue-900 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-xs border border-blue-800">
+                    <span class="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-blue-300"></span>
+                        Semifinais Gerais
+                    </span>
+                    <span class="text-[10px] text-blue-200 font-semibold uppercase">Fase Geral</span>
+                </div>
+
+                <div class="space-y-6">
+                    {% for p in partidas_por_fase.SEMI_GERAL %}
+                    <div class="bg-white border-2 border-blue-200/90 rounded-2xl p-4 shadow-sm space-y-3 hover:border-blue-400 hover:shadow-md transition">
+                        <div class="flex items-center justify-between text-[10px] text-blue-800 font-bold border-b border-blue-100 pb-1.5">
+                            <span>Semi Geral #{{ forloop.counter }}</span>
+                            <span class="bg-blue-50 px-2 py-0.5 rounded text-blue-700">{% if p.horario_partida %}{{ p.data_partida|date:"d/m" }} {{ p.horario_partida|time:"H:i" }}{% else %}A definir{% endif %}</span>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <!-- Time A -->
+                            <div class="flex items-center justify-between px-3 py-2 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-emerald-100 text-emerald-950 font-black border border-emerald-300{% elif p.perdedor == p.time_a and p.time_a %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-900 font-semibold{% endif %}">
+                                <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                                <span class="font-mono text-base font-black {% if p.vencedor == p.time_a and p.time_a %}text-emerald-700{% else %}text-slate-700{% endif %}">
+                                    {{ p.placar_a|default_if_none:"-" }}
+                                </span>
+                            </div>
+                            <!-- Time B -->
+                            <div class="flex items-center justify-between px-3 py-2 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-emerald-100 text-emerald-950 font-black border border-emerald-300{% elif p.perdedor == p.time_b and p.time_b %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-900 font-semibold{% endif %}">
+                                <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                                <span class="font-mono text-base font-black {% if p.vencedor == p.time_b and p.time_b %}text-emerald-700{% else %}text-slate-700{% endif %}">
+                                    {{ p.placar_b|default_if_none:"-" }}
+                                </span>
+                            </div>
+                        </div>
+
+                        {% if p.finalizada and p.vencedor %}
+                        <div class="text-xs text-blue-900 font-extrabold flex items-center gap-1.5 pt-1 bg-blue-50/80 p-2 rounded-xl border border-blue-100">
+                            <i class="fas fa-trophy text-amber-500 text-xs"></i>
+                            Na Grande Final: {{ p.vencedor.nome_delegacao|default:p.vencedor.email }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- COLUNA 5: GRANDE FINAL GERAL E CHAVE BRONZE (DECISÃO DO TÍTULO) -->
+            <div class="w-[320px] sm:w-[350px] shrink-0 space-y-6">
+                <div class="bg-gradient-to-r from-amber-600 to-amber-700 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-xs border border-amber-500">
+                    <span class="text-xs font-black uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-crown text-amber-200"></i>
+                        Decisão do Título
+                    </span>
+                    <span class="text-[10px] text-amber-100 font-extrabold uppercase">Final & Bronze</span>
+                </div>
+
+                <!-- Card da Grande Final Geral -->
+                {% for p in partidas_por_fase.FINAL_GERAL %}
+                <div class="bg-gradient-to-b from-amber-50/80 to-white border-2 border-amber-400 rounded-3xl p-4.5 shadow-md space-y-3.5 relative overflow-hidden ring-4 ring-amber-400/20">
+                    <div class="flex items-center justify-between text-xs font-black text-amber-900 border-b border-amber-200 pb-2">
+                        <span class="flex items-center gap-1.5 uppercase tracking-wide">
+                            <i class="fas fa-trophy text-amber-600"></i> Grande Final Geral
+                        </span>
+                        <span class="text-[10px] bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md font-extrabold">
+                            {% if p.horario_partida %}{{ p.data_partida|date:"d/m" }} {{ p.horario_partida|time:"H:i" }}{% else %}A definir{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="space-y-2">
+                        <!-- Time A Final -->
+                        <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-amber-400 text-amber-950 font-black border-2 border-amber-500 shadow-sm{% elif p.perdedor == p.time_a and p.time_a %}bg-slate-100 text-slate-500 line-through{% else %}bg-white text-slate-900 font-bold border border-slate-200{% endif %}">
+                            <div class="flex items-center gap-2 truncate pr-2">
+                                {% if p.vencedor == p.time_a and p.time_a %}
+                                <i class="fas fa-medal text-amber-950 text-sm"></i>
+                                {% endif %}
+                                <span class="truncate">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"Finalista 1" }}</span>
+                            </div>
+                            <span class="font-mono text-lg font-black">{{ p.placar_a|default_if_none:"-" }}</span>
+                        </div>
+
+                        <!-- Time B Final -->
+                        <div class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-amber-400 text-amber-950 font-black border-2 border-amber-500 shadow-sm{% elif p.perdedor == p.time_b and p.time_b %}bg-slate-100 text-slate-500 line-through{% else %}bg-white text-slate-900 font-bold border border-slate-200{% endif %}">
+                            <div class="flex items-center gap-2 truncate pr-2">
+                                {% if p.vencedor == p.time_b and p.time_b %}
+                                <i class="fas fa-medal text-amber-950 text-sm"></i>
+                                {% endif %}
+                                <span class="truncate">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"Finalista 2" }}</span>
+                            </div>
+                            <span class="font-mono text-lg font-black">{{ p.placar_b|default_if_none:"-" }}</span>
+                        </div>
+                    </div>
+
+                    {% if p.finalizada and p.vencedor %}
+                    <div class="bg-amber-100 border border-amber-300 rounded-2xl p-3 text-center space-y-1">
+                        <span class="text-[10px] font-black uppercase tracking-widest text-amber-800 block">CAMPEÃO GERAL DA MODALIDADE</span>
+                        <div class="text-sm font-black text-amber-950 flex items-center justify-center gap-2">
+                            <i class="fas fa-crown text-amber-600"></i>
+                            {{ p.vencedor.nome_delegacao|default:p.vencedor.email }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="bg-white border border-dashed border-amber-300 rounded-2xl p-6 text-center text-xs text-amber-800">
+                    Aguardando definição dos finalistas.
+                </div>
+                {% endfor %}
+
+                <!-- Card da Chave Bronze (3º Lugar Geral) -->
+                {% for p in partidas_por_fase.BRONZE %}
+                <div class="bg-white border-2 border-amber-700/30 rounded-3xl p-4 shadow-sm space-y-3 relative hover:border-amber-700/60 transition">
+                    <div class="flex items-center justify-between text-xs font-bold text-amber-900 border-b border-slate-100 pb-1.5">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fas fa-medal text-amber-700"></i> Chave Bronze (3º Lugar)
+                        </span>
+                        <span class="text-[10px] text-slate-500 font-semibold">
+                            {% if p.horario_partida %}{{ p.data_partida|date:"d/m" }} {{ p.horario_partida|time:"H:i" }}{% else %}A definir{% endif %}
+                        </span>
+                    </div>
+
+                    <div class="space-y-1.5">
+                        <!-- Time A Bronze -->
+                        <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-amber-100 text-amber-950 font-black border border-amber-400{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
+                            <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                            <span class="font-mono text-sm font-black">{{ p.placar_a|default_if_none:"-" }}</span>
+                        </div>
+                        <!-- Time B Bronze -->
+                        <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-amber-100 text-amber-950 font-black border border-amber-400{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
+                            <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                            <span class="font-mono text-sm font-black">{{ p.placar_b|default_if_none:"-" }}</span>
+                        </div>
+                    </div>
+
+                    {% if p.finalizada and p.vencedor %}
+                    <div class="text-[11px] text-amber-900 font-black flex items-center gap-1.5 pt-1">
+                        <i class="fas fa-medal text-amber-700"></i> 3º Lugar: {{ p.vencedor.nome_delegacao|default:p.vencedor.email }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Script de Controle de Zoom e Arrastar do Bracket -->
+<script>
+    let bracketZoomLevel = 1.0;
+
+    function ajustarZoomBracket(delta) {
+        const canvas = document.getElementById('bracket-canvas');
+        const label = document.getElementById('zoom-bracket-label');
+        if (!canvas) return;
+
+        if (delta === 0) {
+            bracketZoomLevel = 1.0;
+        } else {
+            bracketZoomLevel = Math.max(0.6, Math.min(1.4, bracketZoomLevel + delta));
+        }
+
+        canvas.style.transform = `scale(${bracketZoomLevel})`;
+        if (label) {
+            label.textContent = `${Math.round(bracketZoomLevel * 100)}%`;
+        }
+    }
+
+    // Suporte a arrastar (Drag-to-scroll)
+    document.addEventListener('DOMContentLoaded', () => {
+        const slider = document.getElementById('bracket-scroll-container');
+        if (!slider) return;
+
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        slider.addEventListener('mousedown', (e) => {
+            isDown = true;
+            slider.classList.add('cursor-grabbing');
+            startX = e.pageX - slider.offsetLeft;
+            scrollLeft = slider.scrollLeft;
+        });
+
+        slider.addEventListener('mouseleave', () => {
+            isDown = false;
+            slider.classList.remove('cursor-grabbing');
+        });
+
+        slider.addEventListener('mouseup', () => {
+            isDown = false;
+            slider.classList.remove('cursor-grabbing');
+        });
+
+        slider.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - slider.offsetLeft;
+            const walk = (x - startX) * 1.5;
+            slider.scrollLeft = scrollLeft - walk;
+        });
+    });
+</script>

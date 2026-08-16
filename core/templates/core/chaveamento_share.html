@@ -50,15 +50,26 @@
                 </div>
             </div>
 
-            <!-- Botões de Ação da Tela (Ícones sutis no mobile, texto no desktop) -->
-            <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 no-print">
-                <button type="button" onclick="abrirModalCompartilhamento(window.location.href, '{{ modalidade.nome }} - Olimpíadas UFVJM')" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Compartilhar">
+            <!-- Botões de Ação da Tela (Alternador Bracket + Compartilhar + Imprimir) -->
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0 no-print flex-wrap justify-end">
+                <div class="flex items-center bg-slate-100 p-1 rounded-2xl border border-slate-200/80 gap-1 select-none shadow-2xs">
+                    <button type="button" id="btn-view-tabelas" onclick="switchChaveamentoView('tabelas')" class="px-3 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold transition-all duration-200 bg-white text-slate-900 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-list-ul text-blue-600"></i>
+                        <span>Tabelas</span>
+                    </button>
+                    <button type="button" id="btn-view-bracket" onclick="switchChaveamentoView('bracket')" class="px-3 sm:px-3.5 py-1.5 rounded-xl text-[11px] sm:text-xs font-extrabold transition-all duration-200 text-slate-500 hover:text-slate-800 flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-sitemap text-indigo-500"></i>
+                        <span>Árvore (Bracket)</span>
+                    </button>
+                </div>
+
+                <button type="button" onclick="abrirModalCompartilhamento(window.location.href, '{{ modalidade.nome }} - Olimpíadas UFVJM')" class="h-8 sm:h-9 px-2.5 sm:px-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0" title="Compartilhar">
                     <i class="fas fa-share-nodes text-xs"></i>
-                    <span class="hidden sm:inline">Compartilhar</span>
+                    <span class="hidden md:inline">Compartilhar</span>
                 </button>
-                <button type="button" onclick="window.print()" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 font-bold text-xs rounded-xl sm:rounded-2xl border border-slate-200 transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Imprimir">
+                <button type="button" onclick="window.print()" class="h-8 sm:h-9 px-2.5 sm:px-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-95 font-bold text-xs rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0" title="Imprimir">
                     <i class="fas fa-print text-xs"></i>
-                    <span class="hidden sm:inline">Imprimir</span>
+                    <span class="hidden md:inline">Imprimir</span>
                 </button>
             </div>
         </div>
@@ -66,6 +77,9 @@
 
     <!-- Conteúdo do Chaveamento Standalone -->
     <main class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-6 space-y-6 sm:space-y-8">
+        
+        <!-- VIEW 1: TABELAS E JOGOS (PADRÃO) -->
+        <div id="view-tabelas" class="space-y-6 sm:space-y-8">
 
         <!-- SEÇÃO 1: FASE DE GRUPOS E CLASSIFICATÓRIAS -->
         <div class="space-y-6">
@@ -331,6 +345,12 @@
 
             </div>
         </div>
+        </div>
+
+        <!-- VIEW 2: TOURNAMENT BRACKET (DIAGRAMA EM ÁRVORE) -->
+        <div id="view-bracket" class="hidden space-y-6 sm:space-y-8">
+            {% include "core/includes/tournament_bracket.html" %}
+        </div>
 
     </main>
 
@@ -355,5 +375,46 @@
     </footer>
 
     {% include "core/includes/modal_compartilhar.html" %}
+
+    <!-- Script de Alternância entre Visualização de Tabelas e Bracket -->
+    <script>
+        function switchChaveamentoView(view) {
+            const tabelasDiv = document.getElementById('view-tabelas');
+            const bracketDiv = document.getElementById('view-bracket');
+            const btnTabelas = document.getElementById('btn-view-tabelas');
+            const btnBracket = document.getElementById('btn-view-bracket');
+
+            if (!tabelasDiv || !bracketDiv) return;
+
+            if (view === 'bracket') {
+                tabelasDiv.classList.add('hidden');
+                bracketDiv.classList.remove('hidden');
+                
+                btnBracket.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+                btnBracket.classList.remove('text-slate-500');
+                
+                btnTabelas.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+                btnTabelas.classList.add('text-slate-500');
+                window.location.hash = 'bracket';
+            } else {
+                bracketDiv.classList.add('hidden');
+                tabelasDiv.classList.remove('hidden');
+                
+                btnTabelas.classList.add('bg-white', 'text-slate-900', 'shadow-sm');
+                btnTabelas.classList.remove('text-slate-500');
+                
+                btnBracket.classList.remove('bg-white', 'text-slate-900', 'shadow-sm');
+                btnBracket.classList.add('text-slate-500');
+                window.location.hash = 'tabelas';
+            }
+        }
+
+        // Restaura visualização a partir do hash da URL
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.location.hash === '#bracket') {
+                switchChaveamentoView('bracket');
+            }
+        });
+    </script>
 </body>
 </html>
