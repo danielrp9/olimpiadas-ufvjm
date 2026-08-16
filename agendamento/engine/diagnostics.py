@@ -34,6 +34,8 @@ class DiagnosticsFormatter:
                 reasons_text.append("limite de partidas diárias por equipe na modalidade atingido")
             if reason_summary.get("net_sport_grouping", 0) > 0:
                 reasons_text.append("regra de bloco contínuo para modalidades de rede (vôlei) na mesma quadra")
+            if reason_summary.get("net_sport_shift", 0) > 0:
+                reasons_text.append("restrição de turno/período configurada para modalidades de rede (vôlei)")
             if reason_summary.get("time_window", 0) > 0:
                 reasons_text.append("limite de horário de funcionamento do dia excedido")
 

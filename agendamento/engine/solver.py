@@ -27,6 +27,7 @@ class ScheduleSolver:
         default_buffer_minutes: int = 10,
         max_daily_matches_per_team: int = 2,
         group_net_sports: bool = True,
+        net_sport_shift: str = 'auto',
         time_slot_step_minutes: int = 15,
         max_backtrack_nodes: int = 50000
     ):
@@ -38,6 +39,7 @@ class ScheduleSolver:
         self.default_buffer_minutes = default_buffer_minutes
         self.max_daily_matches_per_team = max_daily_matches_per_team
         self.group_net_sports = group_net_sports
+        self.net_sport_shift = net_sport_shift
         self.time_slot_step_minutes = max(5, time_slot_step_minutes)
         self.max_backtrack_nodes = max_backtrack_nodes
 
@@ -223,6 +225,7 @@ class ScheduleSolver:
             'team_rest': 0,
             'max_daily_matches': 0,
             'net_sport_grouping': 0,
+            'net_sport_shift': 0,
             'precedence': 0,
             'time_window': 0
         }
@@ -340,20 +343,49 @@ class ScheduleSolver:
                 if len(existing_team_matches) >= self.max_daily_matches_per_team:
                     return False, 'max_daily_matches'
 
-        # 2. Agrupamento em bloco contínuo de modalidades de rede (ex: Vôlei) na mesma quadra
+        # 2. Agrupamento e restrição de turno de modalidades de rede (ex: Vôlei) na mesma quadra
         res_date_allocs = allocs_by_res_date.get((resource.id, target_date), [])
-        if self.group_net_sports and res_date_allocs:
-            timeline = [(a.start_time, a.match_request.is_net_sport) for a in res_date_allocs]
-            timeline.append((slot_start.time(), match.is_net_sport))
-            timeline.sort(key=lambda item: item[0])
-            
-            transitions = 0
-            for i in range(1, len(timeline)):
-                if timeline[i][1] != timeline[i-1][1]:
-                    transitions += 1
-            
-            if transitions > 1:
-                return False, 'net_sport_grouping'
+        if self.group_net_sports:
+            if match.is_net_sport:
+                noon_cut_start = time(13, 0)
+                noon_cut_end = time(13, 30)
+
+                if self.net_sport_shift == 'manha':
+                    if slot_end.time() > noon_cut_end:
+                        return False, 'net_sport_shift'
+                elif self.net_sport_shift == 'tarde':
+                    if slot_start.time() < noon_cut_start:
+                        return False, 'net_sport_shift'
+                elif self.net_sport_shift == 'auto':
+                    # Em modo automático, limita o bloco contínuo de rede a 1 turno por dia/quadra
+                    net_allocs = [a for a in res_date_allocs if a.match_request.is_net_sport]
+                    if net_allocs:
+                        is_morning_block = any(a.start_time < noon_cut_start for a in net_allocs)
+                        if is_morning_block:
+                            if slot_end.time() > noon_cut_end:
+                                return False, 'net_sport_shift'
+                        else:
+                            if slot_start.time() < noon_cut_start:
+                                return False, 'net_sport_shift'
+
+                        # Limite de duração contínua de 6 horas por dia
+                        all_starts = [datetime.combine(target_date, a.start_time) for a in net_allocs] + [slot_start]
+                        all_ends = [datetime.combine(target_date, a.end_time) for a in net_allocs] + [slot_end]
+                        if (max(all_ends) - min(all_starts)) > timedelta(hours=6):
+                            return False, 'net_sport_shift'
+
+            if res_date_allocs:
+                timeline = [(a.start_time, a.match_request.is_net_sport) for a in res_date_allocs]
+                timeline.append((slot_start.time(), match.is_net_sport))
+                timeline.sort(key=lambda item: item[0])
+                
+                transitions = 0
+                for i in range(1, len(timeline)):
+                    if timeline[i][1] != timeline[i-1][1]:
+                        transitions += 1
+                
+                if transitions > 1:
+                    return False, 'net_sport_grouping'
 
         # 3. Conflito no mesmo Recurso (apenas jogos no mesmo recurso e mesma data)
         for alloc in res_date_allocs:

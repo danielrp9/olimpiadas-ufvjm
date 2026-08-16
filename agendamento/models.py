@@ -29,10 +29,24 @@ class ConfiguracaoGeral(models.Model):
         verbose_name="Máximo de jogos por dia por equipe",
         help_text="Limite de partidas que uma mesma equipe pode disputar no mesmo dia na mesma modalidade para evitar desgaste excessivo"
     )
+    TURNO_REDE_CHOICES = [
+        ('auto', 'Automático (Sistema escolhe o melhor turno - Máx. 1 turno por dia)'),
+        ('manha', 'Somente Manhã (Restringir ao turno matutino)'),
+        ('tarde', 'Somente Tarde / Noite (Restringir ao turno vespertino/noturno)'),
+        ('integral', 'Livre / Integral (Sem limite de turno)'),
+    ]
+
     agrupar_modalidades_rede = models.BooleanField(
         default=True,
         verbose_name="Agrupar Vôlei em bloco contínuo",
         help_text="Garante que jogos de voleibol aconteçam em sequência contínua no mesmo turno/dia para evitar montagens e desmontagens repetidas de rede"
+    )
+    turno_bloco_rede = models.CharField(
+        max_length=20,
+        choices=TURNO_REDE_CHOICES,
+        default='auto',
+        verbose_name="Turno do Bloco de Vôlei/Rede",
+        help_text="Define a restrição de turno para o bloco contínuo de voleibol: Automático (máx. 1 turno por dia), Somente Manhã, Somente Tarde/Noite ou Livre (dia todo)"
     )
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)

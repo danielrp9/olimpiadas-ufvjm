@@ -227,3 +227,52 @@ class ScheduleSolverEngineTests(TestCase):
         # Verifica número de alternâncias de tipo
         transitions = sum(1 for i in range(1, len(types)) if types[i] != types[i-1])
         self.assertLessEqual(transitions, 1, "Vôlei deve acontecer em bloco contínuo na quadra")
+
+    def test_net_sport_shift_morning_restriction(self):
+        """
+        Garante que quando net_sport_shift='manha', os jogos de vôlei ocorram exclusivamente
+        no período matutino (terminando até 13:30).
+        """
+        matches = [
+            MatchRequest(id=1, modality_id=1, modality_name="Voleibol Masc", phase_code="G", time_a_id=1, time_b_id=2, duration_minutes=50, buffer_minutes=10),
+            MatchRequest(id=2, modality_id=1, modality_name="Voleibol Fem", phase_code="G", time_a_id=3, time_b_id=4, duration_minutes=50, buffer_minutes=10),
+            MatchRequest(id=3, modality_id=2, modality_name="Futsal", phase_code="G", time_a_id=5, time_b_id=6, duration_minutes=50, buffer_minutes=10),
+        ]
+        solver = ScheduleSolver(
+            days=[self.d1], # 08:00 às 22:00
+            resources=[self.r1],
+            phase_constraints=[],
+            matches=matches,
+            group_net_sports=True,
+            net_sport_shift='manha'
+        )
+        result = solver.solve()
+        self.assertTrue(result.success)
+
+        for alloc in result.allocations:
+            if alloc.match_request.is_net_sport:
+                self.assertLessEqual(alloc.end_time, time(13, 30))
+
+    def test_net_sport_shift_afternoon_restriction(self):
+        """
+        Garante que quando net_sport_shift='tarde', os jogos de vôlei ocorram exclusivamente
+        a partir das 13:00.
+        """
+        matches = [
+            MatchRequest(id=1, modality_id=1, modality_name="Voleibol Masc", phase_code="G", time_a_id=1, time_b_id=2, duration_minutes=50, buffer_minutes=10),
+            MatchRequest(id=2, modality_id=1, modality_name="Voleibol Fem", phase_code="G", time_a_id=3, time_b_id=4, duration_minutes=50, buffer_minutes=10),
+        ]
+        solver = ScheduleSolver(
+            days=[self.d1], # 08:00 às 22:00
+            resources=[self.r1],
+            phase_constraints=[],
+            matches=matches,
+            group_net_sports=True,
+            net_sport_shift='tarde'
+        )
+        result = solver.solve()
+        self.assertTrue(result.success)
+
+        for alloc in result.allocations:
+            if alloc.match_request.is_net_sport:
+                self.assertGreaterEqual(alloc.start_time, time(13, 0))

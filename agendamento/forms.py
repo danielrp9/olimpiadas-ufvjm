@@ -12,7 +12,8 @@ class ConfiguracaoGeralForm(forms.ModelForm):
         fields = [
             'nome', 'intervalo_padrao_minutos',
             'descanso_minimo_equipe_minutos', 'duracao_padrao_jogo_minutos',
-            'max_jogos_diarios_por_equipe', 'agrupar_modalidades_rede'
+            'max_jogos_diarios_por_equipe', 'agrupar_modalidades_rede',
+            'turno_bloco_rede'
         ]
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm font-medium'}),
@@ -21,6 +22,7 @@ class ConfiguracaoGeralForm(forms.ModelForm):
             'duracao_padrao_jogo_minutos': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm font-medium', 'min': 10}),
             'max_jogos_diarios_por_equipe': forms.NumberInput(attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm font-medium', 'min': 1}),
             'agrupar_modalidades_rede': forms.CheckboxInput(attrs={'class': 'w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300'}),
+            'turno_bloco_rede': forms.Select(attrs={'class': 'w-full px-4 py-2 border border-slate-300 rounded-xl focus:ring-blue-500 focus:border-blue-500 text-sm font-medium bg-white'}),
         }
 
 
