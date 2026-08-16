@@ -17,7 +17,7 @@ class ConfiguracaoGeral(models.Model):
     descanso_minimo_equipe_minutos = models.PositiveIntegerField(
         default=60,
         verbose_name="Descanso mínimo entre jogos da mesma equipe (minutos)",
-        help_text="Tempo mínimo de recuperação entre duas partidas de uma mesma delegação/equipe"
+        help_text="Tempo mínimo de recuperação entre duas partidas de uma mesma equipe na mesma modalidade"
     )
     duracao_padrao_jogo_minutos = models.PositiveIntegerField(
         default=50,
@@ -27,7 +27,7 @@ class ConfiguracaoGeral(models.Model):
     max_jogos_diarios_por_equipe = models.PositiveIntegerField(
         default=2,
         verbose_name="Máximo de jogos por dia por equipe",
-        help_text="Limite de partidas que uma mesma equipe/delegação pode disputar no mesmo dia para evitar desgaste excessivo"
+        help_text="Limite de partidas que uma mesma equipe pode disputar no mesmo dia na mesma modalidade para evitar desgaste excessivo"
     )
     agrupar_modalidades_rede = models.BooleanField(
         default=True,

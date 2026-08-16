@@ -77,11 +77,16 @@ class MatchRequest:
 
     @property
     def teams(self) -> Set[Any]:
+        """
+        Retorna as equipes participantes no contexto de sua modalidade (tupla: time_id, modality_id).
+        Dessa forma, restrições de conflito, descanso e limites diários aplicam-se por time/modalidade,
+        permitindo que a mesma delegação dispute modalidades diferentes simultaneamente ou no mesmo dia.
+        """
         res = set()
         if self.time_a_id is not None:
-            res.add(self.time_a_id)
+            res.add((self.time_a_id, self.modality_id))
         if self.time_b_id is not None:
-            res.add(self.time_b_id)
+            res.add((self.time_b_id, self.modality_id))
         return res
 
     @property

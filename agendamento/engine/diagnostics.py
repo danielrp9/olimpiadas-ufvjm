@@ -25,13 +25,13 @@ class DiagnosticsFormatter:
             if reason_summary.get("resource_busy", 0) > 0:
                 reasons_text.append("conflito/ocupação dos recursos e quadras disponíveis")
             if reason_summary.get("team_conflict", 0) > 0:
-                reasons_text.append("conflito de horário da mesma equipe")
+                reasons_text.append("conflito de horário da mesma equipe na mesma modalidade")
             if reason_summary.get("team_rest", 0) > 0:
-                reasons_text.append("intervalo de descanso obrigatório entre partidas da mesma equipe")
+                reasons_text.append("intervalo de descanso obrigatório entre partidas da mesma equipe na modalidade")
             if reason_summary.get("precedence", 0) > 0:
                 reasons_text.append("jogos classificatórios anteriores necessários ainda não concluídos a tempo")
             if reason_summary.get("max_daily_matches", 0) > 0:
-                reasons_text.append("limite de partidas diárias por equipe atingido para evitar desgaste")
+                reasons_text.append("limite de partidas diárias por equipe na modalidade atingido")
             if reason_summary.get("net_sport_grouping", 0) > 0:
                 reasons_text.append("regra de bloco contínuo para modalidades de rede (vôlei) na mesma quadra")
             if reason_summary.get("time_window", 0) > 0:
@@ -98,11 +98,11 @@ class DiagnosticsFormatter:
         if reason_summary.get("resource_busy", 0) > 0:
             reasons_text.append("esgotamento dos horários das quadras")
         if reason_summary.get("team_conflict", 0) > 0:
-            reasons_text.append("conflito de horários da mesma equipe")
+            reasons_text.append("conflito de horários da mesma equipe na mesma modalidade")
         if reason_summary.get("team_rest", 0) > 0:
-            reasons_text.append("tempo de descanso obrigatório entre jogos da mesma equipe")
+            reasons_text.append("tempo de descanso obrigatório entre jogos da mesma equipe na modalidade")
         if reason_summary.get("max_daily_matches", 0) > 0:
-            reasons_text.append("limite de partidas diárias por equipe atingido")
+            reasons_text.append("limite de partidas diárias por equipe na modalidade atingido")
         if reason_summary.get("net_sport_grouping", 0) > 0:
             reasons_text.append("agrupamento em bloco contínuo de vôlei")
         if reason_summary.get("precedence", 0) > 0:

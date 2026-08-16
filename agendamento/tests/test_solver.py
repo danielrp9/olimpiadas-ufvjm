@@ -88,12 +88,12 @@ class ScheduleSolverEngineTests(TestCase):
 
     def test_team_concurrency_and_rest_interval(self):
         """
-        Garante que uma mesma equipe não jogue simultaneamente e respeite o tempo de descanso mínimo.
+        Garante que uma mesma equipe na mesma modalidade não jogue simultaneamente e respeite o tempo de descanso mínimo.
         """
-        # Time 10 jogando duas partidas
+        # Time 10 jogando duas partidas da mesma modalidade (Futsal)
         matches = [
             MatchRequest(id=1, modality_id=1, modality_name="Futsal", phase_code="G", time_a_id=10, time_b_id=20, duration_minutes=60, buffer_minutes=0),
-            MatchRequest(id=2, modality_id=2, modality_name="Basquete", phase_code="G", time_a_id=10, time_b_id=30, duration_minutes=60, buffer_minutes=0),
+            MatchRequest(id=2, modality_id=1, modality_name="Futsal", phase_code="G", time_a_id=10, time_b_id=30, duration_minutes=60, buffer_minutes=0),
         ]
         # 1 dia, 2 quadras disponíveis ao mesmo tempo (08:00 às 18:00)
         solver = ScheduleSolver(
@@ -117,6 +117,33 @@ class ScheduleSolverEngineTests(TestCase):
             self.assertGreaterEqual((dt2_start - dt1_end).total_seconds() / 60, 60)
         else:
             self.assertGreaterEqual((dt1_start - dt2_end).total_seconds() / 60, 60)
+
+    def test_delegation_multi_modality_concurrency_allowed(self):
+        """
+        Garante que a mesma delegação pode disputar modalidades diferentes simultaneamente
+        em quadras diferentes (já que são times/atletas distintos).
+        """
+        # Delegação 10 jogando Futsal e Basquete no mesmo horário
+        matches = [
+            MatchRequest(id=1, modality_id=1, modality_name="Futsal", phase_code="G", time_a_id=10, time_b_id=20, duration_minutes=60, buffer_minutes=0),
+            MatchRequest(id=2, modality_id=2, modality_name="Basquete", phase_code="G", time_a_id=10, time_b_id=30, duration_minutes=60, buffer_minutes=0),
+        ]
+        solver = ScheduleSolver(
+            days=[self.d1],
+            resources=[self.r1, self.r2],
+            phase_constraints=[],
+            matches=matches,
+            min_team_rest_minutes=60
+        )
+        result = solver.solve()
+        self.assertTrue(result.success)
+        self.assertEqual(len(result.allocations), 2)
+        
+        # Podem começar no mesmo horário inicial porque são modalidades diferentes
+        alloc_map = {a.match_id: a for a in result.allocations}
+        self.assertEqual(alloc_map[1].start_time, time(8, 0))
+        self.assertEqual(alloc_map[2].start_time, time(8, 0))
+        self.assertNotEqual(alloc_map[1].resource_id, alloc_map[2].resource_id)
 
     def test_phase_dependency_precedence(self):
         """
