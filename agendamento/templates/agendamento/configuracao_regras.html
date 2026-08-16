@@ -23,71 +23,91 @@
 
     <form method="post" class="space-y-6">
         {% csrf_token %}
+        {{ form.nome.as_hidden }}
 
-        <!-- Card Parâmetros Gerais -->
+        <!-- Card Parâmetros Gerais Compacto e Organizado -->
         <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-5">
-            <div class="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-                <span class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+            <div class="flex items-center gap-2.5 pb-3 border-b border-slate-100">
+                <span class="p-2 bg-indigo-50 text-indigo-600 rounded-xl shrink-0">
                     <i class="fas fa-globe text-xs"></i>
                 </span>
-                <h2 class="text-sm font-bold text-slate-800">Parâmetros Gerais</h2>
+                <div>
+                    <h2 class="text-sm font-bold text-slate-800">Parâmetros Gerais</h2>
+                    <p class="text-xs text-slate-500">Regras globais aplicadas em todas as partidas.</p>
+                </div>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Descanso da Equipe *
-                    </label>
-                    <div class="relative">
-                        {{ form.descanso_minimo_equipe_minutos }}
-                        <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">min</span>
+            <!-- Grid de 4 Parâmetros em Mini-Cards Compactos -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- Descanso da Equipe -->
+                <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-800 block">Descanso da Equipe</span>
+                        <span class="text-[11px] text-slate-500 block mt-0.5">Recuperação entre partidas</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Intervalo mínimo entre dois jogos da mesma equipe.</p>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="descanso_minimo_equipe_minutos" id="id_descanso_minimo_equipe_minutos"
+                            value="{{ form.descanso_minimo_equipe_minutos.value }}" min="0" required
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-blue-500 focus:border-blue-500 text-center">
+                        <span class="text-xs font-bold text-slate-500 shrink-0">min</span>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Máx. Jogos/Dia (Equipe) *
-                    </label>
-                    <div class="relative">
-                        {{ form.max_jogos_diarios_por_equipe }}
-                        <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">jogos</span>
+                <!-- Máx. Jogos/Dia por Equipe -->
+                <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-800 block">Máx. Jogos / Dia</span>
+                        <span class="text-[11px] text-slate-500 block mt-0.5">Limite diário por equipe</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Limite diário por equipe para prevenir desgaste físico.</p>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="max_jogos_diarios_por_equipe" id="id_max_jogos_diarios_por_equipe"
+                            value="{{ form.max_jogos_diarios_por_equipe.value }}" min="1" required
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-blue-500 focus:border-blue-500 text-center">
+                        <span class="text-xs font-bold text-slate-500 shrink-0">jogos</span>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Troca de Quadra *
-                    </label>
-                    <div class="relative">
-                        {{ form.intervalo_padrao_minutos }}
-                        <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">min</span>
+                <!-- Troca de Quadra -->
+                <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-800 block">Troca de Quadra</span>
+                        <span class="text-[11px] text-slate-500 block mt-0.5">Aquecimento e transição</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Tempo de aquecimento e saída na mesma quadra.</p>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="intervalo_padrao_minutos" id="id_intervalo_padrao_minutos"
+                            value="{{ form.intervalo_padrao_minutos.value }}" min="0" required
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-blue-500 focus:border-blue-500 text-center">
+                        <span class="text-xs font-bold text-slate-500 shrink-0">min</span>
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Duração Padrão *
-                    </label>
-                    <div class="relative">
-                        {{ form.duracao_padrao_jogo_minutos }}
-                        <span class="absolute right-3.5 top-2.5 text-xs font-bold text-slate-500">min</span>
+                <!-- Duração Padrão -->
+                <div class="p-4 rounded-2xl bg-slate-50/80 border border-slate-200/80 flex flex-col justify-between space-y-3">
+                    <div>
+                        <span class="text-xs font-bold text-slate-800 block">Duração Padrão</span>
+                        <span class="text-[11px] text-slate-500 block mt-0.5">Se esporte não tiver tempo</span>
                     </div>
-                    <p class="text-[11px] text-slate-500 mt-1.5">Tempo estimado se a modalidade não tiver duração.</p>
+                    <div class="flex items-center gap-2">
+                        <input type="number" name="duracao_padrao_jogo_minutos" id="id_duracao_padrao_jogo_minutos"
+                            value="{{ form.duracao_padrao_jogo_minutos.value }}" min="10" required
+                            class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-bold text-slate-800 focus:ring-blue-500 focus:border-blue-500 text-center">
+                        <span class="text-xs font-bold text-slate-500 shrink-0">min</span>
+                    </div>
                 </div>
             </div>
 
             <!-- Otimização de Troca de Rede / Vôlei -->
-            <div class="pt-4 border-t border-slate-100 flex items-start gap-3">
-                {{ form.agrupar_modalidades_rede }}
-                <div>
-                    <label for="{{ form.agrupar_modalidades_rede.id_for_label }}" class="text-xs font-bold text-slate-800 cursor-pointer block">
+            <div class="p-4 rounded-2xl bg-slate-50/60 border border-slate-200/80 flex items-start gap-3">
+                <input type="checkbox" name="agrupar_modalidades_rede" id="id_agrupar_modalidades_rede"
+                    {% if form.agrupar_modalidades_rede.value %}checked{% endif %}
+                    class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 border-slate-300 mt-0.5 cursor-pointer">
+                <div class="text-xs">
+                    <label for="id_agrupar_modalidades_rede" class="font-bold text-slate-800 cursor-pointer block">
                         Agrupar Vôlei em bloco contínuo (no mesmo turno ou dia)
                     </label>
-                    <p class="text-[11px] text-slate-500 mt-0.5">
-                        Quando ativado, os jogos de vôlei acontecem em sequência contínua na quadra para que a rede seja montada e desmontada apenas uma vez.
+                    <p class="text-slate-500 mt-0.5 text-[11px]">
+                        Evita montagens e desmontagens repetidas de rede na mesma quadra compartilhada.
                     </p>
                 </div>
             </div>
