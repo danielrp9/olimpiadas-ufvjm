@@ -70,15 +70,23 @@ class ScheduleSolver:
         # 2. Ordenação das variáveis (Partidas)
         sorted_matches = self._order_matches(self.matches)
 
-        # 3. Execução da Busca com Backtracking
+        # 3. Execução da Busca com Backtracking Otimizado
         allocations: List[AllocatedSlot] = []
         failure_diagnostic_data: Dict[Any, Dict[str, Any]] = {}
         nodes_count = [0]
+
+        # Índices de estado para verificação O(1) de conflitos
+        alloc_map: Dict[Any, AllocatedSlot] = {}
+        allocs_by_res_date: Dict[Tuple[Any, date], List[AllocatedSlot]] = {}
+        allocs_by_team_date: Dict[Tuple[Any, date], List[AllocatedSlot]] = {}
 
         success = self._backtrack(
             index=0,
             matches=sorted_matches,
             current_allocations=allocations,
+            alloc_map=alloc_map,
+            allocs_by_res_date=allocs_by_res_date,
+            allocs_by_team_date=allocs_by_team_date,
             failure_data=failure_diagnostic_data,
             nodes_count=nodes_count
         )
@@ -170,6 +178,9 @@ class ScheduleSolver:
         index: int,
         matches: List[MatchRequest],
         current_allocations: List[AllocatedSlot],
+        alloc_map: Dict[Any, AllocatedSlot],
+        allocs_by_res_date: Dict[Tuple[Any, date], List[AllocatedSlot]],
+        allocs_by_team_date: Dict[Tuple[Any, date], List[AllocatedSlot]],
         failure_data: Dict[Any, Dict[str, Any]],
         nodes_count: List[int]
     ) -> bool:
@@ -221,7 +232,7 @@ class ScheduleSolver:
         # Gera combinações de slots válidos
         for day in candidate_days:
             # Verifica precedência temporal com partidas antecessoras já alocadas
-            min_start_datetime = self._get_min_start_from_dependencies(match, current_allocations)
+            min_start_datetime = self._get_min_start_from_dependencies(match, alloc_map)
             if min_start_datetime and min_start_datetime.date() > day.date:
                 reasons_counter['precedence'] += 1
                 continue
@@ -243,14 +254,15 @@ class ScheduleSolver:
                 slot_end_dt = current_time_dt + match_duration
 
                 for resource in compatible_resources:
-                    # Checagem de conflitos
+                    # Checagem de conflitos ultra-rápida via índices
                     is_valid, reason = self._is_slot_valid(
                         match=match,
                         slot_start=slot_start_dt,
                         slot_end=slot_end_dt,
                         resource=resource,
                         buffer_duration=buffer_duration,
-                        current_allocations=current_allocations
+                        allocs_by_res_date=allocs_by_res_date,
+                        allocs_by_team_date=allocs_by_team_date
                     )
 
                     if not is_valid:
@@ -268,14 +280,28 @@ class ScheduleSolver:
                         resource_id=resource.id,
                         resource_name=resource.name
                     )
+                    
+                    # Atualiza estruturas de estado
                     current_allocations.append(allocated_slot)
+                    alloc_map[match.id] = allocated_slot
+                    allocs_by_res_date.setdefault((resource.id, day.date), []).append(allocated_slot)
+                    for t in match.teams:
+                        allocs_by_team_date.setdefault((t, day.date), []).append(allocated_slot)
 
                     # Passo recursivo
-                    if self._backtrack(index + 1, matches, current_allocations, failure_data, nodes_count):
+                    if self._backtrack(
+                        index + 1, matches, current_allocations,
+                        alloc_map, allocs_by_res_date, allocs_by_team_date,
+                        failure_data, nodes_count
+                    ):
                         return True
 
                     # Desfaz alocação
                     current_allocations.pop()
+                    del alloc_map[match.id]
+                    allocs_by_res_date[(resource.id, day.date)].pop()
+                    for t in match.teams:
+                        allocs_by_team_date[(t, day.date)].pop()
 
                 current_time_dt += slot_step
 
@@ -292,76 +318,64 @@ class ScheduleSolver:
         slot_end: datetime,
         resource: ResourceConfig,
         buffer_duration: timedelta,
-        current_allocations: List[AllocatedSlot]
+        allocs_by_res_date: Dict[Tuple[Any, date], List[AllocatedSlot]],
+        allocs_by_team_date: Dict[Tuple[Any, date], List[AllocatedSlot]]
     ) -> Tuple[bool, str]:
         """
-        Verifica se o slot atende a todas as restrições:
-        - Recurso não ocupado (considerando buffer)
-        - Times não jogando simultaneamente
-        - Intervalo de descanso respeitado para os times
-        - Limite de partidas por dia por equipe respeitado
-        - Bloco contínuo de modalidades de rede (vôlei) respeitado na mesma quadra
-        - Precedência de dependências respeitada
+        Verifica se o slot atende a todas as restrições com complexidade O(1)/O(k).
         """
+        target_date = slot_start.date()
         rest_duration = timedelta(minutes=self.min_team_rest_minutes)
         match_teams = match.teams
 
-        # 1. Limite de partidas por dia por equipe (Prevenção de desgaste excessivo)
+        # 1. Limite de partidas por dia por equipe
         if self.max_daily_matches_per_team > 0:
-            target_date = slot_start.date()
             for t_id in match_teams:
-                daily_matches = sum(
-                    1 for alloc in current_allocations
-                    if alloc.date == target_date and t_id in alloc.match_request.teams
-                )
-                if daily_matches >= self.max_daily_matches_per_team:
+                existing_team_matches = allocs_by_team_date.get((t_id, target_date), [])
+                if len(existing_team_matches) >= self.max_daily_matches_per_team:
                     return False, 'max_daily_matches'
 
         # 2. Agrupamento em bloco contínuo de modalidades de rede (ex: Vôlei) na mesma quadra
-        if self.group_net_sports:
-            res_date_allocs = [
-                alloc for alloc in current_allocations
-                if alloc.resource_id == resource.id and alloc.date == slot_start.date()
-            ]
-            if res_date_allocs:
-                timeline = [(a.start_time, a.match_request.is_net_sport) for a in res_date_allocs]
-                timeline.append((slot_start.time(), match.is_net_sport))
-                timeline.sort(key=lambda item: item[0])
-                
-                transitions = 0
-                for i in range(1, len(timeline)):
-                    if timeline[i][1] != timeline[i-1][1]:
-                        transitions += 1
-                
-                # Mais de 1 transição causaria montagem/desmontagem de rede repetida no mesmo dia
-                if transitions > 1:
-                    return False, 'net_sport_grouping'
+        res_date_allocs = allocs_by_res_date.get((resource.id, target_date), [])
+        if self.group_net_sports and res_date_allocs:
+            timeline = [(a.start_time, a.match_request.is_net_sport) for a in res_date_allocs]
+            timeline.append((slot_start.time(), match.is_net_sport))
+            timeline.sort(key=lambda item: item[0])
+            
+            transitions = 0
+            for i in range(1, len(timeline)):
+                if timeline[i][1] != timeline[i-1][1]:
+                    transitions += 1
+            
+            if transitions > 1:
+                return False, 'net_sport_grouping'
 
-        for alloc in current_allocations:
+        # 3. Conflito no mesmo Recurso (apenas jogos no mesmo recurso e mesma data)
+        for alloc in res_date_allocs:
             alloc_start = alloc.start_datetime
             alloc_end = alloc.end_datetime
             alloc_buffer = timedelta(minutes=alloc.match_request.buffer_minutes)
 
-            # 3. Conflito no mesmo Recurso
-            if alloc.resource_id == resource.id:
-                # Ocupação do recurso inclui a duração da partida + buffer
-                res_busy_start = alloc_start
-                res_busy_end = alloc_end + alloc_buffer
-                cand_busy_start = slot_start
-                cand_busy_end = slot_end + buffer_duration
+            res_busy_start = alloc_start
+            res_busy_end = alloc_end + alloc_buffer
+            cand_busy_start = slot_start
+            cand_busy_end = slot_end + buffer_duration
 
-                if (cand_busy_start < res_busy_end) and (cand_busy_end > res_busy_start):
-                    return False, 'resource_busy'
+            if (cand_busy_start < res_busy_end) and (cand_busy_end > res_busy_start):
+                return False, 'resource_busy'
 
-            # 4. Conflito de Equipes (mesma equipe jogando ao mesmo tempo)
-            alloc_teams = alloc.match_request.teams
-            common_teams = match_teams.intersection(alloc_teams)
-            if common_teams:
+        # 4. Conflito e descanso de Equipes (apenas jogos dos times na mesma data)
+        for t_id in match_teams:
+            team_allocs = allocs_by_team_date.get((t_id, target_date), [])
+            for alloc in team_allocs:
+                alloc_start = alloc.start_datetime
+                alloc_end = alloc.end_datetime
+
                 # Checagem de sobreposição exata
                 if (slot_start < alloc_end) and (slot_end > alloc_start):
                     return False, 'team_conflict'
 
-                # 5. Intervalo de Descanso da Equipe
+                # Intervalo de Descanso da Equipe
                 if slot_start >= alloc_end and (slot_start - alloc_end) < rest_duration:
                     return False, 'team_rest'
 
@@ -373,16 +387,15 @@ class ScheduleSolver:
     def _get_min_start_from_dependencies(
         self,
         match: MatchRequest,
-        current_allocations: List[AllocatedSlot]
+        alloc_map: Dict[Any, AllocatedSlot]
     ) -> Optional[datetime]:
         """
         Retorna o datetime mínimo em que a partida pode começar baseado
-        nas partidas antecessoras que ela depende.
+        nas partidas antecessoras que ela depende (lookup O(1)).
         """
         if not match.depends_on_match_ids:
             return None
 
-        alloc_map = {a.match_id: a for a in current_allocations}
         min_start = None
         rest_delta = timedelta(minutes=self.min_team_rest_minutes)
 
