@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
@@ -304,6 +305,14 @@ def gerar_cronograma_view(request):
             messages.success(request, f"Cronograma '{cenario.titulo}' gerado com sucesso!")
         else:
             messages.warning(request, "O cronograma foi processado, mas encontrou restrições que precisam de ajuste.")
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                'status': cenario.status,
+                'cenario_id': cenario.pk,
+                'redirect_url': reverse('agendamento_cenario_detalhe', args=[cenario.pk])
+            })
 
         return redirect('agendamento_cenario_detalhe', pk=cenario.pk)
 
