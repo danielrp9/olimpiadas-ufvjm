@@ -38,11 +38,17 @@ def dashboard_agendamento_view(request):
     recursos_count = configuracao.recursos.filter(ativo=True).count()
     fases_count = configuracao.restricoes_fases.count()
     
-    partidas_pendentes = PartidaChaveamento.objects.filter(finalizada=False).exclude(chaveamento__modalidade__nome__icontains='atletismo').count()
+    partidas_pendentes = PartidaChaveamento.objects.filter(finalizada=False).exclude(
+        chaveamento__modalidade__nome__icontains='atletismo'
+    ).exclude(
+        fase='EXTERNO_ELIMINATORIA'
+    ).count()
     cenarios = configuracao.cenarios.all()[:8]
 
     # Verifica se existem partidas com horários já atribuídos ou simulações geradas
-    tem_jogos_gerados = PartidaChaveamento.objects.filter(finalizada=False).filter(
+    tem_jogos_gerados = PartidaChaveamento.objects.filter(finalizada=False).exclude(
+        fase='EXTERNO_ELIMINATORIA'
+    ).filter(
         Q(data_partida__isnull=False) | Q(horario_partida__isnull=False)
     ).exists() or configuracao.cenarios.exists()
 
@@ -288,7 +294,11 @@ def gerar_cronograma_view(request):
     """
     configuracao = obter_ou_criar_configuracao()
     modalidades = Modalidade.objects.exclude(nome__icontains='atletismo').order_by('nome', 'genero')
-    total_partidas = PartidaChaveamento.objects.filter(finalizada=False).exclude(chaveamento__modalidade__nome__icontains='atletismo').count()
+    total_partidas = PartidaChaveamento.objects.filter(finalizada=False).exclude(
+        chaveamento__modalidade__nome__icontains='atletismo'
+    ).exclude(
+        fase='EXTERNO_ELIMINATORIA'
+    ).count()
 
     if request.method == 'POST':
         titulo = request.POST.get('titulo', '').strip()

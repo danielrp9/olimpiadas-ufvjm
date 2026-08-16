@@ -15,9 +15,8 @@ from .engine import (
 )
 
 
-# Mapeamento de ordem lógica de fases padrão do sistema
+# Mapeamento de ordem lógica de fases padrão do sistema (apenas jogos em Diamantina)
 FASE_ORDEM_PADRAO = {
-    'EXTERNO_ELIMINATORIA': 1,
     'GRUPO_LOCAL': 1,
     'QUARTAS_LOCAL': 2,
     'SEMI_LOCAL': 3,
@@ -29,7 +28,6 @@ FASE_ORDEM_PADRAO = {
 }
 
 FASE_NOMES_PADRAO = {
-    'EXTERNO_ELIMINATORIA': 'Eliminatória Externa',
     'GRUPO_LOCAL': 'Fase de Grupos',
     'QUARTAS_LOCAL': 'Quartas de Final (Diamantina)',
     'SEMI_LOCAL': 'Semifinal (Diamantina)',
@@ -128,9 +126,11 @@ def extrair_dados_para_motor(
         for p in configuracao.parametros_modalidades.all()
     }
 
-    # 5. Partidas do Chaveamento
+    # 5. Partidas do Chaveamento (Apenas jogos em Diamantina, excluindo eliminatórias de campi externos)
     partidas_qs = PartidaChaveamento.objects.filter(finalizada=False).exclude(
         chaveamento__modalidade__nome__icontains='atletismo'
+    ).exclude(
+        fase='EXTERNO_ELIMINATORIA'
     ).select_related(
         'chaveamento__modalidade', 'time_a', 'time_b', 'jogo', 'proxima_partida', 'partida_perdedor_destino'
     ).order_by('id')
@@ -306,12 +306,16 @@ def aplicar_cenario_ao_oficial(cenario: CenarioExecucao) -> Tuple[int, List[str]
 
 def resetar_todos_horarios(configuracao: Optional[ConfiguracaoGeral] = None) -> int:
     """
-    Remove as datas, horários e quadras/locais de todas as partidas não finalizadas no sistema,
+    Remove as datas, horários e quadras/locais de todas as partidas não finalizadas em Diamantina,
     permitindo redefinir e reexecutar a grade de agendamento do zero com segurança.
     """
     count = 0
     with transaction.atomic():
-        partidas_qs = PartidaChaveamento.objects.filter(finalizada=False).select_related('jogo')
+        partidas_qs = PartidaChaveamento.objects.filter(
+            finalizada=False
+        ).exclude(
+            fase='EXTERNO_ELIMINATORIA'
+        ).select_related('jogo')
         for p in partidas_qs:
             teve_alteracao = False
             if p.data_partida is not None or p.horario_partida is not None:
