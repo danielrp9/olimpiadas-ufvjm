@@ -78,16 +78,16 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <button type="button" onclick="ajustarZoomBracket(-0.1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-95" title="Diminuir Zoom">
+            <button type="button" onclick="ajustarZoomBracket(-0.1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-95 cursor-pointer" title="Diminuir Zoom">
                 <i class="fas fa-search-minus"></i>
             </button>
-            <button type="button" onclick="ajustarZoomBracket(0)" class="px-2.5 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95" title="Resetar Zoom">
+            <button type="button" onclick="ajustarZoomBracket(0)" class="px-2.5 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition active:scale-95 cursor-pointer" title="Resetar Zoom">
                 <span id="zoom-bracket-label">100%</span>
             </button>
-            <button type="button" onclick="ajustarZoomBracket(0.1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-95" title="Aumentar Zoom">
+            <button type="button" onclick="ajustarZoomBracket(0.1)" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center text-xs font-bold transition active:scale-95 cursor-pointer" title="Aumentar Zoom">
                 <i class="fas fa-search-plus"></i>
             </button>
-            <button type="button" onclick="window.print()" class="h-8 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition active:scale-95 flex items-center gap-1.5 ml-2" title="Imprimir / Salvar PDF">
+            <button type="button" onclick="window.print()" class="h-8 px-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition active:scale-95 flex items-center gap-1.5 ml-2 cursor-pointer" title="Imprimir / Salvar PDF">
                 <i class="fas fa-print text-xs"></i>
                 <span class="hidden sm:inline">Imprimir</span>
             </button>
@@ -125,7 +125,7 @@
                         <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if tg.classificado %}bg-emerald-50 text-emerald-900 font-bold border border-emerald-200/80{% else %}bg-slate-50 text-slate-700{% endif %}">
                             <div class="flex items-center gap-2 truncate pr-2">
                                 <span class="text-[10px] font-black {% if tg.classificado %}text-emerald-700{% else %}text-slate-400{% endif %}">{{ forloop.counter }}º</span>
-                                <span class="truncate">{{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}</span>
+                                <span class="truncate">{% if tg.delegacao %}{{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}{% else %}A definir{% endif %}</span>
                             </div>
                             <div class="flex items-center gap-2 shrink-0 font-mono">
                                 <span class="text-[11px] font-black {% if tg.classificado %}text-emerald-800{% else %}text-slate-600{% endif %}">{{ tg.pontos }} pts</span>
@@ -168,14 +168,14 @@
                         <div class="space-y-1.5">
                             <!-- Time A -->
                             <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_a and p.time_a %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
-                                <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                                <span class="truncate pr-2">{% if p.time_a %}{{ p.time_a.nome_delegacao|default:p.time_a.email }}{% else %}A definir{% endif %}</span>
                                 <span class="font-mono text-sm font-black {% if p.vencedor == p.time_a and p.time_a %}text-emerald-700{% else %}text-slate-700{% endif %}">
                                     {{ p.placar_a|default_if_none:"-" }}
                                 </span>
                             </div>
                             <!-- Time B -->
                             <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_b and p.time_b %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
-                                <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                                <span class="truncate pr-2">{% if p.time_b %}{{ p.time_b.nome_delegacao|default:p.time_b.email }}{% else %}A definir{% endif %}</span>
                                 <span class="font-mono text-sm font-black {% if p.vencedor == p.time_b and p.time_b %}text-emerald-700{% else %}text-slate-700{% endif %}">
                                     {{ p.placar_b|default_if_none:"-" }}
                                 </span>
@@ -216,14 +216,14 @@
                         <div class="space-y-1.5">
                             <!-- Time A -->
                             <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_a and p.time_a %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
-                                <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                                <span class="truncate pr-2">{% if p.time_a %}{{ p.time_a.nome_delegacao|default:p.time_a.email }}{% else %}A definir{% endif %}</span>
                                 <span class="font-mono text-sm font-black {% if p.vencedor == p.time_a and p.time_a %}text-emerald-700{% else %}text-slate-700{% endif %}">
                                     {{ p.placar_a|default_if_none:"-" }}
                                 </span>
                             </div>
                             <!-- Time B -->
                             <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-emerald-50 text-emerald-900 font-black border border-emerald-200{% elif p.perdedor == p.time_b and p.time_b %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
-                                <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                                <span class="truncate pr-2">{% if p.time_b %}{{ p.time_b.nome_delegacao|default:p.time_b.email }}{% else %}A definir{% endif %}</span>
                                 <span class="font-mono text-sm font-black {% if p.vencedor == p.time_b and p.time_b %}text-emerald-700{% else %}text-slate-700{% endif %}">
                                     {{ p.placar_b|default_if_none:"-" }}
                                 </span>
@@ -264,14 +264,14 @@
                         <div class="space-y-2">
                             <!-- Time A -->
                             <div class="flex items-center justify-between px-3 py-2 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-emerald-100 text-emerald-950 font-black border border-emerald-300{% elif p.perdedor == p.time_a and p.time_a %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-900 font-semibold{% endif %}">
-                                <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                                <span class="truncate pr-2">{% if p.time_a %}{{ p.time_a.nome_delegacao|default:p.time_a.email }}{% else %}A definir{% endif %}</span>
                                 <span class="font-mono text-base font-black {% if p.vencedor == p.time_a and p.time_a %}text-emerald-700{% else %}text-slate-700{% endif %}">
                                     {{ p.placar_a|default_if_none:"-" }}
                                 </span>
                             </div>
                             <!-- Time B -->
                             <div class="flex items-center justify-between px-3 py-2 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-emerald-100 text-emerald-950 font-black border border-emerald-300{% elif p.perdedor == p.time_b and p.time_b %}bg-slate-50 text-slate-400 line-through{% else %}bg-slate-50 text-slate-900 font-semibold{% endif %}">
-                                <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                                <span class="truncate pr-2">{% if p.time_b %}{{ p.time_b.nome_delegacao|default:p.time_b.email }}{% else %}A definir{% endif %}</span>
                                 <span class="font-mono text-base font-black {% if p.vencedor == p.time_b and p.time_b %}text-emerald-700{% else %}text-slate-700{% endif %}">
                                     {{ p.placar_b|default_if_none:"-" }}
                                 </span>
@@ -319,7 +319,7 @@
                                 {% if p.vencedor == p.time_a and p.time_a %}
                                 <i class="fas fa-medal text-amber-950 text-sm"></i>
                                 {% endif %}
-                                <span class="truncate">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"Finalista 1" }}</span>
+                                <span class="truncate">{% if p.time_a %}{{ p.time_a.nome_delegacao|default:p.time_a.email }}{% else %}Finalista 1{% endif %}</span>
                             </div>
                             <span class="font-mono text-lg font-black">{{ p.placar_a|default_if_none:"-" }}</span>
                         </div>
@@ -330,7 +330,7 @@
                                 {% if p.vencedor == p.time_b and p.time_b %}
                                 <i class="fas fa-medal text-amber-950 text-sm"></i>
                                 {% endif %}
-                                <span class="truncate">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"Finalista 2" }}</span>
+                                <span class="truncate">{% if p.time_b %}{{ p.time_b.nome_delegacao|default:p.time_b.email }}{% else %}Finalista 2{% endif %}</span>
                             </div>
                             <span class="font-mono text-lg font-black">{{ p.placar_b|default_if_none:"-" }}</span>
                         </div>
@@ -367,12 +367,12 @@
                     <div class="space-y-1.5">
                         <!-- Time A Bronze -->
                         <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_a and p.time_a %}bg-amber-100 text-amber-950 font-black border border-amber-400{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
-                            <span class="truncate pr-2">{{ p.time_a.nome_delegacao|default:p.time_a.email|default:"A definir" }}</span>
+                            <span class="truncate pr-2">{% if p.time_a %}{{ p.time_a.nome_delegacao|default:p.time_a.email }}{% else %}A definir{% endif %}</span>
                             <span class="font-mono text-sm font-black">{{ p.placar_a|default_if_none:"-" }}</span>
                         </div>
                         <!-- Time B Bronze -->
                         <div class="flex items-center justify-between px-2.5 py-1.5 rounded-xl text-xs {% if p.vencedor == p.time_b and p.time_b %}bg-amber-100 text-amber-950 font-black border border-amber-400{% else %}bg-slate-50 text-slate-800 font-semibold{% endif %}">
-                            <span class="truncate pr-2">{{ p.time_b.nome_delegacao|default:p.time_b.email|default:"A definir" }}</span>
+                            <span class="truncate pr-2">{% if p.time_b %}{{ p.time_b.nome_delegacao|default:p.time_b.email }}{% else %}A definir{% endif %}</span>
                             <span class="font-mono text-sm font-black">{{ p.placar_b|default_if_none:"-" }}</span>
                         </div>
                     </div>
