@@ -432,13 +432,15 @@ def relatorio_auditoria_view(request):
 
     # Detalhes das regras aplicadas pelo algoritmo
     regras = {
-        'descanso_minimo_minutos': configuracao.descanso_minimo_equipe_minutos,
-        'intervalo_jogos_minutos': configuracao.intervalo_jogos_minutos,
-        'turno_bloco_rede': configuracao.turno_bloco_rede,
-        'agrupar_modalidades_rede': configuracao.agrupar_modalidades_rede,
-        'total_recursos_ativos': configuracao.recursos.filter(ativo=True).count(),
-        'total_datas_ativas': configuracao.datas.filter(ativo=True).count(),
-        'total_restricoes_fase': configuracao.restricoes_fases.count(),
+        'descanso_minimo_minutos': getattr(configuracao, 'descanso_minimo_equipe_minutos', 60),
+        'intervalo_jogos_minutos': getattr(configuracao, 'intervalo_padrao_minutos', 10),
+        'duracao_padrao_minutos': getattr(configuracao, 'duracao_padrao_jogo_minutos', 50),
+        'max_jogos_diarios': getattr(configuracao, 'max_jogos_diarios_por_equipe', 2),
+        'turno_bloco_rede': getattr(configuracao, 'turno_bloco_rede', 'auto'),
+        'agrupar_modalidades_rede': getattr(configuracao, 'agrupar_modalidades_rede', True),
+        'total_recursos_ativos': configuracao.recursos.filter(ativo=True).count() if hasattr(configuracao, 'recursos') else 0,
+        'total_datas_ativas': configuracao.datas.filter(ativo=True).count() if hasattr(configuracao, 'datas') else 0,
+        'total_restricoes_fase': configuracao.restricoes_fases.count() if hasattr(configuracao, 'restricoes_fases') else 0,
     }
 
     context = {
