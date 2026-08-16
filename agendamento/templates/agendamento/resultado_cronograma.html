@@ -101,11 +101,11 @@
         </div>
         <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Dias Utilizados</span>
-            <p class="text-2xl font-black text-slate-900 mt-1">{{ cenario.metricas.dates_used_count|default:datas_agrupadas|length }} <span class="text-xs font-semibold text-slate-500">dias</span></p>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ total_dias }} <span class="text-xs font-semibold text-slate-500">dias</span></p>
         </div>
         <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Locais em Uso</span>
-            <p class="text-2xl font-black text-slate-900 mt-1">{{ cenario.metricas.resources_used_count|default:"-" }} <span class="text-xs font-semibold text-slate-500">quadras</span></p>
+            <p class="text-2xl font-black text-slate-900 mt-1">{{ total_locais }} <span class="text-xs font-semibold text-slate-500">quadras</span></p>
         </div>
         <div class="bg-white border border-slate-200/80 rounded-3xl p-5 shadow-sm">
             <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500 block">Situação</span>

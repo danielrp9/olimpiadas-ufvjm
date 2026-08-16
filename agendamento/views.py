@@ -344,17 +344,25 @@ def cenario_detalhe_view(request, pk):
 
     # Agrupamento por Data
     datas_agrupadas = {}
+    locais_usados = set()
     for a in alocacoes:
         d_key = a.data_alocada
         if d_key not in datas_agrupadas:
             datas_agrupadas[d_key] = []
         datas_agrupadas[d_key].append(a)
+        if a.recurso_nome:
+            locais_usados.add(a.recurso_nome)
+
+    total_dias = len(datas_agrupadas)
+    total_locais = len(locais_usados) or (cenario.metricas.get('resources_used_count') if isinstance(cenario.metricas, dict) else 0)
 
     context = {
         'cenario': cenario,
         'alocacoes': alocacoes,
         'datas_agrupadas': datas_agrupadas,
         'total_alocacoes': alocacoes.count(),
+        'total_dias': total_dias,
+        'total_locais': total_locais,
     }
     return render(request, 'agendamento/resultado_cronograma.html', context)
 
