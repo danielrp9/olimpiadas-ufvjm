@@ -13,9 +13,18 @@ from core.models import (
 User = get_user_model()
 
 
+def _is_queimada(modalidade):
+    if not modalidade:
+        return False
+    nome = (modalidade.nome or '').lower()
+    return 'queimada' in nome or 'dodgeball' in nome
+
+
 def _is_formato_3_grupos_melhor_segundo(modalidade):
     if not modalidade:
         return False
+    if _is_queimada(modalidade):
+        return True
     formato = getattr(modalidade, 'formato_chaveamento', None) or 'padrao'
     return formato == 'formato_3_grupos_melhor_segundo'
 
