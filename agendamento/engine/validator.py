@@ -145,15 +145,25 @@ class ScheduleValidator:
                 if total_duration_available < total_duration_req:
                     dates_str = ", ".join(d.strftime('%d/%m/%Y') for d in pc.allowed_dates)
                     p_name = pc.phase_name or phase_code
+                    deficit_minutes = total_duration_req - total_duration_available
+                    avg_slot = (total_duration_req // len(p_matches)) if p_matches else 50
+                    deficit_games = max(1, -(-deficit_minutes // max(1, avg_slot)))
+                    
+                    req_hours = total_duration_req / 60
+                    avail_hours = total_duration_available / 60
+                    def_hours = deficit_minutes / 60
+
                     issues.append(DiagnosticIssue(
                         code="THEORETICAL_CAPACITY_INSUFFICIENT",
                         level="ERROR",
                         phase_code=phase_code,
                         phase_name=p_name,
-                        message=f"Não foi possível acomodar todas as partidas da fase '{p_name}' na(s) data(s) definida(s).",
+                        message=f"Capacidade insuficiente: {deficit_games} partida(s) da fase '{p_name}' não puderam ser alocadas por falta de horários na(s) data(s) permitida(s).",
                         details=(
-                            f"A fase '{p_name}' possui {len(p_matches)} partida(s) totalizando {total_duration_req} minutos de demanda, "
-                            f"mas a(s) data(s) permitida(s) ({dates_str}) oferecem capacidade máxima de apenas {total_duration_available} minutos nos recursos compatíveis."
+                            f"📊 Balanço da Fase '{p_name}':\n"
+                            f"• Partidas na fase: {len(p_matches)} jogos ({req_hours:.1f}h / {total_duration_req} min de demanda)\n"
+                            f"• Capacidade ofertada em {dates_str}: {avail_hours:.1f}h ({total_duration_available} min nas quadras compatíveis)\n"
+                            f"• Déficit de horários: Faltam aproximadamente {deficit_games} horários de jogos (cerca de {def_hours:.1f} horas de tempo em quadra)."
                         ),
                         recommendation="Selecione uma data adicional para esta fase, adicione recursos/quadras compatíveis ou amplie a janela de horários de funcionamento."
                     ))

@@ -53,27 +53,39 @@
         </div>
     </div>
 
-    <!-- Painel de Diagnóstico (se houver impedimentos) -->
+    <!-- Painel de Diagnóstico (se houver impedimentos ou déficit de horários) -->
     {% if cenario.mensagem_diagnostico and cenario.status == 'inviavel' %}
-    <div class="bg-white border border-rose-200 rounded-3xl p-6 shadow-sm space-y-4">
-        <div class="flex items-start gap-3.5">
+    <div class="bg-white border border-rose-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
+        <div class="flex items-start gap-4">
             <span class="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-2xl shrink-0">
-                <i class="fas fa-exclamation-triangle text-base"></i>
+                <i class="fas fa-exclamation-triangle text-lg"></i>
             </span>
-            <div class="space-y-2 flex-grow">
-                <h3 class="font-bold text-base text-rose-900">Diagnóstico de Inviabilidade</h3>
-                <div class="text-xs text-slate-800 whitespace-pre-line font-medium leading-relaxed bg-rose-50/50 p-4 rounded-2xl border border-rose-100">
+            <div class="space-y-3 flex-grow">
+                <div>
+                    <h3 class="font-bold text-base text-rose-900">Diagnóstico de Capacidade e Inviabilidade</h3>
+                    <p class="text-xs text-rose-700 mt-0.5">O sistema analisou todos os horários e identificou o déficit necessário para comportar os jogos.</p>
+                </div>
+
+                <div class="text-xs text-slate-800 whitespace-pre-line font-medium leading-relaxed bg-slate-50/90 p-5 rounded-2xl border border-slate-200/80 shadow-2xs">
                     {{ cenario.mensagem_diagnostico }}
                 </div>
+
                 <div class="pt-2 flex items-center gap-3 flex-wrap">
-                    <a href="{% url 'agendamento_fases' %}" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
-                        <i class="fas fa-layer-group mr-1"></i> Revisar Fases
+                    <a href="{% url 'agendamento_datas' %}" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-calendar-plus text-xs"></i>
+                        <span>Adicionar Datas</span>
                     </a>
-                    <a href="{% url 'agendamento_datas' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition">
-                        <i class="fas fa-calendar-alt mr-1"></i> Ajustar Datas
+                    <a href="{% url 'agendamento_recursos' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-map-marker-alt text-xs"></i>
+                        <span>Cadastrar Quadras</span>
                     </a>
-                    <a href="{% url 'agendamento_recursos' %}" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition">
-                        <i class="fas fa-map-pin mr-1"></i> Cadastrar Quadras
+                    <a href="{% url 'agendamento_fases' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-layer-group text-xs"></i>
+                        <span>Revisar Fases</span>
+                    </a>
+                    <a href="{% url 'agendamento_regras' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
+                        <i class="fas fa-sliders-h text-xs"></i>
+                        <span>Ajustar Tempos e Regras</span>
                     </a>
                 </div>
             </div>

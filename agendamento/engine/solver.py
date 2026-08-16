@@ -100,33 +100,38 @@ class ScheduleSolver:
                 metrics=metrics
             )
         else:
-            # 4. Formatação de Diagnóstico Explicativo em caso de Inviabilidade
+            # 4. Formatação de Diagnóstico Explicativo com Dimensionamento Real de Horários Faltantes
             issues = list(pre_issues)
-            unallocated_match = None
-            for m in sorted_matches:
-                if not any(a.match_id == m.id for a in allocations):
-                    unallocated_match = m
-                    break
+            allocated_ids = {a.match_id for a in allocations}
+            unallocated_matches = [m for m in sorted_matches if m.id not in allocated_ids]
 
-            if unallocated_match:
-                pc = self.phase_constraints.get(unallocated_match.phase_code)
-                diag_info = failure_diagnostic_data.get(unallocated_match.id, {})
-                reasons = diag_info.get('reasons', {})
-                attempted_dates = diag_info.get('attempted_dates', [])
-                
-                issue = DiagnosticsFormatter.format_unallocated_match_issue(
-                    match=unallocated_match,
-                    phase_constraint=pc,
-                    attempted_dates=attempted_dates,
-                    reason_summary=reasons
+            if unallocated_matches:
+                # Agrega motivos de falha de todas as partidas não alocadas
+                aggregated_reasons: Dict[str, int] = {}
+                for m in unallocated_matches:
+                    diag_info = failure_diagnostic_data.get(m.id, {})
+                    for r_key, r_val in diag_info.get('reasons', {}).items():
+                        aggregated_reasons[r_key] = aggregated_reasons.get(r_key, 0) + r_val
+
+                # Gera o informativo global detalhado
+                global_issue = DiagnosticsFormatter.format_global_deficit_issue(
+                    all_matches=sorted_matches,
+                    unallocated_matches=unallocated_matches,
+                    days=self.days,
+                    resources=self.resources,
+                    reason_summary=aggregated_reasons
                 )
-                issues.append(issue)
+                issues.append(global_issue)
 
             return EngineResult(
                 success=False,
                 allocations=[],
                 issues=issues,
-                metrics={'nodes_explored': nodes_count[0]}
+                metrics={
+                    'nodes_explored': nodes_count[0],
+                    'total_matches': len(sorted_matches),
+                    'unallocated_matches_count': len(unallocated_matches)
+                }
             )
 
     def _order_matches(self, matches: List[MatchRequest]) -> List[MatchRequest]:
