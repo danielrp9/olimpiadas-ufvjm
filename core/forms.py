@@ -32,10 +32,11 @@ class AtletaForm(forms.ModelForm):
 class ModalidadeForm(forms.ModelForm):
     class Meta:
         model = Modalidade
-        fields = ['nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
+        fields = ['nome', 'genero', 'formato_chaveamento', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'genero': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'formato_chaveamento': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'limite_minimo_jogadores': forms.NumberInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'limite_maximo_jogadores': forms.NumberInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'inscricoes_abertas': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600'}),

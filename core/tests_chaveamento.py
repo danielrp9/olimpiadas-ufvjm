@@ -566,6 +566,284 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertContains(res, "Fase de Grupos e Classificatórias por Campus")
         self.assertContains(res, self.futsal.nome)
 
+    def test_formato_3_grupos_melhor_segundo_geracao(self):
+        """
+        Testa a geração do formato específico (9 equipes em Diamantina, 3 grupos de 3,
+        1 classificado direto por grupo + melhor 2º geral = 4 equipes, sem Quartas).
+        """
+        modalidade_queimada = Modalidade.objects.create(
+            nome="Queimada Mista",
+            genero="X",
+            formato_chaveamento="formato_3_grupos_melhor_segundo",
+            limite_minimo_jogadores=6,
+            limite_maximo_jogadores=12
+        )
+        teams = [
+            self._create_delegation_for_mod(f"queimada_dia_{i}@ufvjm.edu.br", f"Time Queimada {i}", self.campus_dia, modalidade_queimada)
+            for i in range(1, 10)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(modalidade_queimada)
+
+        # 1. 3 grupos locais de 3 equipes cada
+        grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        self.assertEqual(len(grupos_locais), 3)
+        for g in grupos_locais:
+            self.assertEqual(g.times.count(), 3)
+            self.assertEqual(g.vagas_classificacao, 1) # 1 vaga direta por grupo
+            self.assertEqual(g.partidas.count(), 3) # Turno único: 3 partidas
+
+        # 2. NÃO deve haver Quartas de Final
+        fases = set(chaveamento.partidas.values_list('fase', flat=True))
+        self.assertNotIn('QUARTAS_LOCAL', fases)
+
+        # 3. Deve haver Semifinais locais (2 partidas), Final Local (1) e Disputa de 3º Lugar (1)
+        self.assertEqual(chaveamento.partidas.filter(fase='SEMI_LOCAL').count(), 2)
+        self.assertEqual(chaveamento.partidas.filter(fase='FINAL_LOCAL').count(), 1)
+        self.assertEqual(chaveamento.partidas.filter(fase='DISPUTA_3_LOCAL').count(), 1)
+
+    def test_formato_3_grupos_melhor_segundo_criterios_desempate(self):
+        """
+        Testa os critérios de desempate para escolha do melhor 2º colocado geral:
+        1. maior número de vitórias;
+        2. maior saldo de jogadores;
+        3. maior número de jogadores adversários eliminados;
+        4. menor número de jogadores da própria equipe eliminados;
+        5. menor número de penalidades;
+        6. sorteio.
+        """
+        from core.models import CartaoPartida
+        modalidade_teste = Modalidade.objects.create(
+            nome="Modalidade Especial",
+            genero="M",
+            formato_chaveamento="formato_3_grupos_melhor_segundo",
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=10
+        )
+        teams = [
+            self._create_delegation_for_mod(f"esp_dia_{i}@ufvjm.edu.br", f"Time Esp {i}", self.campus_dia, modalidade_teste)
+            for i in range(1, 10)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(modalidade_teste)
+        grupos = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        g_a, g_b, g_c = grupos[0], grupos[1], grupos[2]
+
+        t_a = list(g_a.times.all().select_related('delegacao'))
+        t_b = list(g_b.times.all().select_related('delegacao'))
+        t_c = list(g_c.times.all().select_related('delegacao'))
+
+        # Grupo A:
+        # t_a[0] vence t_a[1] (10 x 0) e t_a[2] (10 x 0) -> 1º colocado (6 pts, 2V)
+        # t_a[1] vence t_a[2] (10 x 5) -> 2º colocado (3 pts, 1V, 10 pro, 15 contra, saldo -5)
+        p_a = list(g_a.partidas.all())
+        for p in p_a:
+            if {p.time_a, p.time_b} == {t_a[0].delegacao, t_a[1].delegacao}:
+                if p.time_a == t_a[0].delegacao: registrar_resultado_partida(p, 10, 0)
+                else: registrar_resultado_partida(p, 0, 10)
+            elif {p.time_a, p.time_b} == {t_a[0].delegacao, t_a[2].delegacao}:
+                if p.time_a == t_a[0].delegacao: registrar_resultado_partida(p, 10, 0)
+                else: registrar_resultado_partida(p, 0, 10)
+            elif {p.time_a, p.time_b} == {t_a[1].delegacao, t_a[2].delegacao}:
+                if p.time_a == t_a[1].delegacao: registrar_resultado_partida(p, 10, 5)
+                else: registrar_resultado_partida(p, 5, 10)
+
+        # Grupo B:
+        # t_b[0] vence t_b[1] (10 x 8) e t_b[2] (10 x 0) -> 1º colocado (6 pts, 2V)
+        # t_b[1] vence t_b[2] (10 x 2) -> 2º colocado (3 pts, 1V, 18 pro, 12 contra, saldo +6)
+        p_b = list(g_b.partidas.all())
+        for p in p_b:
+            if {p.time_a, p.time_b} == {t_b[0].delegacao, t_b[1].delegacao}:
+                if p.time_a == t_b[0].delegacao: registrar_resultado_partida(p, 10, 8)
+                else: registrar_resultado_partida(p, 8, 10)
+            elif {p.time_a, p.time_b} == {t_b[0].delegacao, t_b[2].delegacao}:
+                if p.time_a == t_b[0].delegacao: registrar_resultado_partida(p, 10, 0)
+                else: registrar_resultado_partida(p, 0, 10)
+            elif {p.time_a, p.time_b} == {t_b[1].delegacao, t_b[2].delegacao}:
+                if p.time_a == t_b[1].delegacao: registrar_resultado_partida(p, 10, 2)
+                else: registrar_resultado_partida(p, 2, 10)
+
+        # Grupo C:
+        # t_c[0] vence t_c[1] (10 x 5) e t_c[2] (10 x 0) -> 1º colocado (6 pts, 2V)
+        # t_c[1] vence t_c[2] (10 x 4) -> 2º colocado (3 pts, 1V, 15 pro, 14 contra, saldo +1)
+        p_c = list(g_c.partidas.all())
+        for p in p_c:
+            if {p.time_a, p.time_b} == {t_c[0].delegacao, t_c[1].delegacao}:
+                if p.time_a == t_c[0].delegacao: registrar_resultado_partida(p, 10, 5)
+                else: registrar_resultado_partida(p, 5, 10)
+            elif {p.time_a, p.time_b} == {t_c[0].delegacao, t_c[2].delegacao}:
+                if p.time_a == t_c[0].delegacao: registrar_resultado_partida(p, 10, 0)
+                else: registrar_resultado_partida(p, 0, 10)
+            elif {p.time_a, p.time_b} == {t_c[1].delegacao, t_c[2].delegacao}:
+                if p.time_a == t_c[1].delegacao: registrar_resultado_partida(p, 10, 4)
+                else: registrar_resultado_partida(p, 4, 10)
+
+        chaveamento.refresh_from_db()
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        # Valida que o 2º do Grupo B (t_b[1]) foi o escolhido como melhor 2º (maior saldo: +6 vs +1 e -5)
+        self.assertTrue(TimeGrupo.objects.get(grupo=g_b, delegacao=t_b[1].delegacao).classificado)
+        self.assertFalse(TimeGrupo.objects.get(grupo=g_a, delegacao=t_a[1].delegacao).classificado)
+        self.assertFalse(TimeGrupo.objects.get(grupo=g_c, delegacao=t_c[1].delegacao).classificado)
+
+        # Semifinais geradas sem repetir confrontos de grupos:
+        # t_b[1] veio do Grupo B. Portanto, t_b[1] NÃO pode enfrentar o vencedor do Grupo B (t_b[0]).
+        # Deve enfrentar o vencedor do Grupo A (t_a[0]) ou Grupo C (t_c[0]).
+        semis = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        semi1_teams = {semis[0].time_a, semis[0].time_b}
+        semi2_teams = {semis[1].time_a, semis[1].time_b}
+
+        # Verifica que nenhum confronto repete jogo do mesmo grupo
+        self.assertNotIn({t_b[0].delegacao, t_b[1].delegacao}, [semi1_teams, semi2_teams])
+        self.assertNotIn({t_a[0].delegacao, t_a[1].delegacao}, [semi1_teams, semi2_teams])
+        self.assertNotIn({t_c[0].delegacao, t_c[1].delegacao}, [semi1_teams, semi2_teams])
+
+    def test_formato_3_grupos_desempate_por_penalidades(self):
+        """
+        Testa desempate do melhor 2º colocado por menor número de penalidades (cartões).
+        """
+        from core.models import CartaoPartida
+        mod_penalidade = Modalidade.objects.create(
+            nome="Queimada Penalidades",
+            genero="X",
+            formato_chaveamento="formato_3_grupos_melhor_segundo",
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=10
+        )
+        teams = [
+            self._create_delegation_for_mod(f"pen_dia_{i}@ufvjm.edu.br", f"Time Pen {i}", self.campus_dia, mod_penalidade)
+            for i in range(1, 10)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod_penalidade)
+        grupos = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        g_a, g_b, g_c = grupos[0], grupos[1], grupos[2]
+
+        t_a = list(g_a.times.all().select_related('delegacao'))
+        t_b = list(g_b.times.all().select_related('delegacao'))
+        t_c = list(g_c.times.all().select_related('delegacao'))
+
+        # Faz todos os 2º colocados empatarem perfeitamente em vitórias (1), saldo (0), pro (10), contra (10)
+        for g, times in [(g_a, t_a), (g_b, t_b), (g_c, t_c)]:
+            for p in g.partidas.all():
+                if {p.time_a, p.time_b} == {times[0].delegacao, times[1].delegacao}:
+                    if p.time_a == times[0].delegacao: registrar_resultado_partida(p, 10, 0)
+                    else: registrar_resultado_partida(p, 0, 10)
+                elif {p.time_a, p.time_b} == {times[0].delegacao, times[2].delegacao}:
+                    if p.time_a == times[0].delegacao: registrar_resultado_partida(p, 10, 0)
+                    else: registrar_resultado_partida(p, 0, 10)
+                elif {p.time_a, p.time_b} == {times[1].delegacao, times[2].delegacao}:
+                    if p.time_a == times[1].delegacao: registrar_resultado_partida(p, 10, 0)
+                    else: registrar_resultado_partida(p, 0, 10)
+
+        # Adiciona 2 cartões/penalidades para o 2º do grupo A e 1 para o 2º do grupo B, 0 para o grupo C
+        p_ga = g_a.partidas.first()
+        p_gb = g_b.partidas.first()
+        atleta_a = t_a[1].delegacao.atletas.first()
+        atleta_b = t_b[1].delegacao.atletas.first()
+
+        CartaoPartida.objects.create(partida=p_ga, atleta=atleta_a, delegacao=t_a[1].delegacao, modalidade=mod_penalidade, tipo='AMARELO')
+        CartaoPartida.objects.create(partida=p_ga, atleta=atleta_a, delegacao=t_a[1].delegacao, modalidade=mod_penalidade, tipo='AMARELO')
+        CartaoPartida.objects.create(partida=p_gb, atleta=atleta_b, delegacao=t_b[1].delegacao, modalidade=mod_penalidade, tipo='AMARELO')
+
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        # O 2º do Grupo C (0 cartões) deve ser o classificado como melhor 2º
+        self.assertTrue(TimeGrupo.objects.get(grupo=g_c, delegacao=t_c[1].delegacao).classificado)
+        self.assertFalse(TimeGrupo.objects.get(grupo=g_a, delegacao=t_a[1].delegacao).classificado)
+        self.assertFalse(TimeGrupo.objects.get(grupo=g_b, delegacao=t_b[1].delegacao).classificado)
+
+    def test_modalidade_padrao_com_9_times_preserva_quartas(self):
+        """
+        Garante que modalidades com formato='padrao' que tenham 9 equipes continuem utilizando
+        a regra histórica (gerando Quartas de Final e 6 classificados locais).
+        """
+        mod_padrao_9 = Modalidade.objects.create(
+            nome="Vôlei Padrão 9",
+            genero="M",
+            formato_chaveamento="padrao",
+            limite_minimo_jogadores=6,
+            limite_maximo_jogadores=12
+        )
+        teams = [
+            self._create_delegation_for_mod(f"vol_dia_{i}@ufvjm.edu.br", f"Time Vol {i}", self.campus_dia, mod_padrao_9)
+            for i in range(1, 10)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod_padrao_9)
+        fases = set(chaveamento.partidas.values_list('fase', flat=True))
+        # Modalidade padrão com 9 times DEVE gerar QUARTAS_LOCAL
+        self.assertIn('QUARTAS_LOCAL', fases)
+
+    def test_formato_3_grupos_fluxo_mata_mata_e_repescagem(self):
+        """
+        Valida que no formato 3 grupos de 3:
+        1. Vencedores das Semifinais avançam para a Final Local (FINAL_LOCAL).
+        2. Perdedores das Semifinais vão para a disputa de 3º Lugar (DISPUTA_3_LOCAL).
+        3. O registro de placar nas fases finais define o campeão e o 3º colocado.
+        """
+        modalidade_queimada = Modalidade.objects.create(
+            nome="Queimada Mata Mata",
+            genero="X",
+            formato_chaveamento="formato_3_grupos_melhor_segundo",
+            limite_minimo_jogadores=6,
+            limite_maximo_jogadores=12
+        )
+        teams = [
+            self._create_delegation_for_mod(f"qm_dia_{i}@ufvjm.edu.br", f"Time QM {i}", self.campus_dia, modalidade_queimada)
+            for i in range(1, 10)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(modalidade_queimada)
+        grupos = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+
+        # Finaliza jogos da fase de grupos com vitórias simples
+        for g in grupos:
+            partidas = list(g.partidas.all())
+            for p in partidas:
+                registrar_resultado_partida(p, 10, 5)
+
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        # Semifinais estão preenchidas
+        semis = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        self.assertEqual(len(semis), 2)
+        s1, s2 = semis[0], semis[1]
+        self.assertIsNotNone(s1.time_a)
+        self.assertIsNotNone(s1.time_b)
+        self.assertIsNotNone(s2.time_a)
+        self.assertIsNotNone(s2.time_b)
+
+        # Executa Semifinal 1 (time_a vence)
+        registrar_resultado_partida(s1, 15, 10)
+        # Executa Semifinal 2 (time_a vence)
+        registrar_resultado_partida(s2, 12, 8)
+
+        final_local = chaveamento.partidas.filter(fase='FINAL_LOCAL').first()
+        disputa_3 = chaveamento.partidas.filter(fase='DISPUTA_3_LOCAL').first()
+
+        final_local.refresh_from_db()
+        disputa_3.refresh_from_db()
+
+        # Vencedores das semis estão na Final
+        self.assertEqual(final_local.time_a, s1.time_a)
+        self.assertEqual(final_local.time_b, s2.time_a)
+
+        # Perdedores das semis estão na Disputa de 3º Lugar
+        self.assertEqual(disputa_3.time_a, s1.time_b)
+        self.assertEqual(disputa_3.time_b, s2.time_b)
+
+        # Executa Final e Disputa de 3º Lugar
+        registrar_resultado_partida(final_local, 20, 18)
+        registrar_resultado_partida(disputa_3, 14, 12)
+
+        final_local.refresh_from_db()
+        disputa_3.refresh_from_db()
+
+        self.assertEqual(final_local.vencedor, s1.time_a)
+        self.assertEqual(final_local.perdedor, s2.time_a)
+        self.assertEqual(disputa_3.vencedor, s1.time_b)
+        self.assertEqual(disputa_3.perdedor, s2.time_b)
+
+
 
 
 

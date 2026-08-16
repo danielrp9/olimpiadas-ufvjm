@@ -72,8 +72,19 @@ class Modalidade(models.Model):
         ('F', 'Feminino'),
         ('X', 'Misto'),
     ]
+    FORMATO_CHAVEAMENTO_CHOICES = [
+        ('padrao', 'Padrão (Fase de Grupos + Mata-Mata Geral)'),
+        ('formato_3_grupos_melhor_segundo', '3 Grupos de 3 (Melhor 2º Colocado Geral para Semifinais)'),
+    ]
     nome = models.CharField(max_length=100)
     genero = models.CharField(max_length=1, choices=GENERO_MODALIDADE_CHOICES, default='M', verbose_name="Gênero da Categoria")
+    formato_chaveamento = models.CharField(
+        max_length=50,
+        choices=FORMATO_CHAVEAMENTO_CHOICES,
+        default='padrao',
+        verbose_name="Formato de Chaveamento",
+        help_text="Configuração do formato de chaveamento para a modalidade."
+    )
     limite_minimo_jogadores = models.PositiveIntegerField(default=1)
     limite_maximo_jogadores = models.PositiveIntegerField(default=20)
     inscricoes_abertas = models.BooleanField(default=True)

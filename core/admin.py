@@ -20,9 +20,9 @@ class AtletaAdmin(admin.ModelAdmin):
 
 @admin.register(Modalidade)
 class ModalidadeAdmin(admin.ModelAdmin):
-    list_display = ('nome', 'genero', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas')
+    list_display = ('nome', 'genero', 'formato_chaveamento', 'limite_minimo_jogadores', 'limite_maximo_jogadores', 'inscricoes_abertas')
     list_editable = ('inscricoes_abertas',)
-    list_filter = ('genero', 'inscricoes_abertas')
+    list_filter = ('genero', 'formato_chaveamento', 'inscricoes_abertas')
 
 @admin.register(Jogo)
 class JogoAdmin(admin.ModelAdmin):

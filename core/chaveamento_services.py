@@ -7,10 +7,110 @@ from django.contrib.auth import get_user_model
 from core.models import (
     Modalidade, Campus, Jogo,
     ChaveamentoModalidade, GrupoChaveamento, TimeGrupo, PartidaChaveamento,
-    InscricaoModalidade, Atleta
+    InscricaoModalidade, Atleta, CartaoPartida
 )
 
 User = get_user_model()
+
+
+def _is_formato_3_grupos_melhor_segundo(modalidade):
+    if not modalidade:
+        return False
+    formato = getattr(modalidade, 'formato_chaveamento', None) or 'padrao'
+    return formato == 'formato_3_grupos_melhor_segundo'
+
+
+def _calcular_melhor_segundo_colocado(segundos_colocados, modalidade):
+    """
+    Calcula o melhor 2º colocado geral entre os 3 grupos com base nas regras exclusivas deste formato:
+    1. maior número de vitórias;
+    2. maior saldo de jogadores (saldo_gols);
+    3. maior número de jogadores adversários eliminados (gols_pro);
+    4. menor número de jogadores da própria equipe eliminados (gols_contra);
+    5. menor número de penalidades (cartões);
+    6. sorteio.
+    """
+    if not segundos_colocados:
+        return None
+
+    ranking = []
+    for tg in segundos_colocados:
+        penalidades = CartaoPartida.objects.filter(
+            modalidade=modalidade,
+            delegacao=tg.delegacao,
+            partida__fase='GRUPO_LOCAL'
+        ).count()
+
+        sorteio_val = random.random()
+        ranking.append((
+            tg,
+            -tg.vitorias,
+            -tg.saldo_gols,
+            -tg.gols_pro,
+            tg.gols_contra,
+            penalidades,
+            sorteio_val
+        ))
+
+    ranking.sort(key=lambda item: (item[1], item[2], item[3], item[4], item[5], item[6]))
+    return ranking[0][0]
+
+
+def _emparelhar_semifinais_3_grupos(vencedores_grupos, best_segundo, partidas_grupo):
+    """
+    Define os confrontos de Semifinal para o formato 3 grupos:
+    - Evita repetir confrontos da fase de grupos;
+    - O melhor 2º enfrenta um vencedor de grupo diferente do seu;
+    - Os outros dois vencedores de grupo se enfrentam;
+    - Somente quando não existir outra combinação válida será permitido repetir confronto da fase de grupos.
+    """
+    confrontos_grupo_set = set()
+    for p in partidas_grupo:
+        if p.time_a_id and p.time_b_id:
+            confrontos_grupo_set.add((min(p.time_a_id, p.time_b_id), max(p.time_a_id, p.time_b_id)))
+
+    def count_repeats(t1, t2, t3, t4):
+        rep = 0
+        if (min(t1.id, t2.id), max(t1.id, t2.id)) in confrontos_grupo_set:
+            rep += 1
+        if (min(t3.id, t4.id), max(t3.id, t4.id)) in confrontos_grupo_set:
+            rep += 1
+        return rep
+
+    best_2nd_del = best_segundo.delegacao
+    w_same = [w for w in vencedores_grupos if w.grupo_id == best_segundo.grupo_id]
+    w_diff = [w for w in vencedores_grupos if w.grupo_id != best_segundo.grupo_id]
+
+    if w_same and len(w_diff) == 2:
+        # Opção 1: w_diff[0] x best_2nd E w_same[0] x w_diff[1]
+        t1, t2 = w_diff[0].delegacao, best_2nd_del
+        t3, t4 = w_same[0].delegacao, w_diff[1].delegacao
+        if count_repeats(t1, t2, t3, t4) == 0:
+            return (t1, t2), (t3, t4)
+
+        # Opção 2: w_diff[1] x best_2nd E w_same[0] x w_diff[0]
+        t1, t2 = w_diff[1].delegacao, best_2nd_del
+        t3, t4 = w_same[0].delegacao, w_diff[0].delegacao
+        if count_repeats(t1, t2, t3, t4) == 0:
+            return (t1, t2), (t3, t4)
+
+    # Fallback caso não seja possível evitar repetições
+    todos_vencedores = [w.delegacao for w in vencedores_grupos]
+    melhor_par = None
+    min_rep = 999
+    for w in todos_vencedores:
+        outros = [t for t in todos_vencedores if t != w]
+        if len(outros) >= 2:
+            rep = count_repeats(w, best_2nd_del, outros[0], outros[1])
+            if rep < min_rep:
+                min_rep = rep
+                melhor_par = ((w, best_2nd_del), (outros[0], outros[1]))
+
+    if melhor_par:
+        return melhor_par[0], melhor_par[1]
+
+    dels = [w.delegacao for w in vencedores_grupos] + [best_2nd_del]
+    return (dels[0], dels[1]), (dels[2], dels[3])
 
 
 def _is_handebol_feminino(modalidade):
@@ -354,7 +454,11 @@ def gerar_chaveamento_modalidade(modalidade):
     # -------------------------------------------------------------
     # 4. Estrutura Completa de Mata-Mata Gerada Imediatamente
     # -------------------------------------------------------------
-    if n_diamantina == 1:
+    is_f3g = _is_formato_3_grupos_melhor_segundo(modalidade) and n_diamantina == 9
+    if is_f3g:
+        num_vagas_local = 4
+        classificados_local = [None] * 4
+    elif n_diamantina == 1:
         classificados_local = [diamantina[0]]
     else:
         num_vagas_local = sum(g.vagas_classificacao for g in chaveamento.grupos.filter(tipo='grupo_local'))
@@ -377,6 +481,7 @@ def _construir_fase_grupos_diamantina(chaveamento, teams, campus_diamantina):
     """
     n = len(teams)
     is_excecao2 = _is_excecao_tenis_mesa_fem(chaveamento.modalidade, n, chaveamento.vagas_externas)
+    is_f3g = _is_formato_3_grupos_melhor_segundo(chaveamento.modalidade) and n == 9
 
     # Randomiza times para distribuição justa
     shuffled_teams = list(teams)
@@ -386,7 +491,9 @@ def _construir_fase_grupos_diamantina(chaveamento, teams, campus_diamantina):
     # Desejamos grupos de tamanho 3 ou 4.
     grupos_sizes = []
 
-    if is_excecao2:
+    if is_f3g:
+        grupos_sizes = [3, 3, 3]
+    elif is_excecao2:
         grupos_sizes = [4, 3]
     elif n <= 2:
         grupos_sizes = [n]
@@ -432,8 +539,11 @@ def _construir_fase_grupos_diamantina(chaveamento, teams, campus_diamantina):
         letra_code += 1
 
         # Regra de classificação:
+        # Formato 3 Grupos de 3 (Melhor 2º Colocado Geral): 1 vaga direta por grupo
+        if is_f3g:
+            vagas = 1
         # Exceção 2 (Tênis de Mesa Feminino 7 Diamantina + 2 Externos): 2 vagas por grupo
-        if is_excecao2:
+        elif is_excecao2:
             vagas = 2
         elif size == 4:
             vagas = 3
@@ -629,6 +739,96 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     """
     for g in chaveamento.grupos.all():
         atualizar_tabela_grupo(g)
+
+    is_f3g = _is_formato_3_grupos_melhor_segundo(chaveamento.modalidade) and chaveamento.grupos.filter(tipo='grupo_local').count() == 3
+
+    if is_f3g:
+        grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        grupos_externos = list(chaveamento.grupos.filter(tipo='eliminatoria_ext').order_by('nome'))
+
+        todos_locais_concluidos = all(
+            (not g.partidas.filter(finalizada=False).exists()) if g.partidas.exists() else True
+            for g in grupos_locais
+        )
+
+        vencedores_grupos = []
+        segundos_colocados = []
+        classificados_externos = []
+
+        for g in grupos_locais:
+            times_ordenados = list(g.times.order_by('-pontos', '-vitorias', '-saldo_gols', '-gols_pro'))
+            if todos_locais_concluidos and times_ordenados:
+                vencedor = times_ordenados[0]
+                vencedor.classificado = True
+                vencedor.save()
+                vencedores_grupos.append(vencedor)
+
+                if len(times_ordenados) > 1:
+                    segundo = times_ordenados[1]
+                    segundo.classificado = False
+                    segundos_colocados.append(segundo)
+
+                if len(times_ordenados) > 2:
+                    times_ordenados[2].classificado = False
+                    times_ordenados[2].save()
+            else:
+                for tg in times_ordenados:
+                    tg.classificado = False
+                    tg.save()
+
+        # Determina o melhor 2º colocado geral
+        best_segundo = None
+        if todos_locais_concluidos and segundos_colocados:
+            best_segundo = _calcular_melhor_segundo_colocado(segundos_colocados, chaveamento.modalidade)
+            for s in segundos_colocados:
+                s.classificado = (best_segundo is not None and s.id == best_segundo.id)
+                s.save()
+
+        # Atualiza classificados dos grupos externos
+        for g in grupos_externos:
+            has_matches = g.partidas.exists()
+            grupo_concluido = (not g.partidas.filter(finalizada=False).exists()) if has_matches else True
+            times_ordenados = list(g.times.order_by('-pontos', '-vitorias', '-saldo_gols', '-gols_pro'))
+            vagas = g.vagas_classificacao
+            for idx, tg in enumerate(times_ordenados):
+                if grupo_concluido and idx < vagas:
+                    tg.classificado = True
+                    classificados_externos.append(tg.delegacao)
+                else:
+                    tg.classificado = False
+                tg.save()
+
+        classificados_externos = list(dict.fromkeys(classificados_externos))
+
+        # Preenche semifinais locais
+        semis_local = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        if todos_locais_concluidos and len(vencedores_grupos) == 3 and best_segundo and len(semis_local) >= 2:
+            (semi1_ta, semi1_tb), (semi2_ta, semi2_tb) = _emparelhar_semifinais_3_grupos(
+                vencedores_grupos, best_segundo, chaveamento.partidas.filter(fase='GRUPO_LOCAL')
+            )
+            semis_local[0].time_a = semi1_ta
+            semis_local[0].time_b = semi1_tb
+            semis_local[0].save()
+            _sincronizar_jogo_partida(semis_local[0], "Semifinal 1 (Diamantina)")
+
+            semis_local[1].time_a = semi2_ta
+            semis_local[1].time_b = semi2_tb
+            semis_local[1].save()
+            _sincronizar_jogo_partida(semis_local[1], "Semifinal 2 (Diamantina)")
+
+        # Preenche semifinais gerais com classificados externos se aplicável
+        semis_geral = list(chaveamento.partidas.filter(fase='SEMI_GERAL').order_by('id'))
+        if semis_geral:
+            if len(semis_geral) >= 1:
+                semis_geral[0].time_b = classificados_externos[0] if len(classificados_externos) >= 1 else None
+                semis_geral[0].save()
+                _sincronizar_jogo_partida(semis_geral[0], "Semifinal Geral 1")
+            if len(semis_geral) >= 2:
+                semis_geral[1].time_b = classificados_externos[1] if len(classificados_externos) >= 2 else None
+                semis_geral[1].save()
+                _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
+
+        return
 
     classificados_diamantina = []
     classificados_externos = []
