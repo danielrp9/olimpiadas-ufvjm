@@ -42,7 +42,7 @@
             </div>
 
             <button type="submit" class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm active:scale-95 flex items-center gap-1">
-                <i class="fas fa-filter"></i> Filtrar
+                <i data-lucide="filter"></i> Filtrar
             </button>
             {% if campus_filtro or tipo_filtro %}
                 <a href="{% url 'refeicoes_relatorio' %}?data={{ data_filtro|date:'Y-m-d' }}" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold rounded-xl transition">
@@ -53,7 +53,7 @@
             <!-- Botão de Exportação DESKTOP -->
             <div class="hidden md:flex items-center pl-2 border-l border-slate-200">
                 <button type="button" onclick="abrirModalOpcoesEmissao()" class="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition shadow-sm active:scale-95 flex items-center gap-1.5" title="Opções de Emissão de Relatório PDF">
-                    <i class="fas fa-file-pdf text-amber-400"></i> Relatório PDF
+                    <i data-lucide="file-text" class="text-amber-400"></i> Relatório PDF
                 </button>
             </div>
         </form>
@@ -62,16 +62,16 @@
         <div class="block md:hidden pt-2 border-t border-slate-100">
             <button type="button" onclick="toggleEmissaoRelatoriosMobile()" class="w-full flex items-center justify-between px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-200 transition active:scale-98">
                 <span class="flex items-center gap-1.5">
-                    <i class="fas fa-file-export text-indigo-600"></i>
+                    <i data-lucide="file-up" class="text-indigo-600"></i>
                     <span>Emissão de Relatórios</span>
                 </span>
-                <i id="seta-emissao-mobile" class="fas fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+                <i id="seta-emissao-mobile" data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300"></i>
             </button>
 
             <!-- Opção de Exportação MOBILE (Oculta por padrão) -->
             <div id="container-emissao-mobile" class="hidden pt-2 space-y-2">
                 <button type="button" onclick="abrirModalOpcoesEmissao()" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-xl transition shadow-sm active:scale-95 flex items-center justify-center gap-2">
-                    <i class="fas fa-file-pdf text-amber-400"></i> Gerar Relatório PDF
+                    <i data-lucide="file-text" class="text-amber-400"></i> Gerar Relatório PDF
                 </button>
             </div>
         </div>
@@ -87,7 +87,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_geral }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-utensils"></i>
+                        <i data-lucide="utensils"></i>
                     </div>
                 </div>
             </div>
@@ -98,7 +98,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_cafe }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-coffee"></i>
+                        <i data-lucide="coffee"></i>
                     </div>
                 </div>
             </div>
@@ -109,7 +109,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_almoco }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-drumstick-bite"></i>
+                        <i data-lucide="drumstick"></i>
                     </div>
                 </div>
             </div>
@@ -120,7 +120,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_jantar }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-moon"></i>
+                        <i data-lucide="moon"></i>
                     </div>
                 </div>
             </div>
@@ -132,10 +132,10 @@
         <!-- Botão Toggle para Celulares -->
         <button type="button" onclick="toggleContadoresMobile()" class="w-full flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-200/60 shadow-sm font-extrabold text-xs text-slate-800 transition active:scale-98">
             <span class="flex items-center gap-2">
-                <i class="fas fa-chart-pie text-indigo-600 text-sm"></i>
+                <i data-lucide="pie-chart" class="text-indigo-600 text-sm"></i>
                 <span>Ver Resumo de Refeições Servidas</span>
             </span>
-            <i id="seta-contadores-mobile" class="fas fa-chevron-down text-slate-400 transition-transform duration-300"></i>
+            <i id="seta-contadores-mobile" data-lucide="chevron-down" class="text-slate-400 transition-transform duration-300"></i>
         </button>
 
         <!-- Container do Mobile (Oculto por padrão via JS) -->
@@ -146,7 +146,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_geral }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-utensils"></i>
+                        <i data-lucide="utensils"></i>
                     </div>
                 </div>
             </div>
@@ -157,7 +157,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_cafe }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-coffee"></i>
+                        <i data-lucide="coffee"></i>
                     </div>
                 </div>
             </div>
@@ -168,7 +168,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_almoco }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-drumstick-bite"></i>
+                        <i data-lucide="drumstick"></i>
                     </div>
                 </div>
             </div>
@@ -179,7 +179,7 @@
                 <div class="flex items-center justify-between">
                     <span class="text-3xl font-black text-slate-900">{{ total_jantar }}</span>
                     <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-700 flex items-center justify-center text-lg font-bold">
-                        <i class="fas fa-moon"></i>
+                        <i data-lucide="moon"></i>
                     </div>
                 </div>
             </div>
@@ -189,7 +189,7 @@
     <!-- Tabela Detalhada de Histórico de Retiradas -->
     <div class="bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4 w-full">
         <h2 class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <i class="fas fa-history text-emerald-600"></i>
+            <i data-lucide="history" class="text-emerald-600"></i>
             Histórico Detalhado de Retiradas ({{ data_filtro|date:"d/m/Y" }})
         </h2>
 
@@ -201,15 +201,15 @@
                         <div class="min-w-0 flex-1">
                             <h3 class="font-extrabold text-slate-900 text-xs sm:text-sm truncate">{{ reg.atleta.nome_completo }}</h3>
                             <div class="flex items-center gap-2 text-[11px] text-slate-500 font-semibold mt-0.5">
-                                <span><i class="fas fa-utensils text-amber-500 mr-1"></i>{{ reg.refeicao.get_tipo_display }}</span>
+                                <span><i data-lucide="utensils" class="text-amber-500 mr-1"></i>{{ reg.refeicao.get_tipo_display }}</span>
                                 <span>&bull;</span>
-                                <span class="font-mono text-slate-700 font-bold"><i class="fas fa-clock text-slate-400 mr-1"></i>{{ reg.data_retirada|date:"H:i:s" }}</span>
+                                <span class="font-mono text-slate-700 font-bold"><i data-lucide="clock" class="text-slate-400 mr-1"></i>{{ reg.data_retirada|date:"H:i:s" }}</span>
                             </div>
                         </div>
 
                         <!-- Botão VER (Abre Modal com todas as informações) -->
                         <button type="button" onclick="abrirModalDetalhesRegistro('{{ reg.atleta.nome_completo }}', '{{ reg.atleta.matricula }}', '{{ reg.atleta.cpf|default:"-" }}', '{{ reg.atleta.campus.nome|default:"-" }}', '{{ reg.refeicao.get_tipo_display }}', '{{ reg.data_retirada|date:"d/m/Y H:i:s" }}')" class="px-3 py-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 font-extrabold text-xs rounded-xl transition shadow-2xs shrink-0 active:scale-95 flex items-center gap-1">
-                            <i class="fas fa-eye"></i>
+                            <i data-lucide="eye"></i>
                             <span>Ver</span>
                         </button>
                     </div>
@@ -261,11 +261,11 @@
     <div onclick="event.stopPropagation()" class="bg-white rounded-3xl max-w-sm w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 ring-1 ring-slate-900/10 animate-fadeIn">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
-                <i class="fas fa-id-card text-indigo-600"></i>
+                <i data-lucide="id-card" class="text-indigo-600"></i>
                 Detalhes da Retirada
             </h3>
             <button type="button" onclick="fecharModalDetalhesRegistro()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
-                <i class="fas fa-times"></i>
+                <i data-lucide="x"></i>
             </button>
         </div>
 
@@ -407,13 +407,13 @@
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
                 <h3 class="text-base font-black text-slate-900 flex items-center gap-2">
-                    <i class="fas fa-sliders-h text-indigo-600"></i>
+                    <i data-lucide="sliders-horizontal" class="text-indigo-600"></i>
                     Opções de Emissão de Relatório
                 </h3>
                 <p class="text-xs text-slate-500 font-medium mt-0.5">Selecione as informações a serem exibidas no documento.</p>
             </div>
             <button type="button" onclick="fecharModalOpcoesEmissao()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
-                <i class="fas fa-times"></i>
+                <i data-lucide="x"></i>
             </button>
         </div>
 
@@ -437,28 +437,28 @@
         <div class="space-y-2 pt-2 border-t border-slate-100">
             <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                 <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-id-badge text-slate-400"></i> Número de Matrícula
+                    <i data-lucide="badge-check" class="text-slate-400"></i> Número de Matrícula
                 </span>
                 <input type="checkbox" id="chk-opt-matricula" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
             </label>
 
             <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                 <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-address-card text-slate-400"></i> CPF do Estudante
+                    <i data-lucide="contact" class="text-slate-400"></i> CPF do Estudante
                 </span>
                 <input type="checkbox" id="chk-opt-cpf" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
             </label>
 
             <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                 <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-utensils text-slate-400"></i> Tipo de Refeição
+                    <i data-lucide="utensils" class="text-slate-400"></i> Tipo de Refeição
                 </span>
                 <input type="checkbox" id="chk-opt-refeicao" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
             </label>
 
             <label class="flex items-center justify-between p-3 rounded-2xl border border-slate-200 hover:bg-slate-50 cursor-pointer transition">
                 <span class="text-xs font-extrabold text-slate-800 flex items-center gap-2">
-                    <i class="fas fa-clock text-slate-400"></i> Horário da Retirada
+                    <i data-lucide="clock" class="text-slate-400"></i> Horário da Retirada
                 </span>
                 <input type="checkbox" id="chk-opt-horario" checked class="w-4 h-4 text-indigo-600 rounded focus:ring-indigo-500 cursor-pointer">
             </label>
@@ -469,7 +469,7 @@
                 Cancelar
             </button>
             <button type="button" onclick="confirmarGerarRelatorioPDF()" class="flex-1 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-2xl transition shadow-md flex items-center justify-center gap-1.5">
-                <i class="fas fa-file-pdf text-amber-400"></i> Gerar PDF
+                <i data-lucide="file-text" class="text-amber-400"></i> Gerar PDF
             </button>
         </div>
     </div>

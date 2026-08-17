@@ -30,8 +30,8 @@
             <!-- Animated Icon -->
             <div class="flex justify-center">
                 <div class="relative">
-                    <span class="flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50/50 text-amber-500 shadow-sm animate-pulse">
-                        <i class="fas fa-clock text-3xl"></i>
+                    <span class="flex h-20 w-20 items-center justify-center rounded-2xl bg-amber-50/50 text-amber-500 shadow-sm">
+                        <i data-lucide="clock" class="text-3xl"></i>
                     </span>
                     <span class="absolute -top-1.5 -right-1.5 flex h-4 w-4">
                         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -49,7 +49,7 @@
             <!-- Informative Message Box -->
             <div class="bg-amber-50/30 border border-amber-100/50 rounded-2xl p-6 text-left text-xs text-slate-655 leading-relaxed space-y-3 max-w-xl mx-auto shadow-sm">
                 <p class="font-bold text-amber-700 flex items-center gap-1.5">
-                    <i class="fas fa-exclamation-triangle text-sm"></i> Processo em Análise
+                    <i data-lucide="alert-triangle" class="text-sm"></i> Processo em Análise
                 </p>
                 <p class="font-semibold text-slate-700">
                     A delegação já se inscreveu e nenhuma ação ou alteração pode ser efetuada até o veredito da comissão das Olimpíadas Universitárias.
@@ -67,10 +67,10 @@
             <!-- Action Button -->
             <div class="pt-2 flex flex-col sm:flex-row justify-center items-center gap-3">
                 <button onclick="toggleInscricaoDetails()" id="btn-toggle-detalhes" class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm hover:shadow-md hover:shadow-blue-650/10 active:scale-98 flex items-center justify-center gap-1.5">
-                    <i class="fas fa-eye text-xs"></i> Ver modalidades e atletas inscritos
+                    <i data-lucide="eye" class="text-xs"></i> Ver modalidades e atletas inscritos
                 </button>
                 <a href="{% url 'dashboard' %}" class="w-full sm:w-auto px-6 py-3 bg-white border border-slate-150 text-slate-555 hover:bg-slate-50 font-bold rounded-xl text-xs transition active:scale-98 flex items-center justify-center gap-1.5">
-                    <i class="fas fa-chart-pie text-xs"></i> Voltar ao Dashboard
+                    <i data-lucide="pie-chart" class="text-xs"></i> Voltar ao Dashboard
                 </a>
             </div>
         </div>
@@ -80,16 +80,16 @@
         <!-- Listagem de Substituições Realizadas na Segunda Chamada -->
         <div class="bg-indigo-50/30 border border-indigo-100 rounded-3xl p-6 shadow-sm space-y-3">
             <div class="flex items-center gap-2">
-                <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs"><i class="fas fa-exchange-alt"></i></span>
+                <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs"><i data-lucide="arrow-left-right"></i></span>
                 <h4 class="font-bold text-xs text-indigo-800 uppercase tracking-wider">Substituições de Atletas - Segunda Chamada</h4>
             </div>
             <ul class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                 {% for sub in inscricao.substituicoes.all %}
                     <li class="bg-white border border-slate-100 rounded-2xl p-3 flex items-center justify-between shadow-sm">
                         <div class="flex items-center gap-2">
-                            <span class="text-red-500 font-bold flex items-center gap-1"><i class="fas fa-user-minus text-[10px]"></i> {{ sub.atleta_saiu.nome_completo }}</span>
-                            <span class="text-slate-400 font-bold"><i class="fas fa-arrow-right text-[10px]"></i></span>
-                            <span class="text-green-650 font-bold flex items-center gap-1"><i class="fas fa-user-plus text-[10px]"></i> {{ sub.atleta_entrou.nome_completo }}</span>
+                            <span class="text-red-500 font-bold flex items-center gap-1"><i data-lucide="user-minus" class="text-[10px]"></i> {{ sub.atleta_saiu.nome_completo }}</span>
+                            <span class="text-slate-400 font-bold"><i data-lucide="arrow-right" class="text-[10px]"></i></span>
+                            <span class="text-green-650 font-bold flex items-center gap-1"><i data-lucide="user-plus" class="text-[10px]"></i> {{ sub.atleta_entrou.nome_completo }}</span>
                         </div>
                         <span class="text-[9px] text-slate-400 font-medium bg-slate-50 border border-slate-100 px-2 py-0.5 rounded-lg">{{ sub.data_substituicao|date:"d/m H:i" }}</span>
                     </li>
@@ -108,12 +108,12 @@
             <div onclick="toggleModalidadesAtletasCollapsible()" class="p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 cursor-pointer hover:bg-slate-50/20 transition duration-150 select-none {% if not request.user.delegacao_ativa.link_comprovante_pagamento or request.user.delegacao_ativa.status_pagamento == 'indeferido' %}border-b border-slate-100/50{% endif %}">
                 <div class="flex items-start gap-4">
                     <span class="p-3.5 bg-blue-550 text-blue-700 border border-blue-100 rounded-2xl shrink-0 mt-0.5 shadow-sm">
-                        <i class="fas fa-file-invoice text-xl"></i>
+                        <i data-lucide="file-text" class="text-xl"></i>
                     </span>
                     <div>
                         <h1 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
                             Status da Inscrição
-                            <i id="arrow-collapsible" class="fas fa-chevron-down text-slate-400 text-sm transition-transform duration-300 inline-block {% if not is_segunda_chamada_active %}rotate-180{% endif %}"></i>
+                            <i id="arrow-collapsible" data-lucide="chevron-down" class="text-slate-400 text-sm transition-transform duration-300 inline-block {% if not is_segunda_chamada_active %}rotate-180{% endif %}"></i>
                         </h1>
                         <p class="text-slate-400 mt-1 text-xs">Clique para visualizar ou ocultar as modalidades e atletas inscritos.</p>
                         <span class="text-[10px] text-slate-400 font-semibold block mt-1 uppercase tracking-wider">Enviado em: {{ inscricao.data_envio|date:"d/m/Y H:i" }}</span>
@@ -123,15 +123,15 @@
                 <div class="flex flex-col items-end gap-2.5 self-stretch sm:self-auto">
                     {% if inscricao.status == 'deferido' %}
                         <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-green-50 text-green-700 uppercase tracking-wide">
-                            <i class="fas fa-check-circle mr-1.5 text-green-600 text-sm"></i> Deferida (Aprovada)
+                            <i data-lucide="check-circle-2" class="mr-1.5 text-green-600 text-sm"></i> Deferida (Aprovada)
                         </span>
                     {% elif inscricao.status == 'indeferido' %}
                         <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-red-50 text-red-700 uppercase tracking-wide">
-                            <i class="fas fa-times-circle mr-1.5 text-red-655 text-sm"></i> Indeferida (Recusada)
+                            <i data-lucide="x-circle" class="mr-1.5 text-red-655 text-sm"></i> Indeferida (Recusada)
                         </span>
                     {% else %}
-                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 uppercase tracking-wide animate-pulse">
-                            <i class="fas fa-clock mr-1.5 text-amber-600 text-sm"></i> Pendente de Análise
+                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-xs font-bold bg-amber-50 text-amber-700 uppercase tracking-wide">
+                            <i data-lucide="clock" class="mr-1.5 text-amber-600 text-sm"></i> Pendente de Análise
                         </span>
                     {% endif %}
                     
@@ -139,7 +139,7 @@
                         <a href="{% url 'refazer_inscricao' %}" onclick="return confirm('Deseja realmente cancelar/alterar esta inscrição? Você terá que selecionar as modalidades e atletas novamente.')" 
                            class="inline-flex items-center justify-center px-3.5 py-1.5 border border-slate-200 hover:border-red-200 hover:bg-red-50 hover:text-red-650 text-slate-500 rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-95 bg-white"
                            onclick="event.stopPropagation();">
-                            <i class="fas fa-undo-alt"></i> Cancelar / Alterar Inscrição
+                            <i data-lucide="rotate-ccw"></i> Cancelar / Alterar Inscrição
                         </a>
                     {% endif %}
                 </div>
@@ -150,7 +150,7 @@
                 <div class="p-6 bg-red-50/20 space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="p-1.5 bg-red-50 text-red-700 rounded-lg text-xs"><i class="fas fa-lock text-sm"></i></span>
+                            <span class="p-1.5 bg-red-50 text-red-700 rounded-lg text-xs"><i data-lucide="lock" class="text-sm"></i></span>
                             <h3 class="font-bold text-red-800 text-sm">Pendente: Comprovante de Pagamento Geral da Delegação</h3>
                         </div>
                         {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
@@ -158,7 +158,7 @@
                                 Indeferido
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-55/60 text-amber-700 uppercase tracking-wide animate-pulse">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-55/60 text-amber-700 uppercase tracking-wide">
                                 Pendente
                             </span>
                         {% endif %}
@@ -182,11 +182,11 @@
                                     Visualizar
                                 </a>
                                 <button type="button" onclick="openPaymentModal()" class="inline-flex items-center px-4 py-2 bg-red-650 hover:bg-red-755 text-white rounded-xl text-xs font-bold transition gap-1.5 shadow-sm active:scale-95 focus:outline-none">
-                                    <i class="fas fa-edit text-[10px]"></i> Corrigir
+                                    <i data-lucide="pencil" class="text-[10px]"></i> Corrigir
                                 </button>
                             {% else %}
                                 <button type="button" onclick="openPaymentModal()" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition gap-1.5 shadow-sm active:scale-95 focus:outline-none">
-                                    <i class="fas fa-upload text-[10px]"></i> Enviar Comprovante
+                                    <i data-lucide="upload" class="text-[10px]"></i> Enviar Comprovante
                                 </button>
                             {% endif %}
                         </div>
@@ -203,7 +203,7 @@
             {% if inscricao.status == 'indeferido' and inscricao.justificativa %}
                 <div class="bg-red-50/50 border border-red-100/50 rounded-3xl p-6 text-red-800 space-y-2 shadow-sm">
                     <h4 class="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                        <i class="fas fa-comment-dots text-sm"></i> Justificativa / Parecer da Comissão
+                        <i data-lucide="message-square-more" class="text-sm"></i> Justificativa / Parecer da Comissão
                     </h4>
                     <p class="text-xs text-red-700 leading-relaxed font-medium">
                         {{ inscricao.justificativa }}
@@ -216,16 +216,16 @@
                 <div class="rounded-3xl p-6 bg-white border border-slate-100 shadow-sm space-y-4">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
-                            <span class="p-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs"><i class="fas fa-file-invoice-dollar"></i></span>
+                            <span class="p-1 bg-emerald-50 text-emerald-700 rounded-lg text-xs"><i data-lucide="receipt"></i></span>
                             <h3 class="font-bold text-slate-800 text-sm">Comprovante de Pagamento Geral da Delegação</h3>
                         </div>
                         {% if request.user.delegacao_ativa.status_pagamento == 'deferido' %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
-                                <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido
+                                <i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Deferido
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 uppercase tracking-wide animate-pulse">
-                                <i class="fas fa-clock mr-1 text-blue-600"></i> Enviado: Aguardando Análise
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 uppercase tracking-wide">
+                                <i data-lucide="clock" class="mr-1 text-blue-600"></i> Enviado: Aguardando Análise
                             </span>
                         {% endif %}
                     </div>
@@ -236,7 +236,7 @@
                         </div>
                         <div class="flex gap-2 shrink-0">
                             <a href="{{ request.user.delegacao_ativa.link_comprovante_pagamento }}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-bold transition gap-1.5 shadow-sm">
-                                <i class="fas fa-external-link-alt"></i> Visualizar Comprovante
+                                <i data-lucide="external-link"></i> Visualizar Comprovante
                             </a>
                         </div>
                     </div>
@@ -246,7 +246,7 @@
             <!-- Modalidades Selecionadas -->
             <div class="bg-white border border-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
                 <div class="flex items-center gap-2">
-                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-trophy"></i></span>
+                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg text-xs"><i data-lucide="trophy"></i></span>
                     <h3 class="font-bold text-slate-800 text-sm">Modalidades de Interesse Selecionadas</h3>
                 </div>
                 <div class="flex flex-wrap gap-2">
@@ -254,19 +254,19 @@
                         <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-550/35 hover:bg-blue-100/50 text-slate-800 rounded-full text-xs font-semibold shadow-sm transition-all duration-200">
                             <span class="text-blue-600 text-[10px]">
                                 {% if 'futsal' in im.modalidade.nome|lower %}
-                                    <i class="fas fa-futbol"></i>
+                                    <i data-lucide="circle-dot"></i>
                                 {% elif 'vôlei' in im.modalidade.nome|lower or 'volei' in im.modalidade.nome|lower %}
-                                    <i class="fas fa-volleyball"></i>
+                                    <i data-lucide="circle-dot"></i>
                                 {% elif 'basquete' in im.modalidade.nome|lower %}
-                                    <i class="fas fa-basketball"></i>
+                                    <i data-lucide="circle-dot"></i>
                                 {% elif 'handebol' in im.modalidade.nome|lower %}
-                                    <i class="fas fa-hand-paper"></i>
+                                    <i data-lucide="hand"></i>
                                 {% elif 'xadrez' in im.modalidade.nome|lower %}
-                                    <i class="fas fa-chess"></i>
+                                    <i data-lucide="crown"></i>
                                 {% elif 'tênis' in im.modalidade.nome|lower or 'tenis' in im.modalidade.nome|lower %}
-                                    <i class="fas fa-table-tennis"></i>
+                                    <i data-lucide="activity"></i>
                                 {% else %}
-                                    <i class="fas fa-running"></i>
+                                    <i data-lucide="activity"></i>
                                 {% endif %}
                             </span>
                             <span class="text-slate-800 font-bold">{{ im.modalidade.nome }}</span>
@@ -281,7 +281,7 @@
             <div class="bg-white border border-slate-100 rounded-3xl overflow-hidden shadow-sm">
                 <div class="px-6 py-4 bg-slate-50/40 border-b border-slate-100/70 flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <span class="p-1 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-users"></i></span>
+                        <span class="p-1 bg-blue-50 text-blue-600 rounded-lg text-xs"><i data-lucide="users"></i></span>
                         <h3 class="font-bold text-slate-800 text-sm">Elenco de Atletas Inscritos</h3>
                     </div>
                     <span class="px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-50 text-blue-700 uppercase tracking-wider">
@@ -316,7 +316,7 @@
                                     <td class="hidden md:table-cell px-6 py-4">
                                         {% if atleta.link_documento %}
                                             <a href="{{ atleta.link_documento }}" target="_blank" class="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 font-bold transition">
-                                                <i class="fas fa-folder-open text-xs"></i> Pasta Drive <i class="fas fa-external-link-alt text-[9px]"></i>
+                                                <i data-lucide="folder-open" class="text-xs"></i> Pasta Drive <i data-lucide="external-link" class="text-[9px]"></i>
                                             </a>
                                         {% else %}
                                             <span class="text-slate-400 italic">Não enviado</span>
@@ -327,12 +327,12 @@
                                     <td class="px-4 py-3.5 sm:px-6 sm:py-4 text-right">
                                         {% if atleta.status_avaliacao == 'deferido' %}
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
-                                                <i class="fas fa-check-circle mr-1 text-green-600"></i> Aprovado
+                                                <i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Aprovado
                                             </span>
                                         {% elif atleta.status_avaliacao == 'indeferido' %}
                                             <div class="inline-flex flex-col items-end gap-1">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 uppercase tracking-wide">
-                                                    <i class="fas fa-times-circle mr-1 text-red-600"></i> Recusado
+                                                    <i data-lucide="x-circle" class="mr-1 text-red-600"></i> Recusado
                                                 </span>
                                                 <button type="button" onclick="openRejeicaoModal('{{ atleta.nome_completo }}', '{{ atleta.justificativa_inconformidade|escapejs }}', {{ atleta.permite_correcao|yesno:'true,false' }}, '{% url 'enviar_correcao_atleta' atleta.id %}')" 
                                                         class="text-[9px] text-blue-600 hover:text-blue-800 font-bold hover:underline transition"
@@ -342,7 +342,7 @@
                                             </div>
                                         {% else %}
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 uppercase tracking-wide">
-                                                <i class="fas fa-clock mr-1 text-amber-650"></i> Em Análise
+                                                <i data-lucide="clock" class="mr-1 text-amber-650"></i> Em Análise
                                             </span>
                                         {% endif %}
                                     </td>
@@ -367,7 +367,7 @@
         <div class="bg-indigo-50/30 border border-indigo-100 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between sm:items-center gap-6 text-indigo-850">
             <div class="flex items-start gap-4">
                 <span class="p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl shrink-0 mt-0.5 shadow-sm">
-                    <i class="fas fa-calendar-check text-xl animate-bounce"></i>
+                    <i data-lucide="calendar-check" class="text-xl animate-bounce"></i>
                 </span>
                 <div>
                     <h3 class="font-bold text-slate-800 text-sm">Segunda Chamada de Inscrições Ativa</h3>
@@ -378,7 +378,7 @@
             </div>
             <div class="shrink-0 self-stretch sm:self-auto flex justify-end">
                 <a href="{% url 'inscricao_segunda_chamada' %}" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-sm active:scale-[0.98] flex items-center justify-center gap-1.5 text-xs">
-                    <i class="fas fa-user-edit text-[10px]"></i> Alterar Escalação (Segunda Chamada)
+                    <i data-lucide="user-cog" class="text-[10px]"></i> Alterar Escalação (Segunda Chamada)
                 </a>
             </div>
         </div>
@@ -396,7 +396,7 @@
                 <h4 id="modal-rejeicao-atleta-nome" class="font-bold text-slate-800 text-sm mt-0.5"></h4>
             </div>
             <button type="button" onclick="closeRejeicaoModal()" class="text-slate-400 hover:text-slate-655 transition p-1 rounded-lg hover:bg-slate-100">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
@@ -405,7 +405,7 @@
             <!-- Justificativa -->
             <div class="bg-red-50/50 border border-red-100/50 rounded-2xl p-4 text-red-800 space-y-2">
                 <h5 class="font-bold text-xs uppercase tracking-wider flex items-center gap-1.5">
-                    <i class="fas fa-comment-dots text-sm"></i> Parecer da Comissão
+                    <i data-lucide="message-square-more" class="text-sm"></i> Parecer da Comissão
                 </h5>
                 <p id="modal-rejeicao-justificativa" class="text-xs text-red-700 leading-relaxed font-medium text-justify"></p>
             </div>
@@ -414,7 +414,7 @@
             <div id="modal-rejeicao-form-container" class="hidden">
                 <div class="border-t border-slate-100 pt-4 space-y-3">
                     <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">
-                        <i class="fas fa-exclamation-triangle text-amber-500 mr-1 animate-pulse"></i> Enviar Correção
+                        <i data-lucide="alert-triangle" class="text-amber-500 mr-1"></i> Enviar Correção
                     </span>
                     <form id="modal-rejeicao-form" method="post" action="" class="space-y-3">
                         {% csrf_token %}
@@ -445,11 +445,11 @@
             container.classList.remove('hidden');
             collapsible.classList.remove('hidden');
             arrow.classList.add('rotate-180');
-            btn.innerHTML = '<i class="fas fa-eye-slash text-xs"></i> Ocultar Modalidades e Atletas Inscritos';
+            btn.innerHTML = '<i data-lucide="eye-off" class="text-xs"></i> Ocultar Modalidades e Atletas Inscritos';
             container.scrollIntoView({ behavior: 'smooth' });
         } else {
             container.classList.add('hidden');
-            btn.innerHTML = '<i class="fas fa-eye text-xs"></i> Ver modalidades e atletas inscritos';
+            btn.innerHTML = '<i data-lucide="eye" class="text-xs"></i> Ver modalidades e atletas inscritos';
         }
     }
     {% endif %}
@@ -518,7 +518,7 @@
                 <h4 class="font-bold text-slate-800 text-sm mt-0.5">Comprovante de Pagamento Geral da Delegação</h4>
             </div>
             <button type="button" onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-655 transition p-1 rounded-lg hover:bg-slate-100 focus:outline-none">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
@@ -527,7 +527,7 @@
             {% csrf_token %}
             {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
                 <div class="bg-emerald-50 text-emerald-805 border border-emerald-100/50 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
-                    <i class="fas fa-check-circle text-emerald-600 text-sm shrink-0 mt-0.5 animate-bounce-once"></i>
+                    <i data-lucide="check-circle-2" class="text-emerald-600 text-sm shrink-0 mt-0.5 animate-bounce-once"></i>
                     <div>
                         <span class="font-bold text-emerald-800">Comprovante anexado com sucesso!</span>
                         <p class="text-emerald-700 mt-1">
@@ -554,11 +554,11 @@
                     
                     <div class="font-bold flex items-center gap-1.5 mb-1 text-xs">
                         {% if request.user.delegacao_ativa.status_pagamento == 'deferido' %}
-                            <i class="fas fa-check-circle text-green-600"></i> Comprovante Deferido (Aprovado)
+                            <i data-lucide="check-circle-2" class="text-green-600"></i> Comprovante Deferido (Aprovado)
                         {% elif request.user.delegacao_ativa.status_pagamento == 'indeferido' %}
-                            <i class="fas fa-times-circle text-red-655 font-bold"></i> Comprovante Indeferido (Recusado)
+                            <i data-lucide="x-circle" class="text-red-655 font-bold"></i> Comprovante Indeferido (Recusado)
                         {% else %}
-                            <i class="fas fa-clock text-blue-600 animate-pulse"></i> Aguardando Avaliação da Comissão
+                            <i data-lucide="clock" class="text-blue-600"></i> Aguardando Avaliação da Comissão
                         {% endif %}
                     </div>
 
@@ -580,7 +580,7 @@
 
             <!-- Alerta para evitar confusão -->
             <div class="bg-amber-50 text-amber-805 border border-amber-100/50 rounded-2xl p-4 flex gap-3 leading-relaxed">
-                <i class="fas fa-info-circle text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                <i data-lucide="info" class="text-amber-600 text-sm mt-0.5 shrink-0"></i>
                 <div>
                     <span class="font-bold text-amber-800 text-[11px]">Atenção: Comprovante de Pagamento Geral</span>
                     <p class="text-amber-700 text-[10px] mt-0.5">

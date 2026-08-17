@@ -33,12 +33,12 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-4">
         <!-- Botão Voltar Interno -->
         <a href="{% url 'recurso_list' %}" class="inline-flex items-center justify-center w-10 h-10 rounded-2xl hover:bg-slate-50 text-blue-600 transition shrink-0">
-            <i class="fas fa-arrow-left text-base"></i>
+            <i data-lucide="arrow-left" class="text-base"></i>
         </a>
         
         <div class="flex items-center gap-3">
             <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-                <i class="fas fa-balance-scale text-base"></i>
+                <i data-lucide="scale" class="text-base"></i>
             </span>
             <div>
                 <h1 class="text-xl font-bold text-slate-800 tracking-tight">
@@ -67,15 +67,15 @@
             <div class="shrink-0 flex items-center gap-2">
                 {% if recurso.status == 'aberto' %}
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
-                        <i class="fas fa-clock mr-1 text-[10px]"></i> Aguardando Parecer
+                        <i data-lucide="clock" class="mr-1 text-[10px]"></i> Aguardando Parecer
                     </span>
                 {% elif recurso.status == 'parecer_emitido' %}
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-750 border border-yellow-100 uppercase tracking-wide">
-                        <i class="fas fa-balance-scale mr-1 text-[10px]"></i> Parecer Emitido
+                        <i data-lucide="scale" class="mr-1 text-[10px]"></i> Parecer Emitido
                     </span>
                 {% elif recurso.status == 'encerrado' %}
                     <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide">
-                        <i class="fas fa-archive mr-1 text-[10px]"></i> Encerrado / Concluído
+                        <i data-lucide="archive" class="mr-1 text-[10px]"></i> Encerrado / Concluído
                     </span>
                 {% endif %}
             </div>
@@ -140,7 +140,7 @@
                     <!-- Botão de Mostrar Tudo -->
                     <div class="mt-4 text-center toggle-btn-container hidden">
                         <button type="button" onclick="toggleMessage('initial-argument', this)" class="inline-flex items-center text-[10px] font-bold text-blue-600 hover:text-blue-700 bg-white hover:bg-slate-50 px-3 py-1.5 border border-slate-200 rounded-xl transition shadow-sm gap-1">
-                            <span>Ver tudo</span> <i class="fas fa-chevron-down text-[8px]"></i>
+                            <span>Ver tudo</span> <i data-lucide="chevron-down" class="text-[8px]"></i>
                         </button>
                     </div>
                 </div>
@@ -151,7 +151,7 @@
             <div class="bg-blue-50/40 border border-blue-100 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 sm:gap-4">
                 <div class="flex items-center gap-2.5 min-w-0 flex-1">
                     <span class="p-2 bg-blue-100 text-blue-600 rounded-xl shrink-0">
-                        <i class="fas fa-link text-xs"></i>
+                        <i data-lucide="link" class="text-xs"></i>
                     </span>
                     <div class="min-w-0 flex-1">
                         <span class="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Documentação em Anexo</span>
@@ -159,7 +159,7 @@
                     </div>
                 </div>
                 <a href="{{ recurso.link_anexo }}" target="_blank" class="inline-flex items-center justify-center w-full sm:w-auto px-4 py-2 sm:py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 shrink-0 active:scale-95 focus:outline-none">
-                    Abrir Link <i class="fas fa-external-link-alt text-[9px]"></i>
+                    Abrir Link <i data-lucide="external-link" class="text-[9px]"></i>
                 </a>
             </div>
             {% endif %}
@@ -169,7 +169,7 @@
     <!-- Histórico de Mensagens / Árvore de Diálogo -->
     <div class="space-y-4">
         <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <i class="far fa-comments text-base text-slate-400"></i>
+            <i data-lucide="messages-square" class="text-base text-slate-400"></i>
             Pareceres e Respostas da Comissão Organizadora
         </h3>
 
@@ -187,7 +187,7 @@
                     <div class="flex justify-between items-center text-[10px] text-slate-400 border-b border-slate-50 pb-2">
                         <span class="font-bold uppercase tracking-wider
                                      {% if msg.remetente.is_comissao %}text-yellow-650{% else %}text-blue-650{% endif %}">
-                            <i class="{% if msg.remetente.is_comissao %}fas fa-user-shield{% else %}fas fa-university{% endif %} mr-1"></i>
+                            <i {% if msg.remetente.is_comissao %}data-lucide="shield-check"{% else %}data-lucide="landmark"{% endif %} class="mr-1"></i>
                             {% if msg.remetente.is_comissao %}Comissão Organizadora{% else %}Representante {{ msg.remetente.nome_delegacao|default:msg.remetente.email }}{% endif %}
                         </span>
                         <span>{{ msg.data_envio|date:"d/m/Y H:i" }}</span>
@@ -205,7 +205,7 @@
                         <!-- Botão de Mostrar Tudo -->
                         <div class="mt-3 text-center toggle-btn-container hidden">
                             <button type="button" onclick="toggleMessage('msg-{{ msg.id }}', this)" class="inline-flex items-center text-[9px] font-bold text-slate-500 hover:text-slate-700 bg-slate-50 hover:bg-slate-100/50 px-2.5 py-1 border border-slate-200 rounded-lg transition shadow-sm gap-1">
-                                <span>Ver tudo</span> <i class="fas fa-chevron-down text-[6px]"></i>
+                                <span>Ver tudo</span> <i data-lucide="chevron-down" class="text-[6px]"></i>
                             </button>
                         </div>
                     </div>
@@ -213,7 +213,7 @@
             </div>
             {% empty %}
             <div class="relative bg-slate-50/50 border border-dashed border-slate-300/80 rounded-2xl p-6 text-center text-slate-400">
-                <i class="far fa-comment-alt text-2xl mb-2 text-slate-350 block"></i>
+                <i data-lucide="message-square" class="text-2xl mb-2 text-slate-350 block"></i>
                 <span class="text-xs font-semibold">Nenhuma interação registrada até o momento.</span>
             </div>
             {% endfor %}
@@ -227,7 +227,7 @@
             <div class="space-y-4">
                 <div class="bg-slate-100/80 border border-slate-200/80 rounded-2xl p-4 flex items-start sm:items-center gap-3.5 text-slate-600">
                     <span class="p-2.5 bg-slate-200 text-slate-600 rounded-xl shrink-0 flex items-center justify-center">
-                        <i class="fas fa-lock text-sm"></i>
+                        <i data-lucide="lock" class="text-sm"></i>
                     </span>
                     <div>
                         <h4 class="font-bold text-xs text-slate-700 uppercase tracking-wide flex items-center gap-2">
@@ -268,7 +268,7 @@
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="button" disabled
                             class="inline-flex items-center px-5 py-2 bg-slate-200 text-slate-400 text-xs font-bold rounded-xl shadow-none cursor-not-allowed gap-1.5 opacity-70">
-                        <i class="fas fa-lock text-[10px]"></i>
+                        <i data-lucide="lock" class="text-[10px]"></i>
                         Ações Encerradas
                     </button>
                 </div>
@@ -276,7 +276,7 @@
         {% else %}
             <!-- Formulário Ativo (Aberto / Parecer Emitido) -->
             <h3 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
-                <i class="fas fa-reply text-slate-400"></i>
+                <i data-lucide="reply" class="text-slate-400"></i>
                 {% if user.is_comissao %}
                     Adicionar Parecer / Deliberar Recurso
                 {% else %}
@@ -317,7 +317,7 @@
                 <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
                     <button type="submit" 
                             class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
-                        <i class="fas fa-paper-plane"></i>
+                        <i data-lucide="send"></i>
                         {% if user.is_comissao %}
                             Registrar Decisão
                         {% else %}
@@ -366,13 +366,21 @@
             container.classList.remove('max-h-36');
             if (overlay) overlay.classList.add('hidden');
             textSpan.textContent = "Ocultar";
-            icon.classList.replace('fa-chevron-down', 'fa-chevron-up');
+            const curIcon = button.querySelector('i, svg');
+            if (curIcon) {
+                curIcon.outerHTML = '<i data-lucide="chevron-up" class="text-[6px]"></i>';
+                lucide.createIcons({ root: button });
+            }
         } else {
             // Recolher
             container.classList.add('max-h-36');
             if (overlay) overlay.classList.remove('hidden');
             textSpan.textContent = "Ver tudo";
-            icon.classList.replace('fa-chevron-up', 'fa-chevron-down');
+            const curIcon = button.querySelector('i, svg');
+            if (curIcon) {
+                curIcon.outerHTML = '<i data-lucide="chevron-down" class="text-[6px]"></i>';
+                lucide.createIcons({ root: button });
+            }
         }
     }
 </script>

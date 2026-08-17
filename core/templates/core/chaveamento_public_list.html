@@ -33,7 +33,7 @@
         <div class="relative z-10 flex flex-wrap items-center gap-3">
             <!-- Botão de Compartilhar (Padrão de estilo 'Imprimir Relatório') -->
             <button type="button" onclick="abrirModalCompartilhamento('{% url 'chaveamento_share_list' %}', 'Todas as Modalidades - UFVJM')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
-                <i class="fas fa-share-nodes text-amber-400 text-sm"></i> Compartilhar Chaveamentos
+                <i data-lucide="share-2" class="text-amber-400 text-sm"></i> Compartilhar Chaveamentos
             </button>
 
             <!-- Perfil / Delegação Logada -->
@@ -46,7 +46,7 @@
                     <img src="{{ user.foto_url }}" alt="Perfil" class="w-9 h-9 rounded-full object-cover border border-white/10 shadow-sm shrink-0">
                 {% else %}
                     <div class="w-9 h-9 rounded-full bg-indigo-600/40 border border-indigo-400/30 flex items-center justify-center text-white font-bold text-xs uppercase shadow-sm shrink-0">
-                        <i class="fas fa-flag text-xs"></i>
+                        <i data-lucide="flag" class="text-xs"></i>
                     </div>
                 {% endif %}
             </div>
@@ -64,7 +64,7 @@
                     </span>
                     {% if item.minha_participacao %}
                         <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs flex items-center gap-1">
-                            <i class="fas fa-user-shield text-emerald-600 text-[10px]"></i>
+                            <i data-lucide="shield-check" class="text-emerald-600 text-[10px]"></i>
                             <span>Minha Equipe</span>
                         </span>
                     {% endif %}
@@ -87,7 +87,7 @@
             <div class="mt-6 pt-4 border-t border-slate-100">
                 {% if item.chaveamento %}
                     <a href="{% url 'chaveamento_public_detail' pk=item.modalidade.pk %}" class="w-full text-center py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-2">
-                        <i class="fas fa-eye text-xs"></i> Ver Jogos
+                        <i data-lucide="eye" class="text-xs"></i> Ver Jogos
                     </a>
                 {% else %}
                     <button disabled class="w-full py-2.5 px-4 bg-slate-100 text-slate-400 font-bold text-xs rounded-2xl cursor-not-allowed text-center">
@@ -98,7 +98,7 @@
         </div>
         {% empty %}
         <div class="col-span-full bg-white border border-slate-200/80 rounded-3xl p-12 text-center text-slate-500 shadow-[0_4px_20px_rgba(0,0,0,0.04)]">
-            <i class="fas fa-trophy text-4xl text-slate-300 mb-3 block"></i>
+            <i data-lucide="trophy" class="text-4xl text-slate-300 mb-3 block"></i>
             Nenhuma modalidade com chaveamento disponível no momento.
         </div>
         {% endfor %}

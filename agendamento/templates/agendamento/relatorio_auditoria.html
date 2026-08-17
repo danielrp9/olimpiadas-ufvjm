@@ -9,10 +9,10 @@
     <div class="bg-white border border-slate-200/80 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-2 print:border-none print:shadow-none print:p-0">
         <div class="flex items-center gap-4">
             <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-2 rounded-xl hover:bg-slate-100 print:hidden" title="Voltar ao Painel">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="p-3.5 bg-slate-900 text-emerald-400 rounded-2xl shrink-0 shadow-sm print:hidden">
-                <i class="fas fa-shield-alt text-xl"></i>
+                <i data-lucide="shield" class="text-xl"></i>
             </span>
             <div>
                 <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Relatório de Auditoria e Integridade</h1>
@@ -21,7 +21,7 @@
 
         <div class="flex items-center gap-3 print:hidden">
             <a href="{% url 'agendamento_auditoria_print' %}" target="_blank" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center gap-2 cursor-pointer">
-                <i class="fas fa-file-pdf text-rose-400"></i>
+                <i data-lucide="file-text" class="text-rose-400"></i>
                 <span>Gerar Laudo para Impressão (A4)</span>
             </a>
         </div>
@@ -32,7 +32,7 @@
         <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Modalidades Chaveadas</span>
-                <i class="fas fa-sitemap text-blue-500 text-base"></i>
+                <i data-lucide="network" class="text-blue-500 text-base"></i>
             </div>
             <div class="text-2xl font-black text-slate-900">{{ total_chaveamentos }}</div>
             <div class="text-[11px] text-slate-600 font-medium">Algoritmo determinístico por campus</div>
@@ -41,7 +41,7 @@
         <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Execuções de Horários</span>
-                <i class="fas fa-microchip text-indigo-500 text-base"></i>
+                <i data-lucide="cpu" class="text-indigo-500 text-base"></i>
             </div>
             <div class="text-2xl font-black text-slate-900">{{ total_cenarios }}</div>
             <div class="text-[11px] text-slate-600 font-medium">Cenários calculados pelo Solver</div>
@@ -50,7 +50,7 @@
         <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Jogos Registrados</span>
-                <i class="fas fa-futbol text-emerald-500 text-base"></i>
+                <i data-lucide="circle-dot" class="text-emerald-500 text-base"></i>
             </div>
             <div class="text-2xl font-black text-slate-900">{{ total_jogos }}</div>
             <div class="text-[11px] text-slate-600 font-medium">Carimbos de inserção no banco</div>
@@ -59,7 +59,7 @@
         <div class="bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold text-slate-600 uppercase tracking-wider">Carimbo de Emissão</span>
-                <i class="fas fa-clock text-amber-500 text-base"></i>
+                <i data-lucide="clock" class="text-amber-500 text-base"></i>
             </div>
             <div class="text-sm font-black text-slate-900">{{ gerado_em|date:"d/m/Y H:i:s" }}</div>
             <div class="text-[11px] text-slate-600 font-medium">Fuso: America/Sao_Paulo (UTC-3)</div>
@@ -70,7 +70,7 @@
     <div class="bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-3xl p-6 sm:p-8 shadow-md space-y-4">
         <div class="flex items-center gap-3">
             <span class="p-2.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl">
-                <i class="fas fa-certificate text-base"></i>
+                <i data-lucide="award" class="text-base"></i>
             </span>
             <h2 class="text-lg font-bold text-white tracking-tight">Garantias Técnicas de Integridade e Imparcialidade</h2>
         </div>
@@ -78,7 +78,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 text-xs leading-relaxed text-slate-300">
             <div class="space-y-2 bg-white/5 p-4 rounded-2xl border border-white/10">
                 <div class="font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-random text-emerald-400"></i>
+                    <i data-lucide="shuffle" class="text-emerald-400"></i>
                     1. Chaveamento Computacional
                 </div>
                 <p>
@@ -88,7 +88,7 @@
 
             <div class="space-y-2 bg-white/5 p-4 rounded-2xl border border-white/10">
                 <div class="font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-calculator text-blue-400"></i>
+                    <i data-lucide="calculator" class="text-blue-400"></i>
                     2. Agendamento por Solver Matemático
                 </div>
                 <p>
@@ -98,7 +98,7 @@
 
             <div class="space-y-2 bg-white/5 p-4 rounded-2xl border border-white/10">
                 <div class="font-bold text-white flex items-center gap-2">
-                    <i class="fas fa-fingerprint text-indigo-400"></i>
+                    <i data-lucide="fingerprint" class="text-indigo-400"></i>
                     3. Timestamps Imutáveis de Banco
                 </div>
                 <p>
@@ -113,7 +113,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
                 <span class="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                    <i class="fas fa-sitemap text-base"></i>
+                    <i data-lucide="network" class="text-base"></i>
                 </span>
                 <div>
                     <h2 class="text-base sm:text-lg font-bold text-slate-900">1. Registro de Geração de Chaveamentos</h2>
@@ -159,7 +159,7 @@
                         </td>
                         <td class="py-3 px-4">
                             <span class="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md text-[11px] font-bold border border-emerald-200">
-                                <i class="fas fa-robot text-[10px]"></i> Sistema Automático
+                                <i data-lucide="bot" class="text-[10px]"></i> Sistema Automático
                             </span>
                         </td>
                     </tr>
@@ -179,7 +179,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
                 <span class="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl">
-                    <i class="fas fa-calendar-check text-base"></i>
+                    <i data-lucide="calendar-check" class="text-base"></i>
                 </span>
                 <div>
                     <h2 class="text-base sm:text-lg font-bold text-slate-900">2. Registro de Cálculos de Horários (Cenários do Solver)</h2>
@@ -211,15 +211,15 @@
                         <td class="py-3 px-4">
                             {% if cenario.status == 'aplicado' %}
                                 <span class="px-2.5 py-1 text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-full uppercase flex items-center gap-1 w-max">
-                                    <i class="fas fa-check-double text-[9px]"></i> Aplicado ao Oficial
+                                    <i data-lucide="check-check" class="text-[9px]"></i> Aplicado ao Oficial
                                 </span>
                             {% elif cenario.status == 'sucesso' %}
                                 <span class="px-2.5 py-1 text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300 rounded-full uppercase flex items-center gap-1 w-max">
-                                    <i class="fas fa-check text-[9px]"></i> Viável (Calculado)
+                                    <i data-lucide="check" class="text-[9px]"></i> Viável (Calculado)
                                 </span>
                             {% else %}
                                 <span class="px-2.5 py-1 text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300 rounded-full uppercase flex items-center gap-1 w-max">
-                                    <i class="fas fa-exclamation-triangle text-[9px]"></i> Inviável
+                                    <i data-lucide="alert-triangle" class="text-[9px]"></i> Inviável
                                 </span>
                             {% endif %}
                         </td>
@@ -236,9 +236,9 @@
                         </td>
                         <td class="py-3 px-4">
                             {% if cenario.status == 'inviavel' %}
-                                <span class="text-rose-600 font-bold text-[11px]"><i class="fas fa-times-circle mr-1"></i>Conflitos detectados</span>
+                                <span class="text-rose-600 font-bold text-[11px]"><i data-lucide="x-circle" class="mr-1"></i>Conflitos detectados</span>
                             {% else %}
-                                <span class="text-emerald-600 font-bold text-[11px]"><i class="fas fa-check-circle mr-1"></i>0 Conflitos (100% Válido)</span>
+                                <span class="text-emerald-600 font-bold text-[11px]"><i data-lucide="check-circle-2" class="mr-1"></i>0 Conflitos (100% Válido)</span>
                             {% endif %}
                         </td>
                     </tr>
@@ -258,7 +258,7 @@
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
             <div class="flex items-center gap-3">
                 <span class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl">
-                    <i class="fas fa-futbol text-base"></i>
+                    <i data-lucide="circle-dot" class="text-base"></i>
                 </span>
                 <div>
                     <h2 class="text-base sm:text-lg font-bold text-slate-900">3. Registro de Inserção dos Jogos Oficiais no Banco</h2>
@@ -316,7 +316,7 @@
     <div class="bg-slate-900 text-slate-100 rounded-3xl p-6 sm:p-8 shadow-sm space-y-4 print:hidden">
         <div class="flex items-center gap-3">
             <span class="p-2.5 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-xl">
-                <i class="fas fa-terminal text-base"></i>
+                <i data-lucide="terminal" class="text-base"></i>
             </span>
             <div>
                 <h2 class="text-base sm:text-lg font-bold text-white tracking-tight">Comprovação Independente via Terminal (PythonAnywhere)</h2>

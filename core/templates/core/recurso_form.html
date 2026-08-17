@@ -7,7 +7,7 @@
     <!-- Botão de Voltar -->
     <div>
         <a href="{% url 'recurso_list' %}" class="inline-flex items-center text-xs font-bold text-slate-500 hover:text-slate-700 transition gap-1.5">
-            <i class="fas fa-arrow-left text-[10px]"></i> Voltar para Recursos
+            <i data-lucide="arrow-left" class="text-[10px]"></i> Voltar para Recursos
         </a>
     </div>
 
@@ -15,7 +15,7 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
         <h1 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
             <span class="p-2 bg-red-50 text-red-650 rounded-2xl">
-                <i class="fas fa-balance-scale"></i>
+                <i data-lucide="scale"></i>
             </span>
             Interposição de Recurso
         </h1>
@@ -60,14 +60,14 @@
                 </label>
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                        <i class="fas fa-link text-xs"></i>
+                        <i data-lucide="link" class="text-xs"></i>
                     </div>
                     <input type="url" id="link_anexo" name="link_anexo" value="{{ link_anexo|default:'' }}"
                            placeholder="https://drive.google.com/..."
                            class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white shadow-sm">
                 </div>
                 <p class="text-[10px] text-slate-400 mt-1">
-                    <i class="fas fa-info-circle mr-1"></i> Apenas são permitidos links como anexos para evitar problemas de armazenamento. Garanta que o link esteja compartilhado publicamente ou com a comissão.
+                    <i data-lucide="info" class="mr-1"></i> Apenas são permitidos links como anexos para evitar problemas de armazenamento. Garanta que o link esteja compartilhado publicamente ou com a comissão.
                 </p>
             </div>
 
@@ -79,7 +79,7 @@
                 </a>
                 <button type="submit" 
                         class="inline-flex items-center px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95">
-                    <i class="fas fa-paper-plane"></i> Enviar Recurso
+                    <i data-lucide="send"></i> Enviar Recurso
                 </button>
             </div>
         </form>

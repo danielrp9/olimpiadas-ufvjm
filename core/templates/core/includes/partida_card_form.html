@@ -13,7 +13,7 @@
                         </button>
                     {% endif %}
                     <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
-                    {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
+                    {% if partida.vencedor == partida.time_a %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
                 {% endif %}
@@ -34,7 +34,7 @@
             <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0 flex items-center justify-start gap-1.5">
                 {% if partida.time_b %}
                     <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
-                    {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
+                    {% if partida.vencedor == partida.time_b %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
                     {% if partida.cartoes_time_b_amarelos > 0 or partida.cartoes_time_b_vermelhos > 0 %}
                         <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
                             {% if partida.cartoes_time_b_amarelos > 0 %}<span>🟨 {{ partida.cartoes_time_b_amarelos }}</span>{% endif %}
@@ -51,18 +51,18 @@
         <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-[11px]">
             <div class="flex items-center gap-3.5 text-slate-500">
                 <span class="flex items-center gap-1.5" title="Data do jogo">
-                    <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                    <i data-lucide="calendar" class="text-blue-600 text-[10px]"></i>
                     <strong class="text-slate-700 font-semibold">{{ partida.data_jogo_exibicao|default:"A definir" }}</strong>
                 </span>
                 <span class="flex items-center gap-1.5" title="Horário do jogo">
-                    <i class="fas fa-clock text-blue-600 text-[10px]"></i>
+                    <i data-lucide="clock" class="text-blue-600 text-[10px]"></i>
                     <strong class="text-slate-700 font-semibold">{{ partida.horario_jogo_exibicao|default:"A definir" }}</strong>
                 </span>
             </div>
 
             <!-- Botão Lápis para Editar com Cor de Destaque -->
             <button type="button" onclick="togglePartidaEdit({{ partida.pk }}, true)" class="px-2.5 py-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl text-xs font-bold border border-blue-100 transition flex items-center gap-1.5 shadow-2xs" title="Editar Placar e Agendamento">
-                <i class="fas fa-pencil-alt text-[10px] text-blue-600"></i>
+                <i data-lucide="pencil" class="text-[10px] text-blue-600"></i>
                 <span class="hidden sm:inline text-[11px]">Editar</span>
             </button>
         </div>
@@ -88,7 +88,7 @@
         <!-- Badge Indicador de Mudança de Estado -->
         <div class="flex items-center justify-between pb-2 border-b border-blue-200">
             <span class="px-2 py-0.5 text-[9px] font-extrabold uppercase bg-blue-600 text-white rounded-full flex items-center gap-1 shadow-2xs">
-                <i class="fas fa-pencil-alt text-[9px]"></i> Modo de Edição
+                <i data-lucide="pencil" class="text-[9px]"></i> Modo de Edição
             </span>
             <span class="text-[10px] text-slate-500 font-medium">Edite o placar, horários e cartões</span>
         </div>
@@ -123,12 +123,12 @@
         <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-blue-100 bg-blue-50/30 p-2 rounded-xl">
             <div class="flex items-center gap-2 flex-wrap">
                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
-                    <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                    <i data-lucide="calendar" class="text-blue-600 text-[10px]"></i>
                     <input type="date" name="data_jogo" value="{{ partida.data_jogo_formatada }}" class="w-24 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Data (AAAA-MM-DD)">
                 </div>
 
                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner">
-                    <i class="fas fa-clock text-blue-600 text-[10px]"></i>
+                    <i data-lucide="clock" class="text-blue-600 text-[10px]"></i>
                     <input type="time" name="horario_jogo" value="{{ partida.horario_jogo_formatado }}" class="w-16 text-[11px] font-medium text-slate-700 border-0 p-0 focus:ring-0 bg-transparent" title="Horário (HH:MM)">
                 </div>
             </div>
@@ -136,11 +136,11 @@
             <!-- Botões de Ação: Salvar e Cancelar -->
             <div class="flex items-center gap-1.5 ml-auto">
                 <button type="submit" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Salvar Alterações do Placar">
-                    <i class="fas fa-save text-xs"></i>
+                    <i data-lucide="save" class="text-xs"></i>
                     <span>Salvar</span>
                 </button>
                 <button type="button" onclick="togglePartidaEdit({{ partida.pk }}, false)" class="px-2 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1" title="Fechar Edição">
-                    <i class="fas fa-times text-xs"></i>
+                    <i data-lucide="x" class="text-xs"></i>
                     <span>Fechar</span>
                 </button>
             </div>
@@ -151,7 +151,7 @@
             <div class="pt-2 border-t border-blue-100 space-y-2.5 bg-slate-50/80 p-3 rounded-xl border border-slate-200/60">
                 <div class="flex items-center justify-between">
                     <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1.5">
-                        <i class="fas fa-id-card text-amber-500"></i> Lançar Cartão Disciplinar
+                        <i data-lucide="id-card" class="text-amber-500"></i> Lançar Cartão Disciplinar
                     </span>
                     <span class="text-[9px] text-slate-400 font-medium">Apenas delegações da partida</span>
                 </div>
@@ -221,7 +221,7 @@
                     </select>
 
                     <button type="button" onclick="adicionarCartaoAjax({{ partida.pk }})" class="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Lançar cartão instantaneamente (+)">
-                        <i class="fas fa-plus text-[10px]"></i> Lançar
+                        <i data-lucide="plus" class="text-[10px]"></i> Lançar
                     </button>
                 </div>
             </div>

@@ -39,13 +39,13 @@
     <div class="absolute top-3 right-3 sm:top-10 sm:right-10 z-20 flex items-center gap-3 sm:gap-4">
         <!-- Botão Exportar / Imprimir -->
         <button onclick="openPrintModal()" class="print:hidden inline-flex items-center px-3.5 py-1.5 bg-white/5 border border-white/10 hover:bg-white/15 text-white text-xs font-bold rounded-2xl transition gap-2 select-none backdrop-blur-sm active:scale-95 shadow-inner">
-            <i class="fas fa-print"></i> <span class="hidden md:inline">Imprimir Relatório</span>
+            <i data-lucide="printer"></i> <span class="hidden md:inline">Imprimir Relatório</span>
         </button>
 
         <!-- Ícone de Notificação com Dropdown -->
         <div class="relative" id="notification-dropdown-container-admin">
             <button type="button" onclick="toggleNotificationDropdown('notification-dropdown-admin')" class="relative rounded-xl bg-white/10 border border-white/15 hover:bg-white/20 text-slate-200 hover:text-white transition focus:outline-none flex items-center justify-center w-9 h-9 shadow-inner select-none active:scale-95">
-                <i class="far fa-bell text-lg h-5 w-5 flex items-center justify-center"></i>
+                <i data-lucide="bell" class="text-lg h-5 w-5 flex items-center justify-center"></i>
                 {% if unread_notifications.count > 0 %}
                     <span class="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] font-black shadow-md leading-none border-2 border-slate-900 pointer-events-none shrink-0 z-10">
                         {{ unread_notifications.count }}
@@ -71,24 +71,24 @@
                     {% for notif in unread_notifications %}
                         <a href="{% url 'notificacao_ler' notif.id %}" class="flex items-start gap-2.5 p-2.5 hover:bg-slate-50 transition relative group">
                             <div class="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 border border-blue-100/60 shadow-xs mt-0.5">
-                                <i class="far fa-bell text-[10px]"></i>
+                                <i data-lucide="bell" class="text-[10px]"></i>
                             </div>
                             <div class="flex-grow min-w-0 pr-1">
                                 <p class="text-[11px] font-semibold text-slate-800 leading-snug group-hover:text-blue-600 transition">
                                     {{ notif.mensagem }}
                                 </p>
                                 <span class="inline-flex items-center gap-1 text-[10px] text-slate-400 font-medium mt-0.5">
-                                    <i class="far fa-clock text-[9px]"></i> {{ notif.data_criacao|date:"d/m/Y H:i" }}
+                                    <i data-lucide="clock" class="text-[9px]"></i> {{ notif.data_criacao|date:"d/m/Y H:i" }}
                                 </span>
                             </div>
                             <div class="shrink-0 text-slate-300 group-hover:text-blue-600 group-hover:translate-x-0.5 transition self-center">
-                                <i class="fas fa-chevron-right text-[9px]"></i>
+                                <i data-lucide="chevron-right" class="text-[9px]"></i>
                             </div>
                         </a>
                     {% empty %}
                         <div class="py-6 px-4 text-center">
                             <div class="w-9 h-9 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
-                                <i class="far fa-bell-slash text-sm"></i>
+                                <i data-lucide="bell-off" class="text-sm"></i>
                             </div>
                             <p class="text-[11px] font-bold text-slate-700">Nenhuma notificação pendente</p>
                             <p class="text-[10px] text-slate-400 mt-0.5">Você está em dia com todos os avisos.</p>
@@ -120,7 +120,7 @@
     <!-- Delegações -->
     <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
         <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-university text-base"></i>
+            <i data-lucide="landmark" class="text-base"></i>
         </div>
         <div>
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Delegações</span>
@@ -130,7 +130,7 @@
     <!-- Inscrições Gerais -->
     <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
         <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-file-invoice text-base"></i>
+            <i data-lucide="file-text" class="text-base"></i>
         </div>
         <div>
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Inscrições</span>
@@ -140,7 +140,7 @@
     <!-- Total de Atletas -->
     <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
         <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-running text-base"></i>
+            <i data-lucide="activity" class="text-base"></i>
         </div>
         <div>
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Atletas</span>
@@ -150,7 +150,7 @@
     <!-- Modalidades -->
     <div class="bg-white p-5 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex items-center gap-4">
         <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center flex-shrink-0">
-            <i class="fas fa-trophy text-base"></i>
+            <i data-lucide="trophy" class="text-base"></i>
         </div>
         <div>
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Modalidades</span>
@@ -165,23 +165,23 @@
     <div class="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div class="flex flex-nowrap sm:flex-wrap gap-1.5 sm:gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
             <button onclick="switchTab('campus')" id="tab-btn-campus" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-slate-900 text-white shadow-sm flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-map-marker-alt"></i> <span class="tab-text inline">Resumo por Campus</span>
+                <i data-lucide="map-pin"></i> <span class="tab-text inline">Resumo por Campus</span>
             </button>
             <button onclick="switchTab('modalidade')" id="tab-btn-modalidade" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-running"></i> <span class="tab-text hidden sm:inline">Resumo por Modalidade</span>
+                <i data-lucide="activity"></i> <span class="tab-text hidden sm:inline">Resumo por Modalidade</span>
             </button>
             <button onclick="switchTab('modalidade-delegacao')" id="tab-btn-modalidade-delegacao" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-users"></i> <span class="tab-text hidden sm:inline">Modalidade por Delegação</span>
+                <i data-lucide="users"></i> <span class="tab-text hidden sm:inline">Modalidade por Delegação</span>
             </button>
             <button onclick="switchTab('delegacoes-modalidade')" id="tab-btn-delegacoes-modalidade" class="w-auto flex-1 sm:flex-none justify-center px-3 sm:px-4 py-2.5 text-xs font-bold rounded-2xl transition bg-white text-slate-600 hover:bg-slate-50 border border-slate-200 flex items-center gap-1.5 whitespace-nowrap">
-                <i class="fas fa-flag"></i> <span class="tab-text hidden sm:inline">Delegações por Modalidade</span>
+                <i data-lucide="flag"></i> <span class="tab-text hidden sm:inline">Delegações por Modalidade</span>
             </button>
         </div>
         
         <!-- Campo de Pesquisa -->
         <div class="relative w-full sm:w-40" id="search-input-container">
             <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                <i class="fas fa-search text-xs"></i>
+                <i data-lucide="search" class="text-xs"></i>
             </span>
             <input type="text" id="search-input" onkeyup="filterTables()" placeholder="Buscar na tabela..." class="w-full pl-9 pr-4 py-2.5 border border-slate-200 rounded-2xl text-xs focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition bg-white" />
         </div>
@@ -229,7 +229,7 @@
                 {% empty %}
                 <tr>
                     <td colspan="5" class="px-6 py-12 text-center text-slate-400">
-                        <i class="far fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
+                        <i data-lucide="folder-open" class="text-3xl mb-2 text-slate-300 block"></i>
                         Nenhum dado de campus registrado.
                     </td>
                 </tr>
@@ -278,7 +278,7 @@
                 {% empty %}
                 <tr>
                     <td colspan="{{ campi|length|add:2 }}" class="px-6 py-12 text-center text-slate-400">
-                        <i class="far fa-folder-open text-3xl mb-2 text-slate-300 block"></i>
+                        <i data-lucide="folder-open" class="text-3xl mb-2 text-slate-300 block"></i>
                         Nenhuma modalidade registrada.
                     </td>
                 </tr>
@@ -293,7 +293,7 @@
             <!-- Filtro Lateral (Delegação) -->
             <div class="w-full lg:w-72 shrink-0 bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5 sticky top-6">
                 <div class="flex items-center gap-2 mb-3">
-                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-filter text-xs"></i></span>
+                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs"><i data-lucide="filter" class="text-xs"></i></span>
                     <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Filtrar Delegação</h4>
                 </div>
                 <p class="text-[10px] text-slate-455 mb-3 leading-normal">Selecione uma delegação abaixo para ver as modalidades selecionadas por ela.</p>
@@ -310,7 +310,7 @@
             <div id="modalidade-delegacao-content" class="flex-grow w-full space-y-6">
                 <!-- Estado Inicial: Nenhuma Delegação Selecionada -->
                 <div id="md-empty-state" class="text-center py-12 text-slate-400 bg-slate-50/30 rounded-2xl border border-slate-200/60 border-dashed">
-                    <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
+                    <i data-lucide="filter" class="text-3xl mb-2 text-slate-300 block"></i>
                     Selecione uma delegação na barra lateral para visualizar as modalidades em que ela manifestou interesse de participação.
                 </div>
 
@@ -319,7 +319,7 @@
                         <div class="bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5">
                             <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200/60">
                                 <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-users text-xs"></i></span>
+                                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="users" class="text-xs"></i></span>
                                     Modalidades da Delegação
                                 </h4>
                                 <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
@@ -348,11 +348,11 @@
                                                 </td>
                                                 <td class="py-3 pl-4 text-right text-slate-500 font-medium">
                                                     {% if 'Masc' in insc_mod.modalidade.get_genero_display or 'M' == insc_mod.modalidade.genero %}
-                                                        <span class="inline-flex items-center gap-1 text-blue-600 font-semibold"><i class="fas fa-mars text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
+                                                        <span class="inline-flex items-center gap-1 text-blue-600 font-semibold"><i data-lucide="circle-user" class="text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
                                                     {% elif 'Fem' in insc_mod.modalidade.get_genero_display or 'F' == insc_mod.modalidade.genero %}
-                                                        <span class="inline-flex items-center gap-1 text-rose-600 font-semibold"><i class="fas fa-venus text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
+                                                        <span class="inline-flex items-center gap-1 text-rose-600 font-semibold"><i data-lucide="circle-user" class="text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
                                                     {% else %}
-                                                        <span class="inline-flex items-center gap-1 text-purple-650 font-semibold"><i class="fas fa-genderless text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
+                                                        <span class="inline-flex items-center gap-1 text-purple-650 font-semibold"><i data-lucide="circle" class="text-[10px]"></i> {{ insc_mod.modalidade.get_genero_display }}</span>
                                                     {% endif %}
                                                 </td>
                                             </tr>
@@ -379,7 +379,7 @@
             <!-- Filtro Lateral (Modalidade) -->
             <div class="w-full lg:w-72 shrink-0 bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5 sticky top-6">
                 <div class="flex items-center gap-2 mb-3">
-                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-filter text-xs"></i></span>
+                    <span class="p-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs"><i data-lucide="filter" class="text-xs"></i></span>
                     <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider">Filtrar Modalidade</h4>
                 </div>
                 <p class="text-[10px] text-slate-455 mb-3 leading-normal">Selecione uma modalidade abaixo para ver as delegações inscritas.</p>
@@ -396,7 +396,7 @@
             <div id="delegacoes-modalidade-content" class="flex-grow w-full space-y-6">
                 <!-- Estado Inicial: Nenhuma Modalidade Selecionada -->
                 <div id="dm-empty-state" class="text-center py-12 text-slate-400 bg-slate-50/30 rounded-2xl border border-slate-200/60 border-dashed">
-                    <i class="fas fa-filter text-3xl mb-2 text-slate-300 block"></i>
+                    <i data-lucide="filter" class="text-3xl mb-2 text-slate-300 block"></i>
                     Selecione uma modalidade na barra lateral para visualizar as delegações que manifestaram interesse de participação nela.
                 </div>
 
@@ -405,7 +405,7 @@
                         <div class="bg-slate-50/50 rounded-2xl border border-slate-200/60 p-5">
                             <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-200/60">
                                 <h4 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i class="fas fa-flag text-xs"></i></span>
+                                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg"><i data-lucide="flag" class="text-xs"></i></span>
                                     Delegações Inscritas em {{ m.nome }} ({{ m.get_genero_display }})
                                 </h4>
                                 <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-100">
@@ -462,7 +462,7 @@
     <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex flex-col justify-between">
         <div>
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-1">
-                <span class="p-1.5 bg-purple-50 text-purple-600 rounded-xl"><i class="fas fa-university text-xs"></i></span>
+                <span class="p-1.5 bg-purple-50 text-purple-600 rounded-xl"><i data-lucide="landmark" class="text-xs"></i></span>
                 Delegações por Campus
             </h3>
             <p class="text-xs text-slate-400">Distribuição quantitativa das delegações registradas em cada campus.</p>
@@ -475,7 +475,7 @@
     <!-- Distribuição de Gênero e Categorias (Métricas Demográficas) -->
     <div class="bg-white p-6 sm:p-8 rounded-3xl border border-slate-200/60 shadow-[0_2px_12px_rgba(0,0,0,0.01)] flex flex-col justify-between">
         <h3 class="text-base font-bold text-slate-800 flex items-center gap-2 mb-4">
-            <span class="p-1.5 bg-emerald-50 text-emerald-600 rounded-xl"><i class="fas fa-venus-mars text-xs"></i></span>
+            <span class="p-1.5 bg-emerald-50 text-emerald-600 rounded-xl"><i data-lucide="users-2" class="text-xs"></i></span>
             Perfil Demográfico de Atletas
         </h3>
         
@@ -502,7 +502,7 @@
             <!-- Masculino -->
             <div>
                 <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                    <span class="flex items-center gap-1.5"><i class="fas fa-mars" style="color: #3b82f6;"></i> Masculino</span>
+                    <span class="flex items-center gap-1.5"><i data-lucide="circle-user" style="color: #3b82f6;"></i> Masculino</span>
                     <span>{{ atletas_m }} <span class="text-slate-400 font-normal">({{ pct_masculino }}%)</span></span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-2">
@@ -513,7 +513,7 @@
             <!-- Feminino -->
             <div>
                 <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                    <span class="flex items-center gap-1.5"><i class="fas fa-venus" style="color: #e11d48;"></i> Feminino</span>
+                    <span class="flex items-center gap-1.5"><i data-lucide="circle-user" style="color: #e11d48;"></i> Feminino</span>
                     <span>{{ atletas_f }} <span class="text-slate-400 font-normal">({{ pct_feminino }}%)</span></span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-2">
@@ -524,7 +524,7 @@
             <!-- Não-binário -->
             <div>
                 <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
-                    <span class="flex items-center gap-1.5"><i class="fas fa-genderless" style="color: #8b5cf6;"></i> Não-binário</span>
+                    <span class="flex items-center gap-1.5"><i data-lucide="circle" style="color: #8b5cf6;"></i> Não-binário</span>
                     <span>{{ atletas_n }} <span class="text-slate-400 font-normal">({{ pct_nb }}%)</span></span>
                 </div>
                 <div class="w-full bg-slate-100 rounded-full h-2">
@@ -553,7 +553,7 @@
         <div>
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
                 <span class="p-1.5 bg-indigo-50 text-indigo-600 rounded-xl">
-                    <i class="fas fa-chart-line text-xs"></i>
+                    <i data-lucide="line-chart" class="text-xs"></i>
                 </span>
                 Análise Quantitativa de Inscrições
             </h3>
@@ -566,7 +566,7 @@
         <!-- Servidores no Total -->
         <div class="bg-slate-50/50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4">
             <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0" style="background-color: #fff7ed; color: #ea580c;">
-                <i class="fas fa-user-shield text-base"></i>
+                <i data-lucide="shield-check" class="text-base"></i>
             </div>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Servidores no Total</span>
@@ -576,7 +576,7 @@
         <!-- Estudantes no Total -->
         <div class="bg-slate-50/50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4">
             <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-users text-base"></i>
+                <i data-lucide="users" class="text-base"></i>
             </div>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Estudantes no Total</span>
@@ -586,7 +586,7 @@
         <!-- Total -->
         <div class="bg-slate-50/50 border border-slate-100 rounded-3xl p-5 flex items-center gap-4">
             <div class="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
-                <i class="fas fa-running text-base"></i>
+                <i data-lucide="activity" class="text-base"></i>
             </div>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Total</span>
@@ -603,7 +603,7 @@
                 <div>
                     <div class="flex items-center gap-2 border-b border-slate-100 pb-3 mb-4">
                         <span class="p-2 bg-slate-50 text-slate-500 rounded-xl">
-                            <i class="fas fa-map-marker-alt text-xs"></i>
+                            <i data-lucide="map-pin" class="text-xs"></i>
                         </span>
                         <h4 class="font-bold text-slate-800 text-sm">{{ stat.nome }}</h4>
                     </div>
@@ -647,7 +647,7 @@
         <div class="bg-slate-900 text-white rounded-3xl p-6 flex flex-col justify-between shadow-lg">
             <div class="space-y-4">
                 <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <i class="fas fa-balance-scale text-indigo-400"></i> Comparativo de Volume
+                    <i data-lucide="scale" class="text-indigo-400"></i> Comparativo de Volume
                 </h4>
                 
                 <div class="space-y-4 mt-4">
@@ -816,7 +816,7 @@
         <!-- Header -->
         <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl"><i class="fas fa-print"></i></span>
+                <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="printer"></i></span>
                 Opções de Impressão
             </h3>
             <button onclick="closePrintModal()" class="text-slate-400 hover:text-slate-600 transition text-xl font-bold leading-none">&times;</button>
@@ -865,7 +865,7 @@
                 Cancelar
             </button>
             <button onclick="executePrint()" class="px-4 py-2.5 text-xs font-bold rounded-2xl bg-slate-900 hover:bg-slate-800 text-white shadow-md transition active:scale-95 flex items-center gap-1.5">
-                <i class="fas fa-file-pdf"></i> Gerar Documento
+                <i data-lucide="file-text"></i> Gerar Documento
             </button>
         </div>
     </div>

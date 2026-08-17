@@ -8,7 +8,7 @@
     <div class="flex items-center justify-between mb-8 bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
         <div class="flex items-center gap-4">
             <a href="{% url 'dashboard' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1 mr-1" title="Voltar ao Dashboard">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="w-10 h-10 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-sm shadow-md shadow-blue-500/20">1</span>
             <div>
@@ -28,8 +28,8 @@
 
     {% if status_inscricao == 'nao_cadastrada' %}
         <div class="bg-red-50 border border-red-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-red-800">
-            <span class="p-3 bg-red-100 text-red-655 rounded-2xl shrink-0 animate-pulse">
-                <i class="fas fa-exclamation-triangle text-lg"></i>
+            <span class="p-3 bg-red-100 text-red-655 rounded-2xl shrink-0">
+                <i data-lucide="alert-triangle" class="text-lg"></i>
             </span>
             <div>
                 <h3 class="font-bold text-sm">As Olimpíadas ainda não foram iniciadas</h3>
@@ -41,7 +41,7 @@
     {% elif status_inscricao == 'nao_iniciada' %}
         <div class="bg-amber-50 border border-amber-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-amber-800">
             <span class="p-3 bg-amber-100 text-amber-600 rounded-2xl shrink-0">
-                <i class="fas fa-calendar-alt text-lg"></i>
+                <i data-lucide="calendar" class="text-lg"></i>
             </span>
             <div>
                 <h3 class="font-bold text-sm">As inscrições ainda não começaram</h3>
@@ -53,7 +53,7 @@
     {% elif status_inscricao == 'segunda_chamada' %}
         <div class="bg-indigo-50 border border-indigo-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-indigo-800">
             <span class="p-3 bg-indigo-100 text-indigo-650 rounded-2xl shrink-0">
-                <i class="fas fa-calendar-check text-lg"></i>
+                <i data-lucide="calendar-check" class="text-lg"></i>
             </span>
             <div>
                 <h3 class="font-bold text-sm">Segunda Chamada de Inscrições</h3>
@@ -68,7 +68,7 @@
     {% elif status_inscricao == 'encerrada' %}
         <div class="bg-red-50 border border-red-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-red-800">
             <span class="p-3 bg-red-100 text-red-650 rounded-2xl shrink-0">
-                <i class="fas fa-ban text-lg"></i>
+                <i data-lucide="ban" class="text-lg"></i>
             </span>
             <div>
                 <h3 class="font-bold text-sm">Inscrições Encerradas</h3>
@@ -83,7 +83,7 @@
         {% if status_inscricao == 'aberta' %}
         <div class="bg-emerald-50 border border-emerald-200 rounded-3xl p-6 shadow-sm flex items-center gap-4 text-emerald-800 mb-6">
             <span class="p-3 bg-emerald-100 text-emerald-650 rounded-2xl shrink-0">
-                <i class="fas fa-check-circle text-lg"></i>
+                <i data-lucide="check-circle-2" class="text-lg"></i>
             </span>
             <div>
                 <h3 class="font-bold text-sm">Inscrições Abertas!</h3>
@@ -125,7 +125,7 @@
             {% empty %}
                 <div class="col-span-full bg-white border border-slate-200/60 rounded-3xl p-12 text-center text-slate-400">
                     <div class="w-16 h-16 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200">
-                        <i class="fas fa-ban text-xl"></i>
+                        <i data-lucide="ban" class="text-xl"></i>
                     </div>
                     {% if status_inscricao == 'nao_cadastrada' %}
                         <h3 class="font-bold text-slate-750 text-sm">As Olimpíadas ainda não foram iniciadas</h3>
@@ -144,7 +144,7 @@
                     Cancelar
                 </a>
                 <button type="submit" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition shadow-sm active:scale-[0.98] flex items-center gap-2">
-                    Prosseguir para Escalação <i class="fas fa-arrow-right text-[10px]"></i>
+                    Prosseguir para Escalação <i data-lucide="arrow-right" class="text-[10px]"></i>
                 </button>
             </div>
         {% endif %}

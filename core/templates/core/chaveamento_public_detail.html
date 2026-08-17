@@ -9,7 +9,7 @@
         <div>
             <div class="flex items-center gap-3">
                 <a href="{% url 'chaveamento_public_list' %}" class="text-slate-400 hover:text-slate-600 transition">
-                    <i class="fas fa-arrow-left text-lg"></i>
+                    <i data-lucide="arrow-left" class="text-lg"></i>
                 </a>
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-800 tracking-tight">{{ modalidade.nome }}</h1>
                 <span class="px-3.5 py-1 text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs">
@@ -19,7 +19,7 @@
         </div>
         {% if delegacao %}
         <div class="bg-slate-50/80 border border-slate-200/80 px-4 py-2.5 rounded-2xl flex items-center gap-3 shadow-2xs">
-            <i class="fas fa-flag text-blue-600 text-lg"></i>
+            <i data-lucide="flag" class="text-blue-600 text-lg"></i>
             <div>
                 <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
                 <span class="text-xs font-bold text-slate-800">{{ delegacao.nome_delegacao|default:delegacao.nome_completo }}</span>
@@ -33,7 +33,7 @@
         <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-                    <i class="fas fa-users text-base"></i>
+                    <i data-lucide="users" class="text-base"></i>
                 </div>
                 <div>
                     <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest block">Etapa 1</span>
@@ -135,12 +135,12 @@
                             <!-- Linha 2 no Mobile / Direita no Desktop: Data e Horário -->
                             <div class="flex items-center justify-end sm:justify-start gap-2 pt-1.5 sm:pt-0 border-t border-slate-200/60 sm:border-t-0 text-[11px] text-slate-600">
                                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner" title="Data do Jogo">
-                                    <i class="fas fa-calendar-alt text-slate-400 text-[10px]"></i>
+                                    <i data-lucide="calendar" class="text-slate-400 text-[10px]"></i>
                                     <span>{{ p.data_jogo_exibicao|default:"A definir" }}</span>
                                 </div>
 
                                 <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200 shadow-inner" title="Horário do Jogo">
-                                    <i class="fas fa-clock text-slate-400 text-[10px]"></i>
+                                    <i data-lucide="clock" class="text-slate-400 text-[10px]"></i>
                                     <span>{{ p.horario_jogo_exibicao|default:"A definir" }}</span>
                                 </div>
                             </div>
@@ -151,7 +151,7 @@
             </div>
             {% empty %}
             <div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-6 text-center text-slate-500 text-sm font-medium">
-                <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                <i data-lucide="info" class="text-blue-500 mr-2"></i>
                 Esta modalidade não possui fase de grupos. As equipes qualificadas avançaram diretamente para a fase final.
             </div>
             {% endfor %}
@@ -163,7 +163,7 @@
         <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3.5">
                 <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
-                    <i class="fas fa-trophy text-base"></i>
+                    <i data-lucide="trophy" class="text-base"></i>
                 </div>
                 <div>
                     <span class="text-[10px] font-bold text-amber-400 uppercase tracking-widest block">Etapa 2</span>
@@ -185,7 +185,7 @@
 
                     <!-- Data da Fase no topo -->
                     <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-2xl mt-3 mb-4 text-xs text-slate-600">
-                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <i data-lucide="calendar" class="text-blue-600 text-xs flex-shrink-0"></i>
                         <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
                         <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.QUARTAS_LOCAL %}{{ chaveamento.datas_fases.QUARTAS_LOCAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                     </div>
@@ -209,7 +209,7 @@
 
                     <!-- Data da Fase no topo -->
                     <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-2xl mt-3 mb-4 text-xs text-slate-600">
-                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <i data-lucide="calendar" class="text-blue-600 text-xs flex-shrink-0"></i>
                         <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
                         <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.SEMI_LOCAL %}{{ chaveamento.datas_fases.SEMI_LOCAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                     </div>
@@ -233,7 +233,7 @@
 
                     <!-- Data da Fase no topo -->
                     <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-2xl mt-3 mb-4 text-xs text-slate-600">
-                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <i data-lucide="calendar" class="text-blue-600 text-xs flex-shrink-0"></i>
                         <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
                         <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.FINAL_LOCAL %}{{ chaveamento.datas_fases.FINAL_LOCAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                     </div>
@@ -259,12 +259,12 @@
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
                         <span>Semifinais Gerais</span>
-                        <i class="fas fa-star text-blue-500"></i>
+                        <i data-lucide="star" class="text-blue-500"></i>
                     </h3>
 
                     <!-- Data da Fase no topo -->
                     <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-2xl mt-3 mb-4 text-xs text-slate-600">
-                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <i data-lucide="calendar" class="text-blue-600 text-xs flex-shrink-0"></i>
                         <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
                         <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.SEMI_GERAL %}{{ chaveamento.datas_fases.SEMI_GERAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                     </div>
@@ -284,12 +284,12 @@
                 <div>
                     <h3 class="text-sm font-extrabold uppercase tracking-wider text-amber-800 border-b border-amber-100 pb-2 flex items-center justify-between">
                         <span>Final Geral e Chave Bronze</span>
-                        <i class="fas fa-trophy text-amber-500"></i>
+                        <i data-lucide="trophy" class="text-amber-500"></i>
                     </h3>
 
                     <!-- Data da Fase no topo -->
                     <div class="flex items-center gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2 rounded-2xl mt-3 mb-4 text-xs text-slate-600">
-                        <i class="fas fa-calendar-alt text-blue-600 text-xs flex-shrink-0"></i>
+                        <i data-lucide="calendar" class="text-blue-600 text-xs flex-shrink-0"></i>
                         <span class="text-[10px] font-bold uppercase text-slate-500 flex-shrink-0">Data da Fase:</span>
                         <span class="font-bold text-slate-800">{% if chaveamento.datas_fases.FINAL_GERAL %}{{ chaveamento.datas_fases.FINAL_GERAL }}{% else %}<span class="text-slate-400 font-normal italic">A definir</span>{% endif %}</span>
                     </div>

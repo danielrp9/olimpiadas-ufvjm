@@ -8,10 +8,10 @@
     <!-- Header do Cadastro com Seta de Voltar Integrada -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex items-center gap-3">
         <a href="{% url 'presumula_list' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para Jogos e Pré-Súmulas">
-            <i class="fas fa-arrow-left text-lg"></i>
+            <i data-lucide="arrow-left" class="text-lg"></i>
         </a>
         <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-            <i class="fas fa-plus text-base"></i>
+            <i data-lucide="plus" class="text-base"></i>
         </span>
         <div>
             <h1 class="text-xl font-bold text-slate-800 tracking-tight">{% if object %}Editar{% else %}Lançar Novo{% endif %} Jogo</h1>
@@ -51,7 +51,7 @@
                     {% if field.errors %}
                         {% for error in field.errors %}
                             <p class="text-[10px] font-semibold text-red-650 mt-1 flex items-center gap-1">
-                                <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
+                                <i data-lucide="alert-circle" class="text-[9px]"></i> {{ error }}
                             </p>
                         {% endfor %}
                     {% endif %}
@@ -68,7 +68,7 @@
                     Cancelar
                 </a>
                 <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] flex items-center gap-1.5">
-                    <i class="fas fa-save text-[10px]"></i> {% if object %}Salvar Alterações{% else %}Lançar Jogo{% endif %}
+                    <i data-lucide="save" class="text-[10px]"></i> {% if object %}Salvar Alterações{% else %}Lançar Jogo{% endif %}
                 </button>
             </div>
         </form>

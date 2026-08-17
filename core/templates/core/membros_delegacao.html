@@ -8,16 +8,16 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div class="flex items-center gap-3">
             <a href="{% url 'dashboard' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1 focus:outline-none" title="Voltar para o Painel Geral">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <div>
                 <h1 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
                     <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl">
-                        <i class="fas fa-user-friends"></i>
+                        <i data-lucide="users"></i>
                     </span>
                     Membros Autorizados
-                    <button type="button" onclick="openInfoModal()" class="text-slate-400 hover:text-blue-600 transition-colors ml-1 animate-pulse focus:outline-none" title="Informações sobre autorização de membros">
-                        <i class="fas fa-info-circle text-lg"></i>
+                    <button type="button" onclick="openInfoModal()" class="text-slate-400 hover:text-blue-600 transition-colors ml-1 focus:outline-none" title="Informações sobre autorização de membros">
+                        <i data-lucide="info" class="text-lg"></i>
                     </button>
                 </h1>
                 <p class="text-slate-400 mt-1.5 text-xs">
@@ -29,7 +29,7 @@
         <div class="flex items-center gap-2 self-stretch sm:self-auto shrink-0">
             <!-- Botão de adicionar membro -->
             <button type="button" onclick="toggleAddForm()" class="inline-flex items-center px-3.5 py-2 border border-blue-200 rounded-xl text-xs font-bold text-blue-600 bg-blue-50/50 hover:bg-blue-50 transition shadow-sm gap-1.5 focus:outline-none">
-                <i class="fas fa-plus"></i> Autorizar Novo E-mail
+                <i data-lucide="plus"></i> Autorizar Novo E-mail
             </button>
         </div>
     </div>
@@ -45,7 +45,7 @@
             {% csrf_token %}
             <div class="relative w-full sm:w-80">
                 <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                    <i class="far fa-envelope text-xs"></i>
+                    <i data-lucide="mail" class="text-xs"></i>
                 </span>
                 <input type="email" name="email" id="id_email" placeholder="exemplo@gmail.com" required
                        class="w-full pl-9 pr-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30">
@@ -66,7 +66,7 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
         <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-white">
             <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <i class="fas fa-envelope-open-text text-blue-500"></i> E-mails com Acesso Habilitado
+                <i data-lucide="mail-open" class="text-blue-500"></i> E-mails com Acesso Habilitado
             </h2>
             <span class="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-100 uppercase tracking-wide">
                 {{ membros.count }} autorizado(s)
@@ -97,8 +97,10 @@
                         <td class="px-6 py-4 text-right">
                             <form action="{% url 'membro_delegacao_delete' item.id %}" method="post" class="inline" onsubmit="return confirm('Deseja realmente revogar a autorização de acesso para {{ item.email }}?');">
                                 {% csrf_token %}
-                                <button type="submit" class="inline-flex items-center px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-100 rounded-xl font-bold transition text-[10px] gap-1.5 active:scale-95 focus:outline-none">
-                                    <i class="far fa-trash-alt text-[9px]"></i> Revogar Acesso
+                                <button type="submit" 
+                                        class="w-8 h-8 rounded-xl border border-red-200/80 bg-red-50/30 text-red-500 hover:bg-red-50 hover:text-red-700 transition shadow-2xs inline-flex items-center justify-center shrink-0 active:scale-95 focus:outline-none cursor-pointer" 
+                                        title="Revogar autorização">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
                                 </button>
                             </form>
                         </td>
@@ -107,7 +109,7 @@
                     <tr>
                         <td colspan="3" class="px-6 py-20 text-center text-slate-400">
                             <div class="w-12 h-12 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-4 border border-dashed border-slate-200">
-                                <i class="fas fa-users text-lg"></i>
+                                <i data-lucide="users" class="text-lg"></i>
                             </div>
                             <h3 class="font-bold text-slate-700 text-sm">Nenhum membro autorizado</h3>
                             <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">Sua delegação ainda não possui acessos compartilhados. Clique em "Autorizar Novo E-mail" acima para adicionar.</p>
@@ -127,12 +129,12 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2" id="modal-title">
                 <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl">
-                    <i class="fas fa-info-circle"></i>
+                    <i data-lucide="info"></i>
                 </span>
                 Informações sobre Membros Autorizados
             </h3>
             <button type="button" onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-655 transition p-1 rounded-lg hover:bg-slate-50 focus:outline-none">
-                <i class="fas fa-times text-sm"></i>
+                <i data-lucide="x" class="text-sm"></i>
             </button>
         </div>
         <div class="space-y-3.5 text-xs text-slate-600 leading-relaxed">

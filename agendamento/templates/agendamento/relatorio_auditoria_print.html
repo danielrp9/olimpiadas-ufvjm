@@ -1,11 +1,23 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laudo Técnico de Auditoria - Olimpíadas UFVJM</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="{% static 'js/lucide.min.js' %}"></script>
+    <script src="{% static 'js/lucide-init.js' %}"></script>
     <style>
+        /* Lucide Icons Base & Optical Sizing */
+        .lucide, [data-lucide], svg.lucide {
+            display: inline-block;
+            vertical-align: -0.125em;
+            stroke-width: 2px;
+        }
+        svg.lucide:not([class*="w-"]):not([class*="size-"]):not([class*="h-"]) {
+            width: 1.15em;
+            height: 1.15em;
+        }
         * {
             box-sizing: border-box;
             margin: 0;
@@ -290,15 +302,15 @@
     <!-- Barra de Ação Superior (Oculta na Impressão) -->
     <div class="action-bar no-print">
         <div class="action-bar-title">
-            <i class="fas fa-file-invoice mr-2 text-emerald-400"></i>
+            <i data-lucide="file-text" class="mr-2 text-emerald-400"></i>
             Visualização de Impressão Oficial (A4)
         </div>
         <div class="action-bar-buttons">
             <button onclick="window.print();" class="btn btn-print">
-                <i class="fas fa-print"></i> Imprimir / Salvar em PDF
+                <i data-lucide="printer"></i> Imprimir / Salvar em PDF
             </button>
             <button onclick="window.close();" class="btn btn-close">
-                <i class="fas fa-times"></i> Fechar
+                <i data-lucide="x"></i> Fechar
             </button>
         </div>
     </div>

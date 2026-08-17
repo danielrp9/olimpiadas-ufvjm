@@ -33,12 +33,12 @@
         <div class="relative z-10 flex flex-wrap items-center gap-3">
             <!-- Botão Exportar Planilha Excel (.xlsx) (Glassmorphism / Vidro Minimalista) -->
             <a href="{% url 'exportador:exportar_jogos_excel' %}" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold rounded-2xl transition backdrop-blur-sm active:scale-95 flex items-center gap-2 border border-white/10 shadow-inner shrink-0 cursor-pointer" title="Extrair Planilha Excel de Jogos (.xlsx)">
-                <i class="fas fa-file-excel text-emerald-400 text-sm"></i> Extrair
+                <i data-lucide="file-spreadsheet" class="text-emerald-400 text-sm"></i> Extrair
             </a>
 
             <!-- Botão de Compartilhar (Padrão de estilo 'Imprimir Relatório') -->
             <button type="button" onclick="abrirModalCompartilhamento('{% url 'chaveamento_share_list' %}', 'Todas as Modalidades - UFVJM')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
-                <i class="fas fa-share-nodes text-amber-400 text-sm"></i> Compartilhar
+                <i data-lucide="share-2" class="text-amber-400 text-sm"></i> Compartilhar
             </button>
 
 
@@ -73,11 +73,11 @@
                     {% if item.chaveamento %}
                         {% if item.chaveamento.fase_atual == 'finalizado' %}
                             <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                <i class="fas fa-check-circle mr-1"></i> Finalizado
+                                <i data-lucide="check-circle-2" class="mr-1"></i> Finalizado
                             </span>
                         {% else %}
                             <span class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
-                                <i class="fas fa-check-circle mr-1"></i> Ativo
+                                <i data-lucide="check-circle-2" class="mr-1"></i> Ativo
                             </span>
                         {% endif %}
                     {% else %}
@@ -92,19 +92,19 @@
                 <!-- Distribuição dos Campi -->
                 <div class="mt-4 pt-4 border-t border-slate-100 space-y-2 text-xs">
                     <div class="flex justify-between items-center text-slate-600">
-                        <span><i class="fas fa-university text-blue-500 mr-1.5"></i> Diamantina (Sede):</span>
+                        <span><i data-lucide="landmark" class="text-blue-500 mr-1.5"></i> Diamantina (Sede):</span>
                         <span class="font-bold text-slate-900">{{ item.diamantina_count }} time(s)</span>
                     </div>
                     <div class="flex justify-between items-center text-slate-600">
-                        <span><i class="fas fa-map-marker-alt text-emerald-500 mr-1.5"></i> Mucuri (Ext):</span>
+                        <span><i data-lucide="map-pin" class="text-emerald-500 mr-1.5"></i> Mucuri (Ext):</span>
                         <span class="font-bold text-slate-900">{{ item.mucuri_count }} time(s)</span>
                     </div>
                     <div class="flex justify-between items-center text-slate-600">
-                        <span><i class="fas fa-map-marker-alt text-amber-500 mr-1.5"></i> Unaí (Ext):</span>
+                        <span><i data-lucide="map-pin" class="text-amber-500 mr-1.5"></i> Unaí (Ext):</span>
                         <span class="font-bold text-slate-900">{{ item.unai_count }} time(s)</span>
                     </div>
                     <div class="flex justify-between items-center text-slate-600">
-                        <span><i class="fas fa-map-marker-alt text-indigo-500 mr-1.5"></i> Janaúba (Ext):</span>
+                        <span><i data-lucide="map-pin" class="text-indigo-500 mr-1.5"></i> Janaúba (Ext):</span>
                         <span class="font-bold text-slate-900">{{ item.janauba_count }} time(s)</span>
                     </div>
                 </div>
@@ -114,13 +114,13 @@
             <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
                 {% if item.chaveamento %}
                     <a href="{% url 'chaveamento_admin_detail' pk=item.modalidade.pk %}" class="flex-1 text-center py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl transition shadow-sm">
-                        <i class="fas fa-cog mr-1.5"></i> Gerenciar Chaveamento
+                        <i data-lucide="settings" class="mr-1.5"></i> Gerenciar Chaveamento
                     </a>
                 {% else %}
                     <form action="{% url 'chaveamento_gerar' pk=item.modalidade.pk %}" method="POST" class="w-full">
                         {% csrf_token %}
                         <button type="submit" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-2">
-                            <i class="fas fa-magic"></i> Gerar Chaveamento
+                            <i data-lucide="wand-2"></i> Gerar Chaveamento
                         </button>
                     </form>
                 {% endif %}
@@ -128,7 +128,7 @@
         </div>
         {% empty %}
         <div class="col-span-full bg-white border border-slate-200 rounded-3xl p-12 text-center text-slate-500">
-            <i class="fas fa-folder-open text-4xl text-slate-300 mb-3 block"></i>
+            <i data-lucide="folder-open" class="text-4xl text-slate-300 mb-3 block"></i>
             Nenhuma modalidade cadastrada no sistema.
         </div>
         {% endfor %}

@@ -9,10 +9,10 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
             <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1.5" title="Voltar ao Painel">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="p-3 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-                <i class="fas fa-play text-lg"></i>
+                <i data-lucide="play" class="text-lg"></i>
             </span>
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Gerar Cronograma</h1>
@@ -28,7 +28,7 @@
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Datas Disponíveis</span>
                 <span class="p-2.5 bg-amber-50 text-amber-600 rounded-2xl">
-                    <i class="fas fa-calendar-alt text-sm"></i>
+                    <i data-lucide="calendar" class="text-sm"></i>
                 </span>
             </div>
             <div>
@@ -42,7 +42,7 @@
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Quadras e Locais</span>
                 <span class="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl">
-                    <i class="fas fa-map-marker-alt text-sm"></i>
+                    <i data-lucide="map-pin" class="text-sm"></i>
                 </span>
             </div>
             <div>
@@ -56,7 +56,7 @@
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Partidas a Alocar</span>
                 <span class="p-2.5 bg-purple-50 text-purple-600 rounded-2xl">
-                    <i class="fas fa-trophy text-sm"></i>
+                    <i data-lucide="trophy" class="text-sm"></i>
                 </span>
             </div>
             <div>
@@ -100,7 +100,7 @@
 
             <div class="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-6">
                 <p class="text-xs text-slate-600 flex items-center gap-2">
-                    <i class="fas fa-shield-alt text-emerald-600 text-sm shrink-0"></i>
+                    <i data-lucide="shield" class="text-emerald-600 text-sm shrink-0"></i>
                     <span>A simulação é gerada de forma segura e não altera partidas oficiais até a sua aprovação.</span>
                 </p>
 
@@ -108,7 +108,7 @@
                 <button type="submit" id="btn-submit-gerar"
                     style="padding: 14px 36px; gap: 12px;"
                     class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl shadow-sm hover:shadow transition active:scale-[0.98] flex items-center justify-center cursor-pointer shrink-0 text-xs sm:text-sm">
-                    <i class="fas fa-magic text-sm shrink-0"></i>
+                    <i data-lucide="wand-2" class="text-sm shrink-0"></i>
                     <span class="whitespace-nowrap">Executar Agendamento Automático</span>
                 </button>
             </div>
@@ -124,7 +124,7 @@
         <!-- Ícone Animado -->
         <div class="relative mx-auto w-20 h-20 flex items-center justify-center">
             <div class="w-16 h-16 rounded-3xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center shadow-xs">
-                <i id="icone-progresso" class="fas fa-cog fa-spin text-2xl"></i>
+                <i id="icone-progresso" data-lucide="settings" class="animate-spin text-2xl"></i>
             </div>
         </div>
 
@@ -151,19 +151,19 @@
         <!-- Etapas em Checklist -->
         <div class="bg-slate-50/90 border border-slate-200/60 rounded-2xl p-4 text-left space-y-2.5 text-xs">
             <div id="step-1" class="flex items-center gap-2.5 text-slate-400 transition-all duration-300">
-                <i class="fas fa-circle-notch fa-spin text-[10px] w-4 text-center"></i>
+                <i data-lucide="loader-2" class="animate-spin text-[10px] w-4 text-center"></i>
                 <span>Coleta de dados e mapeamento de chaves</span>
             </div>
             <div id="step-2" class="flex items-center gap-2.5 text-slate-400 transition-all duration-300">
-                <i class="far fa-circle text-[10px] w-4 text-center"></i>
+                <i data-lucide="circle" class="text-[10px] w-4 text-center"></i>
                 <span>Resolução de precedências e restrições de fase</span>
             </div>
             <div id="step-3" class="flex items-center gap-2.5 text-slate-400 transition-all duration-300">
-                <i class="far fa-circle text-[10px] w-4 text-center"></i>
+                <i data-lucide="circle" class="text-[10px] w-4 text-center"></i>
                 <span>Otimização de descansos e blocos de vôlei</span>
             </div>
             <div id="step-4" class="flex items-center gap-2.5 text-slate-400 transition-all duration-300">
-                <i class="far fa-circle text-[10px] w-4 text-center"></i>
+                <i data-lucide="circle" class="text-[10px] w-4 text-center"></i>
                 <span>Construção e validação da grade final</span>
             </div>
         </div>
@@ -186,16 +186,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function setStepState(stepEl, state) {
         // state: 'waiting', 'active', 'done'
-        const icon = stepEl.querySelector('i');
+        const icon = stepEl.querySelector('i, svg');
         if (state === 'done') {
             stepEl.className = 'flex items-center gap-2.5 text-emerald-700 font-medium transition-all duration-300';
-            icon.className = 'fas fa-check-circle text-[11px] text-emerald-600 w-4 text-center';
+            if (icon) {
+                icon.outerHTML = '<i data-lucide="check-circle-2" class="text-[11px] text-emerald-600 w-4 text-center"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons({ root: stepEl });
+            }
         } else if (state === 'active') {
             stepEl.className = 'flex items-center gap-2.5 text-blue-700 font-bold transition-all duration-300';
-            icon.className = 'fas fa-circle-notch fa-spin text-[11px] text-blue-600 w-4 text-center';
+            if (icon) {
+                icon.outerHTML = '<i data-lucide="loader-2" class="animate-spin text-[11px] text-blue-600 w-4 text-center"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons({ root: stepEl });
+            }
         } else {
             stepEl.className = 'flex items-center gap-2.5 text-slate-400 transition-all duration-300';
-            icon.className = 'far fa-circle text-[10px] w-4 text-center';
+            if (icon) {
+                icon.outerHTML = '<i data-lucide="circle" class="text-[10px] w-4 text-center"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons({ root: stepEl });
+            }
         }
     }
 
@@ -266,8 +275,15 @@ document.addEventListener('DOMContentLoaded', function() {
             setStepState(step4, 'done');
             
             updateProgress(100, 'Cronograma concluído com sucesso!');
-            icone.className = 'fas fa-check text-2xl text-emerald-600';
-            icone.parentElement.className = 'w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shadow-xs';
+            const targetIcone = document.getElementById('icone-progresso') || icone;
+            if (targetIcone) {
+                targetIcone.outerHTML = '<i id="icone-progresso" data-lucide="check" class="text-2xl text-emerald-600"></i>';
+                if (typeof lucide !== 'undefined') lucide.createIcons({ root: targetIcone.parentElement || document });
+            }
+            const wrapper = document.getElementById('icone-progresso')?.parentElement;
+            if (wrapper) {
+                wrapper.className = 'w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shadow-xs';
+            }
 
             setTimeout(() => {
                 window.location.href = data.redirect_url;

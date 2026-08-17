@@ -8,7 +8,7 @@
     <div>
         <h1 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
             <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl">
-                <i class="fas fa-university"></i>
+                <i data-lucide="landmark"></i>
             </span>
             Gestão de Delegações
         </h1>
@@ -52,7 +52,7 @@
                     <!-- Atletas Cadastrados -->
                     <td class="px-6 py-4 hidden sm:table-cell">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                            <i class="fas fa-users mr-1"></i> {{ del.atletas.count }} Atletas
+                            <i data-lucide="users" class="mr-1"></i> {{ del.atletas.count }} Atletas
                         </span>
                     </td>
 
@@ -60,15 +60,15 @@
                     <td class="px-6 py-4 hidden sm:table-cell">
                         {% if del.status_delegacao == 'deferido' %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-150 uppercase tracking-wide">
-                                <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferida (Aprovada)
+                                <i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Deferida (Aprovada)
                             </span>
                         {% elif del.status_delegacao == 'indeferido' %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-150 uppercase tracking-wide">
-                                <i class="fas fa-times-circle mr-1 text-red-600"></i> Indeferida (Recusada)
+                                <i data-lucide="x-circle" class="mr-1 text-red-600"></i> Indeferida (Recusada)
                             </span>
                         {% else %}
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-150 uppercase tracking-wide animate-pulse">
-                                <i class="fas fa-clock mr-1 text-amber-600"></i> Pendente
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-150 uppercase tracking-wide">
+                                <i data-lucide="clock" class="mr-1 text-amber-600"></i> Pendente
                             </span>
                         {% endif %}
                         {% if del.justificativa_delegacao %}
@@ -84,7 +84,7 @@
                                 id="btn-toggle-athletes-{{ del.id }}"
                                 class="inline-flex items-center px-3 py-1.5 border border-slate-200 hover:border-slate-350 text-slate-650 hover:bg-slate-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-[0.98]">
                             <span class="btn-text">Avaliar Atletas</span>
-                            <i class="fas fa-chevron-down btn-icon text-[9px]"></i>
+                            <i data-lucide="chevron-down" class="btn-icon text-[9px]"></i>
                         </button>
                     </td>
                 </tr>
@@ -108,7 +108,7 @@
                                          data-justificativa="{{ del.justificativa_delegacao|default:'' }}"
                                          data-foto="{{ del.foto_url|default:'' }}"
                                          class="inline-flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1.5 active:scale-[0.98]">
-                                    <i class="fas fa-gavel"></i> Deferir / Indeferir Delegação
+                                    <i data-lucide="gavel"></i> Deferir / Indeferir Delegação
                                 </button>
                             </div>
 
@@ -119,20 +119,20 @@
                                 <div class="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-3">
                                     <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center justify-between">
                                         <span class="flex items-center gap-1.5">
-                                            <i class="fas fa-file-invoice-dollar text-emerald-600"></i> Comprovante de Pagamento Geral da Delegação
+                                            <i data-lucide="receipt" class="text-emerald-600"></i> Comprovante de Pagamento Geral da Delegação
                                         </span>
                                         {% if del.link_comprovante_pagamento %}
                                             {% if del.status_pagamento == 'deferido' %}
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-green-700 border border-green-150 uppercase tracking-wide">
-                                                    <i class="fas fa-check-circle mr-1"></i> Deferido
+                                                    <i data-lucide="check-circle-2" class="mr-1"></i> Deferido
                                                 </span>
                                             {% elif del.status_pagamento == 'indeferido' %}
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 border border-red-150 uppercase tracking-wide">
-                                                    <i class="fas fa-times-circle mr-1"></i> Indeferido
+                                                    <i data-lucide="x-circle" class="mr-1"></i> Indeferido
                                                 </span>
                                             {% else %}
-                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-150 uppercase tracking-wide animate-pulse">
-                                                    <i class="fas fa-clock mr-1"></i> Pendente
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-150 uppercase tracking-wide">
+                                                    <i data-lucide="clock" class="mr-1"></i> Pendente
                                                 </span>
                                             {% endif %}
                                         {% else %}
@@ -156,7 +156,7 @@
                                         <div class="flex gap-2 shrink-0">
                                             {% if del.link_comprovante_pagamento %}
                                                 <a href="{{ del.link_comprovante_pagamento }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-[10px] font-bold transition gap-1 shadow-sm">
-                                                    <i class="fas fa-external-link-alt"></i> Visualizar Comprovante
+                                                    <i data-lucide="external-link"></i> Visualizar Comprovante
                                                 </a>
                                                 <button type="button" onclick="openPaymentEvalModal(this)"
                                                         data-id="{{ del.id }}"
@@ -166,7 +166,7 @@
                                                         data-status="{{ del.status_pagamento }}"
                                                         data-justificativa="{{ del.justificativa_pagamento|default:'' }}"
                                                         class="inline-flex items-center px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1 active:scale-95">
-                                                    <i class="fas fa-gavel"></i> Avaliar Pagamento
+                                                    <i data-lucide="gavel"></i> Avaliar Pagamento
                                                 </button>
                                             {% endif %}
                                         </div>
@@ -176,12 +176,12 @@
                                 <!-- Modalidades Selecionadas -->
                                 <div class="bg-white border border-slate-200/60 rounded-2xl p-5 shadow-sm space-y-3">
                                     <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                                        <i class="fas fa-trophy text-amber-500"></i> Modalidades Selecionadas
+                                        <i data-lucide="trophy" class="text-amber-500"></i> Modalidades Selecionadas
                                     </h5>
                                     <div class="flex flex-wrap gap-2">
                                         {% for im in del.inscricao.modalidades.all %}
                                             <span class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-50 text-slate-750 font-bold border border-slate-200 text-[10px] shadow-sm">
-                                                <i class="fas fa-running text-blue-500"></i> {{ im.modalidade.nome }} ({{ im.modalidade.get_genero_display }})
+                                                <i data-lucide="activity" class="text-blue-500"></i> {{ im.modalidade.nome }} ({{ im.modalidade.get_genero_display }})
                                             </span>
                                         {% endfor %}
                                     </div>
@@ -191,15 +191,15 @@
                                 {% if del.inscricao.substituicoes.exists %}
                                 <div class="bg-indigo-50/45 border border-indigo-100 rounded-2xl p-5 shadow-sm space-y-3">
                                     <h5 class="font-bold text-indigo-800 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                                        <i class="fas fa-exchange-alt"></i> Substituições Realizadas - Segunda Chamada
+                                        <i data-lucide="arrow-left-right"></i> Substituições Realizadas - Segunda Chamada
                                     </h5>
                                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                                         {% for sub in del.inscricao.substituicoes.all %}
                                             <div class="bg-white border border-indigo-100/50 rounded-xl p-3 flex items-center justify-between shadow-xs">
                                                 <div class="flex items-center gap-1.5">
-                                                    <span class="text-red-500 font-bold"><i class="fas fa-user-minus text-[9px]"></i> {{ sub.atleta_saiu.nome_completo }}</span>
-                                                    <span class="text-slate-400 font-bold"><i class="fas fa-arrow-right text-[9px]"></i></span>
-                                                    <span class="text-green-650 font-bold"><i class="fas fa-user-plus text-[9px]"></i> {{ sub.atleta_entrou.nome_completo }}</span>
+                                                    <span class="text-red-500 font-bold"><i data-lucide="user-minus" class="text-[9px]"></i> {{ sub.atleta_saiu.nome_completo }}</span>
+                                                    <span class="text-slate-400 font-bold"><i data-lucide="arrow-right" class="text-[9px]"></i></span>
+                                                    <span class="text-green-650 font-bold"><i data-lucide="user-plus" class="text-[9px]"></i> {{ sub.atleta_entrou.nome_completo }}</span>
                                                 </div>
                                                 <span class="text-[8px] text-slate-400 font-medium bg-slate-50 border border-slate-100 px-1.5 py-0.5 rounded">{{ sub.data_substituicao|date:"d/m H:i" }}</span>
                                             </div>
@@ -212,7 +212,7 @@
                                 <div class="bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm">
                                     <div class="px-4 py-2.5 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                                         <h5 class="font-bold text-slate-700 text-xs uppercase tracking-wider flex items-center gap-1.5">
-                                            <i class="fas fa-users text-blue-500"></i> Elenco de Atletas Inscritos
+                                            <i data-lucide="users" class="text-blue-500"></i> Elenco de Atletas Inscritos
                                         </h5>
                                         <span class="text-[10px] font-semibold text-slate-400">
                                             Total: {{ del.inscricao.atletas_inscritos.count }} atletas
@@ -238,15 +238,15 @@
                                                     <td class="px-2 sm:px-4 py-3">
                                                         {% if atleta.status_avaliacao == 'deferido' %}
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-100 uppercase tracking-wide">
-                                                                <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido
+                                                                <i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Deferido
                                                             </span>
                                                         {% elif atleta.status_avaliacao == 'indeferido' %}
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 uppercase tracking-wide">
-                                                                <i class="fas fa-times-circle mr-1 text-red-655"></i> Indeferido
+                                                                <i data-lucide="x-circle" class="mr-1 text-red-655"></i> Indeferido
                                                             </span>
                                                         {% else %}
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wide">
-                                                                <i class="fas fa-clock mr-1 text-amber-600"></i> Pendente
+                                                                <i data-lucide="clock" class="mr-1 text-amber-600"></i> Pendente
                                                             </span>
                                                         {% endif %}
                                                     </td>
@@ -267,7 +267,7 @@
                                                                 data-justificativa="{{ atleta.justificativa_inconformidade|default:'' }}"
                                                                 data-permite-correcao="{% if atleta.permite_correcao %}true{% else %}false{% endif %}"
                                                                 class="inline-flex items-center px-2.5 py-1.5 bg-white hover:bg-slate-50 hover:text-blue-600 border border-slate-200 rounded-xl font-bold text-[10px] transition duration-150 active:scale-95 shadow-sm gap-1">
-                                                            <i class="fas fa-gavel"></i> Avaliar
+                                                            <i data-lucide="gavel"></i> Avaliar
                                                         </button>
                                                     </td>
                                                 </tr>
@@ -299,7 +299,7 @@
                 <tr>
                     <td colspan="4" class="px-6 py-12 text-center text-slate-400">
                         <div class="w-12 h-12 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 border border-dashed border-slate-200">
-                            <i class="fas fa-university text-lg"></i>
+                            <i data-lucide="landmark" class="text-lg"></i>
                         </div>
                         <p class="font-bold text-slate-700 text-sm">Nenhuma delegação registrada</p>
                         <p class="text-[11px] text-slate-450 mt-1">Nenhuma delegação foi cadastrada ou solicitada no sistema até o momento.</p>
@@ -321,7 +321,7 @@
                 <h4 id="modal-atleta-nome-title" class="font-bold text-slate-800 text-sm mt-0.5"></h4>
             </div>
             <button type="button" onclick="closeEvalModal()" class="text-slate-400 hover:text-slate-600 transition p-1 rounded-lg hover:bg-slate-100">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
@@ -389,11 +389,11 @@
                 <div class="flex gap-6">
                     <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
                         <input type="radio" name="status" value="deferido" id="modal-radio-deferido" class="accent-green-600" onchange="toggleModalJustificativa(false)" required>
-                        <span class="inline-flex items-center text-green-700"><i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido</span>
+                        <span class="inline-flex items-center text-green-700"><i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Deferido</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
                         <input type="radio" name="status" value="indeferido" id="modal-radio-indeferido" class="accent-red-600" onchange="toggleModalJustificativa(true)" required>
-                        <span class="inline-flex items-center text-red-700"><i class="fas fa-times-circle mr-1 text-red-655"></i> Indeferido</span>
+                        <span class="inline-flex items-center text-red-700"><i data-lucide="x-circle" class="mr-1 text-red-655"></i> Indeferido</span>
                     </label>
                 </div>
             </div>
@@ -437,7 +437,7 @@
                 <h4 id="modal-payment-title" class="font-bold text-slate-800 text-sm mt-0.5">Comprovante de Pagamento Geral</h4>
             </div>
             <button type="button" onclick="closePaymentEvalModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100 focus:outline-none">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
@@ -461,7 +461,7 @@
                     <span class="text-[9px] text-slate-405 font-bold uppercase tracking-wider block">Comprovante Anexado</span>
                     <div id="modal-payment-docs" class="mt-2.5">
                         <a id="modal-payment-link-btn" href="" target="_blank" class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition text-xs gap-2 shadow-sm">
-                            <i class="fas fa-external-link-alt"></i> Acessar Comprovante de Pagamento
+                            <i data-lucide="external-link"></i> Acessar Comprovante de Pagamento
                         </a>
                     </div>
                 </div>
@@ -473,11 +473,11 @@
                 <div class="flex gap-6">
                     <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
                         <input type="radio" name="status" value="deferido" id="modal-payment-radio-deferido" class="accent-green-600" onchange="togglePaymentModalJustificativa(false)" required>
-                        <span class="inline-flex items-center text-green-700"><i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido</span>
+                        <span class="inline-flex items-center text-green-700"><i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Deferido</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-750">
                         <input type="radio" name="status" value="indeferido" id="modal-payment-radio-indeferido" class="accent-red-600" onchange="togglePaymentModalJustificativa(true)" required>
-                        <span class="inline-flex items-center text-red-700"><i class="fas fa-times-circle mr-1 text-red-655"></i> Indeferido</span>
+                        <span class="inline-flex items-center text-red-700"><i data-lucide="x-circle" class="mr-1 text-red-655"></i> Indeferido</span>
                     </label>
                 </div>
             </div>
@@ -514,7 +514,7 @@
         <div class="px-6 py-4 flex justify-between items-center bg-slate-50/50 border-b border-slate-100">
             <span class="text-[10px] text-slate-450 font-bold uppercase tracking-wider block">Avaliação de Delegação</span>
             <button type="button" onclick="closeDelEvalModal()" class="text-slate-400 hover:text-slate-600 transition p-1 rounded-lg hover:bg-slate-100">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
@@ -530,7 +530,7 @@
                     <div class="shrink-0">
                         <img id="modal-del-foto" src="" class="w-16 h-16 rounded-full object-cover shadow-sm border border-slate-200 hidden" />
                         <div id="modal-del-foto-placeholder" class="w-16 h-16 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 shadow-sm">
-                            <i class="fas fa-shield-alt text-2xl"></i>
+                            <i data-lucide="shield" class="text-2xl"></i>
                         </div>
                     </div>
                     <!-- Info text -->
@@ -552,13 +552,13 @@
                     <div class="grid grid-cols-2 gap-4 w-full">
                         <label class="flex flex-col items-center justify-center p-4 rounded-2xl bg-green-50/30 hover:bg-green-50/60 hover:border-green-300 transition cursor-pointer text-center group active:scale-[0.98]" style="border: 1px solid #e2e8f0;">
                             <input type="radio" name="status" value="deferido" id="modal-del-radio-deferido" class="accent-green-600 h-4 w-4" onchange="toggleDelModalJustificativa(false); checkDelModalChanges();" required>
-                            <i class="fas fa-check-circle text-2xl text-green-500 mt-2.5 mb-1 group-hover:scale-110 transition"></i>
+                            <i data-lucide="check-circle-2" class="text-2xl text-green-500 mt-2.5 mb-1 group-hover:scale-110 transition"></i>
                             <span class="text-xs font-bold text-green-700" id="label-del-deferir">Deferir</span>
                             <span class="text-[9px] text-green-500/80 mt-0.5 font-medium leading-none" id="sublabel-del-deferir">Aprovar Delegação</span>
                         </label>
                         <label class="flex flex-col items-center justify-center p-4 rounded-2xl bg-red-50/30 hover:bg-red-50/60 hover:border-red-300 transition cursor-pointer text-center group active:scale-[0.98]" style="border: 1px solid #e2e8f0;">
                             <input type="radio" name="status" value="indeferido" id="modal-del-radio-indeferido" class="accent-red-600 h-4 w-4" onchange="toggleDelModalJustificativa(true); checkDelModalChanges();" required>
-                            <i class="fas fa-times-circle text-2xl text-red-500 mt-2.5 mb-1 group-hover:scale-110 transition"></i>
+                            <i data-lucide="x-circle" class="text-2xl text-red-500 mt-2.5 mb-1 group-hover:scale-110 transition"></i>
                             <span class="text-xs font-bold text-red-700" id="label-del-indeferir">Indeferir</span>
                             <span class="text-[9px] text-red-500/80 mt-0.5 font-medium leading-none" id="sublabel-del-indeferir">Recusar Delegação</span>
                         </label>
@@ -720,10 +720,16 @@ function toggleAthletes(id) {
         const iconI = btn.querySelector('.btn-icon');
         if (row.classList.contains('hidden')) {
             textSpan.textContent = 'Avaliar Atletas';
-            iconI.className = 'fas fa-chevron-down btn-icon text-[9px]';
+            if (iconI) {
+                iconI.setAttribute('data-lucide', 'chevron-down');
+                if (typeof lucide !== 'undefined') lucide.createIcons({ root: btn });
+            }
         } else {
             textSpan.textContent = 'Fechar Avaliação';
-            iconI.className = 'fas fa-chevron-up btn-icon text-[9px]';
+            if (iconI) {
+                iconI.setAttribute('data-lucide', 'chevron-up');
+                if (typeof lucide !== 'undefined') lucide.createIcons({ root: btn });
+            }
         }
     }
     
@@ -893,7 +899,7 @@ function openEvalModal(btn) {
         temDocs = true;
         docsContainer.innerHTML += `
             <a href="${linkDocumento}" target="_blank" class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition text-xs gap-2 shadow-sm">
-                <i class="fas fa-folder-open text-sm"></i> Acessar Pasta de Documentos no Drive
+                <i data-lucide="folder-open" class="text-sm"></i> Acessar Pasta de Documentos no Drive
             </a>
         `;
     }
@@ -901,7 +907,7 @@ function openEvalModal(btn) {
         temDocs = true;
         docsContainer.innerHTML += `
             <a href="${linkDocumentoEgresso}" target="_blank" class="inline-flex items-center px-4 py-2.5 bg-purple-50 border border-purple-100 hover:bg-purple-100 hover:text-purple-700 rounded-xl font-semibold text-purple-650 transition text-xs gap-2 shadow-sm">
-                <i class="fas fa-graduation-cap text-sm"></i> Doc. Egresso (Legado)
+                <i data-lucide="graduation-cap" class="text-sm"></i> Doc. Egresso (Legado)
             </a>
         `;
     }
@@ -909,7 +915,7 @@ function openEvalModal(btn) {
         temDocs = true;
         docsContainer.innerHTML += `
             <a href="${linkCorrecao}" target="_blank" class="inline-flex items-center px-4 py-2.5 bg-amber-50 border border-amber-150 hover:bg-amber-100 hover:text-amber-700 rounded-xl font-bold text-amber-600 transition text-xs gap-2 shadow-sm">
-                <i class="fas fa-history text-sm"></i> Doc. Correção
+                <i data-lucide="history" class="text-sm"></i> Doc. Correção
             </a>
         `;
     }
@@ -1024,7 +1030,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const textSpan = btn.querySelector('.btn-text');
                 const iconI = btn.querySelector('.btn-icon');
                 if (textSpan) textSpan.textContent = 'Fechar Avaliação';
-                if (iconI) iconI.className = 'fas fa-chevron-up btn-icon text-[9px]';
+                if (iconI) {
+                    iconI.setAttribute('data-lucide', 'chevron-up');
+                    if (typeof lucide !== 'undefined') lucide.createIcons({ root: btn });
+                }
             }
         }
     });

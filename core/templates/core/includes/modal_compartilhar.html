@@ -9,7 +9,7 @@
                 <p class="text-xs text-slate-500 font-medium mt-0.5">Escolha como deseja compartilhar a estrutura das disputas</p>
             </div>
             <button type="button" onclick="fecharModalCompartilhamento()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition shrink-0 cursor-pointer" title="Fechar">
-                <i class="fas fa-times text-xs"></i>
+                <i data-lucide="x" class="text-xs"></i>
             </button>
         </div>
 
@@ -17,15 +17,15 @@
         <div class="space-y-2">
             <label class="text-xs font-bold text-slate-700 block">Link de Acesso Direto</label>
             <div class="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-2xl p-1.5 pl-3.5 focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition">
-                <i class="fas fa-link text-slate-400 text-xs shrink-0"></i>
+                <i data-lucide="link" class="text-slate-400 text-xs shrink-0"></i>
                 <input type="text" id="share-modal-url-input" readonly class="w-full bg-transparent text-xs font-semibold text-slate-800 focus:outline-none truncate select-all" value="">
                 <button type="button" id="share-modal-copy-btn" onclick="copiarLinkModal()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl shadow-xs transition shrink-0 flex items-center gap-1.5 cursor-pointer">
-                    <i id="share-modal-copy-icon" class="fas fa-copy text-xs"></i>
+                    <i id="share-modal-copy-icon" data-lucide="copy" class="text-xs"></i>
                     <span id="share-modal-copy-text">Copiar</span>
                 </button>
             </div>
             <p id="share-modal-copied-feedback" class="text-[11px] font-bold text-emerald-600 hidden flex items-center gap-1 mt-1.5">
-                <i class="fas fa-check-circle"></i> <span id="share-modal-feedback-msg">Link copiado para a área de transferência!</span>
+                <i data-lucide="check-circle-2"></i> <span id="share-modal-feedback-msg">Link copiado para a área de transferência!</span>
             </p>
         </div>
 
@@ -35,25 +35,25 @@
             <div class="grid grid-cols-2 gap-3">
                 <!-- WhatsApp -->
                 <a id="share-btn-whatsapp" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-bold text-xs shadow-xs transition">
-                    <i class="fab fa-whatsapp text-lg"></i>
+                    <i data-lucide="whatsapp" class="text-lg"></i>
                     <span>WhatsApp</span>
                 </a>
 
                 <!-- X (Twitter) -->
                 <a id="share-btn-x" href="#" target="_blank" rel="noopener noreferrer" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-slate-900 hover:bg-black active:scale-95 text-white font-bold text-xs shadow-xs transition">
-                    <i class="fab fa-x-twitter text-base"></i>
+                    <i data-lucide="twitter" class="text-base"></i>
                     <span>X (Twitter)</span>
                 </a>
 
                 <!-- Instagram -->
                 <button type="button" onclick="compartilharInstagram()" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-gradient-to-r from-purple-600 via-pink-600 to-amber-500 hover:opacity-95 active:scale-95 text-white font-bold text-xs shadow-xs transition cursor-pointer">
-                    <i class="fab fa-instagram text-lg"></i>
+                    <i data-lucide="instagram" class="text-lg"></i>
                     <span>Instagram</span>
                 </button>
 
                 <!-- E-mail -->
                 <a id="share-btn-email" href="#" class="flex items-center justify-center gap-2.5 p-3 rounded-2xl bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-bold text-xs border border-slate-200 transition">
-                    <i class="fas fa-envelope text-base text-slate-500"></i>
+                    <i data-lucide="mail" class="text-base text-slate-500"></i>
                     <span>E-mail</span>
                 </a>
             </div>
@@ -81,7 +81,10 @@
         if (titleElem) titleElem.textContent = titleText;
         if (feedback) feedback.classList.add('hidden');
         if (copyText) copyText.textContent = 'Copiar';
-        if (copyIcon) copyIcon.className = 'fas fa-copy text-xs';
+        if (copyIcon) {
+            copyIcon.setAttribute('data-lucide', 'copy');
+            if (typeof lucide !== 'undefined') lucide.createIcons({ root: copyIcon.parentElement });
+        }
 
         // Prepara Links das Redes Sociais
         const encodedUrl = encodeURIComponent(fullUrl);
@@ -133,17 +136,26 @@
             
             navigator.clipboard.writeText(inputUrl.value).then(() => {
                 if (copyText) copyText.textContent = 'Copiado!';
-                if (copyIcon) copyIcon.className = 'fas fa-check text-xs';
+                if (copyIcon) {
+                    copyIcon.setAttribute('data-lucide', 'check');
+                    if (typeof lucide !== 'undefined') lucide.createIcons({ root: copyIcon.parentElement });
+                }
                 if (feedback) feedback.classList.remove('hidden');
                 setTimeout(() => {
                     if (copyText) copyText.textContent = 'Copiar';
-                    if (copyIcon) copyIcon.className = 'fas fa-copy text-xs';
+                    if (copyIcon) {
+                        copyIcon.setAttribute('data-lucide', 'copy');
+                        if (typeof lucide !== 'undefined') lucide.createIcons({ root: copyIcon.parentElement });
+                    }
                 }, 3000);
             }).catch(() => {
                 inputUrl.select();
                 document.execCommand('copy');
                 if (copyText) copyText.textContent = 'Copiado!';
-                if (copyIcon) copyIcon.className = 'fas fa-check text-xs';
+                if (copyIcon) {
+                    copyIcon.setAttribute('data-lucide', 'check');
+                    if (typeof lucide !== 'undefined') lucide.createIcons({ root: copyIcon.parentElement });
+                }
                 if (feedback) feedback.classList.remove('hidden');
             });
         }

@@ -9,7 +9,7 @@
                     </button>
                 {% endif %}
                 <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
-                {% if partida.vencedor == partida.time_a %}<i class="fas fa-crown text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
+                {% if partida.vencedor == partida.time_a %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
             {% else %}
                 <span class="text-slate-400 font-normal italic">A definir</span>
             {% endif %}
@@ -28,7 +28,7 @@
         <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0 flex items-center justify-start gap-1.5 {% if partida.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
             {% if partida.time_b %}
                 <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
-                {% if partida.vencedor == partida.time_b %}<i class="fas fa-crown text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
+                {% if partida.vencedor == partida.time_b %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
                 {% if partida.cartoes_time_b_amarelos > 0 or partida.cartoes_time_b_vermelhos > 0 %}
                     <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
                         {% if partida.cartoes_time_b_amarelos > 0 %}<span>🟨 {{ partida.cartoes_time_b_amarelos }}</span>{% endif %}
@@ -45,11 +45,11 @@
     <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-slate-500 text-[11px]">
         <div class="flex items-center gap-3 text-slate-500">
             <span class="flex items-center gap-1.5" title="Data do jogo">
-                <i class="fas fa-calendar-alt text-blue-600 text-[10px]"></i>
+                <i data-lucide="calendar" class="text-blue-600 text-[10px]"></i>
                 <strong class="text-slate-700 font-semibold">{{ partida.data_jogo_exibicao|default:"A definir" }}</strong>
             </span>
             <span class="flex items-center gap-1.5" title="Horário do jogo">
-                <i class="fas fa-clock text-blue-600 text-[10px]"></i>
+                <i data-lucide="clock" class="text-blue-600 text-[10px]"></i>
                 <strong class="text-slate-700 font-semibold">{{ partida.horario_jogo_exibicao|default:"A definir" }}</strong>
             </span>
         </div>

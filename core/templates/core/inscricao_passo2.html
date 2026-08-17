@@ -9,7 +9,7 @@
     <div class="flex items-center justify-between mb-8 bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm">
         <div class="flex items-center gap-4">
             <a href="{% url 'inscricao_passo1' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1 mr-1" title="Voltar para Escolha de Modalidades">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <div class="flex items-center gap-4 opacity-50">
                 <span class="w-10 h-10 rounded-2xl bg-slate-100 text-slate-500 flex items-center justify-center font-bold text-sm">1</span>
@@ -32,7 +32,7 @@
     <!-- Modalidades Selecionadas -->
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-4">
         <div class="flex items-center gap-2">
-            <span class="p-1 bg-blue-50 text-blue-700 rounded-lg text-xs"><i class="fas fa-trophy"></i></span>
+            <span class="p-1 bg-blue-50 text-blue-700 rounded-lg text-xs"><i data-lucide="trophy"></i></span>
             <h3 class="font-bold text-slate-800 text-sm">Modalidades de Interesse Selecionadas</h3>
         </div>
         <div class="flex flex-wrap gap-2">
@@ -40,19 +40,19 @@
                 <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50/70 hover:bg-blue-100/50 text-slate-800 rounded-full text-xs font-semibold shadow-sm transition-all duration-200">
                     <span class="text-blue-700 text-[10px]">
                         {% if 'futsal' in mod.nome|lower %}
-                            <i class="fas fa-futbol"></i>
+                            <i data-lucide="circle-dot"></i>
                         {% elif 'vôlei' in mod.nome|lower or 'volei' in mod.nome|lower %}
-                            <i class="fas fa-volleyball"></i>
+                            <i data-lucide="circle-dot"></i>
                         {% elif 'basquete' in mod.nome|lower %}
-                            <i class="fas fa-basketball"></i>
+                            <i data-lucide="circle-dot"></i>
                         {% elif 'handebol' in mod.nome|lower %}
-                            <i class="fas fa-hand-paper"></i>
+                            <i data-lucide="hand"></i>
                         {% elif 'xadrez' in mod.nome|lower %}
-                            <i class="fas fa-chess"></i>
+                            <i data-lucide="crown"></i>
                         {% elif 'tênis' in mod.nome|lower or 'tenis' in mod.nome|lower %}
-                            <i class="fas fa-table-tennis"></i>
+                            <i data-lucide="activity"></i>
                         {% else %}
-                            <i class="fas fa-running"></i>
+                            <i data-lucide="activity"></i>
                         {% endif %}
                     </span>
                     <span class="text-slate-800 font-bold">{{ mod.nome }}</span>
@@ -68,11 +68,11 @@
         <div class="bg-white border border-slate-200/60 rounded-3xl overflow-hidden shadow-sm">
             <div class="px-6 py-4 bg-slate-50/50 border-b border-slate-150/60 flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg text-xs"><i class="fas fa-user-check"></i></span>
+                    <span class="p-1 bg-blue-50 text-blue-600 rounded-lg text-xs"><i data-lucide="user-check"></i></span>
                     <h3 class="font-bold text-slate-800 text-sm">Lista de Atletas da Delegação</h3>
                 </div>
                 <button type="button" id="btn-select-all" class="px-3 py-1.5 bg-white hover:bg-slate-50 border border-slate-200 text-slate-650 rounded-xl font-bold text-[10px] transition active:scale-95 flex items-center gap-1.5 shadow-sm">
-                    <i class="fas fa-check-double text-[9px] text-blue-600"></i> Selecionar Todos
+                    <i data-lucide="check-check" class="text-[9px] text-blue-600"></i> Selecionar Todos
                 </button>
             </div>
 
@@ -91,11 +91,11 @@
                                 <span class="text-[9px] text-slate-400 block">Matrícula: {{ atleta.matricula }}</span>
                                 {% if atleta.link_documento %}
                                     <span class="inline-flex items-center text-[9px] text-blue-600 font-semibold mt-1 gap-0.5">
-                                        <i class="fas fa-link"></i> Pasta Drive OK
+                                        <i data-lucide="link"></i> Pasta Drive OK
                                     </span>
                                 {% else %}
                                     <span class="inline-flex items-center text-[9px] text-red-500 font-semibold mt-1 gap-0.5">
-                                        <i class="fas fa-exclamation-triangle"></i> Sem Pasta Drive
+                                        <i data-lucide="alert-triangle"></i> Sem Pasta Drive
                                     </span>
                                 {% endif %}
                             </div>
@@ -104,7 +104,7 @@
                         <div class="col-span-full py-8 text-center space-y-2">
                             <p class="text-slate-450 text-xs">Sua delegação ainda não possui atletas cadastrados no sistema.</p>
                             <a href="{% url 'atleta_bulk_create' %}" class="inline-flex items-center px-3.5 py-2 bg-blue-700 hover:bg-blue-800 text-white font-bold text-[11px] rounded-xl transition">
-                                <i class="fas fa-plus mr-1"></i> Cadastrar Atletas
+                                <i data-lucide="plus" class="mr-1"></i> Cadastrar Atletas
                             </a>
                         </div>
                     {% endfor %}
@@ -114,10 +114,10 @@
 
         <div class="flex items-center justify-between pt-4 border-t border-slate-100 text-xs">
             <a href="{% url 'inscricao_passo1' %}" class="px-5 py-2.5 border border-slate-200 rounded-xl font-bold text-slate-500 hover:bg-slate-50 transition flex items-center gap-1.5">
-                <i class="fas fa-arrow-left text-[10px]"></i> Voltar Etapa
+                <i data-lucide="arrow-left" class="text-[10px]"></i> Voltar Etapa
             </a>
             <button type="submit" class="px-6 py-2.5 bg-blue-700 hover:bg-blue-800 text-white font-bold rounded-xl transition shadow-sm active:scale-[0.98] flex items-center gap-2">
-                <i class="fas fa-check text-[10px]"></i> Finalizar Inscrição
+                <i data-lucide="check" class="text-[10px]"></i> Finalizar Inscrição
             </button>
         </div>
     </form>
@@ -138,9 +138,9 @@
                 });
                 
                 if (!allChecked) {
-                    btnSelectAll.innerHTML = '<i class="fas fa-times-circle text-[9px] text-red-500"></i> Desmarcar Todos';
+                    btnSelectAll.innerHTML = '<i data-lucide="x-circle" class="text-[9px] text-red-500"></i> Desmarcar Todos';
                 } else {
-                    btnSelectAll.innerHTML = '<i class="fas fa-check-double text-[9px] text-blue-600"></i> Selecionar Todos';
+                    btnSelectAll.innerHTML = '<i data-lucide="check-check" class="text-[9px] text-blue-600"></i> Selecionar Todos';
                 }
             });
         }

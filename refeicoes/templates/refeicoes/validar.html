@@ -12,11 +12,11 @@
         </div>
         <div class="flex items-center gap-2 shrink-0">
             <a href="{% url 'refeicoes_gerenciar' %}" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition active:scale-95">
-                <i class="fas fa-sliders-h"></i>
+                <i data-lucide="sliders-horizontal"></i>
                 Agendamentos
             </a>
             <a href="{% url 'refeicoes_relatorio' %}" class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition active:scale-95">
-                <i class="fas fa-list-alt"></i>
+                <i data-lucide="list-todo"></i>
                 Registros
             </a>
         </div>
@@ -39,15 +39,15 @@
     <!-- Interface Principal de Pesquisa por Nome / CPF / Matrícula -->
     <div class="bg-white p-3.5 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-3 sm:space-y-4">
         <h2 class="text-xs sm:text-base font-bold text-slate-900 tracking-tight flex items-center gap-1.5 sm:gap-2">
-            <i class="fas fa-search text-amber-500"></i>
+            <i data-lucide="search" class="text-amber-500"></i>
             Pesquisar Atleta (Nome, CPF ou Matrícula)
         </h2>
 
         <div class="relative flex items-center bg-slate-50 border border-slate-200 rounded-2xl px-3.5 sm:px-4 focus-within:bg-white focus-within:ring-2 focus-within:ring-amber-500/20 focus-within:border-amber-500 transition shadow-inner">
-            <i class="fas fa-search text-slate-400 text-sm sm:text-base shrink-0 mr-3 pointer-events-none"></i>
+            <i data-lucide="search" class="text-slate-400 text-sm sm:text-base shrink-0 mr-3 pointer-events-none"></i>
             <input type="text" id="input-busca-manual" placeholder="Digite Nome, CPF ou Matrícula..." class="w-full bg-transparent py-2.5 sm:py-3.5 text-slate-800 text-xs sm:text-sm font-semibold focus:outline-none" oninput="debounceBuscaManual()" autofocus>
             <span id="spinner-busca" class="hidden text-amber-500 text-xs sm:text-base shrink-0 ml-2">
-                <i class="fas fa-spinner fa-spin"></i>
+                <i data-lucide="loader-2" class="animate-spin"></i>
             </span>
         </div>
 
@@ -92,7 +92,7 @@
 
         <!-- Botão OK (Limpa a busca e foca para o próximo atleta) -->
         <button type="button" id="btn-popup-ok" onclick="confirmarEProsseguirProximo()" class="w-full py-3 px-4 rounded-2xl font-black text-xs sm:text-sm text-white shadow-md active:scale-95 transition flex items-center justify-center gap-2">
-            <i class="fas fa-check"></i> OK
+            <i data-lucide="check"></i> OK
         </button>
     </div>
 </div>
@@ -146,24 +146,25 @@
                         if (atleta.status_refeicoes && atleta.status_refeicoes.length > 0) {
                             statusBadgesHtml = '<div class="mt-2.5 space-y-1 bg-slate-50/80 p-2 rounded-2xl border border-slate-200/60">';
                             atleta.status_refeicoes.forEach(st => {
-                                let iconClass = 'fa-utensils text-slate-400';
-                                if (st.tipo_code === 'cafe') iconClass = 'fa-coffee text-amber-500';
-                                else if (st.tipo_code === 'almoco') iconClass = 'fa-drumstick-bite text-emerald-500';
-                                else if (st.tipo_code === 'jantar') iconClass = 'fa-moon text-indigo-500';
+                                let iconName = 'utensils';
+                                let iconColor = 'text-slate-400';
+                                if (st.tipo_code === 'cafe') { iconName = 'coffee'; iconColor = 'text-amber-500'; }
+                                else if (st.tipo_code === 'almoco') { iconName = 'drumstick'; iconColor = 'text-emerald-500'; }
+                                else if (st.tipo_code === 'jantar') { iconName = 'moon'; iconColor = 'text-indigo-500'; }
 
                                 let badgeHtml = '';
                                 if (st.retirado) {
-                                    badgeHtml = `<span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1"><i class="fas fa-check-circle text-amber-600"></i> Retirado às ${st.hora_retirada}</span>`;
+                                    badgeHtml = `<span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-amber-100 text-amber-800 border border-amber-200 inline-flex items-center gap-1"><i data-lucide="check-circle-2" class="text-amber-600"></i> Retirado às ${st.hora_retirada}</span>`;
                                 } else if (!st.liberado) {
-                                    badgeHtml = `<span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-red-50 text-red-700 border border-red-100 inline-flex items-center gap-1"><i class="fas fa-ban"></i> Campus Bloqueado</span>`;
+                                    badgeHtml = `<span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-red-50 text-red-700 border border-red-100 inline-flex items-center gap-1"><i data-lucide="ban"></i> Campus Bloqueado</span>`;
                                 } else {
-                                    badgeHtml = `<span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 inline-flex items-center gap-1"><i class="fas fa-clock"></i> Disponível</span>`;
+                                    badgeHtml = `<span class="px-2 py-0.5 text-[9px] font-extrabold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 inline-flex items-center gap-1"><i data-lucide="clock"></i> Disponível</span>`;
                                 }
 
                                 statusBadgesHtml += `
                                     <div class="flex items-center justify-between py-1 px-2.5 rounded-xl bg-white border border-slate-100 shadow-2xs">
                                         <span class="font-bold text-slate-700 text-[11px] flex items-center gap-1.5">
-                                            <i class="fas ${iconClass}"></i> ${st.tipo_nome}
+                                            <i data-lucide="${iconName}" class="${iconColor}"></i> ${st.tipo_nome}
                                         </span>
                                         ${badgeHtml}
                                     </div>
@@ -182,10 +183,11 @@
                                 ${statusBadgesHtml}
                             </div>
                             <button type="button" onclick="processarValidacao('${atleta.id}', null)" class="w-full sm:w-auto px-4 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-black text-xs rounded-xl shadow-sm shrink-0 active:scale-95 transition flex items-center justify-center gap-1.5">
-                                <i class="fas fa-check-circle"></i> Confirmar Retirada
+                                <i data-lucide="check-circle-2"></i> Confirmar Retirada
                             </button>
                         `;
                         container.appendChild(div);
+                        if (typeof lucide !== 'undefined') lucide.createIcons({ root: div });
                     });
                 } else {
                     container.classList.remove('hidden');
@@ -232,7 +234,6 @@
         const modal = document.getElementById('modal-popup-validacao');
         const card = document.getElementById('modal-popup-card');
         const iconDiv = document.getElementById('popup-status-icon');
-        const iconI = document.getElementById('popup-status-i');
         const badge = document.getElementById('popup-status-badge');
         const nome = document.getElementById('popup-atleta-nome');
         const matricula = document.getElementById('popup-atleta-matricula');
@@ -246,7 +247,7 @@
         if (data.success) {
             card.classList.add('border-emerald-200');
             iconDiv.className = 'w-16 h-16 mx-auto rounded-3xl flex items-center justify-center text-3xl shadow-md bg-emerald-500 text-white';
-            iconI.className = 'fas fa-check-circle';
+            iconDiv.innerHTML = '<i data-lucide="check-circle-2" class="w-8 h-8"></i>';
             badge.className = 'px-3 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full inline-block bg-emerald-100 text-emerald-800 border border-emerald-200';
             badge.innerText = 'LIBERADO E REGISTRADO';
 
@@ -260,7 +261,7 @@
         } else if (data.already_claimed) {
             card.classList.add('border-amber-200');
             iconDiv.className = 'w-16 h-16 mx-auto rounded-3xl flex items-center justify-center text-3xl shadow-md bg-amber-500 text-white';
-            iconI.className = 'fas fa-exclamation-triangle';
+            iconDiv.innerHTML = '<i data-lucide="alert-triangle" class="w-8 h-8"></i>';
             badge.className = 'px-3 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full inline-block bg-amber-100 text-amber-800 border border-amber-200';
             badge.innerText = 'REFEIÇÃO JÁ RETIRADA HOJE';
 
@@ -274,7 +275,7 @@
         } else {
             card.classList.add('border-red-200');
             iconDiv.className = 'w-16 h-16 mx-auto rounded-3xl flex items-center justify-center text-3xl shadow-md bg-red-500 text-white';
-            iconI.className = 'fas fa-times-circle';
+            iconDiv.innerHTML = '<i data-lucide="x-circle" class="w-8 h-8"></i>';
             badge.className = 'px-3 py-0.5 text-[10px] font-black uppercase tracking-wider rounded-full inline-block bg-red-100 text-red-800 border border-red-200';
             badge.innerText = 'ACESSO NEGADO / BLOQUEADO';
 
@@ -284,8 +285,9 @@
             delegacao.innerText = (data.atleta && data.atleta.delegacao) ? data.atleta.delegacao : '---';
             msg.className = 'text-xs font-bold leading-relaxed px-1 text-red-800';
             msg.innerText = data.message;
-            btnOk.className = 'w-full py-3 px-4 rounded-2xl font-black text-xs sm:text-sm text-white shadow-md active:scale-95 transition flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600';
+            btnOk.className = 'w-full py-3 px-4 rounded-2xl font-black text-xs sm:text-sm text-white shadow-md active:scale-95 transition flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700';
         }
+        if (typeof lucide !== 'undefined') lucide.createIcons({ root: modal });
 
         modal.classList.remove('hidden');
         btnOk.focus();

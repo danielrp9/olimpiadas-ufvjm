@@ -8,16 +8,16 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div class="flex items-center gap-3">
             <a href="{% url 'atleta_list' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1 focus:outline-none" id="btn-back-link" title="Voltar para a Lista">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-                <i class="fas fa-user-plus text-base"></i>
+                <i data-lucide="user-plus" class="text-base"></i>
             </span>
             <div>
                 <h1 class="text-xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
                     Cadastro de Atletas
-                    <button type="button" onclick="openInfoModal()" class="text-slate-400 hover:text-blue-600 transition-colors animate-pulse focus:outline-none" title="Informações sobre cadastro de atletas">
-                        <i class="fas fa-info-circle text-base"></i>
+                    <button type="button" onclick="openInfoModal()" class="text-slate-400 hover:text-blue-600 transition-colors focus:outline-none" title="Informações sobre cadastro de atletas">
+                        <i data-lucide="info" class="text-base"></i>
                     </button>
                 </h1>
                 <p class="text-slate-400 mt-1 text-xs">Insira os dados dos atletas para empilhá-los no lote temporário.</p>
@@ -38,7 +38,7 @@
         </div>
         <div class="flex items-center gap-2">
             <span id="badge-view-link" class="hidden text-[10px] font-bold text-indigo-600 group-hover:underline">Visualizar Lista</span>
-            <i class="fas fa-chevron-right text-[10px] text-slate-450 group-hover:translate-x-0.5 transition duration-300"></i>
+            <i data-lucide="chevron-right" class="text-[10px] text-slate-450 group-hover:translate-x-0.5 transition duration-300"></i>
         </div>
     </div>
 
@@ -143,7 +143,7 @@
         <div class="pt-4 border-t border-slate-100 flex justify-start">
             <button type="button" onclick="addAtletaToLote()"
                     class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition shadow-sm hover:scale-[1.02] active:scale-95 text-xs flex items-center gap-1.5 focus:outline-none">
-                <i class="fas fa-plus text-[10px]"></i> Adicionar Atleta ao Lote
+                <i data-lucide="plus" class="text-[10px]"></i> Adicionar Atleta ao Lote
             </button>
         </div>
     </div>
@@ -159,7 +159,7 @@
         <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-5 w-full mt-6">
             <!-- Banner de Estado Não Finalizado (Alerta Laranja) -->
             <div class="bg-amber-50 text-amber-805 border border-amber-100/50 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
-                <i class="fas fa-exclamation-triangle text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                <i data-lucide="alert-triangle" class="text-amber-600 text-sm mt-0.5 shrink-0"></i>
                 <div>
                     <span class="font-bold text-amber-800">Ação Pendente de Finalização</span>
                     <p class="text-amber-700 mt-1">
@@ -193,14 +193,14 @@
                 <h4 class="font-bold text-slate-800 text-sm mt-0.5">Atletas no Lote</h4>
             </div>
             <button type="button" onclick="closeAddedModal()" class="text-slate-400 hover:text-slate-600 transition p-1.5 rounded-xl hover:bg-slate-100 focus:outline-none">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
         <!-- Body -->
         <div class="overflow-y-auto text-xs text-slate-655 max-h-[60vh] pr-1">
             <div id="modal-empty-state" class="text-center py-8 text-slate-400 space-y-2">
-                <i class="fas fa-users text-2xl text-slate-350 block"></i>
+                <i data-lucide="users" class="text-2xl text-slate-350 block"></i>
                 <p class="font-semibold text-slate-600">Nenhum atleta no lote</p>
                 <p class="text-[10px] text-slate-400">Insira atletas no formulário para listá-los aqui.</p>
             </div>
@@ -226,12 +226,12 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <h3 class="text-base font-bold text-slate-800 flex items-center gap-2" id="modal-title">
                 <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl">
-                    <i class="fas fa-info-circle"></i>
+                    <i data-lucide="info"></i>
                 </span>
                 Informações sobre Cadastro de Atletas
             </h3>
             <button type="button" onclick="closeInfoModal()" class="text-slate-400 hover:text-slate-655 transition p-1 rounded-lg hover:bg-slate-50 focus:outline-none">
-                <i class="fas fa-times text-sm"></i>
+                <i data-lucide="x" class="text-sm"></i>
             </button>
         </div>
         <div class="space-y-3.5 text-xs text-slate-600 leading-relaxed">
@@ -268,7 +268,7 @@
     <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-md border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto text-center mx-auto" onclick="event.stopPropagation()">
         <!-- Icon Circle -->
         <div class="w-12 h-12 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto border border-amber-100 shadow-sm shrink-0">
-            <i class="fas fa-exclamation-triangle text-lg"></i>
+            <i data-lucide="alert-triangle" class="text-lg"></i>
         </div>
         
         <!-- Content -->
@@ -508,7 +508,7 @@
                         </div>
                         <button type="button" onclick="removeAtletaFromLote(${atleta.id})"
                                 class="text-slate-450 hover:text-red-655 transition p-1.5 rounded-lg hover:bg-red-50 shrink-0 focus:outline-none" title="Remover do Lote">
-                            <i class="far fa-trash-alt text-sm"></i>
+                            <i data-lucide="trash-2" class="text-sm"></i>
                         </button>
                     </li>
                 `;

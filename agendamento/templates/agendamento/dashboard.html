@@ -9,10 +9,10 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
         <div class="flex items-center gap-4">
             <a href="{% url 'dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1.5" title="Voltar ao Dashboard">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="p-3 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-                <i class="fas fa-calendar-check text-lg"></i>
+                <i data-lucide="calendar-check" class="text-lg"></i>
             </span>
             <div>
                 <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Gerador de Horários</h1>
@@ -22,7 +22,7 @@
 
         <div class="flex items-center gap-3">
             <a href="{% url 'agendamento_auditoria' %}" class="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center gap-2">
-                <i class="fas fa-shield-alt text-emerald-400"></i>
+                <i data-lucide="shield" class="text-emerald-400"></i>
                 <span>Relatório de Auditoria</span>
             </a>
         </div>
@@ -36,7 +36,7 @@
             <div>
                 <div class="flex items-center gap-3.5 mb-3">
                     <span class="p-3 bg-amber-50 text-amber-700 rounded-2xl shrink-0">
-                        <i class="fas fa-calendar-alt text-base"></i>
+                        <i data-lucide="calendar" class="text-base"></i>
                     </span>
                     <div>
                         <h3 class="text-base font-bold text-slate-800 leading-tight">Datas dos Jogos</h3>
@@ -47,7 +47,7 @@
             </div>
             <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <span class="text-xl font-black text-slate-900">{{ datas_count }} <span class="text-xs font-semibold text-slate-500">dias</span></span>
-                <i class="fas fa-chevron-right text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
+                <i data-lucide="chevron-right" class="text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
             </div>
         </a>
 
@@ -56,7 +56,7 @@
             <div>
                 <div class="flex items-center gap-3.5 mb-3">
                     <span class="p-3 bg-emerald-50 text-emerald-700 rounded-2xl shrink-0">
-                        <i class="fas fa-map-marker-alt text-base"></i>
+                        <i data-lucide="map-pin" class="text-base"></i>
                     </span>
                     <div>
                         <h3 class="text-base font-bold text-slate-800 leading-tight">Quadras e Locais</h3>
@@ -67,7 +67,7 @@
             </div>
             <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <span class="text-xl font-black text-slate-900">{{ recursos_count }} <span class="text-xs font-semibold text-slate-500">locais</span></span>
-                <i class="fas fa-chevron-right text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
+                <i data-lucide="chevron-right" class="text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
             </div>
         </a>
 
@@ -76,7 +76,7 @@
             <div>
                 <div class="flex items-center gap-3.5 mb-3">
                     <span class="p-3 bg-purple-50 text-purple-700 rounded-2xl shrink-0">
-                        <i class="fas fa-layer-group text-base"></i>
+                        <i data-lucide="layers" class="text-base"></i>
                     </span>
                     <div>
                         <h3 class="text-base font-bold text-slate-800 leading-tight">Restrições por Fase</h3>
@@ -87,7 +87,7 @@
             </div>
             <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <span class="text-xl font-black text-slate-900">{{ fases_count }} <span class="text-xs font-semibold text-slate-500">fases</span></span>
-                <i class="fas fa-chevron-right text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
+                <i data-lucide="chevron-right" class="text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
             </div>
         </a>
 
@@ -96,7 +96,7 @@
             <div>
                 <div class="flex items-center gap-3.5 mb-3">
                     <span class="p-3 bg-indigo-50 text-indigo-700 rounded-2xl shrink-0">
-                        <i class="fas fa-sliders-h text-base"></i>
+                        <i data-lucide="sliders-horizontal" class="text-base"></i>
                     </span>
                     <div>
                         <h3 class="text-base font-bold text-slate-800 leading-tight">Regras e Tempos</h3>
@@ -107,7 +107,7 @@
             </div>
             <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
                 <span class="text-xl font-black text-slate-900">{{ configuracao.descanso_minimo_equipe_minutos }} <span class="text-xs font-semibold text-slate-500">min descanso</span></span>
-                <i class="fas fa-chevron-right text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
+                <i data-lucide="chevron-right" class="text-xs text-slate-400 group-hover:text-blue-600 transition"></i>
             </div>
         </a>
     </div>
@@ -126,7 +126,7 @@
                     <button type="submit" 
                         style="padding: 10px 18px; gap: 8px;"
                         class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200/80 font-bold rounded-xl text-xs transition active:scale-[0.98] flex items-center justify-center cursor-pointer shadow-xs" title="Limpar todos os horários e quadras atribuídos">
-                        <i class="fas fa-undo-alt text-xs shrink-0"></i>
+                        <i data-lucide="rotate-ccw" class="text-xs shrink-0"></i>
                         <span class="whitespace-nowrap">Resetar Horários</span>
                     </button>
                 </form>
@@ -134,7 +134,7 @@
                 <a href="{% url 'agendamento_gerar' %}" 
                     style="padding: 10px 20px; gap: 8px;"
                     class="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98] flex items-center justify-center cursor-pointer">
-                    <i class="fas fa-play text-xs shrink-0"></i>
+                    <i data-lucide="play" class="text-xs shrink-0"></i>
                     <span class="whitespace-nowrap">Gerar Cronograma</span>
                 </a>
             </div>
@@ -143,7 +143,7 @@
         <!-- Aviso Informativo de Configuração Prévia -->
         <div class="p-4 bg-blue-50/70 border border-blue-100 rounded-2xl flex items-start gap-3 text-xs text-blue-900">
             <span class="p-2 bg-blue-100/80 text-blue-700 rounded-xl shrink-0">
-                <i class="fas fa-info-circle text-sm"></i>
+                <i data-lucide="info" class="text-sm"></i>
             </span>
             <div class="space-y-0.5">
                 <p class="font-bold text-slate-900">Importante antes de gerar o cronograma:</p>
@@ -157,7 +157,7 @@
             <div class="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/50 rounded-2xl px-3 transition">
                 <div class="flex items-start gap-3.5">
                     <span class="p-3 rounded-2xl shrink-0 {% if cenario.status == 'aplicado' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% elif cenario.status == 'sucesso' %}bg-blue-50 text-blue-700 border border-blue-200{% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
-                        <i class="fas {% if cenario.status == 'aplicado' %}fa-check-double{% elif cenario.status == 'sucesso' %}fa-check{% else %}fa-exclamation-triangle{% endif %} text-sm"></i>
+                        <i {% if cenario.status == 'aplicado' %}data-lucide="check-check"{% elif cenario.status == 'sucesso' %}data-lucide="check"{% else %}data-lucide="alert-triangle"{% endif %} class="text-sm"></i>
                     </span>
                     <div>
                         <div class="flex items-center gap-2 flex-wrap">
@@ -183,7 +183,7 @@
                     <form method="post" action="{% url 'agendamento_cenario_delete' cenario.pk %}" onsubmit="return confirm('Deseja realmente excluir este cronograma?');">
                         {% csrf_token %}
                         <button type="submit" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer" title="Excluir">
-                            <i class="fas fa-trash-alt text-xs"></i>
+                            <i data-lucide="trash-2" class="text-xs"></i>
                         </button>
                     </form>
                 </div>
@@ -193,12 +193,12 @@
         {% else %}
         <div class="py-10 text-center">
             <span class="p-4 bg-slate-50 text-slate-400 rounded-full inline-block mb-3">
-                <i class="fas fa-calendar-plus text-2xl"></i>
+                <i data-lucide="calendar-plus" class="text-2xl"></i>
             </span>
             <h3 class="text-sm font-bold text-slate-700">Nenhum cronograma gerado</h3>
             <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1 mb-5">Após revisar os parâmetros acima, clique no botão para executar o primeiro agendamento.</p>
             <a href="{% url 'agendamento_gerar' %}" class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98]">
-                <i class="fas fa-magic text-xs"></i> Gerar Cronograma
+                <i data-lucide="wand-2" class="text-xs"></i> Gerar Cronograma
             </a>
         </div>
         {% endif %}

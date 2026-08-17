@@ -9,10 +9,10 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div class="flex items-center gap-3">
             <a href="{% url 'admin_periodo_inscricao' %}" class="text-blue-400 hover:text-blue-600 transition flex items-center justify-center p-1" title="Voltar para Gerenciar Olimpíadas">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-                <i class="fas fa-running text-base"></i>
+                <i data-lucide="activity" class="text-base"></i>
             </span>
             <div>
                 <h1 class="text-xl font-bold text-slate-800 tracking-tight">Gerenciar Modalidades</h1>
@@ -20,7 +20,7 @@
             </div>
         </div>
         <a href="{% url 'modalidade_create' %}" class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition active:scale-[0.98] shadow-sm gap-1.5 self-stretch sm:self-auto justify-center shrink-0">
-            <i class="fas fa-plus"></i> Nova Modalidade
+            <i data-lucide="plus"></i> Nova Modalidade
         </a>
     </div>
 
@@ -46,7 +46,7 @@
                         <!-- Limites -->
                         <td class="px-6 py-4 font-medium text-slate-500">
                             <span class="inline-flex items-center gap-1">
-                                <i class="fas fa-users-cog text-slate-400"></i> {{ modalidade.limite_minimo_jogadores }} a {{ modalidade.limite_maximo_jogadores }} jogadores
+                                <i data-lucide="users" class="text-slate-400"></i> {{ modalidade.limite_minimo_jogadores }} a {{ modalidade.limite_maximo_jogadores }} jogadores
                             </span>
                         </td>
                         <!-- Status -->
@@ -86,7 +86,7 @@
                     <tr>
                         <td colspan="4" class="px-6 py-12 text-center text-slate-400">
                             <div class="w-12 h-12 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 border border-dashed border-slate-200">
-                                <i class="fas fa-running text-lg"></i>
+                                <i data-lucide="activity" class="text-lg"></i>
                             </div>
                             <p class="font-bold text-slate-700 text-sm">Nenhuma modalidade configurada</p>
                             <p class="text-[11px] text-slate-450 mt-1">Adicione uma nova modalidade esportiva clicando no botão no topo.</p>

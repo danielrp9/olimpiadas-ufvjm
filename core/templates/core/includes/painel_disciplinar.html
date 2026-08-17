@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between gap-3 border-b border-slate-100 pb-4">
         <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shadow-2xs">
-                <i class="fas fa-shield-alt text-lg"></i>
+                <i data-lucide="shield" class="text-lg"></i>
             </div>
             <div>
                 <h3 class="text-base sm:text-lg font-black text-slate-900 tracking-tight">Painel Disciplinar & Suspensões</h3>
@@ -18,7 +18,7 @@
         <div class="bg-red-50/50 border border-red-200/80 rounded-xl p-3.5 space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-red-700 flex items-center gap-1.5">
-                    <i class="fas fa-user-slash text-red-600"></i> Atletas Suspensos
+                    <i data-lucide="user-x" class="text-red-600"></i> Atletas Suspensos
                 </span>
                 <span class="px-2 py-0.5 rounded-full text-xs font-black bg-red-600 text-white">
                     {{ relatorio_disciplinar.atletas_suspensos|length }}
@@ -48,7 +48,7 @@
         <div class="bg-amber-50/50 border border-amber-200/80 rounded-xl p-3.5 space-y-2">
             <div class="flex items-center justify-between">
                 <span class="text-xs font-bold uppercase tracking-wider text-amber-800 flex items-center gap-1.5">
-                    <i class="fas fa-exclamation-triangle text-amber-600"></i> Pendurados (1 Cartão Amarelo)
+                    <i data-lucide="alert-triangle" class="text-amber-600"></i> Pendurados (1 Cartão Amarelo)
                 </span>
                 <span class="px-2 py-0.5 rounded-full text-xs font-black bg-amber-500 text-white">
                     {{ relatorio_disciplinar.atletas_com_amarelos|length }}
@@ -79,7 +79,7 @@
     {% if relatorio_disciplinar.registros %}
         <div class="space-y-2">
             <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                <i class="fas fa-list-ol text-blue-600"></i> Histórico Disciplinar Completo
+                <i data-lucide="list-ordered" class="text-blue-600"></i> Histórico Disciplinar Completo
             </h4>
             <div class="overflow-x-auto rounded-xl border border-slate-200">
                 <table class="w-full text-left text-xs text-slate-700">

@@ -12,11 +12,11 @@
         </div>
         <div class="flex items-center gap-2 shrink-0">
             <a href="{% url 'refeicoes_validar' %}" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl transition shadow-sm active:scale-95">
-                <i class="fas fa-check-circle"></i>
+                <i data-lucide="check-circle-2"></i>
                 Validar
             </a>
             <a href="{% url 'refeicoes_relatorio' %}" class="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition active:scale-95">
-                <i class="fas fa-list-alt"></i>
+                <i data-lucide="list-todo"></i>
                 Registros
             </a>
         </div>
@@ -27,7 +27,7 @@
         <div class="lg:col-span-1 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm flex flex-col justify-between">
             <div>
                 <h2 class="text-base font-bold text-slate-900 tracking-tight mb-4 flex items-center gap-2">
-                    <i class="fas fa-calendar-plus text-amber-500"></i>
+                    <i data-lucide="calendar-plus" class="text-amber-500"></i>
                     Agendar Nova Refeição
                 </h2>
 
@@ -59,7 +59,7 @@
                     </div>
 
                     <button type="submit" class="w-full py-3 px-4 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs sm:text-sm rounded-2xl transition shadow-sm active:scale-95 flex items-center justify-center gap-2 mt-4">
-                        <i class="fas fa-plus-circle"></i>
+                        <i data-lucide="plus-circle"></i>
                         Confirmar Agendamento
                     </button>
                 </form>
@@ -70,7 +70,7 @@
         <div class="lg:col-span-2 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200/60 shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <h2 class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
-                    <i class="fas fa-utensils text-blue-600"></i>
+                    <i data-lucide="utensils" class="text-blue-600"></i>
                     Refeições Cadastradas
                 </h2>
             </div>
@@ -96,24 +96,24 @@
                             <div class="flex items-center gap-1.5 shrink-0">
                                 <!-- Botão VER -->
                                 <button type="button" onclick="abrirModalVer('{{ r.id }}', '{{ r.get_tipo_display }}', '{{ r.data|date:"d/m/Y" }}', '{% if r.campi_liberados.exists %}{% for c in r.campi_liberados.all %}{{ c.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}Todos os Campi{% endif %}', {{ r.ativo|lower }})" class="p-2 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-xl font-bold text-xs transition active:scale-95" title="Ver Detalhes">
-                                    <i class="fas fa-eye"></i>
+                                    <i data-lucide="eye"></i>
                                 </button>
 
                                 <!-- Botão EDITAR -->
                                 <button type="button" onclick="abrirModalEditar('{{ r.id }}')" class="p-2 bg-amber-50 hover:bg-amber-100 text-amber-700 rounded-xl font-bold text-xs transition active:scale-95" title="Editar Refeição">
-                                    <i class="fas fa-pen"></i>
+                                    <i data-lucide="pen-line"></i>
                                 </button>
 
                                 <!-- Botão DESATIVAR/ATIVAR ou TRAVADO -->
                                 {% if r.data < hoje %}
                                     <span class="p-2 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed inline-block" title="Encerrada (Data passada)">
-                                        <i class="fas fa-lock"></i>
+                                        <i data-lucide="lock"></i>
                                     </span>
                                 {% else %}
                                     <form method="post" action="{% url 'refeicoes_toggle_ativa' r.id %}" class="inline">
                                         {% csrf_token %}
                                         <button type="submit" class="p-2 rounded-xl font-bold text-xs transition active:scale-95 {% if r.ativo %}bg-red-50 hover:bg-red-100 text-red-700{% else %}bg-emerald-50 hover:bg-emerald-100 text-emerald-700{% endif %}" title="{% if r.ativo %}Desativar{% else %}Ativar{% endif %}">
-                                            <i class="fas {% if r.ativo %}fa-power-off{% else %}fa-check{% endif %}"></i>
+                                            <i {% if r.ativo %}data-lucide="power"{% else %}data-lucide="check"{% endif %}></i>
                                         </button>
                                     </form>
                                 {% endif %}
@@ -178,12 +178,12 @@
                                         <div class="flex items-center justify-end gap-1.5">
                                             <!-- VER (Desktop) -->
                                             <button type="button" onclick="abrirModalVer('{{ r.id }}', '{{ r.get_tipo_display }}', '{{ r.data|date:"d/m/Y" }}', '{% if r.campi_liberados.exists %}{% for c in r.campi_liberados.all %}{{ c.nome }}{% if not forloop.last %}, {% endif %}{% endfor %}{% else %}Todos os Campi{% endif %}', {{ r.ativo|lower }})" class="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Ver Detalhes">
-                                                <i class="fas fa-eye"></i>
+                                                <i data-lucide="eye"></i>
                                             </button>
 
                                             <!-- EDITAR (Desktop) -->
                                             <button type="button" onclick="abrirModalEditar('{{ r.id }}')" class="p-1.5 text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Editar">
-                                                <i class="fas fa-pen"></i>
+                                                <i data-lucide="pen-line"></i>
                                             </button>
 
                                             <!-- ATIVAR/DESATIVAR ou TRAVADO (Desktop) -->
@@ -208,7 +208,7 @@
                 </div>
             {% else %}
                 <div class="text-center py-10 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50/50">
-                    <i class="fas fa-utensils text-3xl text-slate-300 mb-2"></i>
+                    <i data-lucide="utensils" class="text-3xl text-slate-300 mb-2"></i>
                     <h3 class="text-xs font-bold text-slate-700">Nenhuma refeição agendada</h3>
                 </div>
             {% endif %}
@@ -221,11 +221,11 @@
     <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 animate-fadeIn">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                <i class="fas fa-info-circle text-blue-600"></i>
+                <i data-lucide="info" class="text-blue-600"></i>
                 Detalhes da Refeição
             </h3>
             <button type="button" onclick="fecharModalVer()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
-                <i class="fas fa-times"></i>
+                <i data-lucide="x"></i>
             </button>
         </div>
 
@@ -261,11 +261,11 @@
     <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 space-y-4 shadow-2xl border border-slate-100 animate-fadeIn">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h3 class="text-lg font-black text-slate-900 flex items-center gap-2">
-                <i class="fas fa-edit text-amber-500"></i>
+                <i data-lucide="pencil" class="text-amber-500"></i>
                 Editar Refeição
             </h3>
             <button type="button" onclick="fecharModalEditar()" class="text-slate-400 hover:text-slate-600 p-1 text-sm">
-                <i class="fas fa-times"></i>
+                <i data-lucide="x"></i>
             </button>
         </div>
 

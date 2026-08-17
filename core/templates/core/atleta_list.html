@@ -8,7 +8,7 @@
     <div>
         <h1 class="text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
             <span class="p-2 bg-blue-50 text-blue-600 rounded-2xl">
-                <i class="fas fa-users"></i>
+                <i data-lucide="users"></i>
             </span>
             Meus Atletas
         </h1>
@@ -28,7 +28,7 @@
                     bg-blue-600 hover:bg-blue-700 shadow-blue-500/20
                 {% endif %}"
                 title="Comprovante de pagamento integral da delegação">
-            <i class="fas fa-file-invoice-dollar"></i> 
+            <i data-lucide="receipt"></i> 
             {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
                 {% if request.user.delegacao_ativa.status_pagamento == 'deferido' %}
                     Comprovante Geral: Aprovado
@@ -43,7 +43,7 @@
         </button>
 
         <a href="{% url 'atleta_bulk_create' %}" class="inline-flex items-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-xs font-bold rounded-xl text-white transition active:scale-[0.98] shadow-sm gap-1.5 justify-center self-stretch sm:self-auto shrink-0">
-            <i class="fas fa-user-plus"></i> Cadastrar Atletas
+            <i data-lucide="user-plus"></i> Cadastrar Atletas
         </a>
     </div>
 </div>
@@ -82,18 +82,18 @@
                     <td class="hidden md:table-cell px-6 py-4">
                         {% if atleta.status_avaliacao == 'deferido' %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
-                                <i class="fas fa-check-circle mr-1 text-green-600"></i> Deferido
+                                <i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Deferido
                             </span>
                         {% elif atleta.status_avaliacao == 'indeferido' %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 uppercase tracking-wide">
-                                <i class="fas fa-times-circle mr-1 text-red-655"></i> Indeferido
+                                <i data-lucide="x-circle" class="mr-1 text-red-655"></i> Indeferido
                             </span>
                             {% if atleta.link_correcao %}
                                 <span class="block text-[9px] text-amber-500 font-bold uppercase tracking-wider mt-1">Aguardando Avaliação</span>
                             {% endif %}
                         {% else %}
                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-500 uppercase tracking-wide">
-                                <i class="fas fa-clock mr-1 text-slate-400"></i> Não avaliado
+                                <i data-lucide="clock" class="mr-1 text-slate-400"></i> Não avaliado
                             </span>
                         {% endif %}
                     </td>
@@ -120,17 +120,17 @@
                                 onclick="showAtletaDetails(this)"
                                 class="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1.5 border border-slate-200/60 hover:border-blue-500 hover:text-blue-600 rounded-xl transition text-slate-500 bg-white shadow-2xs gap-1 text-[11px] font-bold active:scale-95"
                                 title="Ver Dados">
-                            <i class="far fa-eye text-xs"></i> <span class="hidden sm:inline">Ver Dados</span>
+                            <i data-lucide="eye" class="text-xs"></i> <span class="hidden sm:inline">Ver Dados</span>
                         </button>
                         <a href="{% url 'atleta_update' atleta.pk %}" 
                            class="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1.5 border border-slate-200/60 hover:border-blue-500 hover:text-blue-600 rounded-xl transition text-slate-500 bg-white shadow-2xs gap-1 text-[11px] font-bold active:scale-95"
                            title="Editar">
-                            <i class="far fa-edit text-xs"></i> <span class="hidden sm:inline">Editar</span>
+                            <i data-lucide="pencil" class="text-xs"></i> <span class="hidden sm:inline">Editar</span>
                         </a>
                         <a href="{% url 'atleta_delete' atleta.pk %}" 
                            class="inline-flex items-center px-2 py-1 sm:px-2.5 sm:py-1.5 border border-red-100 hover:border-red-200 hover:bg-red-50/50 text-red-500 hover:text-red-600 rounded-xl transition gap-1 text-[11px] font-bold active:scale-95"
                            title="Remover">
-                            <i class="far fa-trash-alt text-xs"></i> <span class="hidden sm:inline">Remover</span>
+                            <i data-lucide="trash-2" class="text-xs"></i> <span class="hidden sm:inline">Remover</span>
                         </a>
                     </td>
                 </tr>
@@ -138,7 +138,7 @@
                 <tr>
                     <td colspan="5" class="px-6 py-16 text-center text-slate-400">
                         <div class="w-12 h-12 bg-slate-50 text-slate-300 rounded-full flex items-center justify-center mx-auto mb-3 border border-dashed border-slate-200">
-                            <i class="fas fa-users text-lg"></i>
+                            <i data-lucide="users" class="text-lg"></i>
                         </div>
                         <p class="font-bold text-slate-700 text-sm">Nenhum atleta cadastrado</p>
                         <p class="text-[11px] text-slate-400 mt-1 max-w-sm mx-auto">Sua delegação ainda não possui atletas. Clique em "Cadastrar Atletas" acima.</p>
@@ -160,7 +160,7 @@
                 <h4 id="detail-modal-title" class="font-bold text-slate-800 text-sm mt-0.5">Nome do Atleta</h4>
             </div>
             <button type="button" onclick="closeDetailsModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
@@ -169,7 +169,7 @@
             <!-- Seção de Alerta / Inconformidade (Se Indeferido) -->
             <div id="detail-rejeicao-block" class="hidden bg-red-50 border border-red-100/50 rounded-2xl p-4 space-y-2">
                 <h4 class="font-bold text-red-800 flex items-center gap-1.5">
-                    <i class="fas fa-times-circle text-red-655 text-sm"></i> Atleta Indeferido
+                    <i data-lucide="x-circle" class="text-red-655 text-sm"></i> Atleta Indeferido
                 </h4>
                 <p class="font-semibold text-red-700">Motivo do Indeferimento:</p>
                 <p id="detail-justificativa-text" class="text-slate-700 bg-white/70 p-2.5 rounded-xl border border-red-100/30 leading-relaxed font-medium"></p>
@@ -177,7 +177,7 @@
                 <!-- Nova Chance / Formulário de Correção -->
                 <div id="detail-correcao-block" class="hidden pt-3 border-t border-red-100/30">
                     <span class="text-[9px] text-amber-700 font-bold uppercase tracking-wider block mb-1">
-                        <i class="fas fa-exclamation-triangle"></i> Enviar Correção de Documentos:
+                        <i data-lucide="alert-triangle"></i> Enviar Correção de Documentos:
                     </span>
                     <p class="text-[10px] text-slate-500 mb-2 leading-relaxed">
                         A comissão abriu uma nova chance para regularização. Insira o link da pasta contendo o documento correto.
@@ -199,7 +199,7 @@
             <!-- Ficha Limpa / Informações Aprovadas (Se Deferido) -->
             <div id="detail-aprovado-block" class="hidden bg-green-50/50 border border-green-100/50 rounded-2xl p-4 flex items-center gap-3">
                 <span class="w-8 h-8 bg-green-100 text-green-700 rounded-xl flex items-center justify-center text-sm shrink-0 shadow-sm">
-                    <i class="fas fa-check-circle"></i>
+                    <i data-lucide="check-circle-2"></i>
                 </span>
                 <div>
                     <h4 class="font-bold text-green-800 text-xs">Atleta Deferido</h4>
@@ -210,7 +210,7 @@
             <!-- Status Não Avaliado -->
             <div id="detail-nao-avaliado-block" class="hidden bg-slate-50 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
                 <span class="w-8 h-8 bg-slate-100 text-slate-500 rounded-xl flex items-center justify-center text-sm shrink-0 shadow-sm">
-                    <i class="fas fa-clock"></i>
+                    <i data-lucide="clock"></i>
                 </span>
                 <div>
                     <h4 class="font-bold text-slate-700 text-xs">Não avaliado</h4>
@@ -262,11 +262,11 @@
                 <h3 class="font-bold text-slate-800 text-xs border-b border-slate-100 pb-1.5">Documentos do Atleta</h3>
                 <div class="flex flex-col gap-2.5">
                     <a id="detail-link-doc" href="" target="_blank" class="hidden inline-flex items-center text-blue-600 hover:underline gap-1.5 font-semibold">
-                        <i class="fas fa-file-alt"></i> Visualizar Documentos do Atleta
+                        <i data-lucide="file-text"></i> Visualizar Documentos do Atleta
                     </a>
                     <div id="detail-link-correcao-container" class="hidden">
                         <a id="detail-link-correcao" href="" target="_blank" class="inline-flex items-center text-amber-650 hover:underline gap-1.5 font-bold">
-                            <i class="fas fa-history"></i> Visualizar Documentação Complementar
+                            <i data-lucide="history"></i> Visualizar Documentação Complementar
                         </a>
                         <span id="detail-link-correcao-badge" class="block text-[9px] text-amber-500 font-bold uppercase tracking-wider mt-0.5">Aguardando Avaliação da Comissão</span>
                     </div>
@@ -411,7 +411,7 @@
                 <h4 class="font-bold text-slate-800 text-sm mt-0.5">Comprovante de Pagamento Geral da Delegação</h4>
             </div>
             <button type="button" onclick="closePaymentModal()" class="text-slate-400 hover:text-slate-650 transition p-1 rounded-lg hover:bg-slate-100 focus:outline-none">
-                <i class="fas fa-times text-base"></i>
+                <i data-lucide="x" class="text-base"></i>
             </button>
         </div>
 
@@ -420,7 +420,7 @@
             {% csrf_token %}
             {% if request.user.delegacao_ativa.link_comprovante_pagamento %}
                 <div class="bg-emerald-50 text-emerald-805 border border-emerald-100/50 rounded-2xl p-4 flex gap-3 text-xs leading-relaxed">
-                    <i class="fas fa-check-circle text-emerald-600 text-sm shrink-0 mt-0.5 animate-bounce-once"></i>
+                    <i data-lucide="check-circle-2" class="text-emerald-600 text-sm shrink-0 mt-0.5 animate-bounce-once"></i>
                     <div>
                         <span class="font-bold text-emerald-800">Comprovante anexado com sucesso!</span>
                         <p class="text-emerald-700 mt-1">
@@ -447,11 +447,11 @@
                     
                     <div class="font-bold flex items-center gap-1.5 mb-1 text-xs">
                         {% if request.user.delegacao_ativa.status_pagamento == 'deferido' %}
-                            <i class="fas fa-check-circle text-green-600"></i> Comprovante Deferido (Aprovado)
+                            <i data-lucide="check-circle-2" class="text-green-600"></i> Comprovante Deferido (Aprovado)
                         {% elif request.user.delegacao_ativa.status_pagamento == 'indeferido' %}
-                            <i class="fas fa-times-circle text-red-655 font-bold"></i> Comprovante Indeferido (Recusado)
+                            <i data-lucide="x-circle" class="text-red-655 font-bold"></i> Comprovante Indeferido (Recusado)
                         {% else %}
-                            <i class="fas fa-clock text-blue-600 animate-pulse"></i> Aguardando Avaliação da Comissão
+                            <i data-lucide="clock" class="text-blue-600"></i> Aguardando Avaliação da Comissão
                         {% endif %}
                     </div>
 
@@ -473,7 +473,7 @@
 
             <!-- Alerta para evitar confusão -->
             <div class="bg-amber-50 text-amber-805 border border-amber-100/50 rounded-2xl p-4 flex gap-3 leading-relaxed">
-                <i class="fas fa-info-circle text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                <i data-lucide="info" class="text-amber-600 text-sm mt-0.5 shrink-0"></i>
                 <div>
                     <span class="font-bold text-amber-800 text-[11px]">Atenção: Comprovante de Pagamento Geral</span>
                     <p class="text-amber-700 text-[10px] mt-0.5">

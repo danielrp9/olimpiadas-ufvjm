@@ -9,10 +9,10 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3">
             <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1" title="Voltar ao Painel">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="p-2.5 bg-amber-50 text-amber-600 rounded-2xl shrink-0">
-                <i class="fas fa-calendar-alt text-base"></i>
+                <i data-lucide="calendar" class="text-base"></i>
             </span>
             <div>
                 <h1 class="text-xl font-bold text-slate-800 tracking-tight">Datas dos Jogos</h1>
@@ -28,7 +28,7 @@
             <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm space-y-5">
                 <div class="flex items-center gap-2.5 pb-4 border-b border-slate-100">
                     <span class="p-2 bg-blue-50 text-blue-600 rounded-xl">
-                        <i class="fas fa-plus text-xs"></i>
+                        <i data-lucide="plus" class="text-xs"></i>
                     </span>
                     <h2 class="text-sm font-bold text-slate-800">Nova Data</h2>
                 </div>
@@ -62,7 +62,7 @@
                         <button type="submit" 
                             style="padding: 12px 28px; gap: 10px;"
                             class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-2xl text-xs sm:text-sm transition shadow-sm hover:shadow active:scale-[0.98] flex items-center justify-center cursor-pointer">
-                            <i class="fas fa-save text-sm shrink-0"></i>
+                            <i data-lucide="save" class="text-sm shrink-0"></i>
                             <span class="whitespace-nowrap">Salvar Data</span>
                         </button>
                     </div>
@@ -97,7 +97,7 @@
                                     {% endif %}
                                 </h3>
                                 <p class="text-xs text-slate-600 mt-1">
-                                    <i class="far fa-clock text-slate-500 mr-1"></i>
+                                    <i data-lucide="clock" class="text-slate-500 mr-1"></i>
                                     {{ d.horario_inicio|time:"H:i" }} às {{ d.horario_fim|time:"H:i" }}
                                 </p>
                             </div>
@@ -107,13 +107,13 @@
                             <button type="button" 
                                 onclick="abrirModalEditarData('{{ d.pk }}', '{{ d.data|date:"Y-m-d" }}', '{{ d.horario_inicio|time:"H:i" }}', '{{ d.horario_fim|time:"H:i" }}', {{ d.ativo|yesno:"true,false" }})"
                                 class="p-2 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition cursor-pointer" title="Editar Data">
-                                <i class="fas fa-edit text-xs"></i>
+                                <i data-lucide="pencil" class="text-xs"></i>
                             </button>
 
                             <form method="post" action="{% url 'agendamento_data_delete' d.pk %}" onsubmit="return confirm('Deseja realmente remover a data {{ d.data|date:'d/m/Y' }}?');">
                                 {% csrf_token %}
                                 <button type="submit" class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition cursor-pointer" title="Excluir">
-                                    <i class="fas fa-trash-alt text-xs"></i>
+                                    <i data-lucide="trash-2" class="text-xs"></i>
                                 </button>
                             </form>
                         </div>
@@ -139,7 +139,7 @@
         <div class="flex items-center justify-between pb-3 border-b border-slate-100">
             <div class="flex items-center gap-2.5">
                 <span class="p-2 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-                    <i class="fas fa-edit text-xs"></i>
+                    <i data-lucide="pencil" class="text-xs"></i>
                 </span>
                 <div>
                     <h3 class="font-bold text-slate-800 text-sm sm:text-base">Editar Data</h3>
@@ -147,7 +147,7 @@
                 </div>
             </div>
             <button type="button" onclick="fecharModalEditarData()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition flex items-center justify-center cursor-pointer" title="Fechar">
-                <i class="fas fa-times text-xs"></i>
+                <i data-lucide="x" class="text-xs"></i>
             </button>
         </div>
 
@@ -188,7 +188,7 @@
                 </button>
                 <button type="submit"
                     class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98] cursor-pointer flex items-center gap-1.5">
-                    <i class="fas fa-check text-xs"></i>
+                    <i data-lucide="check" class="text-xs"></i>
                     <span>Salvar Alterações</span>
                 </button>
             </div>

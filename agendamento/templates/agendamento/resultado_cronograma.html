@@ -9,25 +9,25 @@
     <div class="bg-white border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div class="flex items-center gap-3">
             <a href="{% url 'agendamento_dashboard' %}" class="text-blue-500 hover:text-blue-700 transition flex items-center justify-center p-1" title="Voltar ao Painel">
-                <i class="fas fa-arrow-left text-lg"></i>
+                <i data-lucide="arrow-left" class="text-lg"></i>
             </a>
             <span class="p-2.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0">
-                <i class="fas fa-calendar-check text-base"></i>
+                <i data-lucide="calendar-check" class="text-base"></i>
             </span>
             <div>
                 <div class="flex items-center gap-2.5 flex-wrap">
                     <h1 class="text-xl font-bold text-slate-800 tracking-tight">{{ cenario.titulo }}</h1>
                     {% if cenario.status == 'aplicado' %}
                         <span class="px-3 py-1 text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full uppercase">
-                            <i class="fas fa-check-double mr-1"></i> Aplicado
+                            <i data-lucide="check-check" class="mr-1"></i> Aplicado
                         </span>
                     {% elif cenario.status == 'sucesso' %}
                         <span class="px-3 py-1 text-xs font-bold bg-blue-50 text-blue-700 border border-blue-200 rounded-full uppercase">
-                            <i class="fas fa-check mr-1"></i> Viável
+                            <i data-lucide="check" class="mr-1"></i> Viável
                         </span>
                     {% else %}
                         <span class="px-3 py-1 text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200 rounded-full uppercase">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> Inviável
+                            <i data-lucide="alert-triangle" class="mr-1"></i> Inviável
                         </span>
                     {% endif %}
                 </div>
@@ -40,14 +40,14 @@
             <form method="post" action="{% url 'agendamento_aplicar_cenario' cenario.pk %}" onsubmit="return confirm('Deseja realmente aplicar este cronograma às partidas oficiais? As datas, horários e quadras serão gravados no sistema.');">
                 {% csrf_token %}
                 <button type="submit" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition shadow-sm active:scale-[0.98] flex items-center gap-2 cursor-pointer">
-                    <i class="fas fa-check-circle"></i>
+                    <i data-lucide="check-circle-2"></i>
                     <span>Aplicar ao Oficial</span>
                 </button>
             </form>
             {% endif %}
 
             <button onclick="window.print();" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
-                <i class="fas fa-print"></i>
+                <i data-lucide="printer"></i>
                 <span>Imprimir</span>
             </button>
         </div>
@@ -58,7 +58,7 @@
     <div class="bg-white border border-rose-200/90 rounded-3xl p-6 sm:p-7 shadow-sm space-y-5">
         <div class="flex items-start gap-4">
             <span class="p-3 bg-rose-50 text-rose-700 border border-rose-200 rounded-2xl shrink-0">
-                <i class="fas fa-exclamation-triangle text-lg"></i>
+                <i data-lucide="alert-triangle" class="text-lg"></i>
             </span>
             <div class="space-y-3 flex-grow">
                 <div>
@@ -72,19 +72,19 @@
 
                 <div class="pt-2 flex items-center gap-3 flex-wrap">
                     <a href="{% url 'agendamento_datas' %}" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer">
-                        <i class="fas fa-calendar-plus text-xs"></i>
+                        <i data-lucide="calendar-plus" class="text-xs"></i>
                         <span>Adicionar Datas</span>
                     </a>
                     <a href="{% url 'agendamento_recursos' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
-                        <i class="fas fa-map-marker-alt text-xs"></i>
+                        <i data-lucide="map-pin" class="text-xs"></i>
                         <span>Cadastrar Quadras</span>
                     </a>
                     <a href="{% url 'agendamento_fases' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
-                        <i class="fas fa-layer-group text-xs"></i>
+                        <i data-lucide="layers" class="text-xs"></i>
                         <span>Revisar Fases</span>
                     </a>
                     <a href="{% url 'agendamento_regras' %}" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold rounded-xl text-xs transition flex items-center gap-1.5 cursor-pointer">
-                        <i class="fas fa-sliders-h text-xs"></i>
+                        <i data-lucide="sliders-horizontal" class="text-xs"></i>
                         <span>Ajustar Tempos e Regras</span>
                     </a>
                 </div>
@@ -152,13 +152,13 @@
                         <tr class="hover:bg-slate-50/80 transition">
                             <td class="py-4 px-6 whitespace-nowrap">
                                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-blue-50 text-blue-800 font-bold font-mono text-xs border border-blue-200">
-                                    <i class="far fa-clock text-[10px]"></i>
+                                    <i data-lucide="clock" class="text-[10px]"></i>
                                     {{ item.horario_inicio|time:"H:i" }} - {{ item.horario_fim|time:"H:i" }}
                                 </span>
                             </td>
                             <td class="py-4 px-4 whitespace-nowrap">
                                 <span class="font-bold text-slate-900 flex items-center gap-1.5">
-                                    <i class="fas fa-map-marker-alt text-slate-500 text-xs"></i>
+                                    <i data-lucide="map-pin" class="text-slate-500 text-xs"></i>
                                     {{ item.recurso_nome }}
                                 </span>
                             </td>
@@ -189,7 +189,7 @@
     </div>
     {% elif cenario.status == 'sucesso' %}
     <div class="bg-white border border-slate-200/60 rounded-3xl p-12 text-center text-slate-500">
-        <i class="far fa-calendar-check text-4xl mb-3 text-slate-300"></i>
+        <i data-lucide="calendar-check" class="text-4xl mb-3 text-slate-300"></i>
         <p class="text-sm font-bold text-slate-700">Nenhuma partida pendente de alocação.</p>
     </div>
     {% endif %}

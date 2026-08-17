@@ -77,7 +77,7 @@
                     <h2 class="text-xs font-bold text-slate-800 leading-tight">{{ user.nome_completo }}</h2>
                     <p class="text-[10px] text-slate-400 mt-0.5">{{ user.email }}</p>
                     <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wide mt-1.5">
-                        <i class="fas fa-clock mr-1 text-[8px]"></i> Cadastro Pendente
+                        <i data-lucide="clock" class="mr-1 text-[8px]"></i> Cadastro Pendente
                     </span>
                 </div>
             </div>
@@ -90,7 +90,7 @@
                     <div class="p-4 bg-red-50 border border-red-100 rounded-2xl">
                         {% for error in form.non_field_errors %}
                             <p class="text-[10px] font-semibold text-red-650 flex items-center gap-1">
-                                <i class="fas fa-exclamation-circle text-[9px]"></i> {{ error }}
+                                <i data-lucide="alert-circle" class="text-[9px]"></i> {{ error }}
                             </p>
                         {% endfor %}
                     </div>
@@ -105,7 +105,7 @@
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                <i class="fas fa-university text-sm"></i>
+                                <i data-lucide="landmark" class="text-sm"></i>
                             </span>
                             <input type="text" name="nome_delegacao" id="id_nome_delegacao" required 
                                    placeholder="Ex.: A.A.A. Delegação" 
@@ -116,7 +116,7 @@
                         {% if form.nome_delegacao.errors %}
                             {% for error in form.nome_delegacao.errors %}
                                 <p class="text-[10px] font-semibold text-red-650 mt-1.5 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
+                                    <i data-lucide="alert-triangle" class="text-[9px]"></i> {{ error }}
                                 </p>
                             {% endfor %}
                         {% endif %}
@@ -130,7 +130,7 @@
                         </label>
                         <div class="relative">
                             <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-                                <i class="fas fa-id-card text-sm"></i>
+                                <i data-lucide="id-card" class="text-sm"></i>
                             </span>
                             <input type="text" name="cpf" id="id_cpf" required 
                                    placeholder="000.000.000-00" 
@@ -142,7 +142,7 @@
                         {% if form.cpf.errors %}
                             {% for error in form.cpf.errors %}
                                 <p class="text-[10px] font-semibold text-red-650 mt-1.5 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-triangle text-[9px]"></i> {{ error }}
+                                    <i data-lucide="alert-triangle" class="text-[9px]"></i> {{ error }}
                                 </p>
                             {% endfor %}
                         {% else %}
@@ -156,7 +156,7 @@
                 <!-- Botão de Ação -->
                 <button type="submit" 
                         class="w-full inline-flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition shadow-sm active:scale-[0.98] text-sm gap-1.5 mt-2">
-                    <i class="fas fa-check-circle text-[11px]"></i> Concluir Cadastro e Acessar
+                    <i data-lucide="check-circle-2" class="text-[11px]"></i> Concluir Cadastro e Acessar
                 </button>
             </form>
         </div>

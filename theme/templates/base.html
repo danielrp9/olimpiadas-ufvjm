@@ -8,8 +8,19 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <link rel="icon" type="image/png" href="{% static 'logo.png' %}">
     <link rel="stylesheet" href="{% static 'css/dist/styles.css' %}?v={% now 'U' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="{% static 'js/lucide.min.js' %}"></script>
+    <script src="{% static 'js/lucide-init.js' %}"></script>
     <style>
+        /* Lucide Icons Base & Optical Sizing */
+        .lucide, [data-lucide], svg.lucide {
+            display: inline-block;
+            vertical-align: -0.125em;
+            stroke-width: 2px;
+        }
+        svg.lucide:not([class*="w-"]):not([class*="size-"]):not([class*="h-"]) {
+            width: 1.15em;
+            height: 1.15em;
+        }
         .no-scrollbar::-webkit-scrollbar {
             display: none;
         }
@@ -85,7 +96,7 @@
                     <span class="sidebar-text transition-all duration-200 text-slate-800">Olimpíadas <span class="text-blue-600 font-black">UFVJM</span></span>
                 </a>
                 <button type="button" id="sidebar-toggle-btn" onclick="toggleDesktopSidebar()" title="Recolher menu" class="absolute -right-1.5 top-full -translate-y-1/2 w-6 h-6 rounded-full bg-white hover:bg-blue-600 text-slate-400 hover:text-white border border-slate-200 shadow-sm flex items-center justify-center transition-all duration-300 z-40 focus:outline-none active:scale-90 cursor-pointer">
-                    <i id="sidebar-toggle-icon" class="fas fa-chevron-left text-[9px] transition-transform duration-300"></i>
+                    <i id="sidebar-toggle-icon" data-lucide="chevron-left" class="text-[9px] transition-transform duration-300"></i>
                 </button>
             </div>
 
@@ -95,12 +106,12 @@
                     <!-- Dashboard (Autenticado) -->
                     {% if user.is_authenticated %}
                     <a href="{% url 'dashboard' %}" title="Dashboard" class="sidebar-item {% if request.path == '/' or 'dashboard' in request.resolver_match.url_name %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                        <i class="fas fa-chart-pie mr-3 text-base sidebar-icon shrink-0"></i>
+                        <i data-lucide="pie-chart" class="mr-3 text-base sidebar-icon shrink-0"></i>
                         <span class="sidebar-text whitespace-nowrap">Dashboard</span>
                     </a>
                     {% if user.is_comissao %}
                     <a href="{% url 'resumo_inscricoes' %}" title="Resumo Inscrições" class="sidebar-item {% if 'comissao/resumo-inscricoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                        <i class="fas fa-chart-bar mr-3 text-base sidebar-icon shrink-0"></i>
+                        <i data-lucide="bar-chart-3" class="mr-3 text-base sidebar-icon shrink-0"></i>
                         <span class="sidebar-text whitespace-nowrap">Resumo Inscrições</span>
                     </a>
                     {% endif %}
@@ -113,42 +124,42 @@
                                 <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gestão Geral</span>
                             </div>
                             <a href="{% url 'admin_delegacoes' %}" title="Delegações" class="sidebar-item {% if 'comissao/delegacoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-university mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="landmark" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Delegações</span>
                             </a>
                             <a href="{% url 'chaveamento_admin_list' %}" title="Chaveamentos" class="sidebar-item {% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-sitemap mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="network" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Chaveamentos</span>
                             </a>
                             <a href="{% url 'agendamento_dashboard' %}" title="Gerador de Horários" class="sidebar-item {% if 'agendamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-calendar-check mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="calendar-check" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Gerador de Horários</span>
                             </a>
                             <a href="{% url 'presumula_list' %}" title="Pré-Súmulas" class="sidebar-item {% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-file-signature mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="signature" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Pré-Súmulas</span>
                             </a>
                             <a href="{% url 'recurso_list' %}" title="Recursos" class="sidebar-item {% if 'recurso' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-balance-scale mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="scale" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Recursos</span>
                             </a>
                             <a href="{% url 'admin_periodo_inscricao' %}" title="Gerenciar Olimpíadas" class="sidebar-item {% if 'comissao/periodo-inscricao' in request.path or 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-calendar-alt mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="calendar" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Gerenciar Olimpíadas</span>
                             </a>
                             <a href="{% url 'admin_whitelist' %}" title="Autorizar Comissão" class="sidebar-item {% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-envelope-open-text mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="mail-open" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Autorizar Comissão</span>
                             </a>
                             <div class="pt-3 pb-1 sidebar-text">
                                 <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alimentação</span>
                             </div>
                             <a href="{% url 'refeicoes_validar' %}" title="Validar Refeições" class="sidebar-item {% if 'refeicoes/validar' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-check-circle mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="check-circle-2" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Validar Refeições</span>
                             </a>
                             <a href="{% url 'refeicoes_gerenciar' %}" title="Gerenciar Refeições" class="sidebar-item {% if 'refeicoes/gerenciar' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-utensils mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="utensils" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Gerenciar Refeições</span>
                             </a>
                             <!-- Menus do Representante -->
@@ -157,27 +168,27 @@
                                 <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
                             </div>
                             <a href="{% url 'atleta_list' %}" title="Atletas" class="sidebar-item {% if 'atleta' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-users mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="users" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Atletas</span>
                             </a>
                             <a href="{% url 'inscricao_detail' %}" title="Inscrição" class="sidebar-item {% if 'inscricao' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-file-invoice mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="file-text" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Inscrição</span>
                             </a>
                             <a href="{% url 'chaveamento_public_list' %}" title="Chaveamentos" class="sidebar-item {% if 'chaveamento' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-sitemap mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="network" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Chaveamentos</span>
                             </a>
                             <a href="{% url 'presumula_list' %}" title="Pré-Súmulas (Escalar)" class="sidebar-item {% if 'presumula' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-file-signature mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="signature" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Pré-Súmulas (Escalar)</span>
                             </a>
                             <a href="{% url 'recurso_list' %}" title="Recursos" class="sidebar-item {% if 'recurso' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-balance-scale mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="scale" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Recursos</span>
                             </a>
                             <a href="{% url 'membros_delegacao' %}" title="Autorizar Membros" class="sidebar-item {% if 'membros' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                                <i class="fas fa-user-friends mr-3 text-base sidebar-icon shrink-0"></i>
+                                <i data-lucide="users" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Autorizar Membros</span>
                             </a>
                         {% endif %}
@@ -188,12 +199,12 @@
                 <div class="border-t border-slate-100 pt-3 mt-4">
                     {% if user.is_authenticated %}
                     <a href="{% url 'logout' %}" title="Sair da Conta" class="sidebar-item text-red-650 bg-red-50 hover:bg-red-100/85 border border-red-100 group flex items-center px-4 py-2.5 text-xs font-bold rounded-2xl transition-all duration-200 active:scale-95 shadow-sm">
-                        <i class="fas fa-sign-out-alt mr-2.5 text-sm sidebar-icon shrink-0"></i>
+                        <i data-lucide="log-out" class="mr-2.5 text-sm sidebar-icon shrink-0"></i>
                         <span class="sidebar-text whitespace-nowrap">Sair da Conta</span>
                     </a>
                     {% else %}
                     <a href="{% url 'login' %}" title="Entrar" class="sidebar-item text-slate-500 hover:bg-slate-50 group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
-                        <i class="fas fa-sign-in-alt mr-3 text-base sidebar-icon shrink-0"></i>
+                        <i data-lucide="log-in" class="mr-3 text-base sidebar-icon shrink-0"></i>
                         <span class="sidebar-text whitespace-nowrap">Entrar</span>
                     </a>
                     {% endif %}
@@ -208,7 +219,7 @@
                 <span class="text-slate-800">Olimpíadas <span class="text-blue-600 font-black">UFVJM</span></span>
             </a>
             <button type="button" onclick="toggleMobileMenu()" class="text-slate-500 hover:text-slate-700 focus:outline-none p-1">
-                <i class="fas fa-bars text-xl"></i>
+                <i data-lucide="menu" class="text-xl"></i>
             </button>
         </div>
 
@@ -224,7 +235,7 @@
                         <span class="text-slate-800">Olimpíadas <span class="text-blue-600 font-black">UFVJM</span></span>
                     </span>
                     <button type="button" onclick="toggleMobileMenu()" class="text-slate-400 hover:text-slate-650">
-                        <i class="fas fa-times text-lg"></i>
+                        <i data-lucide="x" class="text-lg"></i>
                     </button>
                 </div>
                 <div class="flex-grow flex flex-col overflow-y-auto no-scrollbar px-4 py-4 justify-between bg-white">
@@ -232,12 +243,12 @@
                         <!-- Dashboard -->
                         {% if user.is_authenticated %}
                         <a href="{% url 'dashboard' %}" class="{% if request.path == '/' or 'dashboard' in request.resolver_match.url_name %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                            <i class="fas fa-chart-pie mr-3 text-base"></i>
+                            <i data-lucide="pie-chart" class="mr-3 text-base"></i>
                             Dashboard
                         </a>
                         {% if user.is_comissao %}
                         <a href="{% url 'resumo_inscricoes' %}" class="{% if 'comissao/resumo-inscricoes' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                            <i class="fas fa-chart-bar mr-3 text-base"></i>
+                            <i data-lucide="bar-chart-3" class="mr-3 text-base"></i>
                             Resumo Inscrições
                         </a>
                         {% endif %}
@@ -247,42 +258,42 @@
                                     <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Gestão Geral</span>
                                 </div>
                                 <a href="{% url 'admin_delegacoes' %}" class="{% if 'comissao/delegacoes' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-university mr-3 text-base"></i>
+                                    <i data-lucide="landmark" class="mr-3 text-base"></i>
                                     Delegações
                                 </a>
                                 <a href="{% url 'chaveamento_admin_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-sitemap mr-3 text-base"></i>
+                                    <i data-lucide="network" class="mr-3 text-base"></i>
                                     Chaveamentos
                                 </a>
                                 <a href="{% url 'agendamento_dashboard' %}" class="{% if 'agendamento' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-calendar-check mr-3 text-base"></i>
+                                    <i data-lucide="calendar-check" class="mr-3 text-base"></i>
                                     Gerador de Horários
                                 </a>
                                 <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-file-signature mr-3 text-base"></i>
+                                    <i data-lucide="signature" class="mr-3 text-base"></i>
                                     Pré-Súmulas
                                 </a>
                                 <a href="{% url 'recurso_list' %}" class="{% if 'recurso' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-balance-scale mr-3 text-base"></i>
+                                    <i data-lucide="scale" class="mr-3 text-base"></i>
                                     Recursos
                                 </a>
                                 <a href="{% url 'admin_periodo_inscricao' %}" class="{% if 'comissao/periodo-inscricao' in request.path or 'comissao/modalidades' in request.path or 'comissao/modalidade' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-calendar-alt mr-3 text-base"></i>
+                                    <i data-lucide="calendar" class="mr-3 text-base"></i>
                                     Gerenciar Olimpíadas
                                 </a>
                                 <a href="{% url 'admin_whitelist' %}" class="{% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-envelope-open-text mr-3 text-base"></i>
+                                    <i data-lucide="mail-open" class="mr-3 text-base"></i>
                                     Autorizar Comissão
                                 </a>
                                 <div class="pt-3 pb-1">
                                     <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alimentação</span>
                                 </div>
                                 <a href="{% url 'refeicoes_validar' %}" class="{% if 'refeicoes/validar' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-check-circle mr-3 text-base"></i>
+                                    <i data-lucide="check-circle-2" class="mr-3 text-base"></i>
                                     Validar Refeições
                                 </a>
                                 <a href="{% url 'refeicoes_gerenciar' %}" class="{% if 'refeicoes/gerenciar' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-utensils mr-3 text-base"></i>
+                                    <i data-lucide="utensils" class="mr-3 text-base"></i>
                                     Gerenciar Refeições
                                 </a>
                             {% else %}
@@ -290,27 +301,27 @@
                                     <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Minha Delegação</span>
                                 </div>
                                 <a href="{% url 'atleta_list' %}" class="{% if 'atleta' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-users mr-3 text-base"></i>
+                                    <i data-lucide="users" class="mr-3 text-base"></i>
                                     Atletas
                                 </a>
                                 <a href="{% url 'inscricao_detail' %}" class="{% if 'inscricao' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-file-invoice mr-3 text-base"></i>
+                                    <i data-lucide="file-text" class="mr-3 text-base"></i>
                                     Inscrição
                                 </a>
                                 <a href="{% url 'chaveamento_public_list' %}" class="{% if 'chaveamento' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-sitemap mr-3 text-base"></i>
+                                    <i data-lucide="network" class="mr-3 text-base"></i>
                                     Chaveamentos
                                 </a>
                                 <a href="{% url 'presumula_list' %}" class="{% if 'presumula' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-file-signature mr-3 text-base"></i>
+                                    <i data-lucide="signature" class="mr-3 text-base"></i>
                                     Pré-Súmulas (Escalar)
                                 </a>
                                 <a href="{% url 'recurso_list' %}" class="{% if 'recurso' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-balance-scale mr-3 text-base"></i>
+                                    <i data-lucide="scale" class="mr-3 text-base"></i>
                                     Recursos
                                 </a>
                                 <a href="{% url 'membros_delegacao' %}" class="{% if 'membros' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                                    <i class="fas fa-user-friends mr-3 text-base"></i>
+                                    <i data-lucide="users" class="mr-3 text-base"></i>
                                     Autorizar Membros
                                 </a>
                             {% endif %}
@@ -320,12 +331,12 @@
                     <div class="border-t border-slate-100 pt-3 mt-4">
                         {% if user.is_authenticated %}
                         <a href="{% url 'logout' %}" class="text-red-650 bg-red-50 hover:bg-red-100/85 border border-red-100 group flex items-center px-4 py-2.5 text-xs font-bold rounded-2xl transition active:scale-95 shadow-sm">
-                            <i class="fas fa-sign-out-alt mr-2.5 text-sm"></i>
+                            <i data-lucide="log-out" class="mr-2.5 text-sm"></i>
                             Sair da Conta
                         </a>
                         {% else %}
                         <a href="{% url 'login' %}" class="text-slate-500 hover:bg-slate-50 group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
-                            <i class="fas fa-sign-in-alt mr-3 text-base"></i>
+                            <i data-lucide="log-in" class="mr-3 text-base"></i>
                             Entrar
                         </a>
                         {% endif %}
@@ -394,10 +405,10 @@
                     </p>
                     <div class="flex items-center justify-center gap-4 pt-1">
                         <a href="https://www.linkedin.com/in/daniel-rodrigues-pereira-29b1b7243/" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-blue-400 text-lg transition-all duration-200 hover:scale-110" title="LinkedIn">
-                            <i class="fab fa-linkedin"></i>
+                            <i data-lucide="linkedin"></i>
                         </a>
                         <a href="mailto:danielrodrigues878@hotmail.com" class="text-slate-400 hover:text-amber-400 text-lg transition-all duration-200 hover:scale-110" title="E-mail">
-                            <i class="fas fa-envelope"></i>
+                            <i data-lucide="mail"></i>
                         </a>
                     </div>
                 </footer>
@@ -436,18 +447,18 @@
                      role="alert">
                     <span class="shrink-0 mt-0.5 text-base">
                         {% if message.tags == 'success' %}
-                            <i class="fas fa-check-circle text-emerald-500"></i>
+                            <i data-lucide="check-circle-2" class="text-emerald-500"></i>
                         {% elif message.tags == 'error' %}
-                            <i class="fas fa-exclamation-circle text-red-500"></i>
+                            <i data-lucide="alert-circle" class="text-red-500"></i>
                         {% else %}
-                            <i class="fas fa-info-circle text-blue-500"></i>
+                            <i data-lucide="info" class="text-blue-500"></i>
                         {% endif %}
                     </span>
                     <div class="flex-grow">
                         <p class="text-xs font-semibold leading-relaxed">{{ message }}</p>
                     </div>
                     <button type="button" class="shrink-0 text-slate-400 hover:text-slate-650 transition p-0.5 rounded-lg hover:bg-slate-100/50" onclick="dismissToast(this.closest('.toast-item'))">
-                        <i class="fas fa-times text-xs"></i>
+                        <i data-lucide="x" class="text-xs"></i>
                     </button>
                 </div>
             {% endfor %}
