@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 
 class Campus(models.Model):
     nome = models.CharField(max_length=100, unique=True)
@@ -53,7 +54,7 @@ class Atleta(models.Model):
     justificativa_inconformidade = models.TextField(blank=True, null=True, help_text="Motivo pelo qual o atleta não está em conformidade")
     permite_correcao = models.BooleanField(default=False, help_text="Se marcado, o representante pode enviar um novo documento")
     link_correcao = models.URLField(blank=True, null=True, help_text="Novo documento enviado pelo representante para reavaliação")
-    data_cadastro = models.DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name="Data de Cadastro")
+    data_cadastro = models.DateTimeField(default=timezone.now, verbose_name="Data de Cadastro")
 
     @property
     def esta_inscrito(self):

@@ -28,7 +28,6 @@ class AtletaAdmin(admin.ModelAdmin):
     )
     search_fields = ('nome_completo', 'matricula', 'cadastrado_por__nome_delegacao', 'cadastrado_por__email')
     list_filter = ('campus', 'curso', 'genero', 'tipo_atleta', 'em_conformidade', 'data_cadastro')
-    readonly_fields = ('data_cadastro',)
 
     @admin.display(description="Vínculo na Inscrição")
     def status_inscricao_display(self, obj):
