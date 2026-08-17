@@ -53,7 +53,11 @@ class Atleta(models.Model):
     justificativa_inconformidade = models.TextField(blank=True, null=True, help_text="Motivo pelo qual o atleta não está em conformidade")
     permite_correcao = models.BooleanField(default=False, help_text="Se marcado, o representante pode enviar um novo documento")
     link_correcao = models.URLField(blank=True, null=True, help_text="Novo documento enviado pelo representante para reavaliação")
+    data_cadastro = models.DateTimeField(auto_now_add=True, null=True, blank=True, verbose_name="Data de Cadastro")
 
+    @property
+    def esta_inscrito(self):
+        return self.modalidades_inscritas.exists()
 
     def __str__(self):
         return f"{self.nome_completo} ({self.get_genero_display()})"
@@ -295,6 +299,12 @@ class Inscricao(models.Model):
     @property
     def atletas_inscritos(self):
         return Atleta.objects.filter(modalidades_inscritas__inscricao=self).distinct()
+
+    @property
+    def atletas_nao_inscritos(self):
+        """Atletas cadastrados pela delegação que não constam em nenhuma modalidade desta inscrição."""
+        inscritos_ids = self.atletas_inscritos.values_list('id', flat=True)
+        return Atleta.objects.filter(cadastrado_por=self.delegacao).exclude(id__in=inscritos_ids).distinct()
 
 
 class InscricaoModalidade(models.Model):

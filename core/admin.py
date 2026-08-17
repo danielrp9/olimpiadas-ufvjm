@@ -14,9 +14,32 @@ class CampusAdmin(admin.ModelAdmin):
 
 @admin.register(Atleta)
 class AtletaAdmin(admin.ModelAdmin):
-    list_display = ('nome_completo', 'matricula', 'curso', 'campus', 'genero', 'tipo_atleta', 'em_conformidade', 'cadastrado_por')
-    search_fields = ('nome_completo', 'matricula')
-    list_filter = ('campus', 'curso', 'genero', 'tipo_atleta', 'em_conformidade')
+    list_display = (
+        'nome_completo', 
+        'matricula', 
+        'curso', 
+        'campus', 
+        'genero', 
+        'tipo_atleta', 
+        'cadastrado_por',
+        'data_cadastro',
+        'status_inscricao_display',
+        'em_conformidade'
+    )
+    search_fields = ('nome_completo', 'matricula', 'cadastrado_por__nome_delegacao', 'cadastrado_por__email')
+    list_filter = ('campus', 'curso', 'genero', 'tipo_atleta', 'em_conformidade', 'data_cadastro')
+    readonly_fields = ('data_cadastro',)
+
+    @admin.display(description="Vínculo na Inscrição")
+    def status_inscricao_display(self, obj):
+        mods = list(obj.modalidades_inscritas.values_list('modalidade__nome', flat=True))
+        if mods:
+            return f"Inscrito em: {', '.join(mods)}"
+        delegacao = obj.cadastrado_por
+        inscricao = getattr(delegacao, 'inscricao', None)
+        if inscricao:
+            return "⚠️ Não vinculado (Adicionado fora/pós-inscrição)"
+        return "Delegação sem inscrição"
 
 @admin.register(Modalidade)
 class ModalidadeAdmin(admin.ModelAdmin):

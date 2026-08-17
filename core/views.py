@@ -290,7 +290,27 @@ class AtletaListView(LoginRequiredMixin, ListView):
     context_object_name = 'atletas'
 
     def get_queryset(self):
-        return Atleta.objects.filter(cadastrado_por=self.request.user.delegacao_ativa)
+        return Atleta.objects.filter(
+            cadastrado_por=self.request.user.delegacao_ativa
+        ).prefetch_related('modalidades_inscritas__modalidade').order_by('-id')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        delegacao = self.request.user.delegacao_ativa
+        inscricao = getattr(delegacao, 'inscricao', None)
+        context['inscricao'] = inscricao
+        if inscricao:
+            atletas_ids_inscritos = set(
+                Atleta.objects.filter(modalidades_inscritas__inscricao=inscricao).values_list('id', flat=True)
+            )
+            context['atletas_ids_inscritos'] = atletas_ids_inscritos
+            context['total_nao_inscritos'] = Atleta.objects.filter(
+                cadastrado_por=delegacao
+            ).exclude(id__in=atletas_ids_inscritos).count()
+        else:
+            context['atletas_ids_inscritos'] = set()
+            context['total_nao_inscritos'] = 0
+        return context
 
 class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
     template_name = 'core/atleta_bulk_form.html'

@@ -296,6 +296,7 @@
                                 <th class="px-4 py-3 sm:px-6 sm:py-3">Jogador</th>
                                 <th class="hidden md:table-cell px-6 py-3">Gênero</th>
                                 <th class="hidden md:table-cell px-6 py-3">Matrícula</th>
+                                <th class="hidden lg:table-cell px-6 py-3">Data do Cadastro</th>
                                 <th class="hidden md:table-cell px-6 py-3">Pasta Documentos</th>
                                 <th class="px-4 py-3 sm:px-6 sm:py-3 text-right">Avaliação</th>
                             </tr>
@@ -312,6 +313,9 @@
                                     <!-- Matrícula - Oculto no Mobile (< md) -->
                                     <td class="hidden md:table-cell px-6 py-4 font-mono font-medium text-slate-500">{{ atleta.matricula }}</td>
                                     
+                                    <!-- Data do Cadastro (Visível em lg:) -->
+                                    <td class="hidden lg:table-cell px-6 py-4 font-mono text-[10px] text-slate-500">{{ atleta.data_cadastro|date:"d/m/Y \à\s H:i"|default:"-" }}</td>
+
                                     <!-- Pasta Documentos - Oculto no Mobile (< md) -->
                                     <td class="hidden md:table-cell px-6 py-4">
                                         {% if atleta.link_documento %}
@@ -349,7 +353,7 @@
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="5" class="px-6 py-8 text-slate-400 text-center">
+                                    <td colspan="6" class="px-6 py-8 text-slate-400 text-center">
                                         Nenhum atleta inscrito nesta delegação.
                                     </td>
                                 </tr>
@@ -358,6 +362,49 @@
                     </table>
                 </div>
             </div>
+
+            {% if inscricao.atletas_nao_inscritos.exists %}
+            <!-- Atletas no Perfil Não Vinculados à Inscrição Oficial -->
+            <div class="bg-amber-50/60 border border-amber-200/70 rounded-3xl p-6 shadow-sm space-y-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <h4 class="font-bold text-amber-900 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <i data-lucide="alert-triangle" class="text-amber-600"></i> Atletas Cadastrados Fora da Inscrição Oficial ({{ inscricao.atletas_nao_inscritos.count }})
+                    </h4>
+                    <span class="text-[9px] font-extrabold uppercase px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200">
+                        Não Participam dos Jogos
+                    </span>
+                </div>
+                <p class="text-xs text-amber-800 leading-relaxed">
+                    <strong>Atenção:</strong> Estes atletas estão cadastrados no perfil da sua delegação, porém <strong>não foram vinculados a nenhuma modalidade no ato da submissão da inscrição oficial</strong> (ou foram inseridos após a inscrição ter sido finalizada). Por isso, eles não são encaminhados para a Comissão e não poderão ser escalados em jogos ou súmulas.
+                </p>
+                <div class="overflow-x-auto bg-white rounded-2xl border border-amber-200/60 shadow-2xs">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-amber-50/30 border-b border-amber-100 text-amber-900 text-[10px] font-bold uppercase tracking-wider">
+                                <th class="px-4 py-2.5 sm:px-6 sm:py-2.5">Nome do Atleta</th>
+                                <th class="hidden md:table-cell px-6 py-2.5">Matrícula</th>
+                                <th class="hidden md:table-cell px-6 py-2.5">Data do Cadastro</th>
+                                <th class="px-4 py-2.5 sm:px-6 sm:py-2.5 text-right">Situação</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-amber-100/60 text-slate-700">
+                            {% for at_nao in inscricao.atletas_nao_inscritos %}
+                            <tr class="hover:bg-amber-50/20 transition">
+                                <td class="px-4 py-2.5 sm:px-6 sm:py-2.5 font-bold text-slate-800">{{ at_nao.nome_completo }}</td>
+                                <td class="hidden md:table-cell px-6 py-2.5 font-semibold text-slate-600">{{ at_nao.matricula }}</td>
+                                <td class="hidden md:table-cell px-6 py-2.5 text-slate-500 font-mono text-[10px]">{{ at_nao.data_cadastro|date:"d/m/Y \à\s H:i"|default:"-" }}</td>
+                                <td class="px-4 py-2.5 sm:px-6 sm:py-2.5 text-right">
+                                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800">
+                                        Não Vinculado à Inscrição
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
     </div>
