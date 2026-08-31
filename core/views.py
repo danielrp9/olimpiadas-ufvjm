@@ -496,6 +496,15 @@ class AdminDelegacaoListView(LoginRequiredMixin, ListView):
     context_object_name = 'delegacoes'
 
     def get_queryset(self):
+        # Se houver período de inscrição ativo (1ª ou 2ª chamada), sincroniza atletas da delegação com a inscrição
+        ativo, tipo_periodo = get_periodo_inscricao_ativo()
+        if ativo:
+            for insc in Inscricao.objects.prefetch_related('modalidades').all():
+                unlinked = insc.atletas_nao_inscritos
+                if unlinked.exists():
+                    for im in insc.modalidades.all():
+                        im.atletas.add(*unlinked)
+
         # Retorna apenas os representantes que de fato realizaram uma inscrição
         return User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True, inscricao__isnull=False).prefetch_related(
             'atletas', 
@@ -573,6 +582,14 @@ def avaliar_atleta(request, pk):
             atleta.permite_correcao = permite_correcao
             atleta.status_avaliacao = 'indeferido'
         atleta.save()
+        
+        # Garante vínculo com a inscrição da delegação se existir
+        delegacao = atleta.cadastrado_por
+        inscricao = getattr(delegacao, 'inscricao', None)
+        if inscricao and not atleta.modalidades_inscritas.filter(inscricao=inscricao).exists():
+            for im in inscricao.modalidades.all():
+                im.atletas.add(atleta)
+                
         messages.success(request, f"Atleta {atleta.nome_completo} avaliado com sucesso!")
     return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
 

@@ -319,7 +319,8 @@
                                                     <th class="px-3 sm:px-4 py-2.5">Nome do Atleta</th>
                                                     <th class="px-4 py-2.5 hidden sm:table-cell">Matrícula</th>
                                                     <th class="px-4 py-2.5 hidden md:table-cell">Data do Cadastro</th>
-                                                    <th class="px-3 sm:px-4 py-2.5 text-right">Situação</th>
+                                                    <th class="px-3 sm:px-4 py-2.5">Situação</th>
+                                                    <th class="px-3 sm:px-4 py-2.5 text-right">Ação</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-amber-100/60 text-slate-700">
@@ -328,10 +329,30 @@
                                                     <td class="px-3 sm:px-4 py-2.5 font-bold text-slate-800">{{ at_nao.nome_completo }}</td>
                                                     <td class="px-4 py-2.5 font-semibold text-slate-600 hidden sm:table-cell">{{ at_nao.matricula }}</td>
                                                     <td class="px-4 py-2.5 text-slate-500 font-mono text-[10px] hidden md:table-cell">{{ at_nao.data_cadastro|date:"d/m/Y \à\s H:i"|default:"-" }}</td>
-                                                    <td class="px-3 sm:px-4 py-2.5 text-right">
+                                                    <td class="px-3 sm:px-4 py-2.5">
                                                         <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                                            Não Vinculado à Inscrição
+                                                            Não Vinculado
                                                         </span>
+                                                    </td>
+                                                    <td class="px-3 sm:px-4 py-2.5 text-right whitespace-nowrap">
+                                                        <button onclick="openEvalModal(this)"
+                                                                data-id="{{ at_nao.id }}"
+                                                                data-nome="{{ at_nao.nome_completo }}"
+                                                                data-curso="{{ at_nao.curso }}"
+                                                                data-matricula="{{ at_nao.matricula }}"
+                                                                data-cpf="{{ at_nao.cpf|default:'-' }}"
+                                                                data-genero="{{ at_nao.get_genero_display }}"
+                                                                data-campus="{{ at_nao.campus }}"
+                                                                data-vinculo="{% if at_nao.is_egresso %}Egresso{% else %}Regular{% endif %}"
+                                                                data-link-documento="{{ at_nao.link_documento|default:'' }}"
+                                                                data-link-documento-egresso="{{ at_nao.link_documento_egresso|default:'' }}"
+                                                                data-link-correcao="{{ at_nao.link_correcao|default:'' }}"
+                                                                data-status-avaliacao="{{ at_nao.status_avaliacao }}"
+                                                                data-justificativa="{{ at_nao.justificativa_inconformidade|default:'' }}"
+                                                                data-permite-correcao="{% if at_nao.permite_correcao %}true{% else %}false{% endif %}"
+                                                                class="inline-flex items-center px-2.5 py-1 bg-white hover:bg-slate-50 hover:text-blue-600 border border-slate-200 rounded-xl font-bold text-[10px] transition duration-150 active:scale-95 shadow-sm gap-1">
+                                                            <i data-lucide="gavel"></i> Avaliar
+                                                        </button>
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
