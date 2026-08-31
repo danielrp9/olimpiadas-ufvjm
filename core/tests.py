@@ -1437,6 +1437,147 @@ class SecondCallRegistrationTests(TestCase):
         self.delegate.refresh_from_db()
         self.assertEqual(self.delegate.status_delegacao, 'pendente')
 
+    def test_athlete_bulk_create_associates_when_second_call_active(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao, Inscricao, InscricaoModalidade, Atleta, Campus
+        from datetime import timedelta
+
+        campus = Campus.objects.create(nome='Campus Teste Bulk 2')
+
+        # Configure second call active
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=5),
+            data_fim=now - timedelta(days=4),
+            segunda_chamada_inicio=now - timedelta(days=1),
+            segunda_chamada_fim=now + timedelta(days=1)
+        )
+
+        # Create prior registration with atleta1
+        inscricao = Inscricao.objects.create(delegacao=self.delegate, status='deferido')
+        im = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=self.modalidade)
+        im.atletas.add(self.atleta1)
+
+        self.client.force_login(self.delegate)
+
+        # Delegate adds a new athlete via bulk create
+        response = self.client.post(reverse('atleta_bulk_create'), {
+            'nome[]': ['Novo Atleta Segunda Chamada'],
+            'cpf[]': ['111.222.333-44'],
+            'email[]': ['novo2@example.com'],
+            'matricula[]': ['MAT202699'],
+            'curso[]': ['Sistemas de Informação'],
+            'campus[]': [campus.id],
+            'genero[]': ['M'],
+            'tipo_atleta[]': ['estudante'],
+            'is_egresso[]': ['0'],
+            'link_documento[]': ['https://drive.google.com/doc_novo']
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Verify new athlete is linked to the inscription modalities
+        novo_atleta = Atleta.objects.get(matricula='MAT202699')
+        im.refresh_from_db()
+        self.assertIn(novo_atleta, im.atletas.all())
+        self.assertIn(novo_atleta, inscricao.atletas_inscritos)
+        self.assertNotIn(novo_atleta, inscricao.atletas_nao_inscritos)
+
+        # Verify new athlete is set to nao_avaliado
+        self.assertEqual(novo_atleta.status_avaliacao, 'nao_avaliado')
+        self.assertFalse(novo_atleta.em_conformidade)
+
+        # Verify inscription and delegation statuses are reset to pendente for re-evaluation
+        inscricao.refresh_from_db()
+        self.assertEqual(inscricao.status, 'pendente')
+        self.delegate.refresh_from_db()
+        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+
+    def test_athlete_bulk_create_does_not_associate_when_periods_closed(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao, Inscricao, InscricaoModalidade, Atleta, Campus
+        from datetime import timedelta
+
+        campus = Campus.objects.create(nome='Campus Teste Bulk Closed')
+
+        # Configure both regular and second call periods in the past
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=10),
+            data_fim=now - timedelta(days=8),
+            segunda_chamada_inicio=now - timedelta(days=5),
+            segunda_chamada_fim=now - timedelta(days=3)
+        )
+
+        # Create prior registration
+        inscricao = Inscricao.objects.create(delegacao=self.delegate, status='deferido')
+        im = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=self.modalidade)
+        im.atletas.add(self.atleta1)
+
+        self.client.force_login(self.delegate)
+
+        # Delegate adds an athlete outside open periods
+        response = self.client.post(reverse('atleta_bulk_create'), {
+            'nome[]': ['Atleta Fora do Periodo'],
+            'cpf[]': ['555.666.777-88'],
+            'email[]': ['fora@example.com'],
+            'matricula[]': ['MATFORA123'],
+            'curso[]': ['Sistemas de Informação'],
+            'campus[]': [campus.id],
+            'genero[]': ['M'],
+            'tipo_atleta[]': ['estudante'],
+            'is_egresso[]': ['0'],
+            'link_documento[]': ['https://drive.google.com/doc_fora']
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Verify athlete is NOT linked to inscription
+        atleta_fora = Atleta.objects.get(matricula='MATFORA123')
+        im.refresh_from_db()
+        self.assertNotIn(atleta_fora, im.atletas.all())
+        self.assertNotIn(atleta_fora, inscricao.atletas_inscritos)
+        self.assertIn(atleta_fora, inscricao.atletas_nao_inscritos)
+
+        # Inscription status must NOT have changed
+        inscricao.refresh_from_db()
+        self.assertEqual(inscricao.status, 'deferido')
+
+    def test_second_call_add_athlete_via_form(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao, Inscricao, InscricaoModalidade
+        from datetime import timedelta
+
+        # Configure second call active
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=5),
+            data_fim=now - timedelta(days=4),
+            segunda_chamada_inicio=now - timedelta(days=1),
+            segunda_chamada_fim=now + timedelta(days=1)
+        )
+
+        # Inscription with atleta1
+        inscricao = Inscricao.objects.create(delegacao=self.delegate, status='deferido')
+        im = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=self.modalidade)
+        im.atletas.add(self.atleta1)
+
+        self.client.force_login(self.delegate)
+
+        # POST adding atleta2 via second call form
+        response = self.client.post(reverse('inscricao_segunda_chamada'), {
+            'adicionar_atletas': [self.atleta2.id]
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Both atleta1 and atleta2 should now be in the inscription
+        im.refresh_from_db()
+        self.assertIn(self.atleta1, im.atletas.all())
+        self.assertIn(self.atleta2, im.atletas.all())
+        self.assertNotIn(self.atleta2, inscricao.atletas_nao_inscritos)
+        self.assertIn(self.atleta2, inscricao.atletas_inscritos)
+        
+        self.atleta2.refresh_from_db()
+        self.assertEqual(self.atleta2.status_avaliacao, 'nao_avaliado')
+
 
 class PreSumulaManagementTests(TestCase):
     def setUp(self):

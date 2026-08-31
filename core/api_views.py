@@ -267,6 +267,8 @@ class APIAtletasView(View):
             items = data if is_bulk else [data]
             
             atletas_criados = []
+            novos_atletas_objs = []
+            delegacao = request.user.delegacao_ativa
             for item in items:
                 nome = item.get('nome_completo', '').strip()
                 if not nome:
@@ -284,9 +286,14 @@ class APIAtletasView(View):
                     is_egresso=bool(item.get('is_egresso', False)),
                     link_documento_egresso=item.get('link_documento_egresso', '').strip(),
                     link_documento=item.get('link_documento', '').strip(),
-                    cadastrado_por=request.user.delegacao_ativa
+                    cadastrado_por=delegacao
                 )
+                novos_atletas_objs.append(atleta)
                 atletas_criados.append(atleta_to_dict(atleta))
+                
+            if novos_atletas_objs:
+                from .views import associar_atletas_a_inscricao_se_aberta
+                associar_atletas_a_inscricao_se_aberta(delegacao, novos_atletas_objs)
                 
             return JsonResponse({'success': True, 'atletas': atletas_criados})
         except Exception as e:

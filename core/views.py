@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse
+from django.db import models
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
@@ -283,6 +284,90 @@ def reset_conformidade_atleta(request, pk):
     messages.success(request, f"Atleta {atleta.nome_completo} restaurado para conformidade!")
     return redirect(request.META.get('HTTP_REFERER', 'admin_delegacoes'))
 
+# Helper functions for inscription periods and athlete association
+def get_periodo_inscricao_ativo():
+    """
+    Retorna uma tupla (ativo: bool, tipo: str | None) indicando se há um período
+    de inscrições aberto no momento:
+    - (True, 'regular') para período regular de 1ª chamada
+    - (True, 'segunda_chamada') para período de 2ª chamada
+    - (False, None) se não houver período ativo
+    """
+    from django.utils import timezone
+    from .models import ConfiguracaoPeriodoInscricao
+    
+    config = ConfiguracaoPeriodoInscricao.objects.first()
+    if not config:
+        return False, None
+        
+    now = timezone.now()
+    if config.data_inicio and config.data_fim and (config.data_inicio <= now <= config.data_fim):
+        return True, 'regular'
+        
+    if config.segunda_chamada_inicio and config.segunda_chamada_fim and (config.segunda_chamada_inicio <= now <= config.segunda_chamada_fim):
+        return True, 'segunda_chamada'
+        
+    return False, None
+
+
+def associar_atletas_a_inscricao_se_aberta(delegacao, novos_atletas):
+    """
+    Se houver período de inscrição ativo (1ª chamada regular ou 2ª chamada) e a delegação
+    já possuir uma Inscrição oficial enviada, vincula automaticamente os novos atletas criados
+    às modalidades da inscrição, reseta o status da inscrição e delegação para 'pendente'
+    e notifica a comissão organizadora.
+    """
+    ativo, tipo_periodo = get_periodo_inscricao_ativo()
+    if not ativo or not delegacao:
+        return False
+        
+    inscricao = getattr(delegacao, 'inscricao', None)
+    if not inscricao:
+        return False
+        
+    modalidades = inscricao.modalidades.all()
+    if not modalidades.exists():
+        return False
+        
+    if isinstance(novos_atletas, (list, tuple, set, models.QuerySet)):
+        atletas_list = list(novos_atletas)
+    else:
+        atletas_list = [novos_atletas]
+        
+    if not atletas_list:
+        return False
+        
+    # Vincula os atletas às modalidades
+    for im in modalidades:
+        im.atletas.add(*atletas_list)
+        
+    # Reseta status dos atletas para que apareçam como pendentes na avaliação
+    for at in atletas_list:
+        at.status_avaliacao = 'nao_avaliado'
+        at.em_conformidade = False
+        at.save(update_fields=['status_avaliacao', 'em_conformidade'])
+        
+    # Reseta status da inscrição e da delegação para reavaliação da comissão
+    inscricao.status = 'pendente'
+    inscricao.save(update_fields=['status'])
+    
+    delegacao.status_delegacao = 'pendente'
+    delegacao.justificativa_delegacao = ''
+    delegacao.save(update_fields=['status_delegacao', 'justificativa_delegacao'])
+    
+    # Notifica a comissão organizadora
+    motivo = "na Segunda Chamada" if tipo_periodo == 'segunda_chamada' else "no período de inscrições"
+    comissao = User.objects.filter(role='COMISSAO')
+    for admin in comissao:
+        Notificacao.objects.create(
+            usuario=admin,
+            mensagem=f"Novos atletas adicionados {motivo} pela delegação {delegacao.nome_delegacao or delegacao.email}.",
+            link='/comissao/delegacoes/'
+        )
+        
+    return True
+
+
 # Atletas Views
 class AtletaListView(LoginRequiredMixin, ListView):
     model = Atleta
@@ -334,6 +419,8 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
         links_documentos = request.POST.getlist('link_documento[]')
 
         atletas_criados = 0
+        novos_atletas = []
+        delegacao = request.user.delegacao_ativa
         for i in range(len(nomes)):
             if nomes[i].strip():
                 is_egr = (is_egressos[i] == '1') if i < len(is_egressos) else False
@@ -344,7 +431,7 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                 # Fetch selected campus ID
                 c_id = int(campi[i]) if i < len(campi) and campi[i].isdigit() else None
                 
-                Atleta.objects.create(
+                atleta = Atleta.objects.create(
                     nome_completo=nomes[i],
                     cpf=cpfs[i] if i < len(cpfs) else '',
                     email=emails[i],
@@ -356,12 +443,17 @@ class AtletaBulkCreateView(LoginRequiredMixin, TemplateView):
                     is_egresso=is_egr,
                     link_documento_egresso='',
                     link_documento=link_doc,
-                    cadastrado_por=request.user.delegacao_ativa
+                    cadastrado_por=delegacao
                 )
+                novos_atletas.append(atleta)
                 atletas_criados += 1
         
-        if atletas_criados > 0:
-            messages.success(request, f"{atletas_criados} atletas cadastrados com sucesso!")
+        if novos_atletas:
+            vinculado = associar_atletas_a_inscricao_se_aberta(delegacao, novos_atletas)
+            if vinculado:
+                messages.success(request, f"{atletas_criados} atleta(s) cadastrado(s) e vinculado(s) à inscrição oficial com sucesso! A Comissão Organizadora fará a avaliação.")
+            else:
+                messages.success(request, f"{atletas_criados} atletas cadastrados com sucesso!")
         return redirect('atleta_list')
 
 class AtletaUpdateView(LoginRequiredMixin, UpdateView):
@@ -1835,8 +1927,8 @@ def inscricao_segunda_chamada(request):
         athletes_to_add_ids = []
         
         # 1. Process substitutions
-        sub_sai_list = request.POST.getlist('substituicao_sai[]')
-        sub_entra_list = request.POST.getlist('substituicao_entra[]')
+        sub_sai_list = request.POST.getlist('substituicao_sai[]') or request.POST.getlist('substituicao_sai')
+        sub_entra_list = request.POST.getlist('substituicao_entra[]') or request.POST.getlist('substituicao_entra')
         
         for sai_str, entra_str in zip(sub_sai_list, sub_entra_list):
             if sai_str and entra_str:
@@ -1849,7 +1941,7 @@ def inscricao_segunda_chamada(request):
                     athletes_to_add_ids.append(entra_id)
                 
         # 2. Process additions
-        added_athlete_ids_str = request.POST.getlist('adicionar_atletas')
+        added_athlete_ids_str = request.POST.getlist('adicionar_atletas') or request.POST.getlist('adicionar_atletas[]')
         for aid_str in added_athlete_ids_str:
             aid = int(aid_str)
             if aid not in athletes_to_add_ids and aid not in [a.id for a in atletas_atuais]:
@@ -1880,6 +1972,19 @@ def inscricao_segunda_chamada(request):
                 atleta_saiu=sai,
                 atleta_entrou=entra
             )
+            entra.status_avaliacao = 'nao_avaliado'
+            entra.em_conformidade = False
+            entra.save(update_fields=['status_avaliacao', 'em_conformidade'])
+
+        # Reset evaluation status for newly added athletes
+        for aid in athletes_to_add_ids:
+            try:
+                at_added = Atleta.objects.get(id=aid, cadastrado_por=delegacao)
+                at_added.status_avaliacao = 'nao_avaliado'
+                at_added.em_conformidade = False
+                at_added.save(update_fields=['status_avaliacao', 'em_conformidade'])
+            except Atleta.DoesNotExist:
+                pass
             
         # Reset statuses for re-evaluation
         inscricao.status = 'pendente'
