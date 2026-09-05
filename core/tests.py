@@ -2124,7 +2124,7 @@ class PermitirLancamentoAtletasTests(TestCase):
         res = self.client.get(reverse('presumula_list'))
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, f'btn-permitir-atletas-{self.jogo_expirado.id}')
-        self.assertContains(res, 'Permitir Atletas')
+        self.assertContains(res, 'Permitir Lançar Atletas')
 
         # Ativa a permissão
         self.jogo_expirado.permitir_lancamento_atletas = True

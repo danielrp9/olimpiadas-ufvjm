@@ -219,11 +219,10 @@
                                             <!-- Permitir Lançamento de Atletas após prazo (Comissão) -->
                                             <button type="button" 
                                                     id="btn-permitir-atletas-{{ jogo.id }}"
-                                                    class="h-8 px-2 rounded-xl border text-xs font-bold transition shadow-2xs flex items-center justify-center shrink-0 active:scale-95 focus:outline-none cursor-pointer gap-1.5 {% if jogo.permitir_lancamento_atletas %}border-emerald-300 bg-emerald-500 text-white hover:bg-emerald-600{% else %}border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}" 
-                                                    title="{% if jogo.permitir_lancamento_atletas %}Lançamento de atletas liberado após prazo. Clique para voltar a bloquear.{% else %}Permitir que delegações lancem ou editem atletas mesmo após o prazo.{% endif %}" 
+                                                    class="w-8 h-8 rounded-xl border text-xs font-bold transition shadow-2xs flex items-center justify-center shrink-0 active:scale-95 focus:outline-none cursor-pointer {% if jogo.permitir_lancamento_atletas %}border-emerald-300 bg-emerald-500 text-white hover:bg-emerald-600{% else %}border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900{% endif %}" 
+                                                    title="{% if jogo.permitir_lancamento_atletas %}Lançamento liberado após prazo. Clique para voltar a bloquear.{% else %}Permitir lançar atletas mesmo após o prazo.{% endif %}" 
                                                     onclick="togglePermitirLancamentoAtletas('{{ jogo.id }}')">
                                                 <i data-lucide="{% if jogo.permitir_lancamento_atletas %}unlock{% else %}lock{% endif %}" class="w-4 h-4"></i>
-                                                <span class="text-[11px] font-bold hidden xl:inline">{% if jogo.permitir_lancamento_atletas %}Liberado{% else %}Permitir Atletas{% endif %}</span>
                                             </button>
 
                                             <!-- Modificar Horário / Reabrir Pré-Súmula (Comissão) -->
@@ -644,8 +643,8 @@ function openPresumulaModal(nameA, nameB, urlA, urlB, jogoId, modalidade, dataJo
     const permitirBtnText = document.getElementById('modal-presumula-permitir-btn-text');
     if (permitirBtn && jogoId) {
         if (permitirLancamentoAtletas) {
-            permitirBtn.className = "w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-emerald-300 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold rounded-xl transition gap-1.5 focus:outline-none";
-            if (permitirBtnText) permitirBtnText.textContent = "Lançamento Liberado (Bloquear)";
+            permitirBtn.className = "w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-red-200 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-xl transition gap-1.5 focus:outline-none";
+            if (permitirBtnText) permitirBtnText.textContent = "Bloquear Lançamento de Atletas";
         } else {
             permitirBtn.className = "w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl transition gap-1.5 focus:outline-none";
             if (permitirBtnText) permitirBtnText.textContent = "Permitir Lançar Atletas";
