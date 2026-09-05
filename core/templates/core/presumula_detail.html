@@ -175,20 +175,20 @@
                                 <td class="px-2 sm:px-6 py-3 sm:py-4 text-right">
                                     <button type="button" 
                                             onclick="openAtletaModal(this)"
-                                            data-nome="{{ pa.atleta.nome_completo|escapejs }}"
-                                            data-email="{{ pa.atleta.email|escapejs }}"
-                                            data-cpf="{{ pa.atleta.cpf|default:'-'|escapejs }}"
-                                            data-matricula="{{ pa.atleta.matricula|escapejs }}"
-                                            data-genero="{{ pa.atleta.get_genero_display|escapejs }}"
-                                            data-curso="{{ pa.atleta.curso|escapejs }}"
-                                            data-campus="{{ pa.atleta.campus|default:'-'|escapejs }}"
+                                            data-nome="{{ pa.atleta.nome_completo }}"
+                                            data-email="{{ pa.atleta.email }}"
+                                            data-cpf="{{ pa.atleta.cpf|default:'-' }}"
+                                            data-matricula="{{ pa.atleta.matricula }}"
+                                            data-genero="{{ pa.atleta.get_genero_display }}"
+                                            data-curso="{{ pa.atleta.curso }}"
+                                            data-campus="{{ pa.atleta.campus|default:'-' }}"
                                             data-egresso="{% if pa.atleta.is_egresso %}Egresso{% else %}Regular{% endif %}"
-                                            data-tipo="{{ pa.atleta.get_tipo_atleta_display|escapejs }}"
+                                            data-tipo="{{ pa.atleta.get_tipo_atleta_display }}"
                                             data-link-doc="{{ pa.atleta.link_documento|default:'' }}"
                                             data-link-egresso="{{ pa.atleta.link_documento_egresso|default:'' }}"
                                             data-link-correcao="{{ pa.atleta.link_correcao|default:'' }}"
                                             data-status="{{ pa.atleta.status_avaliacao|default:'pendente' }}"
-                                            data-justificativa="{{ pa.atleta.justificativa_inconformidade|default:''|escapejs }}"
+                                            data-justificativa="{{ pa.atleta.justificativa_inconformidade|default:'' }}"
                                             class="text-slate-600 hover:text-blue-600 hover:bg-blue-50 p-2 rounded-xl transition inline-flex items-center justify-center border border-slate-200 bg-white shadow-2xs focus:outline-none"
                                             title="Ver dados do atleta">
                                         <i data-lucide="eye" class="text-xs"></i>
@@ -328,15 +328,20 @@
 
 <script>
 function openAtletaModal(btn) {
-    const nome = btn.getAttribute('data-nome');
-    const email = btn.getAttribute('data-email');
-    const cpf = btn.getAttribute('data-cpf');
-    const matricula = btn.getAttribute('data-matricula');
-    const genero = btn.getAttribute('data-genero');
-    const curso = btn.getAttribute('data-curso');
-    const campus = btn.getAttribute('data-campus');
-    const egresso = btn.getAttribute('data-egresso');
-    const tipo = btn.getAttribute('data-tipo');
+    const cleanAttr = (val) => {
+        if (!val) return '-';
+        return val.replace(/\\u002D/gi, '-').replace(/\\u002d/gi, '-');
+    };
+
+    const nome = cleanAttr(btn.getAttribute('data-nome'));
+    const email = cleanAttr(btn.getAttribute('data-email'));
+    const cpf = cleanAttr(btn.getAttribute('data-cpf'));
+    const matricula = cleanAttr(btn.getAttribute('data-matricula'));
+    const genero = cleanAttr(btn.getAttribute('data-genero'));
+    const curso = cleanAttr(btn.getAttribute('data-curso'));
+    const campus = cleanAttr(btn.getAttribute('data-campus'));
+    const egresso = cleanAttr(btn.getAttribute('data-egresso'));
+    const tipo = cleanAttr(btn.getAttribute('data-tipo'));
     const linkDoc = btn.getAttribute('data-link-doc');
     const linkEgresso = btn.getAttribute('data-link-egresso');
     const linkCorrecao = btn.getAttribute('data-link-correcao');
@@ -344,14 +349,14 @@ function openAtletaModal(btn) {
     const justificativa = btn.getAttribute('data-justificativa');
 
     document.getElementById('atleta-modal-nome-title').textContent = nome;
-    document.getElementById('atleta-modal-email').textContent = email || '-';
-    document.getElementById('atleta-modal-cpf').textContent = cpf || '-';
-    document.getElementById('atleta-modal-matricula').textContent = matricula || '-';
-    document.getElementById('atleta-modal-genero').textContent = genero || '-';
-    document.getElementById('atleta-modal-curso').textContent = curso || '-';
-    document.getElementById('atleta-modal-campus').textContent = campus || '-';
-    document.getElementById('atleta-modal-egresso').textContent = egresso || '-';
-    document.getElementById('atleta-modal-tipo').textContent = tipo || '-';
+    document.getElementById('atleta-modal-email').textContent = email;
+    document.getElementById('atleta-modal-cpf').textContent = cpf;
+    document.getElementById('atleta-modal-matricula').textContent = matricula;
+    document.getElementById('atleta-modal-genero').textContent = genero;
+    document.getElementById('atleta-modal-curso').textContent = curso;
+    document.getElementById('atleta-modal-campus').textContent = campus;
+    document.getElementById('atleta-modal-egresso').textContent = egresso;
+    document.getElementById('atleta-modal-tipo').textContent = tipo;
 
     const defBlock = document.getElementById('atleta-modal-deferido');
     const indefBlock = document.getElementById('atleta-modal-indeferido');
