@@ -198,7 +198,7 @@
                             <label for="camisa_{{ atleta.id }}" class="text-[10px] font-bold text-slate-600 uppercase tracking-wider">
                                 Nº da Camisa:
                             </label>
-                            <input type="number" id="camisa_{{ atleta.id }}" name="camisa_{{ atleta.id }}" min="1" max="999"
+                            <input type="number" id="camisa_{{ atleta.id }}" name="camisa_{{ atleta.id }}" min="0" max="999"
                                    value="{{ atleta.camisa }}"
                                    {% if atleta.is_escalado %}required{% else %}disabled{% endif %}
                                    placeholder="Nº"

@@ -784,11 +784,15 @@ class APIPreSumulasView(View):
             for item in atletas_escalados:
                 atleta_id = item.get('atleta_id')
                 numero_camisa = item.get('camisa')
-                if atleta_id and numero_camisa is not None:
+                if atleta_id and numero_camisa is not None and str(numero_camisa).strip() != '':
+                    try:
+                        num_camisa = int(numero_camisa)
+                    except (ValueError, TypeError):
+                        num_camisa = 0
                     PreSumulaAtleta.objects.create(
                         presumula=presumula,
                         atleta_id=atleta_id,
-                        numero_camisa=int(numero_camisa)
+                        numero_camisa=num_camisa
                     )
                     
             return JsonResponse({'success': True, 'id': presumula.id})
@@ -863,11 +867,15 @@ class APIPreSumulaDetailView(View):
             for item in atletas_escalados:
                 atleta_id = item.get('atleta_id')
                 numero_camisa = item.get('camisa')
-                if atleta_id and numero_camisa is not None:
+                if atleta_id and numero_camisa is not None and str(numero_camisa).strip() != '':
+                    try:
+                        num_camisa = int(numero_camisa)
+                    except (ValueError, TypeError):
+                        num_camisa = 0
                     PreSumulaAtleta.objects.create(
                         presumula=presumula,
                         atleta_id=atleta_id,
-                        numero_camisa=int(numero_camisa)
+                        numero_camisa=num_camisa
                     )
             
             if tecnico is not None:

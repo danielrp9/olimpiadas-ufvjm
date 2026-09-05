@@ -953,6 +953,11 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
             for a in atletas:
                 a.is_escalado = str(a.id) in atleta_ids
                 a.camisa = request.POST.get(f'camisa_{a.id}', '')
+
+            atletas = sorted(
+                atletas,
+                key=lambda a: (0 if a.is_escalado else 1, int(a.camisa) if (a.is_escalado and str(a.camisa).isdigit()) else 999999, a.nome_completo)
+            )
                 
             return render(request, 'core/presumula_form.html', {
                 'jogo': jogo,
@@ -969,11 +974,15 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
         
         for atleta_id in atleta_ids:
             numero_camisa = request.POST.get(f'camisa_{atleta_id}')
-            if numero_camisa:
+            if numero_camisa is not None and str(numero_camisa).strip() != '':
+                try:
+                    num_camisa = int(numero_camisa)
+                except (ValueError, TypeError):
+                    num_camisa = 0
                 PreSumulaAtleta.objects.create(
                     presumula=presumula,
                     atleta_id=atleta_id,
-                    numero_camisa=int(numero_camisa)
+                    numero_camisa=num_camisa
                 )
                 
         messages.success(request, f"Pré-súmula enviada com sucesso para o jogo {jogo}!")
@@ -1097,11 +1106,15 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
         # Cria as novas escalações com os números de camisa
         for atleta_id in atleta_ids:
             numero_camisa = request.POST.get(f'camisa_{atleta_id}')
-            if numero_camisa:
+            if numero_camisa is not None and str(numero_camisa).strip() != '':
+                try:
+                    num_camisa = int(numero_camisa)
+                except (ValueError, TypeError):
+                    num_camisa = 0
                 PreSumulaAtleta.objects.create(
                     presumula=presumula,
                     atleta_id=atleta_id,
-                    numero_camisa=int(numero_camisa)
+                    numero_camisa=num_camisa
                 )
 
         presumula.tecnico = tecnico

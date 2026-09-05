@@ -1791,12 +1791,14 @@ class PreSumulaManagementTests(TestCase):
         from core.models import Atleta, PreSumulaAtleta
         from django.urls import reverse
 
-        # Cria atletas e escala com camisas fora de ordem
+        # Cria atletas e escala com camisas fora de ordem, incluindo camisa 0
+        a0 = Atleta.objects.create(nome_completo='Atleta Camisa 0', cadastrado_por=self.delegate, em_conformidade=True)
         a1 = Atleta.objects.create(nome_completo='Atleta Camisa 99', cadastrado_por=self.delegate, em_conformidade=True)
         a2 = Atleta.objects.create(nome_completo='Atleta Camisa 4', cadastrado_por=self.delegate, em_conformidade=True)
         a3 = Atleta.objects.create(nome_completo='Atleta Camisa 10', cadastrado_por=self.delegate, em_conformidade=True)
         a4 = Atleta.objects.create(nome_completo='Atleta Camisa 1', cadastrado_por=self.delegate, em_conformidade=True)
 
+        PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a0, numero_camisa=0)
         PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a1, numero_camisa=99)
         PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a2, numero_camisa=4)
         PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a3, numero_camisa=10)
@@ -1804,21 +1806,56 @@ class PreSumulaManagementTests(TestCase):
 
         # Verifica ordenação via property escalacao_ordenada
         camisas_ordenadas = [pa.numero_camisa for pa in self.presumula1.escalacao_ordenada]
-        self.assertEqual(camisas_ordenadas, [1, 4, 10, 99])
+        self.assertEqual(camisas_ordenadas, [0, 1, 4, 10, 99])
 
         # Verifica na view presumula_detail para a comissão
         self.client.force_login(self.staff)
         response = self.client.get(reverse('presumula_detail', kwargs={'pk': self.presumula1.pk}))
         self.assertEqual(response.status_code, 200)
 
-        # Na renderização, o número 1 deve aparecer antes do 4, que deve aparecer antes do 10 e do 99
         content = response.content.decode('utf-8')
+        pos_0 = content.find('>0<')
         pos_1 = content.find('>1<')
         pos_4 = content.find('>4<')
         pos_10 = content.find('>10<')
         pos_99 = content.find('>99<')
-        self.assertTrue(pos_1 != -1 and pos_4 != -1 and pos_10 != -1 and pos_99 != -1)
-        self.assertTrue(pos_1 < pos_4 < pos_10 < pos_99)
+        self.assertTrue(pos_0 != -1 and pos_1 != -1 and pos_4 != -1 and pos_10 != -1 and pos_99 != -1)
+        self.assertTrue(pos_0 < pos_1 < pos_4 < pos_10 < pos_99)
+
+    def test_escalacao_com_camisa_zero_via_post_e_form(self):
+        from core.models import Atleta, PreSumulaAtleta
+        from django.urls import reverse
+
+        atleta = Atleta.objects.create(
+            nome_completo='Jogador Camisa Zero',
+            cadastrado_por=self.delegate,
+            genero='M',
+            em_conformidade=True
+        )
+
+        self.client.force_login(self.delegate)
+        # Verifica que o template do formulário aceita min="0"
+        res_form = self.client.get(reverse('presumula_update', kwargs={'pk': self.presumula1.pk}))
+        self.assertEqual(res_form.status_code, 200)
+        self.assertContains(res_form, 'min="0"')
+
+        # Envia atualização com a camisa 0
+        post_data = {
+            'tecnico': 'Coach Teste',
+            'atletas': [str(atleta.id)],
+            f'camisa_{atleta.id}': '0',
+        }
+        res_post = self.client.post(reverse('presumula_update', kwargs={'pk': self.presumula1.pk}), post_data)
+        self.assertEqual(res_post.status_code, 302)
+
+        # Confirma que foi gravado com numero_camisa == 0
+        escalacao = PreSumulaAtleta.objects.get(presumula=self.presumula1, atleta=atleta)
+        self.assertEqual(escalacao.numero_camisa, 0)
+
+        # Confirma que ao recarregar a edição, o valor "0" está no input
+        res_edit = self.client.get(reverse('presumula_update', kwargs={'pk': self.presumula1.pk}))
+        self.assertEqual(res_edit.status_code, 200)
+        self.assertContains(res_edit, 'value="0"')
 
 
 class WOTests(TestCase):
