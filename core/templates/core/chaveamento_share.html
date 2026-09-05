@@ -63,6 +63,11 @@
 
             <!-- Botões de Ação da Tela (Ícones sutis no mobile, texto no desktop) -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 no-print">
+                <a href="{% url 'chaveamento_share_jogos_lista' %}" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Ver programação de jogos por dia">
+                    <i data-lucide="list" class="text-xs text-blue-400"></i>
+                    <span class="hidden sm:inline">Jogos em Lista</span>
+                    <span class="sm:hidden">Jogos</span>
+                </a>
                 <button type="button" onclick="abrirModalCompartilhamento(window.location.href, '{{ modalidade.nome }} - Olimpíadas UFVJM')" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Compartilhar">
                     <i data-lucide="share-2" class="text-xs"></i>
                     <span class="hidden sm:inline">Compartilhar</span>
@@ -170,7 +175,11 @@
                                     </div>
 
                                     <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
-                                        {% if p.finalizada %}
+                                        {% if p.is_wo_duplo %}
+                                            <span class="text-xs font-black text-red-600 block">0 x 0 (D. W.O.)</span>
+                                        {% elif p.is_wo %}
+                                            <span class="text-xs font-black text-red-600 block">{{ p.placar_a|default:0 }} x {{ p.placar_b|default:0 }} (W.O.)</span>
+                                        {% elif p.placar_a != None and p.placar_b != None %}
                                             {{ p.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ p.placar_b }}
                                         {% else %}
                                             <span class="text-slate-400 font-normal italic">vs</span>

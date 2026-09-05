@@ -2599,8 +2599,8 @@ class ChaveamentoJogosListaView(View):
     agrupados por data/dia. Acessível publicamente (sem login) e integrado ao painel
     para Comissão e Delegações.
     """
-    def get(self, request):
-        is_public = (not request.user.is_authenticated) or (request.GET.get('public') == '1')
+    def get(self, request, is_public_route=False):
+        is_public = is_public_route or (not request.user.is_authenticated) or (request.GET.get('public') == '1')
         base_template = 'core/chaveamento_share_base.html' if is_public else 'base.html'
 
         # Determina URL para voltar

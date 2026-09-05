@@ -2266,29 +2266,67 @@ class ChaveamentoJogosListaTests(TestCase):
         res_share = self.client.get(reverse('chaveamento_share_list'))
         self.assertEqual(res_share.status_code, 200)
         self.assertContains(res_share, '>Chaveamentos<')
-        self.assertContains(res_share, reverse('chaveamento_jogos_lista'))
+        self.assertContains(res_share, reverse('chaveamento_share_jogos_lista'))
 
     def test_chaveamento_jogos_lista_public_and_authenticated(self):
         from django.urls import reverse
-        # 1. Público anônimo
-        res_anon = self.client.get(reverse('chaveamento_jogos_lista'))
+        # 1. Público anônimo acessando via rota pública
+        res_anon = self.client.get(reverse('chaveamento_share_jogos_lista'))
         self.assertEqual(res_anon.status_code, 200)
         self.assertContains(res_anon, 'Futsal Lista')
         self.assertContains(res_anon, 'Delegação Alpha')
         self.assertContains(res_anon, 'Delegação Beta')
         self.assertContains(res_anon, '14:00')
         self.assertContains(res_anon, '09:30')
+        self.assertContains(res_anon, reverse('chaveamento_share_list'))
+        self.assertNotContains(res_anon, f'href="{reverse("chaveamento_admin_list")}"')
+        self.assertNotContains(res_anon, f'href="{reverse("chaveamento_public_list")}"')
 
-        # 2. Comissão autenticada
+        # 2. Usuário autenticado acessando rota pública continua com layout público (sem menu interno)
         self.client.force_login(self.staff)
-        res_staff = self.client.get(reverse('chaveamento_jogos_lista'))
-        self.assertEqual(res_staff.status_code, 200)
-        self.assertContains(res_staff, 'Voltar aos Chaveamentos')
-        self.assertContains(res_staff, reverse('chaveamento_admin_list'))
+        res_staff_pub = self.client.get(reverse('chaveamento_share_jogos_lista'))
+        self.assertEqual(res_staff_pub.status_code, 200)
+        self.assertTrue(res_staff_pub.context['is_public'])
+        self.assertContains(res_staff_pub, reverse('chaveamento_share_list'))
+        self.assertNotContains(res_staff_pub, 'Extrair Excel')
 
-        # 3. Forçar layout público com ?public=1
+        # 3. Comissão autenticada acessando rota interna do painel
+        res_staff_internal = self.client.get(reverse('chaveamento_jogos_lista'))
+        self.assertEqual(res_staff_internal.status_code, 200)
+        self.assertFalse(res_staff_internal.context['is_public'])
+        self.assertContains(res_staff_internal, 'Voltar aos Chaveamentos')
+        self.assertContains(res_staff_internal, reverse('chaveamento_admin_list'))
+        self.assertContains(res_staff_internal, 'Extrair Excel')
+
+        # 4. Forçar layout público com ?public=1 na rota geral
         res_public_param = self.client.get(reverse('chaveamento_jogos_lista') + '?public=1')
         self.assertEqual(res_public_param.status_code, 200)
+        self.assertTrue(res_public_param.context['is_public'])
         self.assertContains(res_public_param, reverse('chaveamento_share_list'))
+
+    def test_chaveamento_jogos_lista_nao_exibe_none_x_none_quando_encerrado_sem_placar(self):
+        from django.urls import reverse
+        # Marca a partida como finalizada mas sem placares
+        self.partida1.finalizada = True
+        self.partida1.placar_a = None
+        self.partida1.placar_b = None
+        self.partida1.save()
+
+        res = self.client.get(reverse('chaveamento_share_jogos_lista'))
+        self.assertEqual(res.status_code, 200)
+        content = res.content.decode('utf-8')
+        self.assertNotIn('None x None', content)
+        self.assertNotIn('None', content)
+
+        # Agora define placar válido e confere se aparece
+        self.partida1.placar_a = 3
+        self.partida1.placar_b = 1
+        self.partida1.save()
+
+        res_com_placar = self.client.get(reverse('chaveamento_share_jogos_lista'))
+        self.assertEqual(res_com_placar.status_code, 200)
+        content_placar = res_com_placar.content.decode('utf-8')
+        self.assertIn('3 x 1', content_placar)
+
 
 

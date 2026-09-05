@@ -125,7 +125,11 @@
                                 </div>
 
                                 <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
-                                    {% if p.finalizada %}
+                                    {% if p.is_wo_duplo %}
+                                        <span class="text-xs font-black text-red-600 block">0 x 0 (D. W.O.)</span>
+                                    {% elif p.is_wo %}
+                                        <span class="text-xs font-black text-red-600 block">{{ p.placar_a|default:0 }} x {{ p.placar_b|default:0 }} (W.O.)</span>
+                                    {% elif p.placar_a != None and p.placar_b != None %}
                                         {{ p.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ p.placar_b }}
                                     {% else %}
                                         <span class="text-slate-400 font-normal italic">vs</span>

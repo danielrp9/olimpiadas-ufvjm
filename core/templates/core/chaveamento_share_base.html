@@ -59,7 +59,7 @@
                     <i data-lucide="network" class="text-xs text-slate-500"></i>
                     <span class="hidden sm:inline">Chaveamentos</span>
                 </a>
-                <button type="button" onclick="abrirModalCompartilhamento(window.location.href, 'Programação de Jogos - UFVJM')" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Compartilhar Lista de Jogos">
+                <button type="button" onclick="abrirModalCompartilhamento(window.location.origin + '{% url 'chaveamento_share_jogos_lista' %}', 'Programação de Jogos - UFVJM')" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Compartilhar Lista de Jogos">
                     <i data-lucide="share-2" class="text-xs"></i>
                     <span class="hidden sm:inline">Compartilhar</span>
                 </button>
@@ -71,6 +71,26 @@
     <main class="max-w-[1400px] mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
         {% block content %}{% endblock %}
     </main>
+
+    <!-- Rodapé Oficial do Sistema -->
+    <footer class="max-w-[1400px] mx-auto px-4 sm:px-6 no-print" style="margin-top: 64px !important; margin-bottom: 32px !important;">
+        <div class="w-full bg-slate-900 border border-slate-800 rounded-3xl py-6 px-6 shadow-sm text-center space-y-3">
+            <h3 class="text-sm font-bold text-white tracking-wide">
+                Olimpíadas Universitárias
+            </h3>
+            <p class="text-xs text-slate-400 font-medium">
+                Desenvolvido por <span class="text-slate-200 font-semibold">Daniel Rodrigues</span>
+            </p>
+            <div class="flex items-center justify-center gap-4 pt-1">
+                <a href="https://www.linkedin.com/in/daniel-rodrigues-pereira-29b1b7243/" target="_blank" rel="noopener noreferrer" class="text-slate-400 hover:text-blue-400 text-lg transition-all duration-200 hover:scale-110" title="LinkedIn">
+                    <i data-lucide="linkedin"></i>
+                </a>
+                <a href="mailto:danielrodrigues878@hotmail.com" class="text-slate-400 hover:text-amber-400 text-lg transition-all duration-200 hover:scale-110" title="E-mail">
+                    <i data-lucide="mail"></i>
+                </a>
+            </div>
+        </div>
+    </footer>
 
     {% include 'core/includes/modal_compartilhar.html' %}
 </body>

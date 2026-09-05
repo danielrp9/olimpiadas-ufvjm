@@ -59,7 +59,7 @@
             <p class="text-xs text-slate-500 mt-0.5">Confira datas, horários, locais e confrontos de todas as modalidades da competição.</p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-            <button type="button" onclick="copiarLinkPublico()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-2 cursor-pointer">
+            <button type="button" onclick="if(typeof abrirModalCompartilhamento === 'function'){ abrirModalCompartilhamento(window.location.origin + '{% url 'chaveamento_share_jogos_lista' %}', 'Programação de Jogos - UFVJM'); } else { copiarLinkPublico(); }" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-2 cursor-pointer">
                 <i data-lucide="share-2" class="text-xs"></i> Compartilhar Link
             </button>
         </div>
@@ -218,7 +218,7 @@
                                 {% elif jogo.is_wo %}
                                     <span class="text-xs font-black text-white leading-none">{{ jogo.placar_a|default:0 }}x{{ jogo.placar_b|default:0 }}</span>
                                     <span class="block text-[8px] text-red-400 font-bold uppercase mt-0.5">W.O.</span>
-                                {% elif jogo.finalizada %}
+                                {% elif jogo.placar_a != None and jogo.placar_b != None %}
                                     <span class="text-xs font-black text-white">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
                                 {% else %}
                                     <span class="text-xs font-bold text-slate-300 uppercase">vs</span>
@@ -303,7 +303,7 @@
                                 {% elif jogo.is_wo %}
                                     <span class="text-xs font-black text-white">{{ jogo.placar_a|default:0 }} x {{ jogo.placar_b|default:0 }}</span>
                                     <span class="block text-[8px] text-red-400 font-bold uppercase tracking-wider">W.O.</span>
-                                {% elif jogo.finalizada %}
+                                {% elif jogo.placar_a != None and jogo.placar_b != None %}
                                     <span class="text-sm font-black text-white">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
                                 {% else %}
                                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">vs</span>
@@ -454,7 +454,7 @@ function aplicarFiltros() {
 }
 
 function copiarLinkPublico() {
-    const url = window.location.origin + "{% url 'chaveamento_jogos_lista' %}?public=1";
+    const url = window.location.origin + "{% url 'chaveamento_share_jogos_lista' %}";
     if (navigator.clipboard && window.isSecureContext) {
         navigator.clipboard.writeText(url).then(mostrarToast).catch(() => fallbackCopiar(url));
     } else {

@@ -38,10 +38,10 @@
                         </div>
                         <span class="text-[8px] text-red-400 font-black uppercase tracking-wider mt-0.5">W.O.</span>
                     </div>
-                {% elif partida.finalizada or partida.placar_a != None %}
-                    <span class="text-white font-black text-sm">{{ partida.placar_a|default:0 }}</span>
+                {% elif partida.placar_a != None and partida.placar_b != None %}
+                    <span class="text-white font-black text-sm">{{ partida.placar_a }}</span>
                     <span class="text-slate-400 font-normal px-0.5">x</span>
-                    <span class="text-white font-black text-sm">{{ partida.placar_b|default:0 }}</span>
+                    <span class="text-white font-black text-sm">{{ partida.placar_b }}</span>
                 {% else %}
                     <span class="text-slate-400 font-normal italic">vs</span>
                 {% endif %}
