@@ -84,6 +84,11 @@
                                     {% if tg.delegacao == delegacao %}
                                         <span class="ml-0.5 sm:ml-1 px-1 py-0.2 sm:px-1.5 sm:py-0.5 text-[8px] sm:text-[9px] bg-blue-600 text-white rounded font-bold uppercase inline-block">Você</span>
                                     {% endif %}
+                                    {% if tg.quantidade_wo > 0 %}
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 ml-1" title="{{ tg.quantidade_wo }} W.O.(s) registrado(s) - passível de desclassificação">
+                                            W.O.{% if tg.quantidade_wo > 1 %} ({{ tg.quantidade_wo }}){% endif %}
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center font-black text-blue-600 text-xs sm:text-sm">{{ tg.pontos }}</td>
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.jogos }}</td>

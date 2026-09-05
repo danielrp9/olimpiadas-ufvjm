@@ -116,8 +116,31 @@ class Jogo(models.Model):
     finalizado = models.BooleanField(default=False, verbose_name="Jogo Finalizado?")
     placar_time_a = models.PositiveIntegerField(verbose_name="Placar Time A", blank=True, null=True)
     placar_time_b = models.PositiveIntegerField(verbose_name="Placar Time B", blank=True, null=True)
+    wo_tipo = models.CharField(max_length=10, blank=True, default='', choices=[('', 'Sem W.O.'), ('TIME_A', 'W.O. Time A'), ('TIME_B', 'W.O. Time B'), ('AMBOS', 'W.O. Ambos os Times')], verbose_name="Tipo de W.O.")
+    motivo_wo = models.TextField(blank=True, default='', verbose_name="Motivo do W.O.")
+    permitir_lancamento_atletas = models.BooleanField(
+        default=False, 
+        verbose_name="Permitir Lançar Atletas", 
+        help_text="Permite que as delegações lancem/escalem atletas mesmo após o encerramento do prazo regulamentar."
+    )
     data_hora_fim = models.DateTimeField(verbose_name="Fim Real do Jogo", blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def is_wo(self):
+        return bool(self.wo_tipo)
+
+    @property
+    def is_wo_time_a(self):
+        return self.wo_tipo in ['TIME_A', 'AMBOS']
+
+    @property
+    def is_wo_time_b(self):
+        return self.wo_tipo in ['TIME_B', 'AMBOS']
+
+    @property
+    def is_wo_duplo(self):
+        return self.wo_tipo == 'AMBOS'
 
     @property
     def can_file_recurso(self):
@@ -140,6 +163,8 @@ class Jogo(models.Model):
 
     @property
     def is_presumula_deadline_passed(self):
+        if self.permitir_lancamento_atletas:
+            return False
         deadline = self.presumula_deadline
         if deadline:
             from django.utils import timezone
@@ -148,6 +173,8 @@ class Jogo(models.Model):
 
     @property
     def has_wo_time_a(self):
+        if self.wo_tipo in ['TIME_A', 'AMBOS']:
+            return True
         from django.core.exceptions import ObjectDoesNotExist
         if self.is_presumula_deadline_passed:
             try:
@@ -158,6 +185,8 @@ class Jogo(models.Model):
 
     @property
     def has_wo_time_b(self):
+        if self.wo_tipo in ['TIME_B', 'AMBOS']:
+            return True
         from django.core.exceptions import ObjectDoesNotExist
         if self.is_presumula_deadline_passed:
             try:
@@ -168,6 +197,8 @@ class Jogo(models.Model):
 
     @property
     def is_finalizado_por_wo(self):
+        if self.wo_tipo in ['TIME_A', 'TIME_B', 'AMBOS']:
+            return True
         return self.has_wo_time_a or self.has_wo_time_b
 
     @property
@@ -497,6 +528,7 @@ class TimeGrupo(models.Model):
     gols_pro = models.IntegerField(default=0)
     gols_contra = models.IntegerField(default=0)
     saldo_gols = models.IntegerField(default=0)
+    quantidade_wo = models.IntegerField(default=0, verbose_name="Quantidade de W.O.")
     classificado = models.BooleanField(default=False, db_index=True)
 
     class Meta:
@@ -537,6 +569,13 @@ class PartidaChaveamento(models.Model):
     
     placar_a = models.PositiveIntegerField(null=True, blank=True)
     placar_b = models.PositiveIntegerField(null=True, blank=True)
+    wo_tipo = models.CharField(max_length=10, blank=True, default='', choices=[('', 'Sem W.O.'), ('TIME_A', 'W.O. Time A'), ('TIME_B', 'W.O. Time B'), ('AMBOS', 'W.O. Ambos os Times')], verbose_name="Tipo de W.O.")
+    motivo_wo = models.TextField(blank=True, default='', verbose_name="Motivo do W.O.")
+    permitir_lancamento_atletas = models.BooleanField(
+        default=False, 
+        verbose_name="Permitir Lançar Atletas", 
+        help_text="Permite que as delegações lancem/escalem atletas mesmo após o encerramento do prazo regulamentar."
+    )
     
     data_partida = models.DateField(null=True, blank=True, verbose_name="Data da Partida")
     horario_partida = models.TimeField(null=True, blank=True, verbose_name="Horário da Partida")
@@ -555,6 +594,22 @@ class PartidaChaveamento(models.Model):
         verbose_name = "Partida do Chaveamento"
         verbose_name_plural = "Partidas do Chaveamento"
         ordering = ['id']
+
+    @property
+    def is_wo(self):
+        return bool(self.wo_tipo)
+
+    @property
+    def is_wo_time_a(self):
+        return self.wo_tipo in ['TIME_A', 'AMBOS']
+
+    @property
+    def is_wo_time_b(self):
+        return self.wo_tipo in ['TIME_B', 'AMBOS']
+
+    @property
+    def is_wo_duplo(self):
+        return self.wo_tipo == 'AMBOS'
 
     @property
     def data_jogo_formatada(self):

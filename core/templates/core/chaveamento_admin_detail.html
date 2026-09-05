@@ -85,6 +85,11 @@
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-bold text-slate-700 text-center sm:text-left">{{ forloop.counter }}º</td>
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-semibold text-slate-800 max-w-[90px] xs:max-w-[130px] sm:max-w-none truncate">
                                     {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
+                                    {% if tg.quantidade_wo > 0 %}
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 ml-1" title="{{ tg.quantidade_wo }} W.O.(s) registrado(s) - passível de desclassificação">
+                                            W.O.{% if tg.quantidade_wo > 1 %} ({{ tg.quantidade_wo }}){% endif %}
+                                        </span>
+                                    {% endif %}
                                 </td>
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center font-black text-blue-600 text-xs sm:text-sm">{{ tg.pontos }}</td>
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.jogos }}</td>

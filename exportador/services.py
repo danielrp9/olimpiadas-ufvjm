@@ -292,7 +292,9 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             else:
                 placar_str = "-"
                 
-            if p.finalizada or (jogo_obj and jogo_obj.finalizado):
+            if p.wo_tipo or (jogo_obj and jogo_obj.wo_tipo):
+                status_str = "Finalizado (W.O.)"
+            elif p.finalizada or (jogo_obj and jogo_obj.finalizado):
                 status_str = "Finalizado"
             elif data_str or hora_str:
                 status_str = "Agendado"
@@ -325,7 +327,7 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             else:
                 placar_str = "-"
                 
-            status_str = "Finalizado" if j.finalizado else ("Agendado" if data_str else "Pendente")
+            status_str = "Finalizado (W.O.)" if (j.wo_tipo) else ("Finalizado" if j.finalizado else ("Agendado" if data_str else "Pendente"))
             
             escrever_linha_jogo(
                 ws_master, m_row_idx, num_jogo, mod_nome, fase_nome, grupo_nome,
@@ -388,7 +390,14 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             else:
                 placar_str = "-"
                 
-            status_str = "Finalizado" if (p.finalizada or (jogo_obj and jogo_obj.finalizado)) else ("Agendado" if data_str else "Pendente")
+            if p.wo_tipo or (jogo_obj and jogo_obj.wo_tipo):
+                status_str = "Finalizado (W.O.)"
+            elif p.finalizada or (jogo_obj and jogo_obj.finalizado):
+                status_str = "Finalizado"
+            elif data_str:
+                status_str = "Agendado"
+            else:
+                status_str = "Pendente"
             
             row_values = [
                 num_jogo, fase_nome, grupo_nome, rodada_val,
@@ -425,7 +434,7 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             local_str = j.local or ""
             
             placar_str = f"{j.placar_time_a} x {j.placar_time_b}" if (j.placar_time_a is not None and j.placar_time_b is not None) else "-"
-            status_str = "Finalizado" if j.finalizado else ("Agendado" if data_str else "Pendente")
+            status_str = "Finalizado (W.O.)" if (j.wo_tipo) else ("Finalizado" if j.finalizado else ("Agendado" if data_str else "Pendente"))
             
             row_values = [
                 num_jogo, fase_nome, grupo_nome, rodada_val,

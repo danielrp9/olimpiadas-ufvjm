@@ -12,7 +12,10 @@
                             {% if partida.cartoes_time_a_vermelhos > 0 %}<span>🟥 {{ partida.cartoes_time_a_vermelhos }}</span>{% endif %}
                         </button>
                     {% endif %}
-                    <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+                    {% if partida.is_wo_time_a or partida.is_wo_duplo %}
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
+                    {% endif %}
+                    <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_a or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
                     {% if partida.vencedor == partida.time_a %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
@@ -21,7 +24,21 @@
 
             <!-- Placar Exibição -->
             <div class="px-3 py-1 bg-slate-800 text-white rounded-xl border border-slate-700/80 font-extrabold shadow-xs flex-shrink-0 min-w-[54px] text-center">
-                {% if partida.finalizada or partida.placar_a != None %}
+                {% if partida.is_wo_duplo %}
+                    <div class="flex flex-col items-center">
+                        <span class="text-white font-black text-xs">0 x 0</span>
+                        <span class="text-[8px] text-red-400 font-black uppercase tracking-wider">Duplo W.O.</span>
+                    </div>
+                {% elif partida.is_wo %}
+                    <div class="flex flex-col items-center">
+                        <div class="text-white font-black text-xs leading-none">
+                            <span>{{ partida.placar_a|default:0 }}</span>
+                            <span class="text-slate-400 font-normal px-0.5">x</span>
+                            <span>{{ partida.placar_b|default:0 }}</span>
+                        </div>
+                        <span class="text-[8px] text-red-400 font-black uppercase tracking-wider mt-0.5">W.O.</span>
+                    </div>
+                {% elif partida.finalizada or partida.placar_a != None %}
                     <span class="text-white font-black text-sm">{{ partida.placar_a|default:0 }}</span>
                     <span class="text-slate-400 font-normal px-0.5">x</span>
                     <span class="text-white font-black text-sm">{{ partida.placar_b|default:0 }}</span>
@@ -33,7 +50,10 @@
             <!-- Time B -->
             <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0 flex items-center justify-start gap-1.5">
                 {% if partida.time_b %}
-                    <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+                    {% if partida.is_wo_time_b or partida.is_wo_duplo %}
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
+                    {% endif %}
+                    <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_b or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
                     {% if partida.vencedor == partida.time_b %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
                     {% if partida.cartoes_time_b_amarelos > 0 or partida.cartoes_time_b_vermelhos > 0 %}
                         <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
@@ -46,6 +66,29 @@
                 {% endif %}
             </div>
         </div>
+
+        <!-- Alerta de W.O. Registrado se houver -->
+        {% if partida.wo_tipo %}
+            <div class="px-2.5 py-1.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-1.5 text-[11px] text-red-800">
+                <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-600 shrink-0 mt-0.5"></i>
+                <div class="leading-tight flex-1">
+                    <span class="font-bold">
+                        {% if partida.wo_tipo == 'AMBOS' %}
+                            Duplo W.O. (Ambos os times não compareceram)
+                        {% elif partida.wo_tipo == 'TIME_A' %}
+                            W.O. de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }} (Vitória de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }})
+                        {% elif partida.wo_tipo == 'TIME_B' %}
+                            W.O. de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }} (Vitória de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }})
+                        {% endif %}
+                    </span>
+                    {% if partida.motivo_wo %}
+                        <div class="text-[10px] text-red-700 font-medium mt-0.5">
+                            <span class="font-semibold text-red-800">Motivo:</span> {{ partida.motivo_wo }}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endif %}
 
         <!-- Footer / Data, Horário e Botão Editar -->
         <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-[11px]">
@@ -105,9 +148,9 @@
 
             <!-- Inputs Placar -->
             <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-blue-300 shadow-inner flex-shrink-0">
-                <input type="number" min="0" name="placar_a" value="{{ partida.placar_a|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0 bg-transparent" title="Placar Time A">
+                <input type="number" min="0" name="placar_a" id="placar_a_{{ partida.pk }}" value="{{ partida.placar_a|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0 bg-transparent" title="Placar Time A">
                 <span class="text-slate-400 font-bold">x</span>
-                <input type="number" min="0" name="placar_b" value="{{ partida.placar_b|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0 bg-transparent" title="Placar Time B">
+                <input type="number" min="0" name="placar_b" id="placar_b_{{ partida.pk }}" value="{{ partida.placar_b|default_if_none:'' }}" placeholder="0" class="w-8 text-center font-bold text-slate-900 border-0 p-0 focus:ring-0 bg-transparent" title="Placar Time B">
             </div>
 
             <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0">
@@ -116,6 +159,42 @@
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
                 {% endif %}
+            </div>
+        </div>
+
+        <!-- Seção de W.O. (Não Comparecimento) -->
+        <div class="bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-700 text-[11px] flex items-center gap-1.5">
+                    <i data-lucide="flag" class="w-3 h-3 text-slate-500"></i> Situação da Partida / W.O.
+                </span>
+                <span class="text-[9px] text-slate-400">Em caso de não comparecimento</span>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-[11px]">
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg border bg-white cursor-pointer hover:bg-slate-100 transition text-slate-700 border-slate-200">
+                    <input type="radio" name="wo_tipo" value="" {% if not partida.wo_tipo %}checked{% endif %} onchange="onWoTipoChange({{ partida.pk }}, this.value)" class="text-blue-600 focus:ring-0">
+                    <span class="font-medium text-[11px]">Normal</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg border bg-white cursor-pointer hover:bg-amber-50 transition text-amber-900 border-amber-200">
+                    <input type="radio" name="wo_tipo" value="TIME_A" {% if partida.wo_tipo == 'TIME_A' %}checked{% endif %} onchange="onWoTipoChange({{ partida.pk }}, this.value)" class="text-amber-600 focus:ring-0">
+                    <span class="truncate font-medium text-[11px]">W.O. Time A</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg border bg-white cursor-pointer hover:bg-amber-50 transition text-amber-900 border-amber-200">
+                    <input type="radio" name="wo_tipo" value="TIME_B" {% if partida.wo_tipo == 'TIME_B' %}checked{% endif %} onchange="onWoTipoChange({{ partida.pk }}, this.value)" class="text-amber-600 focus:ring-0">
+                    <span class="truncate font-medium text-[11px]">W.O. Time B</span>
+                </label>
+                <label class="flex items-center gap-1.5 p-1.5 rounded-lg border bg-white cursor-pointer hover:bg-red-50 transition text-red-900 border-red-200">
+                    <input type="radio" name="wo_tipo" value="AMBOS" {% if partida.wo_tipo == 'AMBOS' %}checked{% endif %} onchange="onWoTipoChange({{ partida.pk }}, this.value)" class="text-red-600 focus:ring-0">
+                    <span class="truncate font-medium text-[11px]">Duplo W.O.</span>
+                </label>
+            </div>
+
+            <div id="wo-motivo-container-{{ partida.pk }}" class="{% if not partida.wo_tipo %}hidden{% endif %} pt-1 space-y-1">
+                <label for="motivo_wo_{{ partida.pk }}" class="block text-[10px] font-bold text-slate-600">
+                    Motivo do W.O. <span class="text-slate-400 font-normal">(opcional, recomendado)</span>:
+                </label>
+                <input type="text" name="motivo_wo" id="motivo_wo_{{ partida.pk }}" value="{{ partida.motivo_wo|default:'' }}" placeholder="Ex: Time não compareceu ao local do jogo" class="w-full text-xs bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-800 placeholder:text-slate-400">
             </div>
         </div>
 
@@ -452,6 +531,30 @@ if (typeof window.abrirModalCartoesEquipe === 'undefined') {
     window.fecharModalCartoesEquipe = function(partidaId, teamPos) {
         const el = document.getElementById(`modal-cartoes-${partidaId}-${teamPos}`);
         if (el) el.classList.add('hidden');
+    };
+}
+
+if (typeof window.onWoTipoChange === 'undefined') {
+    window.onWoTipoChange = function(partidaId, val) {
+        const motivoContainer = document.getElementById('wo-motivo-container-' + partidaId);
+        const placarA = document.getElementById('placar_a_' + partidaId);
+        const placarB = document.getElementById('placar_b_' + partidaId);
+
+        if (val === '') {
+            if (motivoContainer) motivoContainer.classList.add('hidden');
+        } else {
+            if (motivoContainer) motivoContainer.classList.remove('hidden');
+            if (val === 'TIME_A') {
+                if (placarA && (placarA.value === '' || placarA.value === '0')) placarA.value = '0';
+                if (placarB && (placarB.value === '' || placarB.value === '0')) placarB.value = '1';
+            } else if (val === 'TIME_B') {
+                if (placarA && (placarA.value === '' || placarA.value === '0')) placarA.value = '1';
+                if (placarB && (placarB.value === '' || placarB.value === '0')) placarB.value = '0';
+            } else if (val === 'AMBOS') {
+                if (placarA) placarA.value = '0';
+                if (placarB) placarB.value = '0';
+            }
+        }
     };
 }
 </script>

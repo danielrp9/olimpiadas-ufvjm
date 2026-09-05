@@ -627,17 +627,64 @@ def atualizar_tabela_grupo(grupo):
     partidas = grupo.partidas.filter(finalizada=True)
     stats = {tg.delegacao_id: {
         'pontos': 0, 'jogos': 0, 'vitorias': 0, 'empates': 0, 'derrotas': 0,
-        'gols_pro': 0, 'gols_contra': 0, 'saldo_gols': 0
+        'gols_pro': 0, 'gols_contra': 0, 'saldo_gols': 0, 'quantidade_wo': 0
     } for tg in grupo.times.all()}
 
     for p in partidas:
         if p.time_a_id not in stats or p.time_b_id not in stats:
             continue
-        if p.placar_a is None or p.placar_b is None:
-            continue
 
         st_a = stats[p.time_a_id]
         st_b = stats[p.time_b_id]
+
+        if p.wo_tipo == 'AMBOS':
+            # Duplo W.O.: ambos computam o jogo, mas ficam com zero pontos e com registro de WO
+            st_a['jogos'] += 1
+            st_b['jogos'] += 1
+            st_a['derrotas'] += 1
+            st_b['derrotas'] += 1
+            st_a['quantidade_wo'] += 1
+            st_b['quantidade_wo'] += 1
+            continue
+
+        if p.wo_tipo == 'TIME_A':
+            # W.O. para o Time A: Time B tem a vitória, Time A recebe W.O.
+            st_a['jogos'] += 1
+            st_b['jogos'] += 1
+            st_b['pontos'] += 3
+            st_b['vitorias'] += 1
+            st_a['derrotas'] += 1
+            st_a['quantidade_wo'] += 1
+            gols_a = p.placar_a if p.placar_a is not None else 0
+            gols_b = p.placar_b if p.placar_b is not None else 1
+            st_a['gols_pro'] += gols_a
+            st_a['gols_contra'] += gols_b
+            st_a['saldo_gols'] = st_a['gols_pro'] - st_a['gols_contra']
+            st_b['gols_pro'] += gols_b
+            st_b['gols_contra'] += gols_a
+            st_b['saldo_gols'] = st_b['gols_pro'] - st_b['gols_contra']
+            continue
+
+        if p.wo_tipo == 'TIME_B':
+            # W.O. para o Time B: Time A tem a vitória, Time B recebe W.O.
+            st_a['jogos'] += 1
+            st_b['jogos'] += 1
+            st_a['pontos'] += 3
+            st_a['vitorias'] += 1
+            st_b['derrotas'] += 1
+            st_b['quantidade_wo'] += 1
+            gols_a = p.placar_a if p.placar_a is not None else 1
+            gols_b = p.placar_b if p.placar_b is not None else 0
+            st_a['gols_pro'] += gols_a
+            st_a['gols_contra'] += gols_b
+            st_a['saldo_gols'] = st_a['gols_pro'] - st_a['gols_contra']
+            st_b['gols_pro'] += gols_b
+            st_b['gols_contra'] += gols_a
+            st_b['saldo_gols'] = st_b['gols_pro'] - st_b['gols_contra']
+            continue
+
+        if p.placar_a is None or p.placar_b is None:
+            continue
 
         st_a['jogos'] += 1
         st_b['jogos'] += 1
@@ -675,36 +722,58 @@ def atualizar_tabela_grupo(grupo):
             tg.gols_pro = st['gols_pro']
             tg.gols_contra = st['gols_contra']
             tg.saldo_gols = st['saldo_gols']
+            tg.quantidade_wo = st.get('quantidade_wo', 0)
             tg.save()
 
 
 @transaction.atomic
-def registrar_resultado_partida(partida, placar_a, placar_b):
+def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo=''):
     """
     Registra o resultado de uma partida, atualiza tabelas de grupo e avança vencedores na árvore de mata-mata.
     """
-    partida.placar_a = placar_a
-    partida.placar_b = placar_b
+    partida.wo_tipo = wo_tipo or ''
+    partida.motivo_wo = motivo_wo or ''
     partida.finalizada = True
 
-    if placar_a > placar_b:
-        partida.vencedor = partida.time_a
-        partida.perdedor = partida.time_b
-    elif placar_b > placar_a:
+    if wo_tipo == 'TIME_A':
+        partida.placar_a = placar_a if placar_a is not None else 0
+        partida.placar_b = placar_b if placar_b is not None else 1
         partida.vencedor = partida.time_b
         partida.perdedor = partida.time_a
-    else:
-        # Se for partida de mata-mata com empate, atribui vencedor ao time A por padrão para evitar travamento
+    elif wo_tipo == 'TIME_B':
+        partida.placar_a = placar_a if placar_a is not None else 1
+        partida.placar_b = placar_b if placar_b is not None else 0
         partida.vencedor = partida.time_a
         partida.perdedor = partida.time_b
+    elif wo_tipo == 'AMBOS':
+        partida.placar_a = 0
+        partida.placar_b = 0
+        partida.vencedor = None
+        partida.perdedor = None
+    else:
+        partida.placar_a = placar_a
+        partida.placar_b = placar_b
+        if placar_a is not None and placar_b is not None:
+            if placar_a > placar_b:
+                partida.vencedor = partida.time_a
+                partida.perdedor = partida.time_b
+            elif placar_b > placar_a:
+                partida.vencedor = partida.time_b
+                partida.perdedor = partida.time_a
+            else:
+                # Se for partida de mata-mata com empate, atribui vencedor ao time A por padrão para evitar travamento
+                partida.vencedor = partida.time_a
+                partida.perdedor = partida.time_b
 
     partida.save()
 
     # Sincroniza modelo Jogo se existir
     if partida.jogo:
         jogo = partida.jogo
-        jogo.placar_time_a = placar_a
-        jogo.placar_time_b = placar_b
+        jogo.placar_time_a = partida.placar_a
+        jogo.placar_time_b = partida.placar_b
+        jogo.wo_tipo = partida.wo_tipo
+        jogo.motivo_wo = partida.motivo_wo
         jogo.finalizado = True
         jogo.save()
 

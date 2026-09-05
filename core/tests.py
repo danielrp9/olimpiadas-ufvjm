@@ -1813,21 +1813,324 @@ class PreSumulaManagementTests(TestCase):
 
         # Na renderização, o número 1 deve aparecer antes do 4, que deve aparecer antes do 10 e do 99
         content = response.content.decode('utf-8')
-        pos_1 = content.find('>1<') if '>1<' in content else content.find('1')
-        pos_4 = content.find('>4<') if '>4<' in content else content.find('4')
-        pos_10 = content.find('>10<') if '>10<' in content else content.find('10')
-        pos_99 = content.find('>99<') if '>99<' in content else content.find('99')
+        pos_1 = content.find('>1<')
+        pos_4 = content.find('>4<')
+        pos_10 = content.find('>10<')
+        pos_99 = content.find('>99<')
+        self.assertTrue(pos_1 != -1 and pos_4 != -1 and pos_10 != -1 and pos_99 != -1)
         self.assertTrue(pos_1 < pos_4 < pos_10 < pos_99)
 
 
+class WOTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from core.models import Modalidade, ChaveamentoModalidade, GrupoChaveamento, TimeGrupo, PartidaChaveamento, Jogo
+        User = get_user_model()
+        self.staff = User.objects.create_user(
+            email='admin_wo@test.com',
+            nome_completo='Staff WO',
+            role='COMISSAO',
+            password='password123'
+        )
+        self.del_a = User.objects.create_user(
+            email='del_a@test.com',
+            nome_completo='Delegacao Alpha',
+            nome_delegacao='Alpha',
+            role='REPRESENTANTE',
+            cpf='366.146.971-10',
+            password='password123'
+        )
+        self.del_b = User.objects.create_user(
+            email='del_b@test.com',
+            nome_completo='Delegacao Beta',
+            nome_delegacao='Beta',
+            role='REPRESENTANTE',
+            cpf='181.498.521-23',
+            password='password123'
+        )
+        self.modalidade = Modalidade.objects.create(
+            nome='Futsal WO',
+            genero='M',
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12
+        )
+        self.chaveamento = ChaveamentoModalidade.objects.create(
+            modalidade=self.modalidade,
+            fase_atual='fase_grupos'
+        )
+        self.grupo = GrupoChaveamento.objects.create(
+            chaveamento=self.chaveamento,
+            nome='Grupo A',
+            tipo='grupo_local'
+        )
+        self.tg_a = TimeGrupo.objects.create(grupo=self.grupo, delegacao=self.del_a)
+        self.tg_b = TimeGrupo.objects.create(grupo=self.grupo, delegacao=self.del_b)
+        self.partida = PartidaChaveamento.objects.create(
+            chaveamento=self.chaveamento,
+            grupo=self.grupo,
+            fase='GRUPO_LOCAL',
+            time_a=self.del_a,
+            time_b=self.del_b
+        )
+
+    def test_wo_time_a(self):
+        from core.chaveamento_services import registrar_resultado_partida
+        registrar_resultado_partida(self.partida, placar_a=0, placar_b=1, wo_tipo='TIME_A', motivo_wo='Não compareceu')
+        self.partida.refresh_from_db()
+        self.tg_a.refresh_from_db()
+        self.tg_b.refresh_from_db()
+
+        self.assertEqual(self.partida.wo_tipo, 'TIME_A')
+        self.assertEqual(self.partida.motivo_wo, 'Não compareceu')
+        self.assertTrue(self.partida.is_wo)
+        self.assertTrue(self.partida.is_wo_time_a)
+        self.assertFalse(self.partida.is_wo_time_b)
+        self.assertEqual(self.partida.vencedor, self.del_b)
+        self.assertEqual(self.partida.perdedor, self.del_a)
+
+        # Standings: Time B should have 3 pts, 1 V, 1 J. Time A should have 0 pts, 1 D, 1 J, 1 WO
+        self.assertEqual(self.tg_b.pontos, 3)
+        self.assertEqual(self.tg_b.vitorias, 1)
+        self.assertEqual(self.tg_b.jogos, 1)
+        self.assertEqual(self.tg_a.pontos, 0)
+        self.assertEqual(self.tg_a.derrotas, 1)
+        self.assertEqual(self.tg_a.jogos, 1)
+        self.assertEqual(self.tg_a.quantidade_wo, 1)
+        self.assertEqual(self.tg_b.quantidade_wo, 0)
+
+    def test_duplo_wo(self):
+        from core.chaveamento_services import registrar_resultado_partida
+        registrar_resultado_partida(self.partida, placar_a=0, placar_b=0, wo_tipo='AMBOS', motivo_wo='Nenhum time compareceu')
+        self.partida.refresh_from_db()
+        self.tg_a.refresh_from_db()
+        self.tg_b.refresh_from_db()
+
+        self.assertEqual(self.partida.wo_tipo, 'AMBOS')
+        self.assertTrue(self.partida.is_wo_duplo)
+        self.assertIsNone(self.partida.vencedor)
+
+        # Both compute 1 game, 0 points, 1 defeat, 1 WO
+        self.assertEqual(self.tg_a.jogos, 1)
+        self.assertEqual(self.tg_b.jogos, 1)
+        self.assertEqual(self.tg_a.pontos, 0)
+        self.assertEqual(self.tg_b.pontos, 0)
+        self.assertEqual(self.tg_a.derrotas, 1)
+        self.assertEqual(self.tg_b.derrotas, 1)
+        self.assertEqual(self.tg_a.quantidade_wo, 1)
+        self.assertEqual(self.tg_b.quantidade_wo, 1)
+
+    def test_salvar_resultado_partida_view_com_wo(self):
+        from django.urls import reverse
+        self.client.force_login(self.staff)
+        url = reverse('chaveamento_partida_resultado', kwargs={'pk': self.partida.pk})
+        response = self.client.post(url, {
+            'wo_tipo': 'TIME_B',
+            'motivo_wo': 'Atraso superior a 15 minutos',
+            'placar_a': '1',
+            'placar_b': '0',
+            'data_jogo': '2026-09-10',
+            'horario_jogo': '14:00'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.partida.refresh_from_db()
+        self.assertEqual(self.partida.wo_tipo, 'TIME_B')
+        self.assertEqual(self.partida.motivo_wo, 'Atraso superior a 15 minutos')
+        self.assertEqual(self.partida.vencedor, self.del_a)
+        self.tg_b.refresh_from_db()
+        self.assertEqual(self.tg_b.quantidade_wo, 1)
+
+    def test_visualizacao_badge_wo_na_tabela(self):
+        from django.urls import reverse
+        from core.chaveamento_services import registrar_resultado_partida
+        registrar_resultado_partida(self.partida, placar_a=0, placar_b=0, wo_tipo='AMBOS', motivo_wo='Chuva torrencial e ausência')
+
+        self.client.force_login(self.staff)
+        url = reverse('chaveamento_admin_detail', kwargs={'pk': self.modalidade.pk})
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        content = res.content.decode('utf-8')
+        self.assertIn('Duplo W.O.', content)
+        self.assertIn('Chuva torrencial e ausência', content)
+        self.assertIn('W.O.', content)
 
 
+class PermitirLancamentoAtletasTests(TestCase):
+    def setUp(self):
+        import datetime
+        from django.contrib.auth import get_user_model
+        from django.utils import timezone
+        from core.models import Modalidade, Jogo, PreSumula, Atleta
+        User = get_user_model()
+        self.staff = User.objects.create_user(
+            email='admin_perm@test.com',
+            nome_completo='Staff Permitir',
+            role='COMISSAO',
+            password='password123'
+        )
+        self.del_a = User.objects.create_user(
+            email='del_a_perm@test.com',
+            nome_completo='Delegacao Alpha',
+            nome_delegacao='Alpha',
+            role='REPRESENTANTE',
+            cpf='069.258.583-45',
+            password='password123'
+        )
+        self.del_a.status_delegacao = 'deferido'
+        self.del_a.save()
 
+        self.del_b = User.objects.create_user(
+            email='del_b_perm@test.com',
+            nome_completo='Delegacao Beta',
+            nome_delegacao='Beta',
+            role='REPRESENTANTE',
+            cpf='181.498.521-23',
+            password='password123'
+        )
+        self.del_b.status_delegacao = 'deferido'
+        self.del_b.save()
 
+        self.modalidade = Modalidade.objects.create(
+            nome='Handebol Permitir',
+            genero='M',
+            limite_minimo_jogadores=1,
+            limite_maximo_jogadores=10
+        )
 
+        # Jogo no passado (prazo expirado)
+        ontem = timezone.localdate() - datetime.timedelta(days=1)
+        self.jogo_expirado = Jogo.objects.create(
+            modalidade=self.modalidade,
+            data_jogo=ontem,
+            horario_jogo=datetime.time(10, 0),
+            time_a=self.del_a,
+            time_b=self.del_b
+        )
 
+        self.atleta1 = Atleta.objects.create(
+            nome_completo='Atleta Alfa 1',
+            cpf='405.029.385-40',
+            cadastrado_por=self.del_a,
+            em_conformidade=True,
+            status_avaliacao='deferido'
+        )
 
+    def test_permitir_atletas_default_false_and_blocks_expired(self):
+        # Por padrão é False
+        self.assertFalse(self.jogo_expirado.permitir_lancamento_atletas)
+        # Prazo expirou
+        self.assertTrue(self.jogo_expirado.is_presumula_deadline_passed)
+        self.assertTrue(self.jogo_expirado.is_finalizado_por_wo)
 
+        # Representante não pode acessar presumula_create para esse jogo expirado
+        from django.urls import reverse
+        self.client.force_login(self.del_a)
+        response = self.client.get(reverse('presumula_create') + f'?jogo={self.jogo_expirado.id}')
+        self.assertEqual(response.status_code, 302)
 
+    def test_permitir_atletas_true_unlocks_submission_without_changing_date(self):
+        # Ativa permissão
+        self.jogo_expirado.permitir_lancamento_atletas = True
+        self.jogo_expirado.save()
 
+        # Agora is_presumula_deadline_passed retorna False mesmo com a data no passado
+        self.assertFalse(self.jogo_expirado.is_presumula_deadline_passed)
+        self.assertFalse(self.jogo_expirado.is_finalizado_por_wo)
+
+        # Representante consegue acessar presumula_create normalmente
+        from django.urls import reverse
+        self.client.force_login(self.del_a)
+        response = self.client.get(reverse('presumula_create') + f'?jogo={self.jogo_expirado.id}')
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Lançamento de Atletas Liberado')
+
+    def test_toggle_permitir_atletas_view(self):
+        from django.urls import reverse
+        self.client.force_login(self.staff)
+        url = reverse('jogo_toggle_permitir_atletas', kwargs={'pk': self.jogo_expirado.pk})
+
+        # 1. Primeiro POST ativa a permissão
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.jogo_expirado.refresh_from_db()
+        self.assertTrue(self.jogo_expirado.permitir_lancamento_atletas)
+        self.assertFalse(self.jogo_expirado.is_presumula_deadline_passed)
+
+        # 2. Segundo POST desativa ("desclica") e volta a bloquear
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.jogo_expirado.refresh_from_db()
+        self.assertFalse(self.jogo_expirado.permitir_lancamento_atletas)
+        self.assertTrue(self.jogo_expirado.is_presumula_deadline_passed)
+
+    def test_toggle_permitir_atletas_ajax(self):
+        import json
+        from django.urls import reverse
+        self.client.force_login(self.staff)
+        url = reverse('jogo_toggle_permitir_atletas', kwargs={'pk': self.jogo_expirado.pk})
+
+        response = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.content)
+        self.assertTrue(data['success'])
+        self.assertTrue(data['permitir_lancamento_atletas'])
+
+        # Chamar de novo via AJAX desativa
+        response2 = self.client.post(url, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response2.status_code, 200)
+        data2 = json.loads(response2.content)
+        self.assertTrue(data2['success'])
+        self.assertFalse(data2['permitir_lancamento_atletas'])
+
+    def test_toggle_permitir_atletas_denied_for_representative(self):
+        from django.urls import reverse
+        self.client.force_login(self.del_a)
+        url = reverse('jogo_toggle_permitir_atletas', kwargs={'pk': self.jogo_expirado.pk})
+
+        response = self.client.post(url)
+        self.assertEqual(response.status_code, 302)
+        self.jogo_expirado.refresh_from_db()
+        self.assertFalse(self.jogo_expirado.permitir_lancamento_atletas)
+
+    def test_ajustar_horario_saves_permitir_atletas(self):
+        from django.urls import reverse
+        self.client.force_login(self.staff)
+        url = reverse('jogo_ajustar_horario', kwargs={'pk': self.jogo_expirado.pk})
+
+        # Salva com permitir_lancamento_atletas marcado
+        response = self.client.post(url, {
+            'data_jogo': self.jogo_expirado.data_jogo.strftime('%Y-%m-%d'),
+            'horario_jogo': '10:00',
+            'has_permitir_atletas_field': '1',
+            'permitir_lancamento_atletas': '1'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.jogo_expirado.refresh_from_db()
+        self.assertTrue(self.jogo_expirado.permitir_lancamento_atletas)
+
+        # Salva sem o checkbox marcado (desclicado)
+        response = self.client.post(url, {
+            'data_jogo': self.jogo_expirado.data_jogo.strftime('%Y-%m-%d'),
+            'horario_jogo': '10:00',
+            'has_permitir_atletas_field': '1'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.jogo_expirado.refresh_from_db()
+        self.assertFalse(self.jogo_expirado.permitir_lancamento_atletas)
+
+    def test_presumula_list_shows_badges_and_buttons(self):
+        from django.urls import reverse
+        # Comissão vê botão e quando ativado vê badge de lançamento liberado
+        self.client.force_login(self.staff)
+        res = self.client.get(reverse('presumula_list'))
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, f'btn-permitir-atletas-{self.jogo_expirado.id}')
+        self.assertContains(res, 'Permitir Atletas')
+
+        # Ativa a permissão
+        self.jogo_expirado.permitir_lancamento_atletas = True
+        self.jogo_expirado.save()
+
+        res2 = self.client.get(reverse('presumula_list'))
+        self.assertEqual(res2.status_code, 200)
+        self.assertContains(res2, 'Lançamento Liberado')
 

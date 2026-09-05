@@ -262,14 +262,30 @@ def jogo_ajustar_horario(request, pk):
         jogo.finalizado = False
         jogo.data_hora_fim = None
 
+        if 'permitir_lancamento_atletas' in request.POST:
+            jogo.permitir_lancamento_atletas = True
+        elif request.POST.get('has_permitir_atletas_field') == '1':
+            jogo.permitir_lancamento_atletas = False
+
         try:
             jogo.full_clean()
             jogo.save()
 
+            # Sincroniza partida de chaveamento se houver
+            partida = jogo.partida_chaveamento.first()
+            if partida:
+                partida.permitir_lancamento_atletas = jogo.permitir_lancamento_atletas
+                partida.save()
+
             horario_formatado = novo_horario.strftime('%H:%M')
             data_formatada = nova_data.strftime('%d/%m/%Y')
 
-            if not jogo.is_presumula_deadline_passed:
+            if jogo.permitir_lancamento_atletas:
+                messages.success(
+                    request,
+                    f"Horário da partida {jogo.modalidade.nome} atualizado para {data_formatada} às {horario_formatado} e lançamento de atletas LIBERADO fora do prazo para esta partida!"
+                )
+            elif not jogo.is_presumula_deadline_passed:
                 deadline_formatado = jogo.presumula_deadline.strftime('%H:%M') if jogo.presumula_deadline else ''
                 messages.success(
                     request,
@@ -278,11 +294,62 @@ def jogo_ajustar_horario(request, pk):
             else:
                 messages.warning(
                     request,
-                    f"Horário da partida atualizado para {data_formatada} às {horario_formatado}. Como o novo horário está com menos de 1 hora de antecedência em relação a agora, o prazo do regulamento manteve a pré-súmula encerrada. Caso queira abrir para as equipes, defina o horário para pelo menos 1 hora à frente."
+                    f"Horário da partida atualizado para {data_formatada} às {horario_formatado}. Como o novo horário está com menos de 1 hora de antecedência em relação a agora, o prazo do regulamento manteve a pré-súmula encerrada. Você pode ativar o botão 'Permitir lançar atletas' para liberá-la sem precisar mudar o horário."
                 )
         except ValidationError as e:
             err_msg = "; ".join([f"{k}: {', '.join(v)}" for k, v in e.message_dict.items()]) if hasattr(e, 'message_dict') else str(e)
             messages.error(request, f"Não foi possível atualizar o horário: {err_msg}")
+
+        return redirect('presumula_list')
+
+
+@login_required
+def jogo_toggle_permitir_atletas(request, pk):
+    """
+    Permite à Comissão Organizadora alternar a permissão de lançamento/escalação
+    de atletas fora do prazo para um jogo específico com um clique.
+    """
+    if not (request.user.is_staff or getattr(request.user, 'is_comissao', False) or request.user.is_superuser):
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+            return JsonResponse({'error': 'Acesso negado: apenas a comissão organizadora pode alterar esta permissão.'}, status=403)
+        messages.error(request, "Acesso negado.")
+        return redirect('presumula_list')
+
+    if request.method == 'POST':
+        jogo = get_object_or_404(Jogo, pk=pk)
+
+        # Inverte o estado atual
+        novo_estado = not jogo.permitir_lancamento_atletas
+        jogo.permitir_lancamento_atletas = novo_estado
+
+        if novo_estado:
+            # Ao liberar lançamento, se o jogo estava finalizado sem placares reais (por prazo), reabre
+            if jogo.finalizado and not jogo.wo_tipo and jogo.placar_time_a is None and jogo.placar_time_b is None:
+                jogo.finalizado = False
+                jogo.data_hora_fim = None
+            msg = f"Lançamento de atletas LIBERADO para o jogo {jogo.modalidade.nome} ({jogo.time_a_display} vs {jogo.time_b_display})! As delegações agora podem escalar atletas mesmo após o prazo regulamentar."
+        else:
+            msg = f"Lançamento de atletas BLOQUEADO para o jogo {jogo.modalidade.nome}. O sistema voltou a aplicar o prazo regulamentar normalmente."
+
+        jogo.save()
+
+        # Sincroniza partida de chaveamento vinculada se existir
+        partida = jogo.partida_chaveamento.first()
+        if partida:
+            partida.permitir_lancamento_atletas = novo_estado
+            if novo_estado and partida.finalizada and not partida.wo_tipo and partida.placar_a is None and partida.placar_b is None:
+                partida.finalizada = False
+            partida.save()
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', ''):
+            return JsonResponse({
+                'success': True,
+                'permitir_lancamento_atletas': novo_estado,
+                'message': msg
+            })
+
+        messages.success(request, msg)
+        return redirect(request.META.get('HTTP_REFERER', 'presumula_list'))
 
     return redirect('presumula_list')
 
@@ -2235,19 +2302,48 @@ def salvar_resultado_partida_view(request, pk):
         partida = get_object_or_404(PartidaChaveamento, pk=pk)
         placar_a_raw = request.POST.get('placar_a')
         placar_b_raw = request.POST.get('placar_b')
+        wo_tipo = request.POST.get('wo_tipo', '').strip()
+        motivo_wo = request.POST.get('motivo_wo', '').strip()
         data_raw = request.POST.get('data_jogo') or request.POST.get('data_partida')
         horario_raw = request.POST.get('horario_jogo') or request.POST.get('horario_partida')
 
         updated_anything = False
 
-        if placar_a_raw is not None and placar_b_raw is not None and placar_a_raw != '' and placar_b_raw != '':
+        if wo_tipo in ['TIME_A', 'TIME_B', 'AMBOS']:
+            try:
+                placar_a = int(placar_a_raw) if (placar_a_raw is not None and placar_a_raw != '') else None
+                placar_b = int(placar_b_raw) if (placar_b_raw is not None and placar_b_raw != '') else None
+                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo=wo_tipo, motivo_wo=motivo_wo)
+                updated_anything = True
+            except ValueError:
+                messages.error(request, "Placares inválidos para W.O.")
+        elif placar_a_raw is not None and placar_b_raw is not None and placar_a_raw != '' and placar_b_raw != '':
             try:
                 placar_a = int(placar_a_raw)
                 placar_b = int(placar_b_raw)
-                registrar_resultado_partida(partida, placar_a, placar_b)
+                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='')
                 updated_anything = True
             except ValueError:
                 messages.error(request, "Placares inválidos.")
+        elif partida.wo_tipo and wo_tipo == '':
+            partida.wo_tipo = ''
+            partida.motivo_wo = ''
+            partida.finalizada = False
+            partida.placar_a = None
+            partida.placar_b = None
+            partida.vencedor = None
+            partida.perdedor = None
+            partida.save()
+            if partida.jogo:
+                partida.jogo.wo_tipo = ''
+                partida.jogo.motivo_wo = ''
+                partida.jogo.placar_time_a = None
+                partida.jogo.placar_time_b = None
+                partida.jogo.finalizado = False
+                partida.jogo.save()
+            if partida.grupo:
+                atualizar_tabela_grupo(partida.grupo)
+            updated_anything = True
 
         import datetime
         if data_raw:

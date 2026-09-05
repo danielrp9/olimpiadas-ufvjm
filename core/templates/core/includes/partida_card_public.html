@@ -8,7 +8,10 @@
                         {% if partida.cartoes_time_a_vermelhos > 0 %}<span>🟥 {{ partida.cartoes_time_a_vermelhos }}</span>{% endif %}
                     </button>
                 {% endif %}
-                <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+                {% if partida.is_wo_time_a or partida.is_wo_duplo %}
+                    <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
+                {% endif %}
+                <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_a or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
                 {% if partida.vencedor == partida.time_a %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
             {% else %}
                 <span class="text-slate-400 font-normal italic">A definir</span>
@@ -16,7 +19,21 @@
         </div>
 
         <div class="px-3 py-1 bg-slate-800 text-white rounded-xl border border-slate-700/80 font-extrabold shadow-xs flex-shrink-0 min-w-[54px] text-center">
-            {% if partida.finalizada %}
+            {% if partida.is_wo_duplo %}
+                <div class="flex flex-col items-center">
+                    <span class="text-white font-black text-xs">0 x 0</span>
+                    <span class="text-[8px] text-red-400 font-black uppercase tracking-wider">Duplo W.O.</span>
+                </div>
+            {% elif partida.is_wo %}
+                <div class="flex flex-col items-center">
+                    <div class="text-white font-black text-xs leading-none">
+                        <span>{{ partida.placar_a|default:0 }}</span>
+                        <span class="text-slate-400 font-normal px-0.5">x</span>
+                        <span>{{ partida.placar_b|default:0 }}</span>
+                    </div>
+                    <span class="text-[8px] text-red-400 font-black uppercase tracking-wider mt-0.5">W.O.</span>
+                </div>
+            {% elif partida.finalizada %}
                 <span class="text-white font-black text-sm">{{ partida.placar_a }}</span>
                 <span class="text-slate-400 font-normal px-0.5">x</span>
                 <span class="text-white font-black text-sm">{{ partida.placar_b }}</span>
@@ -27,7 +44,10 @@
 
         <div class="flex-1 font-bold text-slate-800 text-left truncate min-w-0 flex items-center justify-start gap-1.5 {% if partida.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
             {% if partida.time_b %}
-                <span class="text-slate-900 font-extrabold tracking-tight truncate">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+                {% if partida.is_wo_time_b or partida.is_wo_duplo %}
+                    <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
+                {% endif %}
+                <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_b or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
                 {% if partida.vencedor == partida.time_b %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
                 {% if partida.cartoes_time_b_amarelos > 0 or partida.cartoes_time_b_vermelhos > 0 %}
                     <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
@@ -40,6 +60,29 @@
             {% endif %}
         </div>
     </div>
+
+    <!-- Alerta de W.O. Registrado se houver -->
+    {% if partida.wo_tipo %}
+        <div class="px-2.5 py-1.5 bg-red-50 border border-red-200 rounded-xl flex items-start gap-1.5 text-[11px] text-red-800">
+            <i data-lucide="alert-circle" class="w-3.5 h-3.5 text-red-600 shrink-0 mt-0.5"></i>
+            <div class="leading-tight flex-1">
+                <span class="font-bold">
+                    {% if partida.wo_tipo == 'AMBOS' %}
+                        Duplo W.O. (Ambos os times não compareceram)
+                    {% elif partida.wo_tipo == 'TIME_A' %}
+                        W.O. de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }} (Vitória de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }})
+                    {% elif partida.wo_tipo == 'TIME_B' %}
+                        W.O. de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }} (Vitória de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }})
+                    {% endif %}
+                </span>
+                {% if partida.motivo_wo %}
+                    <div class="text-[10px] text-red-700 font-medium mt-0.5">
+                        <span class="font-semibold text-red-800">Motivo:</span> {{ partida.motivo_wo }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endif %}
 
     <!-- Data e Horário Exibição -->
     <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-slate-500 text-[11px]">
