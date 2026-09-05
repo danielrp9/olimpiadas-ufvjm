@@ -2171,3 +2171,124 @@ class PermitirLancamentoAtletasTests(TestCase):
         self.assertEqual(res2.status_code, 200)
         self.assertContains(res2, 'Lançamento Liberado')
 
+
+class ChaveamentoJogosListaTests(TestCase):
+    def setUp(self):
+        from django.contrib.auth import get_user_model
+        from django.utils import timezone
+        import datetime
+        from core.models import Modalidade, ChaveamentoModalidade, GrupoChaveamento, PartidaChaveamento, Jogo
+
+        User = get_user_model()
+        self.staff = User.objects.create_superuser(
+            email='admin_lista@test.com',
+            nome_completo='Staff Lista',
+            role='COMISSAO',
+            cpf='366.146.971-10',
+            password='password123'
+        )
+        self.delegate_a = User.objects.create_user(
+            email='rep_a_lista@test.com',
+            nome_completo='Rep A Lista',
+            nome_delegacao='Delegação Alpha',
+            role='REPRESENTANTE',
+            cpf='181.498.521-23',
+            password='password123'
+        )
+        self.delegate_a.status_delegacao = 'deferido'
+        self.delegate_a.save()
+
+        self.delegate_b = User.objects.create_user(
+            email='rep_b_lista@test.com',
+            nome_completo='Rep B Lista',
+            nome_delegacao='Delegação Beta',
+            role='REPRESENTANTE',
+            cpf='069.258.583-45',
+            password='password123'
+        )
+        self.delegate_b.status_delegacao = 'deferido'
+        self.delegate_b.save()
+
+        self.mod = Modalidade.objects.create(
+            nome='Futsal Lista',
+            genero='M',
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12
+        )
+        self.ch = ChaveamentoModalidade.objects.create(modalidade=self.mod)
+        self.grupo = GrupoChaveamento.objects.create(chaveamento=self.ch, nome='Grupo Único')
+
+        hoje = timezone.localdate()
+        amanha = hoje + datetime.timedelta(days=1)
+
+        # Partida 1: Hoje às 14:00
+        self.partida1 = PartidaChaveamento.objects.create(
+            chaveamento=self.ch,
+            grupo=self.grupo,
+            fase='GRUPO_LOCAL',
+            time_a=self.delegate_a,
+            time_b=self.delegate_b,
+            data_partida=hoje,
+            horario_partida=datetime.time(14, 0)
+        )
+
+        # Partida 2: Amanhã às 09:30
+        self.partida2 = PartidaChaveamento.objects.create(
+            chaveamento=self.ch,
+            grupo=self.grupo,
+            fase='GRUPO_LOCAL',
+            time_a=self.delegate_b,
+            time_b=self.delegate_a,
+            data_partida=amanha,
+            horario_partida=datetime.time(9, 30)
+        )
+
+    def test_chaveamento_listas_titulos_e_botoes(self):
+        from django.urls import reverse
+        # Admin list
+        self.client.force_login(self.staff)
+        res_admin = self.client.get(reverse('chaveamento_admin_list'))
+        self.assertEqual(res_admin.status_code, 200)
+        self.assertContains(res_admin, '>Chaveamentos<')
+        self.assertContains(res_admin, reverse('chaveamento_jogos_lista'))
+        self.assertContains(res_admin, 'Jogos em Lista')
+
+        # Public list (delegações)
+        self.client.force_login(self.delegate_a)
+        res_pub = self.client.get(reverse('chaveamento_public_list'))
+        self.assertEqual(res_pub.status_code, 200)
+        self.assertContains(res_pub, '>Chaveamentos<')
+        self.assertContains(res_pub, reverse('chaveamento_jogos_lista'))
+        self.assertContains(res_pub, 'Jogos em Lista')
+
+        # Share list (público sem login)
+        self.client.logout()
+        res_share = self.client.get(reverse('chaveamento_share_list'))
+        self.assertEqual(res_share.status_code, 200)
+        self.assertContains(res_share, '>Chaveamentos<')
+        self.assertContains(res_share, reverse('chaveamento_jogos_lista'))
+
+    def test_chaveamento_jogos_lista_public_and_authenticated(self):
+        from django.urls import reverse
+        # 1. Público anônimo
+        res_anon = self.client.get(reverse('chaveamento_jogos_lista'))
+        self.assertEqual(res_anon.status_code, 200)
+        self.assertContains(res_anon, 'Futsal Lista')
+        self.assertContains(res_anon, 'Delegação Alpha')
+        self.assertContains(res_anon, 'Delegação Beta')
+        self.assertContains(res_anon, '14:00')
+        self.assertContains(res_anon, '09:30')
+
+        # 2. Comissão autenticada
+        self.client.force_login(self.staff)
+        res_staff = self.client.get(reverse('chaveamento_jogos_lista'))
+        self.assertEqual(res_staff.status_code, 200)
+        self.assertContains(res_staff, 'Voltar aos Chaveamentos')
+        self.assertContains(res_staff, reverse('chaveamento_admin_list'))
+
+        # 3. Forçar layout público com ?public=1
+        res_public_param = self.client.get(reverse('chaveamento_jogos_lista') + '?public=1')
+        self.assertEqual(res_public_param.status_code, 200)
+        self.assertContains(res_public_param, reverse('chaveamento_share_list'))
+
+

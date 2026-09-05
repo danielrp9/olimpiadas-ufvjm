@@ -1,0 +1,492 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Jogos em Lista - Olimpíadas Universitárias UFVJM{% endblock %}
+
+{% block content %}
+<div class="space-y-6 w-full pb-16">
+
+    {% if not is_public %}
+    <!-- Banner de Apresentação Interno (Comissão / Delegações) -->
+    <div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-sm overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <!-- Abstract SVG Wave Grid -->
+        <div class="absolute inset-0 opacity-20 pointer-events-none">
+            <svg class="w-full h-full object-cover" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M-50,150 Q150,50 350,120 T750,70 T1150,100" stroke="url(#wave-gradient-list)" stroke-width="2" stroke-dasharray="10 15" />
+                <path d="M-50,120 Q150,20 350,90 T750,40 T1150,70" stroke="url(#wave-gradient-list)" stroke-width="1.5" stroke-dasharray="8 12" />
+                <defs>
+                    <linearGradient id="wave-gradient-list" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#3b82f6" />
+                        <stop offset="50%" stop-color="#8b5cf6" />
+                        <stop offset="100%" stop-color="#ec4899" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <div class="relative z-10 min-w-0">
+            <div class="flex items-center gap-3 mb-2">
+                <a href="{{ voltar_url }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-xl transition border border-white/10 shrink-0">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Voltar aos Chaveamentos
+                </a>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">Jogos em Lista</h1>
+            <p class="text-xs text-slate-400 mt-1 max-w-xl">Todos os jogos organizados cronologicamente por dia e horário para visão geral das partidas.</p>
+        </div>
+
+        <div class="relative z-10 flex flex-wrap items-center gap-2.5 shrink-0">
+            {% if user.is_comissao or user.is_staff %}
+            <a href="{% url 'exportador:exportar_jogos_excel' %}" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold rounded-2xl transition backdrop-blur-sm active:scale-95 flex items-center gap-2 border border-white/10 shadow-inner cursor-pointer" title="Extrair Planilha Excel de Jogos (.xlsx)">
+                <i data-lucide="file-spreadsheet" class="text-emerald-400 text-sm"></i> Extrair Excel
+            </a>
+            {% endif %}
+
+            <button type="button" onclick="copiarLinkPublico()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer" title="Copiar link público desta listagem">
+                <i data-lucide="share-2" class="text-xs"></i> Compartilhar
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <!-- Sub-header da visualização pública -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white border border-slate-200/90 rounded-3xl p-5 sm:p-6 shadow-sm">
+        <div>
+            <div class="flex items-center gap-2 mb-1.5">
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200">
+                    Visão Geral Cronológica
+                </span>
+            </div>
+            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Programação de Jogos por Dia</h2>
+            <p class="text-xs text-slate-500 mt-0.5">Confira datas, horários, locais e confrontos de todas as modalidades da competição.</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+            <button type="button" onclick="copiarLinkPublico()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-2 cursor-pointer">
+                <i data-lucide="share-2" class="text-xs"></i> Compartilhar Link
+            </button>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Métricas Resumidas -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Total de Jogos</span>
+            <span class="text-xl sm:text-2xl font-black text-slate-900 mt-1 block">{{ total_jogos }}</span>
+        </div>
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Dias de Jogos</span>
+            <span class="text-xl sm:text-2xl font-black text-blue-600 mt-1 block">{{ total_dias }}</span>
+        </div>
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Encerrados</span>
+            <span class="text-xl sm:text-2xl font-black text-emerald-600 mt-1 block">{{ total_finalizados }}</span>
+        </div>
+        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">A Disputar</span>
+            <span class="text-xl sm:text-2xl font-black text-amber-600 mt-1 block">{{ total_pendentes }}</span>
+        </div>
+    </div>
+
+    <!-- Barra de Filtros e Busca Rápida -->
+    <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+        <!-- Filtro Rápido por Dia (Pills) -->
+        <div>
+            <div class="flex items-center justify-between gap-2 mb-2">
+                <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <i data-lucide="calendar" class="w-3.5 h-3.5 text-blue-600"></i> Selecionar Dia:
+                </span>
+                <span id="filtro-dia-ativo-label" class="text-[11px] font-semibold text-blue-600">Todos os dias</span>
+            </div>
+            <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+                <button type="button" onclick="filtrarPorDia('todos', this)" class="btn-filtro-dia px-3.5 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-blue-600 text-white shadow-xs" data-dia="todos">
+                    Todos os Dias <span class="ml-1 opacity-80 text-[10px]">({{ total_jogos }})</span>
+                </button>
+                {% for g in grupos_dias %}
+                <button type="button" onclick="filtrarPorDia('{{ g.data_iso }}', this)" class="btn-filtro-dia px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700" data-dia="{{ g.data_iso }}">
+                    {{ g.data_curta }} <span class="ml-1 text-[10px] text-slate-400">({{ g.total_jogos }})</span>
+                </button>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Linha de Busca e Seletores -->
+        <div class="grid grid-cols-1 sm:grid-cols-12 gap-3 pt-3 border-t border-slate-100 text-xs">
+            <!-- Campo de Busca Textual -->
+            <div class="sm:col-span-6 relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <input type="text" id="campo-busca" oninput="aplicarFiltros()" placeholder="Buscar delegação, modalidade ou quadra..." class="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs font-semibold text-slate-800 placeholder:text-slate-400 transition">
+            </div>
+
+            <!-- Seletor de Modalidade -->
+            <div class="sm:col-span-3">
+                <select id="filtro-modalidade" onchange="aplicarFiltros()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs font-semibold text-slate-800 transition cursor-pointer">
+                    <option value="todas">Todas as Modalidades</option>
+                    {% for m in modalidades_lista %}
+                    <option value="{{ m.pk }}">{{ m.nome }} ({{ m.get_genero_display }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Seletor de Status -->
+            <div class="sm:col-span-3">
+                <select id="filtro-status" onchange="aplicarFiltros()" class="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-200 focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs font-semibold text-slate-800 transition cursor-pointer">
+                    <option value="todos">Todos os Status</option>
+                    <option value="agendado">Apenas Agendados</option>
+                    <option value="encerrado">Apenas Encerrados</option>
+                    <option value="wo">Com Registro de W.O.</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista de Grupos por Dia -->
+    <div id="container-dias" class="space-y-8">
+        {% for g in grupos_dias %}
+        <div id="dia-bloco-{{ g.data_iso }}" class="dia-bloco space-y-3" data-dia="{{ g.data_iso }}">
+            <!-- Cabeçalho do Dia -->
+            <div class="flex items-center justify-between gap-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white px-4 sm:px-6 py-3 rounded-2xl shadow-sm">
+                <div class="flex items-center gap-2.5 min-w-0">
+                    <i data-lucide="calendar" class="w-4 h-4 text-blue-400 shrink-0"></i>
+                    <h3 class="text-xs sm:text-sm font-black tracking-tight uppercase truncate">
+                        {{ g.label|safe }}
+                    </h3>
+                </div>
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-white/10 text-slate-200 border border-white/10 shrink-0">
+                    {{ g.total_jogos }} jogo{{ g.total_jogos|pluralize }}
+                </span>
+            </div>
+
+            <!-- Lista de Partidas do Dia -->
+            <div class="space-y-2.5">
+                {% for jogo in g.jogos %}
+                <div class="jogo-card"
+                     data-mod-id="{{ jogo.modalidade.pk }}"
+                     data-status="{% if jogo.is_wo %}wo{% elif jogo.finalizada %}encerrado{% else %}agendado{% endif %}"
+                     data-search-text="{{ jogo.modalidade.nome|lower }} {{ jogo.time_a_nome|lower }} {{ jogo.time_b_nome|lower }} {{ jogo.local|lower }} {{ jogo.fase_display|lower }} {{ jogo.grupo_display|lower }}">
+
+                    <!-- ============================================== -->
+                    <!-- VISUALIZAÇÃO MOBILE (block sm:hidden)           -->
+                    <!-- Totalmente adaptada para caber sem rolagem     -->
+                    <!-- ============================================== -->
+                    <div class="block sm:hidden bg-white rounded-2xl border border-slate-200/90 p-3 shadow-xs space-y-2.5 transition hover:border-blue-300">
+                        <!-- Linha Superior: Modalidade + Horário & Local -->
+                        <div class="flex items-center justify-between gap-2 text-xs">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/70 truncate max-w-[50%] shrink-0" title="{{ jogo.modalidade.nome }}">
+                                {{ jogo.modalidade.nome }} ({{ jogo.modalidade.get_genero_display }})
+                            </span>
+                            <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold shrink-0">
+                                <span class="inline-flex items-center gap-1 text-slate-800">
+                                    <i data-lucide="clock" class="w-3 h-3 text-blue-600"></i>
+                                    {{ jogo.horario_exibicao }}
+                                </span>
+                                <span class="text-slate-300">•</span>
+                                <span class="inline-flex items-center gap-1 text-slate-600 truncate max-w-[95px]" title="{{ jogo.local }}">
+                                    <i data-lucide="map-pin" class="w-3 h-3 text-emerald-600 shrink-0"></i>
+                                    <span class="truncate">{{ jogo.local }}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Linha Central: Disputa (Confronto Direto) -->
+                        <div class="flex items-center justify-between gap-2 py-0.5">
+                            <div class="flex-1 text-right min-w-0">
+                                <span class="text-xs font-bold text-slate-800 truncate block {% if jogo.is_wo_time_a or jogo.is_wo_duplo %}line-through text-red-600{% endif %}" title="{{ jogo.time_a_nome }}">
+                                    {{ jogo.time_a_nome }}
+                                </span>
+                            </div>
+
+                            <!-- Placar / VS Badge -->
+                            <div class="shrink-0 px-2.5 py-1 bg-slate-900 text-white rounded-xl text-center min-w-[50px] shadow-2xs">
+                                {% if jogo.is_wo_duplo %}
+                                    <span class="text-[10px] font-black text-red-300 uppercase block">D. W.O.</span>
+                                {% elif jogo.is_wo %}
+                                    <span class="text-xs font-black">{{ jogo.placar_a|default:0 }}x{{ jogo.placar_b|default:0 }}</span>
+                                    <span class="block text-[8px] text-red-300 font-bold uppercase">W.O.</span>
+                                {% elif jogo.finalizada %}
+                                    <span class="text-xs font-black">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
+                                {% else %}
+                                    <span class="text-xs font-bold text-slate-300">vs</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="flex-1 text-left min-w-0">
+                                <span class="text-xs font-bold text-slate-800 truncate block {% if jogo.is_wo_time_b or jogo.is_wo_duplo %}line-through text-red-600{% endif %}" title="{{ jogo.time_b_nome }}">
+                                    {{ jogo.time_b_nome }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Linha Inferior: Fase e Status -->
+                        <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 text-[10px] text-slate-400">
+                            <span class="truncate">{{ jogo.fase_display }}{% if jogo.grupo_display %} - {{ jogo.grupo_display }}{% endif %}</span>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                {% if jogo.is_wo %}
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-50 text-red-700 border border-red-200">W.O.</span>
+                                {% elif jogo.finalizada %}
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Encerrado</span>
+                                {% else %}
+                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Agendado</span>
+                                {% endif %}
+
+                                {% if jogo.chaveamento_url %}
+                                <a href="{{ jogo.chaveamento_url }}" class="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Ver Chaveamento">
+                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ============================================== -->
+                    <!-- VISUALIZAÇÃO DESKTOP (hidden sm:flex)           -->
+                    <!-- Ampla, elegante, sem quebra forçada de texto   -->
+                    <!-- ============================================== -->
+                    <div class="hidden sm:flex items-center justify-between gap-4 p-4 bg-white hover:bg-slate-50/80 rounded-2xl border border-slate-200/90 transition shadow-2xs">
+                        <!-- 1. Horário e Local -->
+                        <div class="w-48 shrink-0 flex flex-col justify-center">
+                            <div class="flex items-center gap-1.5 text-xs font-black text-slate-800">
+                                <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
+                                <span>{{ jogo.horario_exibicao }}</span>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-[11px] text-slate-500 mt-1 truncate" title="{{ jogo.local }}">
+                                <i data-lucide="map-pin" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                                <span class="truncate font-semibold">{{ jogo.local }}</span>
+                            </div>
+                        </div>
+
+                        <!-- 2. Modalidade & Categoria & Fase -->
+                        <div class="w-56 shrink-0 flex flex-col justify-center">
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-xs font-bold text-slate-900 truncate" title="{{ jogo.modalidade.nome }}">
+                                    {{ jogo.modalidade.nome }}
+                                </span>
+                                <span class="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
+                                    {{ jogo.modalidade.get_genero_display }}
+                                </span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-0.5 truncate font-medium">
+                                {{ jogo.fase_display }}{% if jogo.grupo_display %} &bull; {{ jogo.grupo_display }}{% endif %}
+                            </span>
+                        </div>
+
+                        <!-- 3. Confronto / Disputa Centralizado -->
+                        <div class="flex-1 flex items-center justify-center gap-3 min-w-0 px-2">
+                            <!-- Time A -->
+                            <div class="flex-1 text-right min-w-0 truncate">
+                                <span class="text-sm font-bold text-slate-800 truncate block {% if jogo.is_wo_time_a or jogo.is_wo_duplo %}line-through text-red-600/80{% endif %}" title="{{ jogo.time_a_nome }}">
+                                    {{ jogo.time_a_nome }}
+                                </span>
+                            </div>
+
+                            <!-- Placar / VS Badge -->
+                            <div class="shrink-0 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-center min-w-[64px] shadow-2xs">
+                                {% if jogo.is_wo_duplo %}
+                                    <span class="text-xs font-black text-white">0 x 0</span>
+                                    <span class="block text-[8px] text-red-400 font-bold uppercase tracking-wider">Duplo W.O.</span>
+                                {% elif jogo.is_wo %}
+                                    <span class="text-xs font-black text-white">{{ jogo.placar_a|default:0 }} x {{ jogo.placar_b|default:0 }}</span>
+                                    <span class="block text-[8px] text-red-400 font-bold uppercase tracking-wider">W.O.</span>
+                                {% elif jogo.finalizada %}
+                                    <span class="text-sm font-black text-white">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
+                                {% else %}
+                                    <span class="text-xs font-bold text-slate-400 italic">vs</span>
+                                {% endif %}
+                            </div>
+
+                            <!-- Time B -->
+                            <div class="flex-1 text-left min-w-0 truncate">
+                                <span class="text-sm font-bold text-slate-800 truncate block {% if jogo.is_wo_time_b or jogo.is_wo_duplo %}line-through text-red-600/80{% endif %}" title="{{ jogo.time_b_nome }}">
+                                    {{ jogo.time_b_nome }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 4. Status & Ação -->
+                        <div class="w-44 shrink-0 flex items-center justify-end gap-2">
+                            {% if jogo.is_wo %}
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-red-50 text-red-700 border border-red-200 shrink-0">
+                                    W.O.
+                                </span>
+                            {% elif jogo.finalizada %}
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                                    Encerrado
+                                </span>
+                            {% else %}
+                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                                    Agendado
+                                </span>
+                            {% endif %}
+
+                            {% if jogo.chaveamento_url %}
+                            <a href="{{ jogo.chaveamento_url }}" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition border border-blue-100 shrink-0" title="Ver Chaveamento da Modalidade">
+                                <span>Ver</span>
+                                <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-xs">
+            <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="calendar-x" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-base font-bold text-slate-800">Nenhum jogo cadastrado</h3>
+            <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Os confrontos aparecerão aqui conforme os chaveamentos forem gerados pela Comissão.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Mensagem de Nenhum Resultado na Busca/Filtros -->
+    <div id="sem-resultados" class="hidden bg-white border border-slate-200 rounded-3xl p-12 text-center shadow-xs">
+        <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-3">
+            <i data-lucide="filter-x" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">Nenhum jogo encontrado</h3>
+        <p class="text-xs text-slate-400 mt-1">Tente remover filtros ou pesquisar por outro termo.</p>
+    </div>
+
+</div>
+
+<!-- Toast Compartilhamento Flutuante (caso não esteja usando o base_share) -->
+<div id="toast-share-local" class="fixed bottom-5 right-5 z-50 transition-all duration-300 transform translate-y-12 opacity-0 pointer-events-none">
+    <div class="bg-slate-900 text-white border border-slate-700 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 text-xs font-semibold">
+        <i data-lucide="check-circle-2" class="text-emerald-400 text-base"></i>
+        <span>Link copiado para a área de transferência!</span>
+    </div>
+</div>
+
+<script>
+let diaSelecionado = 'todos';
+
+function filtrarPorDia(diaIso, btn) {
+    diaSelecionado = diaIso;
+
+    // Atualiza classes ativas nos botões
+    document.querySelectorAll('.btn-filtro-dia').forEach(b => {
+        b.className = 'btn-filtro-dia px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700';
+    });
+    if (btn) {
+        btn.className = 'btn-filtro-dia px-3.5 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-blue-600 text-white shadow-xs';
+    }
+
+    const labelSpan = document.getElementById('filtro-dia-ativo-label');
+    if (labelSpan) {
+        if (diaIso === 'todos') {
+            labelSpan.textContent = 'Todos os dias';
+        } else if (diaIso === 'indefinido') {
+            labelSpan.textContent = 'Data a Definir';
+        } else {
+            labelSpan.textContent = 'Dia ' + btn.textContent.trim().split(' ')[0];
+        }
+    }
+
+    aplicarFiltros();
+}
+
+function aplicarFiltros() {
+    const query = (document.getElementById('campo-busca')?.value || '').toLowerCase().trim();
+    const modId = document.getElementById('filtro-modalidade')?.value || 'todas';
+    const statusVal = document.getElementById('filtro-status')?.value || 'todos';
+
+    const blocosDia = document.querySelectorAll('.dia-bloco');
+    let totalJogosVisiveis = 0;
+
+    blocosDia.forEach(bloco => {
+        const blocoDia = bloco.getAttribute('data-dia');
+        const cards = bloco.querySelectorAll('.jogo-card');
+        let visiveisNoBloco = 0;
+
+        // Verifica se o bloco de dia combina com a seleção
+        const diaBate = (diaSelecionado === 'todos') || (blocoDia === diaSelecionado);
+
+        cards.forEach(card => {
+            if (!diaBate) {
+                card.style.display = 'none';
+                return;
+            }
+
+            const cardModId = card.getAttribute('data-mod-id');
+            const cardStatus = card.getAttribute('data-status');
+            const cardText = card.getAttribute('data-search-text') || '';
+
+            const modBate = (modId === 'todas') || (cardModId === modId);
+            const statusBate = (statusVal === 'todos') || (cardStatus === statusVal);
+            const queryBate = !query || cardText.includes(query);
+
+            if (modBate && statusBate && queryBate) {
+                card.style.display = '';
+                visiveisNoBloco++;
+                totalJogosVisiveis++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Oculta o bloco de dia se nenhum jogo nele estiver visível
+        bloco.style.display = (visiveisNoBloco > 0) ? '' : 'none';
+    });
+
+    const semResultados = document.getElementById('sem-resultados');
+    if (semResultados) {
+        semResultados.style.display = (totalJogosVisiveis === 0) ? 'block' : 'none';
+    }
+}
+
+function copiarLinkPublico() {
+    const url = window.location.origin + "{% url 'chaveamento_jogos_lista' %}?public=1";
+    if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(mostrarToast).catch(() => fallbackCopiar(url));
+    } else {
+        fallbackCopiar(url);
+    }
+}
+
+function fallbackCopiar(text) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+        document.execCommand('copy');
+        mostrarToast();
+    } catch (e) {
+        prompt('Copie o link abaixo:', text);
+    }
+    document.body.removeChild(ta);
+}
+
+function mostrarToast() {
+    // Tenta primeiro o toast global (se base_share)
+    const tGlobal = document.getElementById('toast-share');
+    if (tGlobal) {
+        tGlobal.classList.remove('opacity-0', 'translate-x-12', 'pointer-events-none');
+        setTimeout(() => {
+            tGlobal.classList.add('opacity-0', 'translate-x-12', 'pointer-events-none');
+        }, 3000);
+        return;
+    }
+
+    // Toast local
+    const t = document.getElementById('toast-share-local');
+    if (t) {
+        t.classList.remove('opacity-0', 'translate-y-12', 'pointer-events-none');
+        setTimeout(() => {
+            t.classList.add('opacity-0', 'translate-y-12', 'pointer-events-none');
+        }, 3000);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+});
+</script>
+{% endblock %}

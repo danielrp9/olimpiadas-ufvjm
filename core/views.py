@@ -4,7 +4,7 @@ from django.db import models
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
-from django.urls import reverse_lazy
+from django.urls import reverse, reverse_lazy
 from django.contrib import messages
 from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade, Recurso, RecursoMensagem, Notificacao, ConfiguracaoPeriodoInscricao
 from .forms import RegisterForm, AtletaForm, JogoForm, ModalidadeForm, ConfiguracaoPeriodoInscricaoForm
@@ -2591,6 +2591,243 @@ def chaveamento_share_view(request, pk):
         'grupos': grupos,
         'partidas_por_fase': partidas_por_fase,
     })
+
+
+class ChaveamentoJogosListaView(View):
+    """
+    Lista todos os jogos do chaveamento em formato cronológico
+    agrupados por data/dia. Acessível publicamente (sem login) e integrado ao painel
+    para Comissão e Delegações.
+    """
+    def get(self, request):
+        is_public = (not request.user.is_authenticated) or (request.GET.get('public') == '1')
+        base_template = 'core/chaveamento_share_base.html' if is_public else 'base.html'
+
+        # Determina URL para voltar
+        if not is_public:
+            if getattr(request.user, 'is_comissao', False) or request.user.is_staff:
+                voltar_url = reverse('chaveamento_admin_list')
+            else:
+                voltar_url = reverse('chaveamento_public_list')
+        else:
+            voltar_url = reverse('chaveamento_share_list')
+
+        # 1. Busca todas as partidas de chaveamento
+        partidas_qs = PartidaChaveamento.objects.select_related(
+            'chaveamento__modalidade',
+            'grupo',
+            'time_a',
+            'time_b',
+            'vencedor',
+            'jogo'
+        ).all()
+
+        # 2. Busca jogos avulsos sem partida de chaveamento vinculada
+        jogos_avulsos_qs = Jogo.objects.filter(
+            partida_chaveamento__isnull=True
+        ).select_related('modalidade', 'time_a', 'time_b').all()
+
+        import datetime
+        DIAS_SEMANA = [
+            'Segunda-feira', 'Terça-feira', 'Quarta-feira',
+            'Quinta-feira', 'Sexta-feira', 'Sábado', 'Domingo'
+        ]
+
+        def formatar_time_display_local(time_obj, partida, posicao='a'):
+            if time_obj:
+                return time_obj.nome_delegacao or time_obj.nome_completo or time_obj.email
+            fase = partida.fase if partida else ''
+            if fase == 'QUARTAS_LOCAL':
+                return f"A definir (Quartas - Time {posicao.upper()})"
+            elif fase in ['SEMI_LOCAL', 'SEMI_GERAL']:
+                return f"A definir (Semi - Time {posicao.upper()})"
+            elif fase in ['FINAL_LOCAL', 'FINAL_GERAL']:
+                return f"A definir (Final - Time {posicao.upper()})"
+            elif fase in ['DISPUTA_3_LOCAL', 'BRONZE']:
+                return f"A definir (3º Lugar - Time {posicao.upper()})"
+            elif fase == 'EXTERNO_ELIMINATORIA':
+                return f"A definir (Eliminatória - Time {posicao.upper()})"
+            return f"A definir (Time {posicao.upper()})"
+
+        todos_jogos = []
+
+        for p in partidas_qs:
+            mod = p.modalidade
+            if not mod:
+                continue
+
+            # Data
+            data = p.data_partida
+            if not data and p.jogo and p.jogo.data_jogo:
+                data = p.jogo.data_jogo
+            if not data and p.chaveamento and getattr(p.chaveamento, 'datas_fases', None):
+                df = p.chaveamento.datas_fases.get(p.fase)
+                if df:
+                    try:
+                        data = datetime.datetime.strptime(df, '%Y-%m-%d').date()
+                    except ValueError:
+                        pass
+
+            # Horário
+            horario = p.horario_partida
+            if not horario and p.jogo and p.jogo.horario_jogo:
+                horario = p.jogo.horario_jogo
+
+            # Local
+            local = None
+            if p.jogo and p.jogo.local:
+                local = p.jogo.local
+            if not local:
+                local = "Local a definir"
+
+            # URL do chaveamento correspondente
+            chaveamento_url = None
+            if mod:
+                if not is_public and (getattr(request.user, 'is_comissao', False) or request.user.is_staff):
+                    chaveamento_url = reverse('chaveamento_admin_detail', kwargs={'pk': mod.pk})
+                elif not is_public:
+                    chaveamento_url = reverse('chaveamento_public_detail', kwargs={'pk': mod.pk})
+                else:
+                    chaveamento_url = reverse('chaveamento_share', kwargs={'pk': mod.pk})
+
+            todos_jogos.append({
+                'id': f"P-{p.id}",
+                'pk': p.id,
+                'modalidade': mod,
+                'fase_display': p.get_fase_display(),
+                'grupo_display': p.grupo.nome if p.grupo else '',
+                'rodada': p.rodada,
+                'time_a': p.time_a,
+                'time_a_nome': formatar_time_display_local(p.time_a, p, 'a'),
+                'time_b': p.time_b,
+                'time_b_nome': formatar_time_display_local(p.time_b, p, 'b'),
+                'data': data,
+                'data_exibicao': data.strftime('%d/%m/%Y') if data else 'A definir',
+                'horario': horario,
+                'horario_exibicao': horario.strftime('%H:%M') if horario else 'A definir',
+                'local': local,
+                'placar_a': p.placar_a,
+                'placar_b': p.placar_b,
+                'finalizada': p.finalizada,
+                'wo_tipo': p.wo_tipo,
+                'motivo_wo': p.motivo_wo,
+                'is_wo': p.is_wo,
+                'is_wo_time_a': p.is_wo_time_a,
+                'is_wo_time_b': p.is_wo_time_b,
+                'is_wo_duplo': p.is_wo_duplo,
+                'vencedor': p.vencedor,
+                'chaveamento_url': chaveamento_url,
+            })
+
+        for j in jogos_avulsos_qs:
+            mod = j.modalidade
+            if not mod:
+                continue
+
+            chaveamento_url = None
+            if hasattr(mod, 'chaveamento'):
+                if not is_public and (getattr(request.user, 'is_comissao', False) or request.user.is_staff):
+                    chaveamento_url = reverse('chaveamento_admin_detail', kwargs={'pk': mod.pk})
+                elif not is_public:
+                    chaveamento_url = reverse('chaveamento_public_detail', kwargs={'pk': mod.pk})
+                else:
+                    chaveamento_url = reverse('chaveamento_share', kwargs={'pk': mod.pk})
+
+            ta_nome = j.time_a.nome_delegacao or j.time_a.nome_completo or j.time_a.email if j.time_a else "A definir"
+            tb_nome = j.time_b.nome_delegacao or j.time_b.nome_completo or j.time_b.email if j.time_b else "A definir"
+
+            todos_jogos.append({
+                'id': f"J-{j.id}",
+                'pk': j.id,
+                'modalidade': mod,
+                'fase_display': 'Partida Geral',
+                'grupo_display': '',
+                'rodada': None,
+                'time_a': j.time_a,
+                'time_a_nome': ta_nome,
+                'time_b': j.time_b,
+                'time_b_nome': tb_nome,
+                'data': j.data_jogo,
+                'data_exibicao': j.data_jogo.strftime('%d/%m/%Y') if j.data_jogo else 'A definir',
+                'horario': j.horario_jogo,
+                'horario_exibicao': j.horario_jogo.strftime('%H:%M') if j.horario_jogo else 'A definir',
+                'local': j.local or "Local a definir",
+                'placar_a': j.placar_time_a,
+                'placar_b': j.placar_time_b,
+                'finalizada': j.finalizado,
+                'wo_tipo': j.wo_tipo,
+                'motivo_wo': j.motivo_wo,
+                'is_wo': j.is_wo,
+                'is_wo_time_a': j.is_wo_time_a,
+                'is_wo_time_b': j.is_wo_time_b,
+                'is_wo_duplo': j.is_wo_duplo,
+                'vencedor': None,
+                'chaveamento_url': chaveamento_url,
+            })
+
+        # Ordenação cronológica global
+        def sort_key(item):
+            has_date = 0 if item['data'] is not None else 1
+            d = item['data'] or datetime.date.max
+            has_time = 0 if item['horario'] is not None else 1
+            h = item['horario'] or datetime.time.max
+            m_nome = item['modalidade'].nome if item['modalidade'] else ''
+            return (has_date, d, has_time, h, m_nome, item['id'])
+
+        todos_jogos.sort(key=sort_key)
+
+        from collections import OrderedDict
+        grupos_dias_dict = OrderedDict()
+        modalidades_encontradas = {}
+
+        for j in todos_jogos:
+            d = j['data']
+            if d not in grupos_dias_dict:
+                grupos_dias_dict[d] = []
+            grupos_dias_dict[d].append(j)
+
+            if j['modalidade']:
+                modalidades_encontradas[j['modalidade'].pk] = j['modalidade']
+
+        grupos_dias = []
+        for d, jogos_do_dia in grupos_dias_dict.items():
+            if d is not None:
+                dia_semana = DIAS_SEMANA[d.weekday()]
+                label = f"{d.strftime('%d/%m/%Y')} • {dia_semana}"
+                data_iso = d.strftime('%Y-%m-%d')
+                data_curta = d.strftime('%d/%m')
+            else:
+                dia_semana = ''
+                label = "Data a Definir"
+                data_iso = "indefinido"
+                data_curta = "A definir"
+
+            grupos_dias.append({
+                'data': d,
+                'data_iso': data_iso,
+                'data_curta': data_curta,
+                'dia_semana': dia_semana,
+                'label': label,
+                'is_indefinido': d is None,
+                'total_jogos': len(jogos_do_dia),
+                'jogos': jogos_do_dia
+            })
+
+        total_jogos = len(todos_jogos)
+        total_finalizados = sum(1 for j in todos_jogos if j['finalizada'] or j['is_wo'])
+        total_pendentes = total_jogos - total_finalizados
+
+        return render(request, 'core/chaveamento_jogos_lista.html', {
+            'base_template': base_template,
+            'is_public': is_public,
+            'voltar_url': voltar_url,
+            'grupos_dias': grupos_dias,
+            'modalidades_lista': sorted(modalidades_encontradas.values(), key=lambda m: m.nome),
+            'total_jogos': total_jogos,
+            'total_finalizados': total_finalizados,
+            'total_pendentes': total_pendentes,
+            'total_dias': len([g for g in grupos_dias if not g['is_indefinido']]),
+        })
 
 
 

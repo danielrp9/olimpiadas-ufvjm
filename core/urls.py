@@ -91,4 +91,5 @@ urlpatterns = [
     path('chaveamento/<int:pk>/', views.ChaveamentoPublicDetailView.as_view(), name='chaveamento_public_detail'),
     path('chaveamentos/compartilhar/', views.chaveamento_share_list_view, name='chaveamento_share_list'),
     path('chaveamento/compartilhar/<int:pk>/', views.chaveamento_share_view, name='chaveamento_share'),
+    path('chaveamentos/jogos/', views.ChaveamentoJogosListaView.as_view(), name='chaveamento_jogos_lista'),
 ]

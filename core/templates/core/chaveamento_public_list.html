@@ -27,10 +27,15 @@
         <div class="absolute left-1/3 -bottom-10 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
 
         <div class="relative z-10 w-full sm:w-auto">
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Chaveamento de partidas</h1>
+            <h1 class="text-2xl sm:text-3xl font-black tracking-tight">Chaveamentos</h1>
         </div>
         
         <div class="relative z-10 flex flex-wrap items-center gap-3">
+            <!-- Botão Ver Jogos em Lista -->
+            <a href="{% url 'chaveamento_jogos_lista' %}" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 shrink-0 cursor-pointer" title="Ver todos os jogos em formato de lista por dia">
+                <i data-lucide="list" class="text-white text-sm"></i> Jogos em Lista
+            </a>
+
             <!-- Botão de Compartilhar (Padrão de estilo 'Imprimir Relatório') -->
             <button type="button" onclick="abrirModalCompartilhamento('{% url 'chaveamento_share_list' %}', 'Todas as Modalidades - UFVJM')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
                 <i data-lucide="share-2" class="text-amber-400 text-sm"></i> Compartilhar Chaveamentos
