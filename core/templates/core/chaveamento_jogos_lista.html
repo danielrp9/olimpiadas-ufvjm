@@ -66,28 +66,33 @@
     </div>
     {% endif %}
 
-    <!-- Métricas Resumidas -->
-    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Total de Jogos</span>
-            <span class="text-xl sm:text-2xl font-black text-slate-900 mt-1 block">{{ total_jogos }}</span>
-        </div>
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Dias de Jogos</span>
-            <span class="text-xl sm:text-2xl font-black text-blue-600 mt-1 block">{{ total_dias }}</span>
-        </div>
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Encerrados</span>
-            <span class="text-xl sm:text-2xl font-black text-emerald-600 mt-1 block">{{ total_finalizados }}</span>
-        </div>
-        <div class="bg-white border border-slate-200/80 rounded-2xl p-3.5 shadow-2xs">
-            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">A Disputar</span>
-            <span class="text-xl sm:text-2xl font-black text-amber-600 mt-1 block">{{ total_pendentes }}</span>
-        </div>
-    </div>
-
-    <!-- Barra de Filtros e Busca Rápida -->
+    <!-- Barra de Filtros e Busca Rápida com Quantitativo Integrado -->
     <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
+        <!-- Resumo Quantitativo Discreto e Integrado -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2 flex-wrap">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-black bg-blue-50 text-blue-700 border border-blue-200/70">
+                    <i data-lucide="trophy" class="w-3.5 h-3.5 text-blue-600"></i>
+                    {{ total_jogos }} jogo{{ total_jogos|pluralize }} programado{{ total_jogos|pluralize }}
+                </span>
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200/80">
+                    <i data-lucide="calendar" class="w-3 h-3 text-slate-500"></i>
+                    {{ total_dias }} dia{{ total_dias|pluralize }} de jogos
+                </span>
+            </div>
+
+            <div class="flex items-center gap-3 text-xs font-bold">
+                <span class="inline-flex items-center gap-1.5 text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-lg border border-emerald-200/60">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    {{ total_finalizados }} encerrado{{ total_finalizados|pluralize }}
+                </span>
+                <span class="inline-flex items-center gap-1.5 text-amber-700 bg-amber-50 px-2.5 py-0.5 rounded-lg border border-amber-200/60">
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                    {{ total_pendentes }} a disputar
+                </span>
+            </div>
+        </div>
+
         <!-- Filtro Rápido por Dia (Pills) -->
         <div>
             <div class="flex items-center justify-between gap-2 mb-2">
@@ -97,11 +102,11 @@
                 <span id="filtro-dia-ativo-label" class="text-[11px] font-semibold text-blue-600">Todos os dias</span>
             </div>
             <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
-                <button type="button" onclick="filtrarPorDia('todos', this)" class="btn-filtro-dia px-3.5 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-blue-600 text-white shadow-xs" data-dia="todos">
+                <button type="button" onclick="filtrarPorDia('todos', this)" class="btn-filtro-dia px-3.5 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-blue-600 text-white shadow-xs cursor-pointer" data-dia="todos">
                     Todos os Dias <span class="ml-1 opacity-80 text-[10px]">({{ total_jogos }})</span>
                 </button>
                 {% for g in grupos_dias %}
-                <button type="button" onclick="filtrarPorDia('{{ g.data_iso }}', this)" class="btn-filtro-dia px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700" data-dia="{{ g.data_iso }}">
+                <button type="button" onclick="filtrarPorDia('{{ g.data_iso }}', this)" class="btn-filtro-dia px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer" data-dia="{{ g.data_iso }}">
                     {{ g.data_curta }} <span class="ml-1 text-[10px] text-slate-400">({{ g.total_jogos }})</span>
                 </button>
                 {% endfor %}
@@ -144,20 +149,24 @@
     <div id="container-dias" class="space-y-8">
         {% for g in grupos_dias %}
         <div id="dia-bloco-{{ g.data_iso }}" class="dia-bloco space-y-3" data-dia="{{ g.data_iso }}">
-            <!-- Cabeçalho do Dia -->
-            <div class="flex items-center justify-between gap-3 bg-gradient-to-r from-slate-900 to-slate-800 text-white px-4 sm:px-6 py-3 rounded-2xl shadow-sm">
-                <div class="flex items-center gap-2.5 min-w-0">
-                    <i data-lucide="calendar" class="w-4 h-4 text-blue-400 shrink-0"></i>
-                    <h3 class="text-xs sm:text-sm font-black tracking-tight uppercase truncate">
+            <!-- Cabeçalho do Dia (Quantitativo e Identificação do Dia) -->
+            <div class="flex items-center justify-between gap-3 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 text-white px-4 sm:px-6 py-3.5 rounded-2xl shadow-sm border border-slate-800">
+                <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-8 h-8 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center shrink-0">
+                        <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i>
+                    </div>
+                    <h3 class="text-xs sm:text-sm font-black tracking-tight uppercase truncate text-white">
                         {{ g.label|safe }}
                     </h3>
                 </div>
-                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-white/10 text-slate-200 border border-white/10 shrink-0">
-                    {{ g.total_jogos }} jogo{{ g.total_jogos|pluralize }}
-                </span>
+                <div class="flex items-center gap-2 shrink-0">
+                    <span class="px-3 py-1 rounded-full text-[11px] font-black bg-white/10 text-slate-200 border border-white/15 shadow-inner">
+                        {{ g.total_jogos }} jogo{{ g.total_jogos|pluralize }} neste dia
+                    </span>
+                </div>
             </div>
 
-            <!-- Lista de Partidas do Dia -->
+            <!-- Lista de Partidas do Dia (Confrontos em Destaque) -->
             <div class="space-y-2.5">
                 {% for jogo in g.jogos %}
                 <div class="jogo-card"
@@ -166,72 +175,79 @@
                      data-search-text="{{ jogo.modalidade.nome|lower }} {{ jogo.time_a_nome|lower }} {{ jogo.time_b_nome|lower }} {{ jogo.local|lower }} {{ jogo.fase_display|lower }} {{ jogo.grupo_display|lower }}">
 
                     <!-- ============================================== -->
-                    <!-- VISUALIZAÇÃO MOBILE (block sm:hidden)           -->
-                    <!-- Totalmente adaptada para caber sem rolagem     -->
+                    <!-- VISUALIZAÇÃO MOBILE (block md:hidden)           -->
+                    <!-- Sem rolagem horizontal, foco total no confronto -->
                     <!-- ============================================== -->
-                    <div class="block sm:hidden bg-white rounded-2xl border border-slate-200/90 p-3 shadow-xs space-y-2.5 transition hover:border-blue-300">
+                    <div class="block md:hidden bg-white rounded-2xl border border-slate-200/90 p-3.5 shadow-xs space-y-2.5 transition hover:border-blue-300">
                         <!-- Linha Superior: Modalidade + Horário & Local -->
                         <div class="flex items-center justify-between gap-2 text-xs">
-                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/70 truncate max-w-[50%] shrink-0" title="{{ jogo.modalidade.nome }}">
-                                {{ jogo.modalidade.nome }} ({{ jogo.modalidade.get_genero_display }})
-                            </span>
+                            <div class="flex items-center gap-1.5 min-w-0 truncate">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-black bg-blue-50 text-blue-700 border border-blue-200/70 truncate" title="{{ jogo.modalidade.nome }}">
+                                    {{ jogo.modalidade.nome }}
+                                </span>
+                                <span class="px-1.5 py-0.2 text-[9px] font-bold rounded bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                                    {{ jogo.modalidade.get_genero_display }}
+                                </span>
+                            </div>
                             <div class="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold shrink-0">
-                                <span class="inline-flex items-center gap-1 text-slate-800">
+                                <span class="inline-flex items-center gap-1 text-slate-900 font-black">
                                     <i data-lucide="clock" class="w-3 h-3 text-blue-600"></i>
                                     {{ jogo.horario_exibicao }}
                                 </span>
                                 <span class="text-slate-300">•</span>
-                                <span class="inline-flex items-center gap-1 text-slate-600 truncate max-w-[95px]" title="{{ jogo.local }}">
+                                <span class="inline-flex items-center gap-1 text-slate-600 truncate max-w-[100px]" title="{{ jogo.local }}">
                                     <i data-lucide="map-pin" class="w-3 h-3 text-emerald-600 shrink-0"></i>
                                     <span class="truncate">{{ jogo.local }}</span>
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Linha Central: Disputa (Confronto Direto) -->
-                        <div class="flex items-center justify-between gap-2 py-0.5">
-                            <div class="flex-1 text-right min-w-0">
-                                <span class="text-xs font-bold text-slate-800 truncate block {% if jogo.is_wo_time_a or jogo.is_wo_duplo %}line-through text-red-600{% endif %}" title="{{ jogo.time_a_nome }}">
+                        <!-- Linha Central: Confronto em Destaque Visual -->
+                        <div class="flex items-center justify-between gap-2 py-1.5 px-3 bg-slate-50/90 rounded-xl border border-slate-200/60">
+                            <div class="flex-1 text-right min-w-0 pr-1">
+                                <span class="text-xs font-black text-slate-900 truncate block {% if jogo.is_wo_time_a or jogo.is_wo_duplo %}line-through text-red-600{% endif %}" title="{{ jogo.time_a_nome }}">
                                     {{ jogo.time_a_nome }}
                                 </span>
                             </div>
 
                             <!-- Placar / VS Badge -->
-                            <div class="shrink-0 px-2.5 py-1 bg-slate-900 text-white rounded-xl text-center min-w-[50px] shadow-2xs">
+                            <div class="shrink-0 px-2.5 py-1 bg-slate-900 text-white rounded-xl text-center min-w-[56px] shadow-2xs">
                                 {% if jogo.is_wo_duplo %}
-                                    <span class="text-[10px] font-black text-red-300 uppercase block">D. W.O.</span>
+                                    <span class="text-[10px] font-black text-white block leading-none">0 x 0</span>
+                                    <span class="block text-[8px] text-red-400 font-bold uppercase mt-0.5">D. W.O.</span>
                                 {% elif jogo.is_wo %}
-                                    <span class="text-xs font-black">{{ jogo.placar_a|default:0 }}x{{ jogo.placar_b|default:0 }}</span>
-                                    <span class="block text-[8px] text-red-300 font-bold uppercase">W.O.</span>
+                                    <span class="text-xs font-black text-white leading-none">{{ jogo.placar_a|default:0 }}x{{ jogo.placar_b|default:0 }}</span>
+                                    <span class="block text-[8px] text-red-400 font-bold uppercase mt-0.5">W.O.</span>
                                 {% elif jogo.finalizada %}
-                                    <span class="text-xs font-black">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
+                                    <span class="text-xs font-black text-white">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
                                 {% else %}
-                                    <span class="text-xs font-bold text-slate-300">vs</span>
+                                    <span class="text-xs font-bold text-slate-300 uppercase">vs</span>
                                 {% endif %}
                             </div>
 
-                            <div class="flex-1 text-left min-w-0">
-                                <span class="text-xs font-bold text-slate-800 truncate block {% if jogo.is_wo_time_b or jogo.is_wo_duplo %}line-through text-red-600{% endif %}" title="{{ jogo.time_b_nome }}">
+                            <div class="flex-1 text-left min-w-0 pl-1">
+                                <span class="text-xs font-black text-slate-900 truncate block {% if jogo.is_wo_time_b or jogo.is_wo_duplo %}line-through text-red-600{% endif %}" title="{{ jogo.time_b_nome }}">
                                     {{ jogo.time_b_nome }}
                                 </span>
                             </div>
                         </div>
 
                         <!-- Linha Inferior: Fase e Status -->
-                        <div class="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-100 text-[10px] text-slate-400">
-                            <span class="truncate">{{ jogo.fase_display }}{% if jogo.grupo_display %} - {{ jogo.grupo_display }}{% endif %}</span>
+                        <div class="flex items-center justify-between gap-2 pt-1 border-t border-slate-100 text-[10px] text-slate-400">
+                            <span class="truncate font-medium text-slate-500">{{ jogo.fase_display }}{% if jogo.grupo_display %} &bull; {{ jogo.grupo_display }}{% endif %}</span>
                             <div class="flex items-center gap-1.5 shrink-0">
                                 {% if jogo.is_wo %}
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-red-50 text-red-700 border border-red-200">W.O.</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-red-50 text-red-700 border border-red-200">W.O.</span>
                                 {% elif jogo.finalizada %}
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">Encerrado</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200">Encerrado</span>
                                 {% else %}
-                                    <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Agendado</span>
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200">Agendado</span>
                                 {% endif %}
 
                                 {% if jogo.chaveamento_url %}
-                                <a href="{{ jogo.chaveamento_url }}" class="p-1 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Ver Chaveamento">
-                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                <a href="{{ jogo.chaveamento_url }}" class="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition font-bold" title="Ver Chaveamento">
+                                    <span>Ver</span>
+                                    <i data-lucide="arrow-right" class="w-3 h-3"></i>
                                 </a>
                                 {% endif %}
                             </div>
@@ -239,13 +255,13 @@
                     </div>
 
                     <!-- ============================================== -->
-                    <!-- VISUALIZAÇÃO DESKTOP (hidden sm:flex)           -->
-                    <!-- Ampla, elegante, sem quebra forçada de texto   -->
+                    <!-- VISUALIZAÇÃO DESKTOP (hidden md:flex)           -->
+                    <!-- Ampla, elegante, confronto em alto destaque     -->
                     <!-- ============================================== -->
-                    <div class="hidden sm:flex items-center justify-between gap-4 p-4 bg-white hover:bg-slate-50/80 rounded-2xl border border-slate-200/90 transition shadow-2xs">
+                    <div class="hidden md:flex items-center justify-between gap-4 p-4 bg-white hover:bg-slate-50/80 rounded-2xl border border-slate-200/90 transition shadow-2xs">
                         <!-- 1. Horário e Local -->
                         <div class="w-48 shrink-0 flex flex-col justify-center">
-                            <div class="flex items-center gap-1.5 text-xs font-black text-slate-800">
+                            <div class="flex items-center gap-1.5 text-xs font-black text-slate-900">
                                 <i data-lucide="clock" class="w-3.5 h-3.5 text-blue-600 shrink-0"></i>
                                 <span>{{ jogo.horario_exibicao }}</span>
                             </div>
@@ -258,7 +274,7 @@
                         <!-- 2. Modalidade & Categoria & Fase -->
                         <div class="w-56 shrink-0 flex flex-col justify-center">
                             <div class="flex items-center gap-1.5">
-                                <span class="text-xs font-bold text-slate-900 truncate" title="{{ jogo.modalidade.nome }}">
+                                <span class="text-xs font-black text-slate-900 truncate" title="{{ jogo.modalidade.nome }}">
                                     {{ jogo.modalidade.nome }}
                                 </span>
                                 <span class="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200 shrink-0">
@@ -271,16 +287,16 @@
                         </div>
 
                         <!-- 3. Confronto / Disputa Centralizado -->
-                        <div class="flex-1 flex items-center justify-center gap-3 min-w-0 px-2">
+                        <div class="flex-1 flex items-center justify-center gap-3 min-w-0 px-3 py-1.5 bg-slate-50/80 rounded-xl border border-slate-100">
                             <!-- Time A -->
                             <div class="flex-1 text-right min-w-0 truncate">
-                                <span class="text-sm font-bold text-slate-800 truncate block {% if jogo.is_wo_time_a or jogo.is_wo_duplo %}line-through text-red-600/80{% endif %}" title="{{ jogo.time_a_nome }}">
+                                <span class="text-sm font-black text-slate-900 truncate block {% if jogo.is_wo_time_a or jogo.is_wo_duplo %}line-through text-red-600/80{% endif %}" title="{{ jogo.time_a_nome }}">
                                     {{ jogo.time_a_nome }}
                                 </span>
                             </div>
 
                             <!-- Placar / VS Badge -->
-                            <div class="shrink-0 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-center min-w-[64px] shadow-2xs">
+                            <div class="shrink-0 px-3 py-1.5 bg-slate-900 text-white rounded-xl text-center min-w-[70px] shadow-2xs">
                                 {% if jogo.is_wo_duplo %}
                                     <span class="text-xs font-black text-white">0 x 0</span>
                                     <span class="block text-[8px] text-red-400 font-bold uppercase tracking-wider">Duplo W.O.</span>
@@ -290,13 +306,13 @@
                                 {% elif jogo.finalizada %}
                                     <span class="text-sm font-black text-white">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
                                 {% else %}
-                                    <span class="text-xs font-bold text-slate-400 italic">vs</span>
+                                    <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">vs</span>
                                 {% endif %}
                             </div>
 
                             <!-- Time B -->
                             <div class="flex-1 text-left min-w-0 truncate">
-                                <span class="text-sm font-bold text-slate-800 truncate block {% if jogo.is_wo_time_b or jogo.is_wo_duplo %}line-through text-red-600/80{% endif %}" title="{{ jogo.time_b_nome }}">
+                                <span class="text-sm font-black text-slate-900 truncate block {% if jogo.is_wo_time_b or jogo.is_wo_duplo %}line-through text-red-600/80{% endif %}" title="{{ jogo.time_b_nome }}">
                                     {{ jogo.time_b_nome }}
                                 </span>
                             </div>
@@ -305,11 +321,11 @@
                         <!-- 4. Status & Ação -->
                         <div class="w-44 shrink-0 flex items-center justify-end gap-2">
                             {% if jogo.is_wo %}
-                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-red-50 text-red-700 border border-red-200 shrink-0">
+                                <span class="px-2.5 py-1 text-[10px] font-black rounded-full bg-red-50 text-red-700 border border-red-200 shrink-0">
                                     W.O.
                                 </span>
                             {% elif jogo.finalizada %}
-                                <span class="px-2.5 py-1 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
+                                <span class="px-2.5 py-1 text-[10px] font-black rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">
                                     Encerrado
                                 </span>
                             {% else %}
@@ -319,7 +335,7 @@
                             {% endif %}
 
                             {% if jogo.chaveamento_url %}
-                            <a href="{{ jogo.chaveamento_url }}" class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition border border-blue-100 shrink-0" title="Ver Chaveamento da Modalidade">
+                            <a href="{{ jogo.chaveamento_url }}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-extrabold text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-xl transition border border-blue-100 shrink-0" title="Ver Chaveamento da Modalidade">
                                 <span>Ver</span>
                                 <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
                             </a>
