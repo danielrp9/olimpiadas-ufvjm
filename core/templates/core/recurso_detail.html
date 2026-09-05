@@ -26,6 +26,45 @@
         stroke-dashoffset: 24;
         animation: drawCheck 0.6s 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+
+    /* Regras explícitas de expansão/recolhimento de texto */
+    .message-content {
+        position: relative;
+        word-break: break-word;
+        transition: max-height 0.3s ease-in-out;
+    }
+    .message-content p {
+        white-space: pre-line;
+        word-break: break-word;
+        margin: 0;
+    }
+    .message-content.is-collapsed {
+        max-height: 160px !important;
+        overflow: hidden !important;
+    }
+    .message-content.is-expanded {
+        max-height: none !important;
+        overflow: visible !important;
+    }
+    .fade-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 60px;
+        pointer-events: none;
+        z-index: 10;
+        display: block;
+    }
+    .fade-overlay.is-hidden {
+        display: none !important;
+    }
+    .fade-overlay-blue {
+        background: linear-gradient(to top, rgba(239, 246, 255, 0.98), rgba(239, 246, 255, 0)) !important;
+    }
+    .fade-overlay-slate {
+        background: linear-gradient(to top, rgba(248, 250, 252, 0.98), rgba(248, 250, 252, 0)) !important;
+    }
 </style>
 
 <div class="space-y-6">
@@ -129,16 +168,16 @@
                 <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider">Argumentação Inicial</h4>
                 
                 <!-- Conteúdo Ocultável com "Ler mais" -->
-                <div class="bg-blue-50/40 rounded-2xl p-5 relative overflow-hidden">
-                    <div class="message-content max-h-48 overflow-hidden transition-all duration-300 relative" id="initial-argument">
-                        <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line break-words">{{ recurso.corpo }}</p>
+                <div class="bg-blue-50/40 rounded-2xl p-5 relative">
+                    <div class="message-content is-collapsed" id="initial-argument">
+                        <p class="text-xs text-slate-700 leading-relaxed">{{ recurso.corpo }}</p>
                         
                         <!-- Overlay de Gradiente de Fade Out -->
-                        <div class="fade-overlay absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-blue-50/90 to-transparent pointer-events-none"></div>
+                        <div class="fade-overlay fade-overlay-blue is-hidden"></div>
                     </div>
                     
                     <!-- Botão de Ler mais / Ler menos -->
-                    <div class="mt-3 text-center toggle-btn-container hidden">
+                    <div class="mt-3 text-center toggle-btn-container" style="display: none;">
                         <button type="button" onclick="toggleMessage('initial-argument', this)" class="inline-flex items-center text-[11px] font-bold text-blue-600 hover:text-blue-700 bg-white hover:bg-slate-50 px-3.5 py-1.5 border border-blue-200/80 rounded-xl transition shadow-xs gap-1.5 active:scale-95 cursor-pointer focus:outline-none">
                             <span>Ler mais</span> <i data-lucide="chevron-down" class="text-xs"></i>
                         </button>
@@ -194,16 +233,16 @@
                     </div>
 
                     <!-- Conteúdo Ocultável com "Ler mais" -->
-                    <div class="relative overflow-hidden">
-                        <div class="message-content max-h-48 overflow-hidden transition-all duration-300 relative" id="msg-{{ msg.id }}">
-                            <p class="text-xs text-slate-700 leading-relaxed whitespace-pre-line break-words">{{ msg.texto }}</p>
+                    <div class="relative">
+                        <div class="message-content is-collapsed" id="msg-{{ msg.id }}">
+                            <p class="text-xs text-slate-700 leading-relaxed">{{ msg.texto }}</p>
                             
                             <!-- Overlay de Gradiente de Fade Out -->
-                            <div class="fade-overlay absolute bottom-0 left-0 right-0 h-14 bg-gradient-to-t from-white to-transparent pointer-events-none"></div>
+                            <div class="fade-overlay {% if msg.remetente.is_comissao %}fade-overlay-blue{% else %}fade-overlay-slate{% endif %} is-hidden"></div>
                         </div>
                         
                         <!-- Botão de Ler mais / Ler menos -->
-                        <div class="mt-3 text-center toggle-btn-container hidden">
+                        <div class="mt-3 text-center toggle-btn-container" style="display: none;">
                             <button type="button" onclick="toggleMessage('msg-{{ msg.id }}', this)" class="inline-flex items-center text-[10px] font-bold text-slate-600 hover:text-slate-800 bg-slate-50 hover:bg-slate-100 px-3 py-1.5 border border-slate-200 rounded-xl transition shadow-xs gap-1.5 active:scale-95 cursor-pointer focus:outline-none">
                                 <span>Ler mais</span> <i data-lucide="chevron-down" class="text-xs"></i>
                             </button>
@@ -342,20 +381,22 @@
 
             if (!innerText) return;
 
-            // Se o usuário já expandiu este elemento, preserva seu estado
+            // Se o usuário já expandiu este elemento, preserva seu estado expandido
             if (container.classList.contains('is-expanded')) {
                 return;
             }
 
-            // Limite de altura compacta (max-h-48 = 192px)
-            const threshold = 180;
+            // Altura total real do texto
+            const fullHeight = Math.max(innerText.scrollHeight, innerText.offsetHeight, container.scrollHeight);
+            const threshold = 160;
 
-            if (innerText.scrollHeight > threshold) {
-                container.classList.add('max-h-48', 'overflow-hidden');
-                container.classList.remove('max-h-none');
-                if (overlay) overlay.classList.remove('hidden');
+            if (fullHeight > threshold + 25) {
+                // Texto extenso: limita altura e exibe botão "Ler mais"
+                container.classList.add('is-collapsed');
+                container.classList.remove('is-expanded');
+                if (overlay) overlay.classList.remove('is-hidden');
                 if (btnContainer) {
-                    btnContainer.classList.remove('hidden');
+                    btnContainer.style.display = 'block';
                     const textSpan = btnContainer.querySelector('span');
                     if (textSpan) textSpan.textContent = "Ler mais";
                     const curIcon = btnContainer.querySelector('i, svg');
@@ -365,10 +406,12 @@
                     }
                 }
             } else {
-                container.classList.remove('max-h-48', 'overflow-hidden');
-                container.classList.add('max-h-none');
-                if (overlay) overlay.classList.add('hidden');
-                if (btnContainer) btnContainer.classList.add('hidden');
+                // Texto curto: não necessita de botão nem recolhimento
+                container.classList.remove('is-collapsed', 'is-expanded');
+                if (overlay) overlay.classList.add('is-hidden');
+                if (btnContainer) {
+                    btnContainer.style.display = 'none';
+                }
             }
         });
     }
@@ -383,9 +426,9 @@
 
         if (!isExpanded) {
             // Expandir totalmente para exibir todo o conteúdo
-            container.classList.remove('max-h-48', 'overflow-hidden');
-            container.classList.add('max-h-none', 'is-expanded');
-            if (overlay) overlay.classList.add('hidden');
+            container.classList.remove('is-collapsed');
+            container.classList.add('is-expanded');
+            if (overlay) overlay.classList.add('is-hidden');
             if (textSpan) textSpan.textContent = "Ler menos";
             const curIcon = button.querySelector('i, svg');
             if (curIcon) {
@@ -394,9 +437,9 @@
             }
         } else {
             // Recolher de volta ao tamanho compacto
-            container.classList.remove('max-h-none', 'is-expanded');
-            container.classList.add('max-h-48', 'overflow-hidden');
-            if (overlay) overlay.classList.remove('hidden');
+            container.classList.remove('is-expanded');
+            container.classList.add('is-collapsed');
+            if (overlay) overlay.classList.remove('is-hidden');
             if (textSpan) textSpan.textContent = "Ler mais";
             const curIcon = button.querySelector('i, svg');
             if (curIcon) {
@@ -419,5 +462,7 @@
     }
     window.addEventListener('load', checkAllExpandables);
     window.addEventListener('resize', checkAllExpandables);
+    setTimeout(checkAllExpandables, 50);
+    setTimeout(checkAllExpandables, 250);
 </script>
 {% endblock %}
