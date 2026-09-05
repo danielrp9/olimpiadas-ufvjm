@@ -26,8 +26,8 @@
 
         <div class="relative z-10 min-w-0">
             <div class="flex items-center gap-3">
-                <a href="{{ voltar_url }}" class="text-slate-400 hover:text-white transition flex items-center justify-center p-1 shrink-0" title="Voltar aos Chaveamentos">
-                    <i data-lucide="arrow-left" class="text-lg"></i>
+                <a href="{{ voltar_url }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center transition shrink-0 active:scale-95 cursor-pointer shadow-xs" title="Voltar aos Chaveamentos">
+                    <i data-lucide="arrow-left" class="w-4 h-4 sm:w-5 sm:h-5 pointer-events-none"></i>
                 </a>
                 <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">Jogos em Lista</h1>
             </div>
@@ -57,7 +57,12 @@
                     Visão Geral Cronológica
                 </span>
             </div>
-            <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Programação de Jogos por Dia</h2>
+            <div class="flex items-center gap-3">
+                <a href="{{ voltar_url }}" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center justify-center transition shrink-0 active:scale-95 cursor-pointer" title="Voltar aos Chaveamentos">
+                    <i data-lucide="arrow-left" class="w-4 h-4 text-slate-600 pointer-events-none"></i>
+                </a>
+                <h2 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">Programação de Jogos por Dia</h2>
+            </div>
             <p class="text-xs text-slate-500 mt-0.5">Confira datas, horários, locais e confrontos de todas as modalidades da competição.</p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
