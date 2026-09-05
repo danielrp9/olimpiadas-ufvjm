@@ -253,6 +253,14 @@ class PreSumula(models.Model):
         verbose_name_plural = "Pré-Súmulas"
         unique_together = ('jogo', 'representante')
 
+    @property
+    def escalacao_ordenada(self):
+        """
+        Retorna a lista de atletas escalados ordenada dinamicamente
+        pelo número da camisa em ordem crescente (do menor para o maior).
+        """
+        return self.escalacao.all().select_related('atleta').order_by('numero_camisa', 'atleta__nome_completo')
+
     def __str__(self):
         return f"Pré-Súmula de {self.representante.nome_delegacao or self.representante.email} para o Jogo: {self.jogo}"
 
@@ -270,6 +278,7 @@ class PreSumulaAtleta(models.Model):
         unique_together = ('presumula', 'atleta')
         verbose_name = "Atleta Escalado"
         verbose_name_plural = "Atletas Escalados"
+        ordering = ['numero_camisa', 'atleta__nome_completo']
 
     def __str__(self):
         return f"Atleta {self.atleta.nome_completo} - Camisa {self.numero_camisa}"

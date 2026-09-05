@@ -1787,6 +1787,39 @@ class PreSumulaManagementTests(TestCase):
         jogo_teste.refresh_from_db()
         self.assertEqual(jogo_teste.horario_jogo, datetime.time(10, 0))
 
+    def test_escalacao_ordenada_por_numero_camisa(self):
+        from core.models import Atleta, PreSumulaAtleta
+        from django.urls import reverse
+
+        # Cria atletas e escala com camisas fora de ordem
+        a1 = Atleta.objects.create(nome_completo='Atleta Camisa 99', cadastrado_por=self.delegate, em_conformidade=True)
+        a2 = Atleta.objects.create(nome_completo='Atleta Camisa 4', cadastrado_por=self.delegate, em_conformidade=True)
+        a3 = Atleta.objects.create(nome_completo='Atleta Camisa 10', cadastrado_por=self.delegate, em_conformidade=True)
+        a4 = Atleta.objects.create(nome_completo='Atleta Camisa 1', cadastrado_por=self.delegate, em_conformidade=True)
+
+        PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a1, numero_camisa=99)
+        PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a2, numero_camisa=4)
+        PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a3, numero_camisa=10)
+        PreSumulaAtleta.objects.create(presumula=self.presumula1, atleta=a4, numero_camisa=1)
+
+        # Verifica ordenação via property escalacao_ordenada
+        camisas_ordenadas = [pa.numero_camisa for pa in self.presumula1.escalacao_ordenada]
+        self.assertEqual(camisas_ordenadas, [1, 4, 10, 99])
+
+        # Verifica na view presumula_detail para a comissão
+        self.client.force_login(self.staff)
+        response = self.client.get(reverse('presumula_detail', kwargs={'pk': self.presumula1.pk}))
+        self.assertEqual(response.status_code, 200)
+
+        # Na renderização, o número 1 deve aparecer antes do 4, que deve aparecer antes do 10 e do 99
+        content = response.content.decode('utf-8')
+        pos_1 = content.find('>1<') if '>1<' in content else content.find('1')
+        pos_4 = content.find('>4<') if '>4<' in content else content.find('4')
+        pos_10 = content.find('>10<') if '>10<' in content else content.find('10')
+        pos_99 = content.find('>99<') if '>99<' in content else content.find('99')
+        self.assertTrue(pos_1 < pos_4 < pos_10 < pos_99)
+
+
 
 
 

@@ -956,6 +956,12 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
                 atleta.is_escalado = False
                 atleta.camisa = ""
 
+        # Ordena dinamicamente: escalados primeiro (por número de camisa crescente), seguidos pelos não escalados
+        atletas = sorted(
+            atletas,
+            key=lambda a: (0 if a.is_escalado else 1, int(a.camisa) if (a.is_escalado and str(a.camisa).isdigit()) else 999999, a.nome_completo)
+        )
+
         return render(request, 'core/presumula_form.html', {
             'presumula': presumula,
             'jogo': jogo,
@@ -1003,7 +1009,13 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
             for a in atletas:
                 a.is_escalado = str(a.id) in atleta_ids
                 a.camisa = request.POST.get(f'camisa_{a.id}', '')
-                
+
+            # Ordena dinamicamente: escalados primeiro (por número de camisa crescente), seguidos pelos não escalados
+            atletas = sorted(
+                atletas,
+                key=lambda a: (0 if a.is_escalado else 1, int(a.camisa) if (a.is_escalado and str(a.camisa).isdigit()) else 999999, a.nome_completo)
+            )
+
             return render(request, 'core/presumula_form.html', {
                 'presumula': presumula,
                 'jogo': jogo,

@@ -715,7 +715,7 @@ class APIPreSumulasView(View):
                 
             for ps in presumulas:
                 escalacao = []
-                for pa in ps.escalacao.all().select_related('atleta'):
+                for pa in ps.escalacao_ordenada:
                     escalacao.append({
                         'atleta': atleta_to_dict(pa.atleta),
                         'numero_camisa': pa.numero_camisa
@@ -813,7 +813,7 @@ class APIPreSumulaDetailView(View):
             return JsonResponse({'error': 'Não autorizado'}, status=403)
             
         escalacao = []
-        for pa in presumula.escalacao.all().select_related('atleta'):
+        for pa in presumula.escalacao_ordenada:
             escalacao.append({
                 'atleta': atleta_to_dict(pa.atleta),
                 'numero_camisa': pa.numero_camisa
