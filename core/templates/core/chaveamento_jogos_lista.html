@@ -25,24 +25,26 @@
         </div>
 
         <div class="relative z-10 min-w-0">
-            <div class="flex items-center gap-3 mb-2">
-                <a href="{{ voltar_url }}" class="inline-flex items-center gap-1.5 text-xs font-bold text-slate-300 hover:text-white bg-white/10 hover:bg-white/15 px-3 py-1.5 rounded-xl transition border border-white/10 shrink-0">
-                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Voltar aos Chaveamentos
+            <div class="flex items-center gap-3">
+                <a href="{{ voltar_url }}" class="text-slate-400 hover:text-white transition flex items-center justify-center p-1 shrink-0" title="Voltar aos Chaveamentos">
+                    <i data-lucide="arrow-left" class="text-lg"></i>
                 </a>
+                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">Jogos em Lista</h1>
             </div>
-            <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">Jogos em Lista</h1>
             <p class="text-xs text-slate-400 mt-1 max-w-xl">Todos os jogos organizados cronologicamente por dia e horário para visão geral das partidas.</p>
         </div>
 
-        <div class="relative z-10 flex flex-wrap items-center gap-2.5 shrink-0">
+        <div class="relative z-10 flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
             {% if user.is_comissao or user.is_staff %}
-            <a href="{% url 'exportador:exportar_jogos_excel' %}" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold rounded-2xl transition backdrop-blur-sm active:scale-95 flex items-center gap-2 border border-white/10 shadow-inner cursor-pointer" title="Extrair Planilha Excel de Jogos (.xlsx)">
-                <i data-lucide="file-spreadsheet" class="text-emerald-400 text-sm"></i> Extrair Excel
+            <a href="{% url 'exportador:exportar_jogos_excel' %}" class="px-2.5 sm:px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold rounded-2xl transition backdrop-blur-sm active:scale-95 flex items-center gap-2 border border-white/10 shadow-inner cursor-pointer" title="Extrair Planilha Excel de Jogos (.xlsx)">
+                <i data-lucide="file-spreadsheet" class="text-emerald-400 text-sm"></i>
+                <span class="hidden sm:inline">Extrair Excel</span>
             </a>
             {% endif %}
 
-            <button type="button" onclick="copiarLinkPublico()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer" title="Copiar link público desta listagem">
-                <i data-lucide="share-2" class="text-xs"></i> Compartilhar
+            <button type="button" onclick="copiarLinkPublico()" class="px-2.5 sm:px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer" title="Copiar link público desta listagem">
+                <i data-lucide="share-2" class="text-xs"></i>
+                <span class="hidden sm:inline">Compartilhar</span>
             </button>
         </div>
     </div>

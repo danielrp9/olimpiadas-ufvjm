@@ -37,13 +37,15 @@
             </a>
 
             <!-- Botão Exportar Planilha Excel (.xlsx) (Glassmorphism / Vidro Minimalista) -->
-            <a href="{% url 'exportador:exportar_jogos_excel' %}" class="px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold rounded-2xl transition backdrop-blur-sm active:scale-95 flex items-center gap-2 border border-white/10 shadow-inner shrink-0 cursor-pointer" title="Extrair Planilha Excel de Jogos (.xlsx)">
-                <i data-lucide="file-spreadsheet" class="text-emerald-400 text-sm"></i> Extrair
+            <a href="{% url 'exportador:exportar_jogos_excel' %}" class="px-2.5 sm:px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold rounded-2xl transition backdrop-blur-sm active:scale-95 flex items-center gap-2 border border-white/10 shadow-inner shrink-0 cursor-pointer" title="Extrair Planilha Excel de Jogos (.xlsx)">
+                <i data-lucide="file-spreadsheet" class="text-emerald-400 text-sm"></i>
+                <span class="hidden sm:inline">Extrair</span>
             </a>
 
             <!-- Botão de Compartilhar (Padrão de estilo 'Imprimir Relatório') -->
-            <button type="button" onclick="abrirModalCompartilhamento('{% url 'chaveamento_share_list' %}', 'Todas as Modalidades - UFVJM')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
-                <i data-lucide="share-2" class="text-amber-400 text-sm"></i> Compartilhar
+            <button type="button" onclick="abrirModalCompartilhamento('{% url 'chaveamento_share_list' %}', 'Todas as Modalidades - UFVJM')" class="px-2.5 sm:px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
+                <i data-lucide="share-2" class="text-amber-400 text-sm"></i>
+                <span class="hidden sm:inline">Compartilhar</span>
             </button>
 
 

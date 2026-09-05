@@ -19,8 +19,9 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
-            <a href="{% url 'exportador:exportar_jogos_excel' %}?modalidade_id={{ modalidade.id }}" class="py-2 px-3.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 text-xs font-extrabold rounded-xl transition border border-emerald-200/80 shadow-2xs flex items-center gap-2 shrink-0 cursor-pointer" title="Extrair Planilha Excel desta modalidade">
-                <i data-lucide="file-spreadsheet" class="text-emerald-600 text-sm"></i> Extrair
+            <a href="{% url 'exportador:exportar_jogos_excel' %}?modalidade_id={{ modalidade.id }}" class="py-2 px-2.5 sm:px-3.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 text-xs font-extrabold rounded-xl transition border border-emerald-200/80 shadow-2xs flex items-center gap-2 shrink-0 cursor-pointer" title="Extrair Planilha Excel desta modalidade">
+                <i data-lucide="file-spreadsheet" class="text-emerald-600 text-sm"></i>
+                <span class="hidden sm:inline">Extrair</span>
             </a>
             <form action="{% url 'chaveamento_resetar' pk=modalidade.pk %}" method="POST" onsubmit="return confirm('Tem certeza que deseja resetar todo o chaveamento desta modalidade?');">
                 {% csrf_token %}
