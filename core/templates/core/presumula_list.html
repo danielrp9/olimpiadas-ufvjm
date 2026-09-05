@@ -205,11 +205,19 @@
                                     {% if user.is_comissao %}
                                         <!-- COMMISSION ACTIONS -->
                                         <div class="flex items-center justify-end gap-2">
+                                            <!-- Modificar Horário / Reabrir Pré-Súmula (Comissão) -->
+                                            <button type="button" 
+                                                    class="w-8 h-8 rounded-xl border border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 transition shadow-2xs flex items-center justify-center shrink-0 active:scale-95 focus:outline-none cursor-pointer" 
+                                                    title="Modificar Horário / Reabrir Pré-Súmula" 
+                                                    onclick="openEditHorarioModal('{{ jogo.id }}', '{{ jogo.modalidade.nome|escapejs }}', '{{ jogo.time_a_display|escapejs }}', '{{ jogo.time_b_display|escapejs }}', '{{ jogo.data_jogo|date:'Y-m-d' }}', '{{ jogo.horario_jogo|time:'H:i'|default:'' }}', '{% url 'jogo_update' jogo.id %}', {{ jogo.is_presumula_deadline_passed|yesno:'true,false' }}, {{ jogo.finalizado|yesno:'true,false' }})">
+                                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                                            </button>
+
                                             <!-- Pré-súmulas enviadas (Olho / Ver) -->
                                             <button type="button" 
                                                     class="w-8 h-8 rounded-xl border border-slate-200/80 bg-white hover:bg-blue-50 text-slate-600 hover:text-blue-600 transition shadow-2xs flex items-center justify-center shrink-0 active:scale-95 focus:outline-none cursor-pointer" 
-                                                    title="Visualizar Pré-Súmulas da Partida"
-                                                    onclick="openPresumulaModal('{{ jogo.time_a_display|escapejs }}', '{{ jogo.time_b_display|escapejs }}', '{% if jogo.presumula_a %}{% url 'presumula_detail' jogo.presumula_a.id %}{% endif %}', '{% if jogo.presumula_b %}{% url 'presumula_detail' jogo.presumula_b.id %}{% endif %}')">
+                                                    title="Visualizar Pré-Súmulas da Partida" 
+                                                    onclick="openPresumulaModal('{{ jogo.time_a_display|escapejs }}', '{{ jogo.time_b_display|escapejs }}', '{% if jogo.presumula_a %}{% url 'presumula_detail' jogo.presumula_a.id %}{% endif %}', '{% if jogo.presumula_b %}{% url 'presumula_detail' jogo.presumula_b.id %}{% endif %}', '{{ jogo.id }}', '{{ jogo.modalidade.nome|escapejs }}', '{{ jogo.data_jogo|date:'Y-m-d' }}', '{{ jogo.horario_jogo|time:'H:i'|default:'' }}', '{% url 'jogo_update' jogo.id %}', {{ jogo.is_presumula_deadline_passed|yesno:'true,false' }}, {{ jogo.finalizado|yesno:'true,false' }})">
                                                 <i data-lucide="eye" class="w-4 h-4"></i>
                                             </button>
                                             
@@ -334,6 +342,94 @@
                 </div>
             </div>
         </div>
+
+        {% if user.is_comissao or user.is_staff %}
+        <!-- Rodapé do Modal com Ação de Modificar Horário -->
+        <div class="flex flex-col sm:flex-row justify-between items-center pt-3 border-t border-slate-100 gap-2 mt-1">
+            <button type="button" id="modal-presumula-edit-btn" class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition gap-1.5 focus:outline-none">
+                <i data-lucide="clock" class="w-3.5 h-3.5"></i> Modificar Horário da Partida
+            </button>
+            <button type="button" onclick="closePresumulaModal()" class="w-full sm:w-auto px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition focus:outline-none">
+                Fechar
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Modal de Edição de Horário / Reabertura de Pré-Súmula (Intervenção da Comissão em caso de atraso) -->
+<div id="edit-horario-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-md overflow-y-auto p-4" onclick="closeEditHorarioModal()">
+    <div class="relative transform rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-lg border border-slate-200/60 p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto mx-auto" onclick="event.stopPropagation()">
+        <!-- Header -->
+        <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+            <h3 class="text-base font-black text-slate-800 flex items-center gap-2">
+                <span class="p-1.5 bg-blue-50 text-blue-600 rounded-xl">
+                    <i data-lucide="clock" class="text-xs"></i>
+                </span>
+                Modificar Horário da Partida
+            </h3>
+            <button type="button" onclick="closeEditHorarioModal()" class="text-slate-400 hover:text-slate-600 p-1.5 hover:bg-slate-100 rounded-xl transition focus:outline-none">
+                <i data-lucide="x" class="text-sm"></i>
+            </button>
+        </div>
+
+        <!-- Descrição / Informação de Atraso -->
+        <div class="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200/80 text-amber-900 text-xs flex items-start gap-2.5">
+            <i data-lucide="info" class="text-amber-600 shrink-0 mt-0.5 w-4 h-4"></i>
+            <div class="space-y-1">
+                <strong class="block font-bold">Intervenção por Atraso</strong>
+                <p class="text-[11px] text-amber-800 leading-relaxed">
+                    Caso a partida tenha atrasado e a pré-súmula tenha sido encerrada automaticamente por prazo (WO), ajuste o novo horário do jogo abaixo para que o prazo seja recalculado e a pré-súmula abra novamente para as delegações escalarem atletas.
+                </p>
+            </div>
+        </div>
+
+        <!-- Dados do Confronto -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1">
+            <span id="modal-edit-modalidade" class="text-[10px] font-black uppercase tracking-wider text-blue-600 block">Modalidade</span>
+            <p id="modal-edit-partida" class="text-xs font-black text-slate-800">Time A vs Time B</p>
+            <div id="modal-edit-status-wo" class="pt-1">
+                <!-- Preenchido dinamicamente -->
+            </div>
+        </div>
+
+        <!-- Formulário de Ajuste de Horário -->
+        <form id="edit-horario-form" method="post" action="" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                    <label for="modal-input-data" class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1.5">Data do Jogo</label>
+                    <input type="date" name="data_jogo" id="modal-input-data" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+                </div>
+                <div>
+                    <label for="modal-input-horario" class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1.5">Novo Horário do Jogo</label>
+                    <input type="time" name="horario_jogo" id="modal-input-horario" required class="w-full px-3 py-2 border border-slate-200 rounded-xl text-xs bg-slate-50/50 focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition">
+                </div>
+            </div>
+
+            <!-- Painel Informativo Dinâmico de Cálculo do Prazo -->
+            <div id="modal-preview-deadline" class="p-3.5 rounded-xl border border-slate-200/70 bg-slate-50/80 text-[11px] text-slate-600 space-y-1">
+                <span class="font-bold block text-slate-700">Prazo de Encerramento Automático:</span>
+                <p id="modal-preview-text" class="text-[11px] text-slate-500 leading-relaxed">
+                    A pré-súmula encerra automaticamente 1 hora antes do horário do jogo.
+                </p>
+            </div>
+
+            <!-- Botões de Ação -->
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-slate-100">
+                <a id="modal-link-full-edit" href="#" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition order-2 sm:order-1">
+                    <i data-lucide="external-link" class="w-3 h-3"></i> Editar dados completos do jogo
+                </a>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end order-1 sm:order-2">
+                    <button type="button" onclick="closeEditHorarioModal()" class="px-3.5 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-50 transition">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition shadow-sm active:scale-95 flex items-center gap-1.5">
+                        <i data-lucide="save" class="w-3.5 h-3.5"></i> Salvar e Reabrir
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -464,7 +560,7 @@ function toggleFilterPanel() {
     panel.classList.toggle('hidden');
 }
 
-function openPresumulaModal(nameA, nameB, urlA, urlB) {
+function openPresumulaModal(nameA, nameB, urlA, urlB, jogoId, modalidade, dataJogo, horarioJogo, fullEditUrl, isDeadLinePassed, isFinalizado) {
     const modal = document.getElementById('presumula-modal');
     
     // Set names
@@ -500,6 +596,18 @@ function openPresumulaModal(nameA, nameB, urlA, urlB) {
             <i data-lucide="alert-circle" class="mr-1"></i> Não Enviada
         </span>`;
     }
+
+    // Configura botão de modificar horário no rodapé do modal (se comissão)
+    const editBtn = document.getElementById('modal-presumula-edit-btn');
+    if (editBtn && jogoId) {
+        editBtn.onclick = function() {
+            closePresumulaModal();
+            openEditHorarioModal(jogoId, modalidade, nameA, nameB, dataJogo, horarioJogo, fullEditUrl, isDeadLinePassed, isFinalizado);
+        };
+        editBtn.classList.remove('hidden');
+    } else if (editBtn) {
+        editBtn.classList.add('hidden');
+    }
     
     // Show Modal
     modal.classList.remove('hidden');
@@ -512,6 +620,88 @@ function closePresumulaModal() {
     modal.classList.add('hidden');
     document.body.classList.remove('overflow-hidden');
 }
+
+function openEditHorarioModal(jogoId, modalidadeNome, timeA, timeB, dataJogo, horarioJogo, fullEditUrl, isDeadLinePassed, isFinalizado) {
+    const modal = document.getElementById('edit-horario-modal');
+    document.getElementById('modal-edit-modalidade').textContent = modalidadeNome;
+    document.getElementById('modal-edit-partida').textContent = timeA + ' vs ' + timeB;
+    
+    const statusContainer = document.getElementById('modal-edit-status-wo');
+    if (isDeadLinePassed || isFinalizado) {
+        statusContainer.innerHTML = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-red-50 text-red-650 border border-red-200 uppercase tracking-wide"><i data-lucide="alert-triangle" class="w-2.5 h-2.5 mr-1 text-red-500"></i> Partida com encerramento automático (WO / Finalizada)</span>';
+    } else {
+        statusContainer.innerHTML = '<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 uppercase tracking-wide"><i data-lucide="check" class="w-2.5 h-2.5 mr-1 text-emerald-600"></i> Pré-Súmula Aberta</span>';
+    }
+
+    document.getElementById('modal-input-data').value = dataJogo || '';
+    document.getElementById('modal-input-horario').value = horarioJogo || '';
+    document.getElementById('edit-horario-form').action = `/comissao/jogo/${jogoId}/ajustar-horario/`;
+    document.getElementById('modal-link-full-edit').href = fullEditUrl;
+
+    updateDeadlinePreview();
+    
+    modal.classList.remove('hidden');
+    document.body.classList.add('overflow-hidden');
+    if (typeof lucide !== 'undefined') lucide.createIcons({ root: modal });
+}
+
+function closeEditHorarioModal() {
+    const modal = document.getElementById('edit-horario-modal');
+    modal.classList.add('hidden');
+    document.body.classList.remove('overflow-hidden');
+}
+
+function updateDeadlinePreview() {
+    const dataVal = document.getElementById('modal-input-data').value;
+    const horaVal = document.getElementById('modal-input-horario').value;
+    const previewText = document.getElementById('modal-preview-text');
+    
+    if (!dataVal || !horaVal) {
+        previewText.textContent = 'Informe a data e o horário da partida para calcular o novo prazo de encerramento.';
+        return;
+    }
+    
+    try {
+        const [year, month, day] = dataVal.split('-').map(Number);
+        const [hours, minutes] = horaVal.split(':').map(Number);
+        const jogoDate = new Date(year, month - 1, day, hours, minutes);
+        
+        // Deadline is 1 hour before
+        const deadlineDate = new Date(jogoDate.getTime() - 60 * 60 * 1000);
+        const now = new Date();
+        
+        const dHours = String(deadlineDate.getHours()).padStart(2, '0');
+        const dMinutes = String(deadlineDate.getMinutes()).padStart(2, '0');
+        const dDay = String(deadlineDate.getDate()).padStart(2, '0');
+        const dMonth = String(deadlineDate.getMonth() + 1).padStart(2, '0');
+        
+        if (now > deadlineDate) {
+            previewText.innerHTML = `<span class="text-amber-700 font-bold block">O novo prazo calculado seria às ${dHours}:${dMinutes} de ${dDay}/${dMonth} (que já expirou).</span><span class="text-[10px] text-amber-600 block mt-0.5">Para que a pré-súmula reabra para as equipes, defina o horário da partida com pelo menos 1 hora à frente do horário atual.</span>`;
+        } else {
+            const diffMinutes = Math.round((deadlineDate.getTime() - now.getTime()) / (60 * 1000));
+            const diffHours = Math.floor(diffMinutes / 60);
+            const remMinutes = diffMinutes % 60;
+            let tempoRestante = '';
+            if (diffHours > 0) {
+                tempoRestante = `${diffHours}h e ${remMinutes}min`;
+            } else {
+                tempoRestante = `${remMinutes}min`;
+            }
+            previewText.innerHTML = `<span class="text-emerald-700 font-bold block"><i data-lucide="check-circle" class="inline w-3 h-3 mr-1 text-emerald-600"></i> A pré-súmula REABRIRÁ e ficará aberta até às ${dHours}:${dMinutes} de ${dDay}/${dMonth}</span><span class="text-[10px] text-emerald-600 block mt-0.5">As equipes terão ${tempoRestante} restantes para enviar suas escalações.</span>`;
+        }
+    } catch (e) {
+        previewText.textContent = 'A pré-súmula encerra automaticamente 1 hora antes do início do jogo.';
+    }
+    
+    if (typeof lucide !== 'undefined') lucide.createIcons({ root: document.getElementById('modal-preview-deadline') });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const inputData = document.getElementById('modal-input-data');
+    const inputHorario = document.getElementById('modal-input-horario');
+    if (inputData) inputData.addEventListener('change', updateDeadlinePreview);
+    if (inputHorario) inputHorario.addEventListener('input', updateDeadlinePreview);
+});
 
 function triggerFinalizarJogo(actionUrl) {
     document.getElementById('confirm-finalizar-form').action = actionUrl;

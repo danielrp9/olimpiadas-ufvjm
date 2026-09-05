@@ -1714,6 +1714,80 @@ class PreSumulaManagementTests(TestCase):
         self.assertContains(response, 'Recusado')
         self.assertContains(response, 'openRejeicaoModal')
 
+    def test_ajustar_horario_comissao_reabre_presumula_encerrada(self):
+        import datetime
+        from django.utils import timezone
+        from django.urls import reverse
+        from core.models import Jogo, PreSumula
+
+        # Cria um jogo com data passada para simular pré-súmula encerrada por prazo (WO)
+        ontem = timezone.localdate() - datetime.timedelta(days=1)
+        jogo_atrasado = Jogo.objects.create(
+            modalidade=self.modalidade,
+            data_jogo=ontem,
+            horario_jogo=datetime.time(10, 0),
+            time_a=self.delegate,
+            time_b=self.delegate_b,
+            finalizado=True
+        )
+
+        # Verifica que o prazo encerrou e foi finalizado por WO
+        self.assertTrue(jogo_atrasado.is_presumula_deadline_passed)
+        self.assertTrue(jogo_atrasado.is_finalizado_por_wo)
+
+        # Comissão intervém alterando o horário para amanhã às 16:00
+        amanha = timezone.localdate() + datetime.timedelta(days=1)
+        self.client.force_login(self.staff)
+        response = self.client.post(reverse('jogo_ajustar_horario', kwargs={'pk': jogo_atrasado.pk}), {
+            'data_jogo': amanha.strftime('%Y-%m-%d'),
+            'horario_jogo': '16:00'
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # Recarrega o jogo
+        jogo_atrasado.refresh_from_db()
+        self.assertEqual(jogo_atrasado.data_jogo, amanha)
+        self.assertEqual(jogo_atrasado.horario_jogo, datetime.time(16, 0))
+        self.assertFalse(jogo_atrasado.finalizado)
+        self.assertIsNone(jogo_atrasado.data_hora_fim)
+
+        # Verifica que a pré-súmula reabriu!
+        self.assertFalse(jogo_atrasado.is_presumula_deadline_passed)
+        self.assertFalse(jogo_atrasado.is_finalizado_por_wo)
+
+        # A lista de pré-súmulas agora mostra que está aberta
+        self.client.force_login(self.delegate)
+        res_list = self.client.get(reverse('presumula_list'))
+        self.assertEqual(res_list.status_code, 200)
+        self.assertContains(res_list, 'Escalar Atletas')
+
+    def test_ajustar_horario_denied_for_representative(self):
+        import datetime
+        from django.utils import timezone
+        from django.urls import reverse
+        from core.models import Jogo
+
+        amanha = timezone.localdate() + datetime.timedelta(days=1)
+        jogo_teste = Jogo.objects.create(
+            modalidade=self.modalidade,
+            data_jogo=amanha,
+            horario_jogo=datetime.time(10, 0),
+            time_a=self.delegate,
+            time_b=self.delegate_b
+        )
+
+        self.client.force_login(self.delegate)
+        response = self.client.post(reverse('jogo_ajustar_horario', kwargs={'pk': jogo_teste.pk}), {
+            'data_jogo': amanha.strftime('%Y-%m-%d'),
+            'horario_jogo': '18:00'
+        })
+        self.assertEqual(response.status_code, 302)
+
+        # O horário NÃO deve ter sido alterado
+        jogo_teste.refresh_from_db()
+        self.assertEqual(jogo_teste.horario_jogo, datetime.time(10, 0))
+
+
 
 
 

@@ -35,6 +35,7 @@ urlpatterns = [
     path('comissao/modalidade/<int:pk>/toggle/', views.toggle_modalidade, name='toggle_modalidade'),
     path('comissao/jogo/novo/', views.JogoCreateView.as_view(), name='jogo_create'),
     path('comissao/jogo/<int:pk>/editar/', views.JogoUpdateView.as_view(), name='jogo_update'),
+    path('comissao/jogo/<int:pk>/ajustar-horario/', views.jogo_ajustar_horario, name='jogo_ajustar_horario'),
     path('comissao/jogo/<int:pk>/remover/', views.JogoDeleteView.as_view(), name='jogo_delete'),
     path('comissao/jogo/<int:pk>/finalizar/', views.finalizar_jogo, name='jogo_finalizar'),
     path('comissao/whitelist/', views.AdminWhitelistView.as_view(), name='admin_whitelist'),

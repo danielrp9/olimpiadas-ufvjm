@@ -212,8 +212,79 @@ class JogoUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('presumula_list')
 
     def form_valid(self, form):
-        messages.success(self.request, "Dados do jogo atualizados com sucesso!")
-        return super().form_valid(form)
+        jogo = form.save(commit=False)
+        if not form.cleaned_data.get('finalizado'):
+            jogo.finalizado = False
+            jogo.data_hora_fim = None
+        jogo.save()
+        form.save_m2m()
+        if not jogo.is_presumula_deadline_passed and not jogo.finalizado:
+            deadline_str = f" até às {jogo.presumula_deadline.strftime('%H:%M')}" if jogo.presumula_deadline else ""
+            messages.success(self.request, f"Dados do jogo atualizados com sucesso! A pré-súmula está aberta{deadline_str}.")
+        else:
+            messages.success(self.request, "Dados do jogo atualizados com sucesso!")
+        return redirect(self.success_url)
+
+
+@login_required
+def jogo_ajustar_horario(request, pk):
+    """
+    Permite à Comissão Organizadora intervir e alterar o horário/data da partida diretamente
+    a partir da seção de pré-súmulas, possibilitando que em casos de atrasos na quadra/programação
+    a pré-súmula possa ser reaberta para preenchimento pelas equipes.
+    """
+    if not (request.user.is_staff or request.user.is_comissao):
+        messages.error(request, "Acesso negado: Apenas a comissão organizadora pode intervir e alterar o horário da partida.")
+        return redirect('presumula_list')
+
+    if request.method == 'POST':
+        jogo = get_object_or_404(Jogo, pk=pk)
+        data_str = request.POST.get('data_jogo')
+        horario_str = request.POST.get('horario_jogo')
+
+        if not data_str or not horario_str:
+            messages.error(request, "Data e horário do jogo são obrigatórios para alterar a programação.")
+            return redirect('presumula_list')
+
+        import datetime
+        from django.core.exceptions import ValidationError
+
+        try:
+            nova_data = datetime.datetime.strptime(data_str, '%Y-%m-%d').date()
+            novo_horario = datetime.datetime.strptime(horario_str, '%H:%M').time()
+        except ValueError:
+            messages.error(request, "Formato de data ou horário inválido.")
+            return redirect('presumula_list')
+
+        jogo.data_jogo = nova_data
+        jogo.horario_jogo = novo_horario
+        # Ao reprogramar a partida para intervir em atraso, reabre o jogo
+        jogo.finalizado = False
+        jogo.data_hora_fim = None
+
+        try:
+            jogo.full_clean()
+            jogo.save()
+
+            horario_formatado = novo_horario.strftime('%H:%M')
+            data_formatada = nova_data.strftime('%d/%m/%Y')
+
+            if not jogo.is_presumula_deadline_passed:
+                deadline_formatado = jogo.presumula_deadline.strftime('%H:%M') if jogo.presumula_deadline else ''
+                messages.success(
+                    request,
+                    f"Horário da partida {jogo.modalidade.nome} atualizado para {data_formatada} às {horario_formatado}! A pré-súmula foi REABERTA com sucesso (prazo de escalação até às {deadline_formatado})."
+                )
+            else:
+                messages.warning(
+                    request,
+                    f"Horário da partida atualizado para {data_formatada} às {horario_formatado}. Como o novo horário está com menos de 1 hora de antecedência em relação a agora, o prazo do regulamento manteve a pré-súmula encerrada. Caso queira abrir para as equipes, defina o horário para pelo menos 1 hora à frente."
+                )
+        except ValidationError as e:
+            err_msg = "; ".join([f"{k}: {', '.join(v)}" for k, v in e.message_dict.items()]) if hasattr(e, 'message_dict') else str(e)
+            messages.error(request, f"Não foi possível atualizar o horário: {err_msg}")
+
+    return redirect('presumula_list')
 
 @method_decorator(user_passes_test(lambda u: u.is_staff), name='dispatch')
 class JogoDeleteView(LoginRequiredMixin, DeleteView):
