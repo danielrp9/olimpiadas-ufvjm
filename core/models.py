@@ -278,7 +278,6 @@ class PreSumulaAtleta(models.Model):
         unique_together = ('presumula', 'atleta')
         verbose_name = "Atleta Escalado"
         verbose_name_plural = "Atletas Escalados"
-        ordering = ['numero_camisa', 'atleta__nome_completo']
 
     def __str__(self):
         return f"Atleta {self.atleta.nome_completo} - Camisa {self.numero_camisa}"
