@@ -2181,10 +2181,12 @@ def inscricao_segunda_chamada(request):
             entra.save(update_fields=['status_avaliacao', 'em_conformidade', 'justificativa_inconformidade'])
 
             # Atualiza pré-súmulas não finalizadas que continham o atleta substituído
-            PreSumulaAtleta.objects.filter(
-                presumula__jogo__finalizado=False,
-                atleta=sai
-            ).update(atleta=entra)
+            for psa in PreSumulaAtleta.objects.filter(presumula__jogo__finalizado=False, atleta=sai):
+                if PreSumulaAtleta.objects.filter(presumula=psa.presumula, atleta=entra).exists():
+                    psa.delete()
+                else:
+                    psa.atleta = entra
+                    psa.save(update_fields=['atleta'])
 
         # Identifica inclusões puras (atletas adicionados que não são substitutos)
         substituto_ids = {e for _, e in substitutions_to_create}

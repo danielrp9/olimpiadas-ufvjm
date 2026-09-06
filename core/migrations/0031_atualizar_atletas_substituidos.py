@@ -29,10 +29,12 @@ def atualizar_dados_substituicoes(apps, schema_editor):
                     im.atletas.add(entra)
 
         if sai and entra:
-            PreSumulaAtleta.objects.filter(
-                atleta=sai,
-                presumula__jogo__status__in=['agendado', 'em_andamento']
-            ).update(atleta=entra)
+            for psa in PreSumulaAtleta.objects.filter(atleta=sai, presumula__jogo__finalizado=False):
+                if PreSumulaAtleta.objects.filter(presumula=psa.presumula, atleta=entra).exists():
+                    psa.delete()
+                else:
+                    psa.atleta = entra
+                    psa.save(update_fields=['atleta'])
 
 
 class Migration(migrations.Migration):
