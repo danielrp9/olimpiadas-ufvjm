@@ -333,6 +333,10 @@
                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-green-50 text-green-700 uppercase tracking-wide">
                                                 <i data-lucide="check-circle-2" class="mr-1 text-green-600"></i> Aprovado
                                             </span>
+                                        {% elif atleta.status_avaliacao == 'substituido' %}
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-50 text-purple-700 uppercase tracking-wide">
+                                                <i data-lucide="user-minus" class="mr-1 text-purple-600"></i> Substituído
+                                            </span>
                                         {% elif atleta.status_avaliacao == 'indeferido' %}
                                             <div class="inline-flex flex-col items-end gap-1">
                                                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-700 uppercase tracking-wide">

@@ -1431,11 +1431,114 @@ class SecondCallRegistrationTests(TestCase):
             atleta_entrou=self.atleta2
         ).exists())
         
-        # Verify status reset to pendente for re-evaluation
+        # Verify substituted athlete state
+        self.atleta1.refresh_from_db()
+        self.assertEqual(self.atleta1.status_avaliacao, 'substituido')
+        self.assertFalse(self.atleta1.em_conformidade)
+        self.assertNotIn(self.atleta1, inscricao.atletas_inscritos)
+
+        # Verify substitute athlete state
+        self.atleta2.refresh_from_db()
+        self.assertEqual(self.atleta2.status_avaliacao, 'deferido')
+        self.assertTrue(self.atleta2.em_conformidade)
+        self.assertIn(self.atleta2, inscricao.atletas_inscritos)
+
+        # Verify delegation and registration remain approved so delegation can fill pre-sumulas
         inscricao.refresh_from_db()
-        self.assertEqual(inscricao.status, 'pendente')
+        self.assertEqual(inscricao.status, 'deferido')
         self.delegate.refresh_from_db()
-        self.assertEqual(self.delegate.status_delegacao, 'pendente')
+        self.assertEqual(self.delegate.status_delegacao, 'deferido')
+
+    def test_substitute_athlete_appears_in_presumula_and_replaced_athlete_excluded(self):
+        from django.urls import reverse
+        from .models import ConfiguracaoPeriodoInscricao, Inscricao, InscricaoModalidade, Jogo, PreSumula, PreSumulaAtleta
+        from datetime import timedelta
+        from django.utils import timezone
+
+        now = timezone.now()
+        ConfiguracaoPeriodoInscricao.objects.create(
+            data_inicio=now - timedelta(days=5),
+            data_fim=now - timedelta(days=4),
+            segunda_chamada_inicio=now - timedelta(days=1),
+            segunda_chamada_fim=now + timedelta(days=1)
+        )
+
+        inscricao = Inscricao.objects.create(delegacao=self.delegate, status='deferido')
+        im = InscricaoModalidade.objects.create(inscricao=inscricao, modalidade=self.modalidade)
+        im.atletas.add(self.atleta1)
+
+        # Create an opponent delegation and a match
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        oponente = User.objects.create_user(
+            email='oponente@example.com',
+            nome_completo='Oponente User',
+            role='REPRESENTANTE',
+            cpf='181.498.521-23',
+            password='testpassword'
+        )
+        oponente.nome_delegacao = 'Delegacao Oponente'
+        oponente.status_delegacao = 'deferido'
+        oponente.save()
+
+        jogo = Jogo.objects.create(
+            modalidade=self.modalidade,
+            time_a=self.delegate,
+            time_b=oponente,
+            data_jogo=now.date() + timedelta(days=1),
+            horario_jogo=(now + timedelta(hours=5)).time(),
+            finalizado=False
+        )
+
+        self.client.force_login(self.delegate)
+
+        # Execute substitution: atleta1 out, atleta2 in
+        self.client.post(reverse('inscricao_segunda_chamada'), {
+            'substituicao_sai[]': [self.atleta1.id],
+            'substituicao_entra[]': [self.atleta2.id]
+        })
+
+        # Check PreSumulaCreateView GET
+        res = self.client.get(reverse('presumula_create') + f'?jogo={jogo.id}')
+        self.assertEqual(res.status_code, 200)
+        atletas_disponiveis = res.context['atletas']
+        self.assertIn(self.atleta2, atletas_disponiveis)
+        self.assertNotIn(self.atleta1, atletas_disponiveis)
+
+        # Post pre-sumula with substitute athlete
+        res_post = self.client.post(reverse('presumula_create'), {
+            'jogo_id': jogo.id,
+            'tecnico': 'Treinador Teste',
+            'atletas': [self.atleta2.id],
+            f'camisa_{self.atleta2.id}': '10'
+        })
+        self.assertEqual(res_post.status_code, 302)
+
+        presumula = PreSumula.objects.get(jogo=jogo, representante=self.delegate)
+        self.assertTrue(PreSumulaAtleta.objects.filter(presumula=presumula, atleta=self.atleta2, numero_camisa=10).exists())
+        self.assertFalse(PreSumulaAtleta.objects.filter(presumula=presumula, atleta=self.atleta1).exists())
+
+        # Check PreSumulaUpdateView GET
+        res_edit = self.client.get(reverse('presumula_update', kwargs={'pk': presumula.id}))
+        self.assertEqual(res_edit.status_code, 200)
+        atletas_edit = res_edit.context['atletas']
+        self.assertIn(self.atleta2, atletas_edit)
+        self.assertNotIn(self.atleta1, atletas_edit)
+
+        # Check AdminDelegacaoListView as staff: comissão sees atleta2 and not atleta1
+        admin_user = User.objects.create_superuser(
+            email='admin@example.com',
+            password='testpassword',
+            cpf='603.957.346-60',
+            nome_completo='Admin User'
+        )
+        self.client.force_login(admin_user)
+        res_admin = self.client.get(reverse('admin_delegacoes'))
+        self.assertEqual(res_admin.status_code, 200)
+        del_entry = [d for d in res_admin.context['delegacoes'] if d.id == self.delegate.id][0]
+        inscritos = list(del_entry.inscricao.atletas_inscritos)
+        self.assertIn(self.atleta2, inscritos)
+        self.assertNotIn(self.atleta1, inscritos)
 
     def test_athlete_bulk_create_associates_when_second_call_active(self):
         from django.urls import reverse

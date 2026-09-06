@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth import login, logout
 from django.urls import reverse, reverse_lazy
 from django.contrib import messages
-from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade, Recurso, RecursoMensagem, Notificacao, ConfiguracaoPeriodoInscricao
+from .models import Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Inscricao, InscricaoModalidade, Recurso, RecursoMensagem, Notificacao, ConfiguracaoPeriodoInscricao, SubstituicaoAtleta
 from .forms import RegisterForm, AtletaForm, JogoForm, ModalidadeForm, ConfiguracaoPeriodoInscricaoForm
 from users.models import ComissaoWhitelist, MembroDelegacao
 
@@ -523,13 +523,14 @@ class AtletaListView(LoginRequiredMixin, ListView):
         inscricao = getattr(delegacao, 'inscricao', None)
         context['inscricao'] = inscricao
         if inscricao:
+            substituidos_ids = set(inscricao.substituicoes.values_list('atleta_saiu_id', flat=True))
             atletas_ids_inscritos = set(
-                Atleta.objects.filter(modalidades_inscritas__inscricao=inscricao).values_list('id', flat=True)
+                Atleta.objects.filter(modalidades_inscritas__inscricao=inscricao).exclude(id__in=substituidos_ids).values_list('id', flat=True)
             )
             context['atletas_ids_inscritos'] = atletas_ids_inscritos
             context['total_nao_inscritos'] = Atleta.objects.filter(
                 cadastrado_por=delegacao
-            ).exclude(id__in=atletas_ids_inscritos).count()
+            ).exclude(id__in=atletas_ids_inscritos).exclude(id__in=substituidos_ids).count()
         else:
             context['atletas_ids_inscritos'] = set()
             context['total_nao_inscritos'] = 0
@@ -637,7 +638,13 @@ class AdminDelegacaoListView(LoginRequiredMixin, ListView):
         # Se houver período de inscrição ativo (1ª ou 2ª chamada), sincroniza atletas da delegação com a inscrição
         ativo, tipo_periodo = get_periodo_inscricao_ativo()
         if ativo:
-            for insc in Inscricao.objects.prefetch_related('modalidades').all():
+            for insc in Inscricao.objects.prefetch_related('modalidades', 'substituicoes').all():
+                # Remove atletas substituídos de im.atletas se ainda estiverem vinculados
+                subs_saiu_ids = list(insc.substituicoes.values_list('atleta_saiu_id', flat=True))
+                if subs_saiu_ids:
+                    for im in insc.modalidades.all():
+                        im.atletas.remove(*subs_saiu_ids)
+
                 unlinked = insc.atletas_nao_inscritos
                 if unlinked.exists():
                     for im in insc.modalidades.all():
@@ -893,9 +900,10 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
             ps = PreSumula.objects.get(jogo=jogo, representante=delegacao)
             return redirect('presumula_update', pk=ps.id)
             
-        # Filtra os atletas da delegação em conformidade e pelo sexo da categoria
+        # Filtra os atletas da delegação em conformidade e pelo sexo da categoria (excluindo substituídos)
         genero_modalidade = jogo.modalidade.genero
-        atletas = Atleta.objects.filter(cadastrado_por=delegacao, em_conformidade=True)
+        substituidos_ids = list(SubstituicaoAtleta.objects.filter(inscricao__delegacao=delegacao).values_list('atleta_saiu_id', flat=True))
+        atletas = Atleta.objects.filter(cadastrado_por=delegacao, em_conformidade=True).exclude(id__in=substituidos_ids)
         if genero_modalidade == 'M':
             atletas = atletas.filter(genero__in=['M', 'N'])
         elif genero_modalidade == 'F':
@@ -931,7 +939,8 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
             messages.error(request, "Você já preencheu a pré-súmula para este jogo.")
             return redirect('presumula_list')
             
-        atleta_ids = request.POST.getlist('atletas')
+        substituidos_ids = set(SubstituicaoAtleta.objects.filter(inscricao__delegacao=delegacao).values_list('atleta_saiu_id', flat=True))
+        atleta_ids = [aid for aid in request.POST.getlist('atletas') if int(aid) not in substituidos_ids]
         tecnico = request.POST.get('tecnico', '').strip()
 
         # Validar número de atletas contra limites da modalidade
@@ -944,7 +953,7 @@ class PreSumulaCreateView(LoginRequiredMixin, View):
             messages.error(request, f"Erro: A escalação deve conter {limit_msg} atleta(s) para a modalidade {jogo.modalidade.nome}. (Selecionados: {num_selecionados})")
             
             genero_modalidade = jogo.modalidade.genero
-            atletas = Atleta.objects.filter(cadastrado_por=delegacao, em_conformidade=True)
+            atletas = Atleta.objects.filter(cadastrado_por=delegacao, em_conformidade=True).exclude(id__in=substituidos_ids)
             if genero_modalidade == 'M':
                 atletas = atletas.filter(genero__in=['M', 'N'])
             elif genero_modalidade == 'F':
@@ -1012,8 +1021,9 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
         jogo = presumula.jogo
         genero_modalidade = jogo.modalidade.genero
         
-        # Filtra os atletas da delegação em conformidade e pelo sexo da categoria
-        atletas = Atleta.objects.filter(cadastrado_por=presumula.representante, em_conformidade=True)
+        # Filtra os atletas da delegação em conformidade e pelo sexo da categoria (excluindo substituídos)
+        substituidos_ids = list(SubstituicaoAtleta.objects.filter(inscricao__delegacao=presumula.representante).values_list('atleta_saiu_id', flat=True))
+        atletas = Atleta.objects.filter(cadastrado_por=presumula.representante, em_conformidade=True).exclude(id__in=substituidos_ids)
         if genero_modalidade == 'M':
             atletas = atletas.filter(genero__in=['M', 'N'])
         elif genero_modalidade == 'F':
@@ -1062,7 +1072,8 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
             messages.error(request, "Prazo encerrado: A pré-súmula não pode mais ser editada (limite de 1h antes do jogo).")
             return redirect('presumula_list')
 
-        atleta_ids = request.POST.getlist('atletas')
+        substituidos_ids = set(SubstituicaoAtleta.objects.filter(inscricao__delegacao=delegacao).values_list('atleta_saiu_id', flat=True))
+        atleta_ids = [aid for aid in request.POST.getlist('atletas') if int(aid) not in substituidos_ids]
         tecnico = request.POST.get('tecnico', '').strip()
 
         # Validar número de atletas contra limites da modalidade
@@ -1076,7 +1087,7 @@ class PreSumulaUpdateView(LoginRequiredMixin, View):
             
             jogo = presumula.jogo
             genero_modalidade = jogo.modalidade.genero
-            atletas = Atleta.objects.filter(cadastrado_por=presumula.representante, em_conformidade=True)
+            atletas = Atleta.objects.filter(cadastrado_por=presumula.representante, em_conformidade=True).exclude(id__in=substituidos_ids)
             if genero_modalidade == 'M':
                 atletas = atletas.filter(genero__in=['M', 'N'])
             elif genero_modalidade == 'F':
@@ -2152,12 +2163,35 @@ def inscricao_segunda_chamada(request):
                 atleta_saiu=sai,
                 atleta_entrou=entra
             )
-            entra.status_avaliacao = 'nao_avaliado'
-            entra.em_conformidade = False
-            entra.save(update_fields=['status_avaliacao', 'em_conformidade'])
+            # Remove o atleta substituído de todas as modalidades e garante a inclusão do substituto
+            for im in inscricao.modalidades.all():
+                im.atletas.remove(sai)
+                im.atletas.add(entra)
 
-        # Reset evaluation status for newly added athletes
-        for aid in athletes_to_add_ids:
+            # Atleta que saiu perde conformidade e status de deferido
+            sai.em_conformidade = False
+            sai.status_avaliacao = 'substituido'
+            sai.justificativa_inconformidade = f"Substituído por {entra.nome_completo} na Segunda Chamada."
+            sai.save(update_fields=['em_conformidade', 'status_avaliacao', 'justificativa_inconformidade'])
+
+            # Atleta substituto assume a vaga com status deferido para entrar na pré-súmula
+            entra.em_conformidade = True
+            entra.status_avaliacao = 'deferido'
+            entra.justificativa_inconformidade = ''
+            entra.save(update_fields=['status_avaliacao', 'em_conformidade', 'justificativa_inconformidade'])
+
+            # Atualiza pré-súmulas não finalizadas que continham o atleta substituído
+            PreSumulaAtleta.objects.filter(
+                presumula__jogo__finalizado=False,
+                atleta=sai
+            ).update(atleta=entra)
+
+        # Identifica inclusões puras (atletas adicionados que não são substitutos)
+        substituto_ids = {e for _, e in substitutions_to_create}
+        standalone_added_ids = [aid for aid in athletes_to_add_ids if aid not in substituto_ids]
+
+        # Reset evaluation status apenas para atletas recém-adicionados que não são substitutos
+        for aid in standalone_added_ids:
             try:
                 at_added = Atleta.objects.get(id=aid, cadastrado_por=delegacao)
                 at_added.status_avaliacao = 'nao_avaliado'
@@ -2166,13 +2200,13 @@ def inscricao_segunda_chamada(request):
             except Atleta.DoesNotExist:
                 pass
             
-        # Reset statuses for re-evaluation
-        inscricao.status = 'pendente'
-        inscricao.save()
-        
-        delegacao.status_delegacao = 'pendente'
-        delegacao.justificativa_delegacao = ''
-        delegacao.save()
+        # Se houverem adições avulsas (não substituições), reavaliação é necessária
+        if standalone_added_ids or delegacao.status_delegacao != 'deferido':
+            inscricao.status = 'pendente'
+            inscricao.save()
+            delegacao.status_delegacao = 'pendente'
+            delegacao.justificativa_delegacao = ''
+            delegacao.save()
         
         # Notify commission
         comissao = User.objects.filter(role='COMISSAO')
@@ -2203,6 +2237,8 @@ from .chaveamento_services import (
     gerar_chaveamento_modalidade,
     registrar_resultado_partida,
     encerrar_fase_grupos_e_gerar_mata_mata,
+    atualizar_tabela_grupo,
+    atualizar_classificados_e_preencher_mata_mata,
     classificar_delegacoes_por_campus,
     obter_resumo_chaveamentos_admin,
     obter_resumo_chaveamentos_publico
@@ -2240,6 +2276,8 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
         if not chaveamento:
             messages.info(request, "O chaveamento para esta modalidade ainda não foi gerado. Clique em 'Gerar Chaveamento' para iniciar.")
             return redirect('chaveamento_admin_list')
+
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
 
         grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
         partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
@@ -2356,6 +2394,7 @@ def salvar_resultado_partida_view(request, pk):
                 partida.jogo.save()
             if partida.grupo:
                 atualizar_tabela_grupo(partida.grupo)
+                atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
             updated_anything = True
 
         import datetime
@@ -2513,6 +2552,8 @@ class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
             messages.info(request, "O chaveamento desta modalidade ainda não foi gerado pela Comissão Organizadora.")
             return redirect('chaveamento_public_list')
 
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
         grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
         partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
 
@@ -2567,6 +2608,8 @@ def chaveamento_share_view(request, pk):
     if not chaveamento:
         messages.info(request, "O chaveamento desta modalidade ainda não foi gerado.")
         return redirect('chaveamento_share_list')
+
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
 
     grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
     partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')

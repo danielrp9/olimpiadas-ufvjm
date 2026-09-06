@@ -233,7 +233,7 @@
                                             <tbody class="divide-y divide-slate-100 text-slate-650">
                                                 {% for atleta in del.inscricao.atletas_inscritos %}
                                                 <!-- Row do Atleta -->
-                                                <tr class="transition border-l-4 {% if atleta.status_avaliacao == 'deferido' %} bg-green-50/5 hover:bg-green-50/15 border-l-green-500 {% elif atleta.status_avaliacao == 'indeferido' %} bg-red-50/5 hover:bg-red-50/15 border-l-red-500 {% else %} bg-amber-50/5 hover:bg-amber-50/15 border-l-amber-500 {% endif %}">
+                                                <tr class="transition border-l-4 {% if atleta.status_avaliacao == 'deferido' %} bg-green-50/5 hover:bg-green-50/15 border-l-green-500 {% elif atleta.status_avaliacao == 'indeferido' %} bg-red-50/5 hover:bg-red-50/15 border-l-red-500 {% elif atleta.status_avaliacao == 'substituido' %} bg-slate-50/20 hover:bg-slate-50/40 border-l-slate-400 opacity-70 {% else %} bg-amber-50/5 hover:bg-amber-50/15 border-l-amber-500 {% endif %}">
                                                     <td class="px-3 sm:px-4 py-3 font-bold text-slate-800">{{ atleta.nome_completo }}</td>
                                                     <td class="px-4 py-3 font-semibold text-slate-700 hidden sm:table-cell">{{ atleta.matricula }}</td>
                                                     <td class="px-4 py-3 text-slate-500 font-mono text-[10px] hidden md:table-cell">{{ atleta.data_cadastro|date:"d/m/Y \à\s H:i"|default:"-" }}</td>
@@ -245,6 +245,10 @@
                                                         {% elif atleta.status_avaliacao == 'indeferido' %}
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-50 text-red-700 border border-red-100 uppercase tracking-wide">
                                                                 <i data-lucide="x-circle" class="mr-1 text-red-655"></i> Indeferido
+                                                            </span>
+                                                        {% elif atleta.status_avaliacao == 'substituido' %}
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase tracking-wide" title="Atleta substituído na Segunda Chamada">
+                                                                <i data-lucide="arrow-left-right" class="mr-1 text-slate-500"></i> Substituído
                                                             </span>
                                                         {% else %}
                                                             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100 uppercase tracking-wide">

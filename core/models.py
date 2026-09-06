@@ -43,6 +43,7 @@ class Atleta(models.Model):
         ('nao_avaliado', 'Não avaliado'),
         ('deferido', 'Deferido'),
         ('indeferido', 'Indeferido'),
+        ('substituido', 'Substituído'),
     ]
     status_avaliacao = models.CharField(
         max_length=20,
@@ -338,13 +339,15 @@ class Inscricao(models.Model):
 
     @property
     def atletas_inscritos(self):
-        return Atleta.objects.filter(modalidades_inscritas__inscricao=self).distinct()
+        substituidos_ids = self.substituicoes.values_list('atleta_saiu_id', flat=True)
+        return Atleta.objects.filter(modalidades_inscritas__inscricao=self).exclude(id__in=substituidos_ids).distinct()
 
     @property
     def atletas_nao_inscritos(self):
         """Atletas cadastrados pela delegação que não constam em nenhuma modalidade desta inscrição."""
         inscritos_ids = self.atletas_inscritos.values_list('id', flat=True)
-        return Atleta.objects.filter(cadastrado_por=self.delegacao).exclude(id__in=inscritos_ids).distinct()
+        substituidos_ids = self.substituicoes.values_list('atleta_saiu_id', flat=True)
+        return Atleta.objects.filter(cadastrado_por=self.delegacao).exclude(id__in=inscritos_ids).exclude(id__in=substituidos_ids).distinct()
 
 
 class InscricaoModalidade(models.Model):

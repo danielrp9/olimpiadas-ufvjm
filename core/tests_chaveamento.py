@@ -843,6 +843,337 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertEqual(disputa_3.vencedor, s1.time_b)
         self.assertEqual(disputa_3.perdedor, s2.time_b)
 
+    def test_cruzamento_olimpico_dois_grupos_semifinais(self):
+        """
+        Garante que com 2 grupos e 2 classificados por grupo:
+        - Semi 1: 1ºA x 2ºB
+        - Semi 2: 1ºB x 2ºA
+        - Equipes do mesmo grupo NUNCA se enfrentam nas semifinais.
+        """
+        mod = Modalidade.objects.create(
+            nome="Handebol 2G",
+            genero="M",
+            formato_chaveamento="padrao",
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12
+        )
+        # Cria 6 times no campus local (3 no Grupo A, 3 no Grupo B)
+        teams = [
+            self._create_delegation_for_mod(f"hnd_{i}@ufvjm.edu.br", f"Time HND {i}", self.campus_dia, mod)
+            for i in range(1, 7)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        grupos = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        self.assertEqual(len(grupos), 2)
+        g_a, g_b = grupos[0], grupos[1]
+
+        # Força 2 vagas de classificação em cada grupo
+        g_a.vagas_classificacao = 2
+        g_a.save()
+        g_b.vagas_classificacao = 2
+        g_b.save()
+
+        # Simula partidas do Grupo A:
+        # Time A1 ganha de todos (6 pts), Time A2 ganha do Time A3 (3 pts), Time A3 perde todas (0 pts)
+        t_a = list(g_a.times.all())
+        t_a1, t_a2, t_a3 = t_a[0].delegacao, t_a[1].delegacao, t_a[2].delegacao
+
+        for p in g_a.partidas.all():
+            if (p.time_a == t_a1 and p.time_b == t_a2) or (p.time_b == t_a1 and p.time_a == t_a2):
+                placar_1 = 20 if p.time_a == t_a1 else 10
+                placar_2 = 10 if p.time_a == t_a1 else 20
+                registrar_resultado_partida(p, placar_1, placar_2)
+            elif (p.time_a == t_a1 and p.time_b == t_a3) or (p.time_b == t_a1 and p.time_a == t_a3):
+                placar_1 = 20 if p.time_a == t_a1 else 10
+                placar_2 = 10 if p.time_a == t_a1 else 20
+                registrar_resultado_partida(p, placar_1, placar_2)
+            else:
+                placar_1 = 20 if p.time_a == t_a2 else 10
+                placar_2 = 10 if p.time_a == t_a2 else 20
+                registrar_resultado_partida(p, placar_1, placar_2)
+
+        # Simula partidas do Grupo B:
+        # Time B1 ganha de todos (6 pts), Time B2 ganha do Time B3 (3 pts), Time B3 perde todas (0 pts)
+        t_b = list(g_b.times.all())
+        t_b1, t_b2, t_b3 = t_b[0].delegacao, t_b[1].delegacao, t_b[2].delegacao
+
+        for p in g_b.partidas.all():
+            if (p.time_a == t_b1 and p.time_b == t_b2) or (p.time_b == t_b1 and p.time_a == t_b2):
+                placar_1 = 20 if p.time_a == t_b1 else 10
+                placar_2 = 10 if p.time_a == t_b1 else 20
+                registrar_resultado_partida(p, placar_1, placar_2)
+            elif (p.time_a == t_b1 and p.time_b == t_b3) or (p.time_b == t_b1 and p.time_a == t_b3):
+                placar_1 = 20 if p.time_a == t_b1 else 10
+                placar_2 = 10 if p.time_a == t_b1 else 20
+                registrar_resultado_partida(p, placar_1, placar_2)
+            else:
+                placar_1 = 20 if p.time_a == t_b2 else 10
+                placar_2 = 10 if p.time_a == t_b2 else 20
+                registrar_resultado_partida(p, placar_1, placar_2)
+
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        semis = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        self.assertEqual(len(semis), 2)
+        s1, s2 = semis[0], semis[1]
+
+        # Semi 1 deve ser 1ºA x 2ºB
+        self.assertEqual(s1.time_a, t_a1)
+        self.assertEqual(s1.time_b, t_b2)
+
+        # Semi 2 deve ser 1ºB x 2ºA
+        self.assertEqual(s2.time_a, t_b1)
+        self.assertEqual(s2.time_b, t_a2)
+
+        # Garante que equipes do mesmo grupo NÃO se enfrentam nas semifinais
+        times_g_a = {t_a1, t_a2, t_a3}
+        times_g_b = {t_b1, t_b2, t_b3}
+
+        # Na Semi 1, um time deve ser do Grupo A e outro do Grupo B
+        self.assertTrue(
+            (s1.time_a in times_g_a and s1.time_b in times_g_b) or
+            (s1.time_a in times_g_b and s1.time_b in times_g_a)
+        )
+        # Na Semi 2, um time deve ser do Grupo A e outro do Grupo B
+        self.assertTrue(
+            (s2.time_a in times_g_a and s2.time_b in times_g_b) or
+            (s2.time_a in times_g_b and s2.time_b in times_g_a)
+        )
+
+    def test_cruzamento_dois_grupos_conclusao_parcial(self):
+        """
+        Garante que quando apenas um grupo é concluído (Grupo A):
+        - Os times classificados do Grupo A NÃO se enfrentam prematuramente entre si.
+        - Não é criado Jogo com times do mesmo grupo.
+        - Quando o Grupo B encerra, os confrontos são completados com o cruzamento correto.
+        """
+        mod = Modalidade.objects.create(
+            nome="Basquete 2G Parcial",
+            genero="F",
+            formato_chaveamento="padrao",
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12
+        )
+        teams = [
+            self._create_delegation_for_mod(f"bsk_{i}@ufvjm.edu.br", f"Time BSK {i}", self.campus_dia, mod)
+            for i in range(1, 7)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        grupos = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        g_a, g_b = grupos[0], grupos[1]
+        g_a.vagas_classificacao = 2
+        g_a.save()
+        g_b.vagas_classificacao = 2
+        g_b.save()
+
+        # Conclui apenas partidas do Grupo A
+        t_a = list(g_a.times.all())
+        t_a1, t_a2, t_a3 = t_a[0].delegacao, t_a[1].delegacao, t_a[2].delegacao
+
+        for p in g_a.partidas.all():
+            registrar_resultado_partida(p, 15, 10)
+
+        # Não finaliza partidas do Grupo B (estão em andamento)
+        from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+        semis = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        s1, s2 = semis[0], semis[1]
+
+        # Em Semi 1, 1ºA aguarda 2ºB (que ainda é None)
+        self.assertIsNotNone(s1.time_a)
+        self.assertIsNone(s1.time_b)
+
+        # Em Semi 2, 2ºA aguarda 1ºB (que ainda é None)
+        self.assertIsNone(s2.time_a)
+        self.assertIsNotNone(s2.time_b)
+
+        # Garante que 1ºA e 2ºA não foram colocados na mesma semifinal
+        self.assertNotEqual(s1.time_a, s1.time_b)
+        self.assertNotEqual(s2.time_a, s2.time_b)
+
+        # Nenhum jogo vinculado foi criado prematuramente para s1 ou s2 porque falta oponente
+        self.assertIsNone(s1.jogo)
+        self.assertIsNone(s2.jogo)
+
+        # Agora finaliza o Grupo B
+        for p in g_b.partidas.all():
+            registrar_resultado_partida(p, 20, 10)
+
+        s1.refresh_from_db()
+        s2.refresh_from_db()
+
+        # Agora ambas as semifinais estão completas com adversários cruzados
+        self.assertIsNotNone(s1.time_a)
+        self.assertIsNotNone(s1.time_b)
+        self.assertIsNotNone(s2.time_a)
+        self.assertIsNotNone(s2.time_b)
+
+        # E agora os Jogos foram sincronizados corretamente
+        self.assertIsNotNone(s1.jogo)
+        self.assertIsNotNone(s2.jogo)
+        self.assertEqual(s1.jogo.time_a, s1.time_a)
+        self.assertEqual(s1.jogo.time_b, s1.time_b)
+
+    def test_cruzamento_olimpico_dois_grupos_quartas(self):
+        """
+        Garante que quando há Quartas de Final em formato com 2 grupos (ex: 3 classificados por grupo):
+        - Q1: 1ºA x Bye
+        - Q2: 2ºB x 3ºA (Cruzamento de grupos, e NÃO 1ºB x 2ºB)
+        - Q3: 1ºB x Bye
+        - Q4: 2ºA x 3ºB (Cruzamento de grupos)
+        - NUNCA há confronto entre equipes do mesmo grupo nas Quartas.
+        """
+        mod = Modalidade.objects.create(
+            nome="Futsal 2G Quartas",
+            genero="M",
+            formato_chaveamento="padrao",
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12
+        )
+        teams = [
+            self._create_delegation_for_mod(f"futq_{i}@ufvjm.edu.br", f"Time FUTQ {i}", self.campus_dia, mod)
+            for i in range(1, 9)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        grupos = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        g_a, g_b = grupos[0], grupos[1]
+
+        # Define 3 vagas em cada grupo (total 6 classificados locais -> Quartas com 2 Byes)
+        g_a.vagas_classificacao = 3
+        g_a.save()
+        g_b.vagas_classificacao = 3
+        g_b.save()
+
+        # Finaliza todas as partidas dos grupos
+        for p in g_a.partidas.all():
+            registrar_resultado_partida(p, 5, 2)
+        for p in g_b.partidas.all():
+            registrar_resultado_partida(p, 4, 1)
+
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        quartas = list(chaveamento.partidas.filter(fase='QUARTAS_LOCAL').order_by('id'))
+        self.assertEqual(len(quartas), 4)
+
+        q1, q2, q3, q4 = quartas[0], quartas[1], quartas[2], quartas[3]
+
+        c_a = [tg.delegacao for tg in g_a.times.filter(classificado=True).order_by('-pontos', '-vitorias', '-saldo_gols', '-gols_pro')]
+        c_b = [tg.delegacao for tg in g_b.times.filter(classificado=True).order_by('-pontos', '-vitorias', '-saldo_gols', '-gols_pro')]
+
+        # Q1: 1ºA tem Bye
+        self.assertEqual(q1.time_a, c_a[0])
+        self.assertTrue(q1.finalizada)
+        self.assertEqual(q1.vencedor, c_a[0])
+
+        # Q2: 2ºB x 3ºA (Cruzamento de grupos!)
+        self.assertEqual(q2.time_a, c_b[1])
+        self.assertEqual(q2.time_b, c_a[2])
+
+        # Q3: 1ºB tem Bye
+        self.assertEqual(q3.time_a, c_b[0])
+        self.assertTrue(q3.finalizada)
+        self.assertEqual(q3.vencedor, c_b[0])
+
+        # Q4: 2ºA x 3ºB (Cruzamento de grupos!)
+        self.assertEqual(q4.time_a, c_a[1])
+        self.assertEqual(q4.time_b, c_b[2])
+
+        # Semifinais já receberam os Byes de 1ºA e 1ºB
+        semis = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        self.assertEqual(semis[0].time_a, c_a[0])
+        self.assertEqual(semis[1].time_a, c_b[0])
+
+    def test_preservacao_partidas_finalizadas(self):
+        """
+        Garante que partidas de mata-mata que já foram finalizadas não tenham seus dados
+        sobrescritos ao recalcular os chaveamentos.
+        """
+        mod = Modalidade.objects.create(
+            nome="Volei Preservado",
+            genero="M",
+            formato_chaveamento="padrao",
+            limite_minimo_jogadores=6,
+            limite_maximo_jogadores=12
+        )
+        teams = [
+            self._create_delegation_for_mod(f"vol_p_{i}@ufvjm.edu.br", f"Time VP {i}", self.campus_dia, mod)
+            for i in range(1, 7)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        for g in chaveamento.grupos.filter(tipo='grupo_local'):
+            g.vagas_classificacao = 2
+            g.save()
+            for p in g.partidas.all():
+                registrar_resultado_partida(p, 25, 20)
+
+        encerrar_fase_grupos_e_gerar_mata_mata(chaveamento)
+
+        semis = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+        s1 = semis[0]
+        # Joga a semifinal 1 e finaliza
+        registrar_resultado_partida(s1, 25, 18)
+        s1.refresh_from_db()
+        vencedor_original = s1.vencedor
+        self.assertTrue(s1.finalizada)
+
+        # Chama atualizar_classificados_e_preencher_mata_mata novamente
+        from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+        s1.refresh_from_db()
+        # Garante que s1 continua finalizada com o mesmo vencedor e placar
+        self.assertTrue(s1.finalizada)
+        self.assertEqual(s1.vencedor, vencedor_original)
+        self.assertEqual(s1.placar_a, 25)
+        self.assertEqual(s1.placar_b, 18)
+
+    def test_view_admin_e_publica_atualizam_automaticamente(self):
+        """
+        Garante que acessar as views de detalhe do chaveamento (admin e pública)
+        aciona a atualização automática dos classificados e mata-mata.
+        """
+        mod = Modalidade.objects.create(
+            nome="Peteca Auto Update",
+            genero="M",
+            formato_chaveamento="padrao",
+            limite_minimo_jogadores=2,
+            limite_maximo_jogadores=4
+        )
+        teams = [
+            self._create_delegation_for_mod(f"pet_{i}@ufvjm.edu.br", f"Time PET {i}", self.campus_dia, mod)
+            for i in range(1, 7)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        for g in chaveamento.grupos.filter(tipo='grupo_local'):
+            g.vagas_classificacao = 2
+            g.save()
+            for p in g.partidas.all():
+                registrar_resultado_partida(p, 21, 15)
+
+        # Acessa a view de admin
+        self.client.force_login(self.admin_user)
+        resp_admin = self.client.get(reverse('chaveamento_admin_detail', args=[mod.pk]))
+        self.assertEqual(resp_admin.status_code, 200)
+
+        # Verifica que as semifinais estão preenchidas no contexto
+        partidas_fase = resp_admin.context['partidas_por_fase']
+        self.assertEqual(len(partidas_fase['SEMI_LOCAL']), 2)
+        s1 = partidas_fase['SEMI_LOCAL'][0]
+        self.assertIsNotNone(s1.time_a)
+        self.assertIsNotNone(s1.time_b)
+
+        # Acessa a view pública
+        self.client.force_login(self.rep_user)
+        resp_pub = self.client.get(reverse('chaveamento_public_detail', args=[mod.pk]))
+        self.assertEqual(resp_pub.status_code, 200)
+
+        # Acessa a view de compartilhamento (anônima)
+        self.client.logout()
+        resp_share = self.client.get(reverse('chaveamento_share', args=[mod.pk]))
+        self.assertEqual(resp_share.status_code, 200)
+
+
 
 
 
