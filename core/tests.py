@@ -2329,4 +2329,105 @@ class ChaveamentoJogosListaTests(TestCase):
         self.assertIn('3 x 1', content_placar)
 
 
+class PresumulaDelegacoesEFiltrosTestCase(TestCase):
+    def setUp(self):
+        self.comissao = User.objects.create_user(
+            email='comissao_presumula@test.com',
+            nome_completo='Comissao Teste',
+            role='COMISSAO',
+            is_staff=True
+        )
+        self.del_deferida = User.objects.create_user(
+            email='del_deferida@test.com',
+            nome_completo='Delegado Deferido',
+            nome_delegacao='Delegação Aprovada',
+            role='REPRESENTANTE',
+            status_delegacao='deferido'
+        )
+        self.del_pendente = User.objects.create_user(
+            email='del_pendente@test.com',
+            nome_completo='Delegado Pendente',
+            nome_delegacao='Delegação Pendente',
+            role='REPRESENTANTE',
+            status_delegacao='pendente'
+        )
+        self.del_indeferida = User.objects.create_user(
+            email='del_indeferida@test.com',
+            nome_completo='Delegado Indeferido',
+            nome_delegacao='Delegação Recusada',
+            role='REPRESENTANTE',
+            status_delegacao='indeferido'
+        )
+        self.sub_delegado = User.objects.create_user(
+            email='sub_del@test.com',
+            nome_completo='Sub Delegado',
+            role='REPRESENTANTE',
+            parent_delegate=self.del_deferida,
+            status_delegacao='deferido'
+        )
+        self.modalidade = Modalidade.objects.create(nome='Handebol', genero='F')
+
+    def test_jogo_form_does_not_contain_permitir_lancamento_atletas(self):
+        from core.forms import JogoForm
+        form = JogoForm()
+        self.assertNotIn('permitir_lancamento_atletas', form.fields)
+
+    def test_jogo_form_only_shows_deferred_principal_delegations(self):
+        from core.forms import JogoForm
+        form = JogoForm()
+        reps_a = list(form.fields['time_a'].queryset)
+        reps_b = list(form.fields['time_b'].queryset)
+        self.assertIn(self.del_deferida, reps_a)
+        self.assertIn(self.del_deferida, reps_b)
+        self.assertNotIn(self.del_pendente, reps_a)
+        self.assertNotIn(self.del_indeferida, reps_a)
+        self.assertNotIn(self.sub_delegado, reps_a)
+        self.assertNotIn(self.comissao, reps_a)
+
+    def test_presumula_list_filter_only_shows_deferred_principal_delegations(self):
+        from django.urls import reverse
+        self.client.force_login(self.comissao)
+        url = reverse('presumula_list')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        delegacoes_list = list(response.context['delegacoes_list'])
+        self.assertIn(self.del_deferida, delegacoes_list)
+        self.assertNotIn(self.del_pendente, delegacoes_list)
+        self.assertNotIn(self.del_indeferida, delegacoes_list)
+        self.assertNotIn(self.sub_delegado, delegacoes_list)
+        self.assertNotIn(self.comissao, delegacoes_list)
+
+    def test_user_admin_lupa_popup_only_returns_deferred_delegations(self):
+        from django.contrib.admin.sites import AdminSite
+        from django.test import RequestFactory
+        from users.admin import UserAdmin
+        rf = RequestFactory()
+        request = rf.get('/admin/users/user/?_to_field=id')
+        request.user = self.comissao
+        admin_obj = UserAdmin(User, AdminSite())
+        qs = list(admin_obj.get_queryset(request))
+        self.assertIn(self.del_deferida, qs)
+        self.assertNotIn(self.del_pendente, qs)
+        self.assertNotIn(self.del_indeferida, qs)
+        self.assertNotIn(self.sub_delegado, qs)
+        self.assertNotIn(self.comissao, qs)
+
+    def test_presumula_admin_foreignkey_only_deferred_delegations(self):
+        from django.contrib.admin.sites import AdminSite
+        from django.test import RequestFactory
+        from core.admin import PreSumulaAdmin
+        from core.models import PreSumula
+        rf = RequestFactory()
+        request = rf.get('/admin/core/presumula/add/')
+        request.user = self.comissao
+        admin_obj = PreSumulaAdmin(PreSumula, AdminSite())
+        formfield = admin_obj.formfield_for_foreignkey(PreSumula._meta.get_field('representante'), request)
+        qs = list(formfield.queryset)
+        self.assertIn(self.del_deferida, qs)
+        self.assertNotIn(self.del_pendente, qs)
+        self.assertNotIn(self.del_indeferida, qs)
+        self.assertNotIn(self.sub_delegado, qs)
+
+
+
 

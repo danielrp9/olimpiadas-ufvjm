@@ -51,6 +51,14 @@ class JogoAdmin(admin.ModelAdmin):
     list_display = ('modalidade', 'time_a', 'time_b', 'data_jogo', 'horario_jogo', 'local', 'arbitro', 'finalizado')
     list_filter = ('modalidade', 'data_jogo', 'finalizado')
     search_fields = ('time_a__nome_delegacao', 'time_b__nome_delegacao', 'local', 'arbitro')
+    raw_id_fields = ('time_a', 'time_b')
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name in ("time_a", "time_b"):
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            kwargs["queryset"] = User.objects.filter(role='REPRESENTANTE', status_delegacao='deferido', parent_delegate__isnull=True).order_by('nome_delegacao', 'email')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 class PreSumulaAtletaInline(admin.TabularInline):
     model = PreSumulaAtleta
@@ -60,9 +68,17 @@ class PreSumulaAtletaInline(admin.TabularInline):
 class PreSumulaAdmin(admin.ModelAdmin):
     list_display = ('id', 'jogo', 'representante', 'tecnico', 'data_criacao')
     list_filter = ('jogo__modalidade', 'data_criacao')
+    raw_id_fields = ('representante',)
     inlines = [PreSumulaAtletaInline]
     search_fields = ('representante__nome_delegacao', 'representante__nome_completo', 'tecnico', 'jogo__modalidade__nome')
     actions = ['delete_selected', 'apagar_todas_presumulas_action']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "representante":
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            kwargs["queryset"] = User.objects.filter(role='REPRESENTANTE', status_delegacao='deferido', parent_delegate__isnull=True).order_by('nome_delegacao', 'email')
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     @admin.action(description="Apagar TODAS as pré-súmulas do sistema")
     def apagar_todas_presumulas_action(self, request, queryset):

@@ -837,7 +837,7 @@ class PreSumulaListView(LoginRequiredMixin, ListView):
         
         from django.contrib.auth import get_user_model
         User = get_user_model()
-        context['delegacoes_list'] = User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True).order_by('nome_delegacao')
+        context['delegacoes_list'] = User.objects.filter(role='REPRESENTANTE', status_delegacao='deferido', parent_delegate__isnull=True).order_by('nome_delegacao')
         
         if user.is_staff:
             from collections import defaultdict

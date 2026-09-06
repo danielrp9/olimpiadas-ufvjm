@@ -14,9 +14,17 @@ class UserAdmin(BaseUserAdmin):
     
     # Define as colunas mostradas na lista do admin
     list_display = ('email', 'nome_completo', 'role', 'get_delegacao', 'parent_delegate', 'cpf', 'perfil_completo', 'is_staff', 'date_joined')
-    list_filter = ('role', 'perfil_completo', 'is_staff', 'is_superuser')
+    list_filter = ('role', 'status_delegacao', 'perfil_completo', 'is_staff', 'is_superuser')
     search_fields = ('email', 'nome_completo', 'cpf', 'nome_delegacao', 'parent_delegate__nome_delegacao')
     ordering = ('email',)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Se for popup de seleção pela lupa (ex: raw_id_fields em Pré-Súmula ou Jogo)
+        if request.GET.get('_to_field') == 'id' or request.GET.get('is_popup'):
+            if not request.GET.get('all_users'):
+                qs = qs.filter(role='REPRESENTANTE', status_delegacao='deferido', parent_delegate__isnull=True)
+        return qs
     
     # Agrupa os campos na página de detalhe/edição
     fieldsets = (

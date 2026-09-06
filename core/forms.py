@@ -62,21 +62,20 @@ class JogoForm(forms.ModelForm):
 
     class Meta:
         model = Jogo
-        fields = ['modalidade', 'data_jogo', 'horario_jogo', 'time_a', 'time_b', 'local', 'arbitro', 'permitir_lancamento_atletas', 'finalizado', 'data_hora_fim']
+        fields = ['modalidade', 'data_jogo', 'horario_jogo', 'time_a', 'time_b', 'local', 'arbitro', 'finalizado', 'data_hora_fim']
         widgets = {
             'modalidade': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'data_jogo': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'horario_jogo': forms.TimeInput(format='%H:%M', attrs={'type': 'time', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'local': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'arbitro': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
-            'permitir_lancamento_atletas': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-emerald-600 border-slate-200 rounded focus:ring-emerald-500/20 focus:outline-none accent-emerald-600'}),
             'finalizado': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600'}),
             'data_hora_fim': forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        reps = User.objects.filter(role='REPRESENTANTE', status_delegacao='deferido').order_by('nome_delegacao', 'email')
+        reps = User.objects.filter(role='REPRESENTANTE', status_delegacao='deferido', parent_delegate__isnull=True).order_by('nome_delegacao', 'email')
         
         # Garante que os times da partida atual estejam no queryset de opções de edição
         if self.instance and self.instance.pk:
@@ -87,7 +86,7 @@ class JogoForm(forms.ModelForm):
                 additional_ids.append(self.instance.time_b_id)
             if additional_ids:
                 reps = User.objects.filter(
-                    Q(role='REPRESENTANTE', status_delegacao='deferido') | Q(id__in=additional_ids)
+                    Q(role='REPRESENTANTE', status_delegacao='deferido', parent_delegate__isnull=True) | Q(id__in=additional_ids)
                 ).distinct().order_by('nome_delegacao', 'email')
                 
         self.fields['time_a'].queryset = reps

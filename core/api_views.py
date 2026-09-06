@@ -631,7 +631,7 @@ class APIDelegacoesView(View):
         else:
             # Representante pode listar apenas a sua delegacao
             # Pode ser útil para popular dropdowns
-            representantes = User.objects.filter(role='REPRESENTANTE', perfil_completo=True).order_by('nome_delegacao')
+            representantes = User.objects.filter(role='REPRESENTANTE', status_delegacao='deferido', parent_delegate__isnull=True).order_by('nome_delegacao')
             return JsonResponse({'delegacoes': [{'id': r.id, 'nome_delegacao': r.nome_delegacao or r.email} for r in representantes]})
 
 @method_decorator(csrf_exempt, name='dispatch')
