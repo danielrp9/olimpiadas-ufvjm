@@ -2243,7 +2243,8 @@ from .chaveamento_services import (
     atualizar_classificados_e_preencher_mata_mata,
     classificar_delegacoes_por_campus,
     obter_resumo_chaveamentos_admin,
-    obter_resumo_chaveamentos_publico
+    obter_resumo_chaveamentos_publico,
+    _sincronizar_jogo_partida
 )
 
 class ChaveamentoAdminListView(LoginRequiredMixin, View):
@@ -2304,13 +2305,41 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
         from core.disciplinar_services import obter_relatorio_disciplinar_modalidade
         relatorio_disciplinar = obter_relatorio_disciplinar_modalidade(modalidade)
 
+        # Delegações para seleção manual em confrontos do mata-mata
+        delegacoes_modalidade_ids = set()
+        for g in grupos:
+            for tg in g.times.all():
+                if tg.delegacao_id:
+                    delegacoes_modalidade_ids.add(tg.delegacao_id)
+        for p in chaveamento.partidas.all():
+            if p.time_a_id:
+                delegacoes_modalidade_ids.add(p.time_a_id)
+            if p.time_b_id:
+                delegacoes_modalidade_ids.add(p.time_b_id)
+        for bucket_list in buckets.values():
+            for d in bucket_list:
+                delegacoes_modalidade_ids.add(d.id)
+
+        from core.models import InscricaoModalidade
+        inscricoes_mod = InscricaoModalidade.objects.filter(modalidade=modalidade).values_list('inscricao__delegacao_id', flat=True)
+        for d_id in inscricoes_mod:
+            if d_id:
+                delegacoes_modalidade_ids.add(d_id)
+
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        delegacoes_modalidade = list(User.objects.filter(id__in=delegacoes_modalidade_ids).order_by('nome_delegacao', 'email'))
+        outras_delegacoes = list(User.objects.filter(role='REPRESENTANTE').exclude(id__in=delegacoes_modalidade_ids).order_by('nome_delegacao', 'email'))
+
         return render(request, 'core/chaveamento_admin_detail.html', {
             'modalidade': modalidade,
             'chaveamento': chaveamento,
             'grupos': grupos,
             'partidas_por_fase': partidas_por_fase,
             'buckets': buckets,
-            'relatorio_disciplinar': relatorio_disciplinar
+            'relatorio_disciplinar': relatorio_disciplinar,
+            'delegacoes_modalidade': delegacoes_modalidade,
+            'outras_delegacoes': outras_delegacoes,
         })
 
 
@@ -2361,6 +2390,53 @@ def salvar_resultado_partida_view(request, pk):
         horario_raw = request.POST.get('horario_jogo') or request.POST.get('horario_partida')
 
         updated_anything = False
+        mudou_para_automatico = False
+
+        # Intervenção / Seleção Manual de Equipes (Quartas, Semifinais, Finais, etc.)
+        if request.POST.get('has_team_selection') == '1':
+            time_a_id = request.POST.get('time_a', '').strip()
+            time_b_id = request.POST.get('time_b', '').strip()
+            definicao_manual_checked = (request.POST.get('definicao_manual') == '1')
+
+            novo_time_a = User.objects.filter(pk=time_a_id).first() if time_a_id else None
+            novo_time_b = User.objects.filter(pk=time_b_id).first() if time_b_id else None
+
+            mudou_times = (novo_time_a != partida.time_a or novo_time_b != partida.time_b)
+
+            if mudou_times:
+                partida.time_a = novo_time_a
+                partida.time_b = novo_time_b
+                partida.definicao_manual = True
+                updated_anything = True
+            elif definicao_manual_checked != partida.definicao_manual:
+                partida.definicao_manual = definicao_manual_checked
+                if not definicao_manual_checked:
+                    mudou_para_automatico = True
+                updated_anything = True
+
+            if partida.definicao_manual:
+                if partida.jogo:
+                    partida.jogo.time_a = partida.time_a
+                    partida.jogo.time_b = partida.time_b
+                    partida.jogo.save(update_fields=['time_a', 'time_b'])
+                else:
+                    _sincronizar_jogo_partida(partida)
+
+                if partida.finalizada and mudou_times:
+                    if partida.placar_a is not None and partida.placar_b is not None:
+                        if partida.placar_a > partida.placar_b:
+                            partida.vencedor = partida.time_a
+                            partida.perdedor = partida.time_b
+                        elif partida.placar_b > partida.placar_a:
+                            partida.vencedor = partida.time_b
+                            partida.perdedor = partida.time_a
+                        if partida.proxima_partida and partida.vencedor and not partida.proxima_partida.definicao_manual:
+                            if partida.posicao_proxima_partida == 'A':
+                                partida.proxima_partida.time_a = partida.vencedor
+                            elif partida.posicao_proxima_partida == 'B':
+                                partida.proxima_partida.time_b = partida.vencedor
+                            partida.proxima_partida.save()
+                            _sincronizar_jogo_partida(partida.proxima_partida, "Mata-Mata")
 
         if wo_tipo in ['TIME_A', 'TIME_B', 'AMBOS']:
             try:
@@ -2421,6 +2497,9 @@ def salvar_resultado_partida_view(request, pk):
                 pass
 
         partida.save()
+
+        if mudou_para_automatico and partida.chaveamento:
+            atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
 
         if updated_anything:
             messages.success(request, "Dados da partida salvos com sucesso!")

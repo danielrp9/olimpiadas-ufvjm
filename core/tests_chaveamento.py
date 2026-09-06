@@ -1173,6 +1173,293 @@ class ChaveamentoModuleTestCase(TestCase):
         resp_share = self.client.get(reverse('chaveamento_share', args=[mod.pk]))
         self.assertEqual(resp_share.status_code, 200)
 
+    def test_wo_desclassifica_time_e_prioriza_time_sem_wo(self):
+        """
+        Garante que quando um time tem W.O., ele JAMAIS segue para a fase seguinte (classificado=False),
+        e o sistema prioriza outro time sem W.O. (mesmo com menos pontos).
+        """
+        mod = Modalidade.objects.create(
+            nome="Truco Teste WO",
+            genero="M",
+            limite_minimo_jogadores=2,
+            limite_maximo_jogadores=4
+        )
+        t_a = self._create_delegation_for_mod("wo_t1@ufvjm.edu.br", "Time WO 1", self.campus_dia, mod)
+        t_b = self._create_delegation_for_mod("wo_t2@ufvjm.edu.br", "Time WO 2", self.campus_dia, mod)
+        t_c = self._create_delegation_for_mod("wo_t3@ufvjm.edu.br", "Time WO 3", self.campus_dia, mod)
+
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        grupo = chaveamento.grupos.filter(tipo='grupo_local').first()
+        grupo.vagas_classificacao = 2
+        grupo.save()
+
+        # Partidas do grupo
+        # Partida 1: Time A vence Time B (Time A tem 3 pts, 0 WO)
+        p1 = grupo.partidas.filter(time_a__in=[t_a, t_b], time_b__in=[t_a, t_b]).first()
+        registrar_resultado_partida(p1, placar_a=12, placar_b=6)
+
+        # Partida 2: Time A comete W.O. contra Time C (Time A recebe W.O.)
+        p2 = grupo.partidas.filter(time_a__in=[t_a, t_c], time_b__in=[t_a, t_c]).first()
+        if p2.time_a == t_a:
+            registrar_resultado_partida(p2, placar_a=0, placar_b=1, wo_tipo='TIME_A', motivo_wo='Ausência')
+        else:
+            registrar_resultado_partida(p2, placar_a=1, placar_b=0, wo_tipo='TIME_B', motivo_wo='Ausência')
+
+        # Partida 3: Time B vence Time C
+        p3 = grupo.partidas.filter(time_a__in=[t_b, t_c], time_b__in=[t_b, t_c]).first()
+        registrar_resultado_partida(p3, placar_a=12, placar_b=4)
+
+        from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+        tg_a = TimeGrupo.objects.get(grupo=grupo, delegacao=t_a)
+        tg_b = TimeGrupo.objects.get(grupo=grupo, delegacao=t_b)
+        tg_c = TimeGrupo.objects.get(grupo=grupo, delegacao=t_c)
+
+        self.assertEqual(tg_a.quantidade_wo, 1)
+        self.assertEqual(tg_b.quantidade_wo, 0)
+        self.assertEqual(tg_c.quantidade_wo, 0)
+
+        # Time A tem 3 pontos mas tem W.O. -> NÃO pode se classificar!
+        self.assertFalse(tg_a.classificado)
+        # Time B e Time C não têm W.O. -> classificados!
+        self.assertTrue(tg_b.classificado)
+        self.assertTrue(tg_c.classificado)
+
+        # Na ordenação do grupo, o time com W.O. fica no final
+        times_ord = list(grupo.times.all())
+        self.assertEqual(times_ord[-1].delegacao, t_a)
+
+    def test_cenario_truco_grupos_com_wo_repescagem_e_vagas_completas(self):
+        """
+        Cenário real do Truco:
+        - 11 times em Diamantina -> 3 Grupos: Grupo A (4), Grupo B (4), Grupo C (3).
+        - Vagas originais: 3 em A, 3 em B, 2 em C (Total = 8 classificados para Quartas).
+        - No Grupo A, 2 equipes cometem W.O. (restando apenas 2 equipes elegíveis).
+        - O sistema deve desconsiderar os times com W.O. e priorizar equipes sem W.O. dos demais grupos.
+        - Garante que exatamente 8 equipes avancem, nenhuma com W.O., e que as Quartas sejam preenchidas.
+        """
+        mod = Modalidade.objects.create(
+            nome="Truco Geral 11 Times",
+            genero="M",
+            limite_minimo_jogadores=2,
+            limite_maximo_jogadores=4
+        )
+        dia_teams = [
+            self._create_delegation_for_mod(f"truco_{i}@ufvjm.edu.br", f"Dupla Truco {i}", self.campus_dia, mod)
+            for i in range(1, 12)
+        ]
+
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        grupos = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+        self.assertEqual(len(grupos), 3)
+
+        g_a, g_b, g_c = grupos[0], grupos[1], grupos[2]
+        # Garante configuração padrão: Grupo A (4 times, vagas=3), B (4 times, vagas=3), C (3 times, vagas=2)
+        g_a.vagas_classificacao = 3
+        g_a.save()
+        g_b.vagas_classificacao = 3
+        g_b.save()
+        g_c.vagas_classificacao = 2
+        g_c.save()
+
+        times_a = list(g_a.times.all())
+        times_b = list(g_b.times.all())
+        times_c = list(g_c.times.all())
+
+        # No Grupo A:
+        # times_a[0] e times_a[1] jogam normalmente e não têm WO.
+        # times_a[2] e times_a[3] cometem WO em suas partidas!
+        for p in g_a.partidas.all():
+            if p.time_a == times_a[2].delegacao or p.time_b == times_a[2].delegacao:
+                wo_side = 'TIME_A' if p.time_a == times_a[2].delegacao else 'TIME_B'
+                registrar_resultado_partida(p, 0, 1, wo_tipo=wo_side, motivo_wo='WO')
+            elif p.time_a == times_a[3].delegacao or p.time_b == times_a[3].delegacao:
+                wo_side = 'TIME_A' if p.time_a == times_a[3].delegacao else 'TIME_B'
+                registrar_resultado_partida(p, 0, 1, wo_tipo=wo_side, motivo_wo='WO')
+            else:
+                registrar_resultado_partida(p, 12, 8)
+
+        # No Grupo B e Grupo C: todos jogam normalmente (zero W.O.)
+        for p in g_b.partidas.all():
+            registrar_resultado_partida(p, 12, 10)
+        for p in g_c.partidas.all():
+            registrar_resultado_partida(p, 12, 10)
+
+        from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+        # Validações:
+        # 1. Times com WO no Grupo A JAMAIS são classificados
+        self.assertFalse(TimeGrupo.objects.get(id=times_a[2].id).classificado)
+        self.assertFalse(TimeGrupo.objects.get(id=times_a[3].id).classificado)
+        self.assertGreater(TimeGrupo.objects.get(id=times_a[2].id).quantidade_wo, 0)
+        self.assertGreater(TimeGrupo.objects.get(id=times_a[3].id).quantidade_wo, 0)
+
+        # 2. Total de classificados em Diamantina deve ser EXATAMENTE 8
+        total_classificados = TimeGrupo.objects.filter(grupo__in=grupos, classificado=True).count()
+        self.assertEqual(total_classificados, 8)
+
+        # 3. NENHUM classificado tem WO
+        classificados = TimeGrupo.objects.filter(grupo__in=grupos, classificado=True)
+        for tg in classificados:
+            self.assertEqual(tg.quantidade_wo, 0)
+
+        # 4. As Quartas de Final devem estar 100% preenchidas com as 8 equipes (4 partidas x 2 equipes)
+        quartas = list(chaveamento.partidas.filter(fase='QUARTAS_LOCAL').order_by('id'))
+        self.assertEqual(len(quartas), 4)
+        for q in quartas:
+            self.assertIsNotNone(q.time_a)
+            self.assertIsNotNone(q.time_b)
+            self.assertNotEqual(q.time_a, q.time_b)
+
+        # 5. Visualização na view exibe badge de Desclassificado
+        self.client.force_login(self.admin_user)
+        resp = self.client.get(reverse('chaveamento_admin_detail', args=[mod.pk]))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Desclassificado")
+
+    def _setup_modalidade_com_quartas(self, prefix="man"):
+        mod = Modalidade.objects.create(
+            nome=f"Modalidade Manual {prefix}",
+            genero="M",
+            formato_chaveamento="padrao",
+            limite_minimo_jogadores=5,
+            limite_maximo_jogadores=12
+        )
+        teams = [
+            self._create_delegation_for_mod(f"{prefix}_{i}@ufvjm.edu.br", f"Time {prefix.upper()} {i}", self.campus_dia, mod)
+            for i in range(1, 9)
+        ]
+        chaveamento = gerar_chaveamento_modalidade(mod)
+        return mod, teams, chaveamento
+
+    def test_intervencao_manual_admin_seleciona_times_nas_quartas(self):
+        """
+        Testa se a Comissão Organizadora pode intervir manualmente nas Quartas de Final,
+        selecionando diretamente os times através da edição da partida, e se essa escolha
+        manual fica fixada (definicao_manual=True) sem ser sobrescrita pelo algoritmo.
+        """
+        mod, teams, chaveamento = self._setup_modalidade_com_quartas("qman")
+        quartas = list(chaveamento.partidas.filter(fase='QUARTAS_LOCAL').order_by('id'))
+        self.assertTrue(len(quartas) >= 1)
+        q1 = quartas[0]
+
+        team_custom_1 = teams[0]
+        team_custom_2 = teams[5]
+
+        self.client.force_login(self.admin_user)
+        url = reverse('chaveamento_partida_resultado', kwargs={'pk': q1.pk})
+
+        response = self.client.post(url, {
+            'has_team_selection': '1',
+            'time_a': str(team_custom_1.pk),
+            'time_b': str(team_custom_2.pk),
+            'definicao_manual': '1',
+            'placar_a': '',
+            'placar_b': '',
+            'wo_tipo': '',
+        })
+        self.assertEqual(response.status_code, 302)
+
+        q1.refresh_from_db()
+        self.assertTrue(q1.definicao_manual)
+        self.assertEqual(q1.time_a, team_custom_1)
+        self.assertEqual(q1.time_b, team_custom_2)
+        self.assertIsNotNone(q1.jogo)
+        self.assertEqual(q1.jogo.time_a, team_custom_1)
+        self.assertEqual(q1.jogo.time_b, team_custom_2)
+
+        # Chamar a rotina de preenchimento automático NÃO deve sobrescrever a escolha manual do admin
+        from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+        q1.refresh_from_db()
+        self.assertTrue(q1.definicao_manual)
+        self.assertEqual(q1.time_a, team_custom_1)
+        self.assertEqual(q1.time_b, team_custom_2)
+
+    def test_intervencao_manual_desmarcar_restaura_preenchimento_automatico(self):
+        """
+        Testa se ao desmarcar 'Definição Manual' o sistema remove o bloqueio
+        e restaura o cálculo automático dos confrontos com base nos classificados.
+        """
+        mod, teams, chaveamento = self._setup_modalidade_com_quartas("undoman")
+        q1 = chaveamento.partidas.filter(fase='QUARTAS_LOCAL').first()
+        q1.time_a = teams[0]
+        q1.time_b = teams[1]
+        q1.definicao_manual = True
+        q1.save()
+
+        self.client.force_login(self.admin_user)
+        url = reverse('chaveamento_partida_resultado', kwargs={'pk': q1.pk})
+
+        # Desmarca a definição manual (sem o checkbox definicao_manual enviado no POST)
+        response = self.client.post(url, {
+            'has_team_selection': '1',
+            'time_a': str(teams[0].pk),
+            'time_b': str(teams[1].pk),
+            'placar_a': '',
+            'placar_b': '',
+        })
+        self.assertEqual(response.status_code, 302)
+
+        q1.refresh_from_db()
+        self.assertFalse(q1.definicao_manual)
+
+    def test_intervencao_manual_em_semifinais_protege_contra_avanco_automatico(self):
+        """
+        Testa se uma semifinal configurada manualmente pelo admin não é sobrescrita
+        quando uma partida de quartas anterior for concluída e tentar avançar o vencedor.
+        """
+        mod, teams, chaveamento = self._setup_modalidade_com_quartas("semiman")
+        q1 = chaveamento.partidas.filter(fase='QUARTAS_LOCAL').first()
+        semi1 = chaveamento.partidas.filter(fase='SEMI_LOCAL').first()
+        self.assertIsNotNone(semi1)
+
+        # Fixa manualmente os times da semifinal
+        semi1.time_a = teams[3]
+        semi1.time_b = teams[4]
+        semi1.definicao_manual = True
+        semi1.save()
+
+        # Configura e finaliza Q1 com vitória de outro time
+        q1.time_a = teams[0]
+        q1.time_b = teams[1]
+        q1.proxima_partida = semi1
+        q1.posicao_proxima_partida = 'A'
+        q1.save()
+
+        registrar_resultado_partida(q1, 5, 2)
+        self.assertEqual(q1.vencedor, teams[0])
+
+        # Semi 1 NÃO deve ter seu time_a alterado para o vencedor de Q1, pois está travada manualmente
+        semi1.refresh_from_db()
+        self.assertEqual(semi1.time_a, teams[3])
+        self.assertEqual(semi1.time_b, teams[4])
+
+    def test_chaveamento_admin_detail_view_exibe_seletores_de_time_e_badge_manual(self):
+        """
+        Testa se a página de gerenciamento do chaveamento renderiza o formulário de edição
+        com os seletores de time para mata-mata e o badge de definição manual quando aplicável.
+        """
+        mod, teams, chaveamento = self._setup_modalidade_com_quartas("viewman")
+        q1 = chaveamento.partidas.filter(fase='QUARTAS_LOCAL').first()
+        q1.definicao_manual = True
+        q1.save()
+
+        self.client.force_login(self.admin_user)
+        url = reverse('chaveamento_admin_detail', kwargs={'pk': mod.pk})
+        resp = self.client.get(url)
+
+        self.assertEqual(resp.status_code, 200)
+        self.assertIn('delegacoes_modalidade', resp.context)
+        self.assertContains(resp, 'name="time_a"')
+        self.assertContains(resp, 'name="time_b"')
+        self.assertContains(resp, 'Definição Manual')
+        self.assertContains(resp, 'Manual')
+
+
 
 
 

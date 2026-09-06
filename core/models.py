@@ -538,7 +538,11 @@ class TimeGrupo(models.Model):
         verbose_name = "Time no Grupo"
         verbose_name_plural = "Times nos Grupos"
         unique_together = ('grupo', 'delegacao')
-        ordering = ['-pontos', '-vitorias', '-saldo_gols', '-gols_pro']
+        ordering = ['quantidade_wo', '-pontos', '-vitorias', '-saldo_gols', '-gols_pro']
+
+    @property
+    def is_desclassificado_por_wo(self):
+        return self.quantidade_wo > 0
 
     def __str__(self):
         nome_del = self.delegacao.nome_delegacao or self.delegacao.nome_completo or self.delegacao.email
@@ -592,6 +596,12 @@ class PartidaChaveamento(models.Model):
     
     partida_perdedor_destino = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='partidas_origem_perdedor')
     posicao_perdedor_destino = models.CharField(max_length=1, choices=[('A', 'Time A'), ('B', 'Time B')], null=True, blank=True)
+
+    definicao_manual = models.BooleanField(
+        default=False,
+        verbose_name="Definição Manual de Equipes",
+        help_text="Indica se as equipes foram selecionadas manualmente pela organização, impedindo substituição automática."
+    )
 
     class Meta:
         verbose_name = "Partida do Chaveamento"
