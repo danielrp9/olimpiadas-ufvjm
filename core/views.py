@@ -2379,6 +2379,197 @@ def resetar_chaveamento_view(request, pk):
 
 
 @user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def salvar_set_partida_view(request, pk):
+    """
+    Registra ou atualiza um set de uma partida de volei/tenis/rede (suporta AJAX e POST tradicional).
+    """
+    if request.method == 'POST':
+        partida = get_object_or_404(PartidaChaveamento, pk=pk)
+        numero_set_raw = request.POST.get('numero_set')
+        pontos_a_raw = request.POST.get('pontos_a')
+        pontos_b_raw = request.POST.get('pontos_b')
+
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+
+        try:
+            numero_set = int(numero_set_raw) if (numero_set_raw and str(numero_set_raw).strip()) else partida.proximo_numero_set
+            pontos_a = int(pontos_a_raw)
+            pontos_b = int(pontos_b_raw)
+        except (ValueError, TypeError):
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': 'Informe valores numéricos válidos para os pontos do set.'}, status=400)
+            messages.error(request, "Informe valores válidos para o set.")
+            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+
+        if pontos_a < 0 or pontos_b < 0:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': 'Os pontos do set não podem ser negativos.'}, status=400)
+            messages.error(request, "Pontos não podem ser negativos.")
+            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+
+        if pontos_a == pontos_b:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': 'Um set não pode terminar empatado. É necessária a pontuação de desempate.'}, status=400)
+            messages.error(request, "Um set não pode terminar empatado.")
+            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+
+        from core.models import SetPartida
+        set_obj, created = SetPartida.objects.update_or_create(
+            partida=partida,
+            numero_set=numero_set,
+            defaults={
+                'jogo': partida.jogo,
+                'pontos_a': pontos_a,
+                'pontos_b': pontos_b,
+            }
+        )
+
+        sets_a = sum(1 for s in partida.sets.all() if s.pontos_a > s.pontos_b)
+        sets_b = sum(1 for s in partida.sets.all() if s.pontos_b > s.pontos_a)
+
+        partida.placar_a = sets_a
+        partida.placar_b = sets_b
+
+        # Se a partida já estava finalizada, atualiza vencedor
+        if partida.finalizada:
+            if sets_a > sets_b:
+                partida.vencedor = partida.time_a
+                partida.perdedor = partida.time_b
+            elif sets_b > sets_a:
+                partida.vencedor = partida.time_b
+                partida.perdedor = partida.time_a
+            else:
+                partida.vencedor = None
+                partida.perdedor = None
+
+        partida.save()
+
+        if partida.jogo:
+            partida.jogo.placar_time_a = sets_a
+            partida.jogo.placar_time_b = sets_b
+            if partida.finalizada:
+                partida.jogo.finalizado = True
+            partida.jogo.save()
+
+        if partida.grupo:
+            from core.chaveamento_services import atualizar_tabela_grupo, atualizar_classificados_e_preencher_mata_mata
+            atualizar_tabela_grupo(partida.grupo)
+            atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
+
+        if partida.finalizada and partida.proxima_partida and partida.vencedor and not partida.proxima_partida.definicao_manual:
+            from core.chaveamento_services import _sincronizar_jogo_partida
+            if partida.posicao_proxima_partida == 'A':
+                partida.proxima_partida.time_a = partida.vencedor
+            elif partida.posicao_proxima_partida == 'B':
+                partida.proxima_partida.time_b = partida.vencedor
+            partida.proxima_partida.save()
+            _sincronizar_jogo_partida(partida.proxima_partida, "Mata-Mata")
+
+        if is_ajax:
+            sets_list = [
+                {
+                    'id': s.id,
+                    'numero_set': s.numero_set,
+                    'pontos_a': s.pontos_a,
+                    'pontos_b': s.pontos_b,
+                    'vencedor': s.vencedor,
+                }
+                for s in partida.sets.all().order_by('numero_set', 'id')
+            ]
+            return JsonResponse({
+                'success': True,
+                'set_id': set_obj.id,
+                'sets': sets_list,
+                'placar_a': sets_a,
+                'placar_b': sets_b,
+                'proximo_set': partida.proximo_numero_set,
+                'resumo': partida.sets_resumo,
+                'sets_resumo': partida.sets_resumo,
+            })
+
+        messages.success(request, f"Set {numero_set} ({pontos_a} x {pontos_b}) registrado com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def remover_set_partida_view(request, pk):
+    """
+    Remove um set de uma partida (suporta POST normal e AJAX).
+    """
+    if request.method == 'POST':
+        from core.models import SetPartida
+        set_obj = get_object_or_404(SetPartida, pk=pk)
+        partida = set_obj.partida
+        modalidade_pk = partida.chaveamento.modalidade.pk if partida and partida.chaveamento and partida.chaveamento.modalidade else None
+        set_obj.delete()
+
+        sets_a = sum(1 for s in partida.sets.all() if s.pontos_a > s.pontos_b) if partida else 0
+        sets_b = sum(1 for s in partida.sets.all() if s.pontos_b > s.pontos_a) if partida else 0
+
+        if partida:
+            partida.placar_a = sets_a if partida.sets.exists() else None
+            partida.placar_b = sets_b if partida.sets.exists() else None
+            if not partida.sets.exists():
+                partida.finalizada = False
+                partida.vencedor = None
+                partida.perdedor = None
+            elif partida.finalizada:
+                if sets_a > sets_b:
+                    partida.vencedor = partida.time_a
+                    partida.perdedor = partida.time_b
+                elif sets_b > sets_a:
+                    partida.vencedor = partida.time_b
+                    partida.perdedor = partida.time_a
+                else:
+                    partida.vencedor = None
+                    partida.perdedor = None
+            partida.save()
+
+            if partida.jogo:
+                partida.jogo.placar_time_a = partida.placar_a
+                partida.jogo.placar_time_b = partida.placar_b
+                if not partida.sets.exists():
+                    partida.jogo.finalizado = False
+                partida.jogo.save()
+
+            if partida.grupo:
+                from core.chaveamento_services import atualizar_tabela_grupo, atualizar_classificados_e_preencher_mata_mata
+                atualizar_tabela_grupo(partida.grupo)
+                atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
+
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+        if is_ajax:
+            sets_list = [
+                {
+                    'id': s.id,
+                    'numero_set': s.numero_set,
+                    'pontos_a': s.pontos_a,
+                    'pontos_b': s.pontos_b,
+                    'vencedor': s.vencedor,
+                }
+                for s in (partida.sets.all().order_by('numero_set', 'id') if partida else [])
+            ]
+            return JsonResponse({
+                'success': True,
+                'sets': sets_list,
+                'placar_a': sets_a,
+                'placar_b': sets_b,
+                'proximo_set': partida.proximo_numero_set if partida else 1,
+                'resumo': partida.sets_resumo if partida else '',
+                'sets_resumo': partida.sets_resumo if partida else '',
+            })
+
+        messages.success(request, "Set removido com sucesso!")
+        if modalidade_pk:
+            return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+        return redirect('chaveamento_admin_list')
+
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def salvar_resultado_partida_view(request, pk):
     if request.method == 'POST':
         partida = get_object_or_404(PartidaChaveamento, pk=pk)
@@ -2450,10 +2641,24 @@ def salvar_resultado_partida_view(request, pk):
             try:
                 placar_a = int(placar_a_raw)
                 placar_b = int(placar_b_raw)
-                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='')
-                updated_anything = True
+                if partida.sets.exists():
+                    placar_a = partida.sets_vencidos_a
+                    placar_b = partida.sets_vencidos_b
+                if partida.sets.exists() and placar_a == placar_b:
+                    messages.warning(request, "A partida possui empate em sets. Lance o set de desempate para definir o vencedor.")
+                else:
+                    registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='')
+                    updated_anything = True
             except ValueError:
                 messages.error(request, "Placares inválidos.")
+        elif partida.sets.exists() and wo_tipo == '':
+            placar_a = partida.sets_vencidos_a
+            placar_b = partida.sets_vencidos_b
+            if placar_a == placar_b:
+                messages.warning(request, "A partida possui empate em sets. Lance o set de desempate para definir o vencedor.")
+            else:
+                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='')
+                updated_anything = True
         elif partida.wo_tipo and wo_tipo == '':
             partida.wo_tipo = ''
             partida.motivo_wo = ''
@@ -2841,6 +3046,7 @@ class ChaveamentoJogosListaView(View):
                 'is_wo_duplo': p.is_wo_duplo,
                 'vencedor': p.vencedor,
                 'chaveamento_url': chaveamento_url,
+                'sets_resumo': p.sets_resumo,
             })
 
         for j in jogos_avulsos_qs:
@@ -2887,6 +3093,7 @@ class ChaveamentoJogosListaView(View):
                 'is_wo_duplo': j.is_wo_duplo,
                 'vencedor': None,
                 'chaveamento_url': chaveamento_url,
+                'sets_resumo': j.sets_resumo,
             })
 
         # Ordenação cronológica global

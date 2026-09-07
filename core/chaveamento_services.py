@@ -33,15 +33,18 @@ def _calcular_melhor_segundo_colocado(segundos_colocados, modalidade):
     """
     Calcula o melhor 2º colocado geral entre os 3 grupos com base nas regras exclusivas deste formato:
     1. maior número de vitórias;
-    2. maior saldo de jogadores (saldo_gols);
-    3. maior número de jogadores adversários eliminados (gols_pro);
-    4. menor número de jogadores da própria equipe eliminados (gols_contra);
-    5. menor número de penalidades (cartões);
-    6. sorteio.
+    2. maior saldo de jogadores/sets (saldo_gols);
+    3. maior número de jogadores adversários eliminados / sets pró (gols_pro);
+    4. menor número de jogadores da própria equipe eliminados / sets contra (gols_contra);
+    5. maior saldo de pontos nos sets (para modalidades com sets como vôlei e tênis);
+    6. maior número de pontos pró nos sets;
+    7. menor número de penalidades (cartões);
+    8. sorteio.
     """
     if not segundos_colocados:
         return None
 
+    is_rede = getattr(modalidade, 'is_jogo_rede', False)
     ranking = []
     for tg in segundos_colocados:
         penalidades = CartaoPartida.objects.filter(
@@ -51,17 +54,31 @@ def _calcular_melhor_segundo_colocado(segundos_colocados, modalidade):
         ).count()
 
         sorteio_val = random.random()
-        ranking.append((
-            tg,
-            -tg.vitorias,
-            -tg.saldo_gols,
-            -tg.gols_pro,
-            tg.gols_contra,
-            penalidades,
-            sorteio_val
-        ))
+        st = tg.estatisticas_sets
+        if is_rede or st.get('tem_sets'):
+            ranking.append((
+                tg,
+                -tg.vitorias,
+                -tg.saldo_gols,
+                -tg.gols_pro,
+                tg.gols_contra,
+                -st.get('saldo_pontos', 0),
+                -st.get('pontos_pro', 0),
+                penalidades,
+                sorteio_val
+            ))
+        else:
+            ranking.append((
+                tg,
+                -tg.vitorias,
+                -tg.saldo_gols,
+                -tg.gols_pro,
+                tg.gols_contra,
+                penalidades,
+                sorteio_val
+            ))
 
-    ranking.sort(key=lambda item: (item[1], item[2], item[3], item[4], item[5], item[6]))
+    ranking.sort(key=lambda item: item[1:])
     return ranking[0][0]
 
 
@@ -844,6 +861,64 @@ def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_
     return partida
 
 
+def ordenar_times_grupo(grupo):
+    """
+    Retorna a lista de times do grupo devidamente ordenada pelos critérios de classificação:
+    0. Prioridade absoluta para quem NÃO tem W.O. (1 if tg.quantidade_wo > 0 else 0)
+    1. Maior número de pontos (-pontos)
+    2. Maior número de vitórias (-vitorias)
+    3. Maior saldo de sets/gols (-saldo_gols)
+    4. Maior número de sets/gols pró (-gols_pro)
+    Se for modalidade de sets/rede (vôlei, tênis, etc.) ou se houver sets cadastrados:
+    5. Maior saldo de pontos nos sets (-saldo_pontos)
+    6. Maior número de pontos pró nos sets (-pontos_pro)
+    7. Menor número de penalidades disciplinares (cartões)
+    8. ID estável
+    """
+    times = list(grupo.times.all())
+    mod = getattr(grupo.chaveamento, 'modalidade', None) if hasattr(grupo, 'chaveamento') else None
+    is_rede = getattr(mod, 'is_jogo_rede', False) if mod else False
+
+    def sort_key(tg):
+        st = tg.estatisticas_sets
+        penalidades = 0
+        if mod:
+            from core.models import CartaoPartida
+            penalidades = CartaoPartida.objects.filter(
+                modalidade=mod,
+                delegacao=tg.delegacao,
+                partida__grupo=grupo
+            ).count()
+
+        wo_penalty = 1 if getattr(tg, 'quantidade_wo', 0) > 0 else 0
+
+        if is_rede or st.get('tem_sets'):
+            return (
+                wo_penalty,
+                -tg.pontos,
+                -tg.vitorias,
+                -tg.saldo_gols,
+                -tg.gols_pro,
+                -st.get('saldo_pontos', 0),
+                -st.get('pontos_pro', 0),
+                penalidades,
+                tg.id
+            )
+        return (
+            wo_penalty,
+            -tg.pontos,
+            -tg.vitorias,
+            -tg.saldo_gols,
+            -tg.gols_pro,
+            tg.gols_contra,
+            penalidades,
+            tg.id
+        )
+
+    times.sort(key=sort_key)
+    return times
+
+
 @transaction.atomic
 def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     """
@@ -864,18 +939,7 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     for g in grupos_externos:
         has_matches = g.partidas.exists()
         grupo_concluido = (not g.partidas.filter(finalizada=False).exists()) if has_matches else True
-        times_ordenados = sorted(
-            list(g.times.all()),
-            key=lambda tg: (
-                1 if tg.quantidade_wo > 0 else 0,
-                -tg.pontos,
-                -tg.vitorias,
-                -tg.saldo_gols,
-                -tg.gols_pro,
-                tg.gols_contra,
-                tg.id
-            )
-        )
+        times_ordenados = ordenar_times_grupo(g)
         vagas = g.vagas_classificacao
         for idx, tg in enumerate(times_ordenados):
             if grupo_concluido and idx < vagas and tg.quantidade_wo == 0:
@@ -905,18 +969,7 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
         segundos_colocados = []
 
         for g in grupos_locais:
-            times_ordenados = sorted(
-                list(g.times.all()),
-                key=lambda tg: (
-                    1 if tg.quantidade_wo > 0 else 0,
-                    -tg.pontos,
-                    -tg.vitorias,
-                    -tg.saldo_gols,
-                    -tg.gols_pro,
-                    tg.gols_contra,
-                    tg.id
-                )
-            )
+            times_ordenados = ordenar_times_grupo(g)
             times_sem_wo = [tg for tg in times_ordenados if tg.quantidade_wo == 0]
             times_com_wo = [tg for tg in times_ordenados if tg.quantidade_wo > 0]
 
@@ -1007,18 +1060,7 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
         grupo_concluido = (not g.partidas.filter(finalizada=False).exists()) if has_matches else True
 
         # Ordenação com prioridade absoluta para quem NÃO tem W.O.
-        times_ordenados = sorted(
-            list(g.times.all()),
-            key=lambda tg: (
-                1 if tg.quantidade_wo > 0 else 0,
-                -tg.pontos,
-                -tg.vitorias,
-                -tg.saldo_gols,
-                -tg.gols_pro,
-                tg.gols_contra,
-                tg.id
-            )
-        )
+        times_ordenados = ordenar_times_grupo(g)
 
         vagas = g.vagas_classificacao
         times_sem_wo = [tg for tg in times_ordenados if tg.quantidade_wo == 0]
@@ -1063,6 +1105,19 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
                 delegacao=tg.delegacao,
                 partida__fase='GRUPO_LOCAL'
             ).count()
+            st = tg.estatisticas_sets
+            is_rede = getattr(chaveamento.modalidade, 'is_jogo_rede', False)
+            if is_rede or st.get('tem_sets'):
+                return (
+                    -tg.pontos,
+                    -tg.vitorias,
+                    -tg.saldo_gols,
+                    -tg.gols_pro,
+                    -st.get('saldo_pontos', 0),
+                    -st.get('pontos_pro', 0),
+                    penalidades,
+                    tg.id
+                )
             return (
                 -tg.pontos,
                 -tg.vitorias,
@@ -1100,9 +1155,7 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
 
     todos_classificados_diamantina = []
     for g in grupos_locais:
-        for tg in sorted(g.times.filter(classificado=True), key=lambda x: (
-            -x.pontos, -x.vitorias, -x.saldo_gols, -x.gols_pro, x.gols_contra
-        )):
+        for tg in [t for t in ordenar_times_grupo(g) if t.classificado]:
             if tg.delegacao not in todos_classificados_diamantina:
                 todos_classificados_diamantina.append(tg.delegacao)
 

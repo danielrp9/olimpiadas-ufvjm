@@ -69,14 +69,19 @@
                                 <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">Pts</th>
                                 <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">J</th>
                                 <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">V</th>
-                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">E</th>
+                                {% if not modalidade.is_jogo_rede %}
+                                    <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">E</th>
+                                {% endif %}
                                 <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">D</th>
-                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">SG</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center" title="{% if modalidade.is_jogo_rede %}Saldo de Sets{% else %}Saldo de Gols{% endif %}">{% if modalidade.is_jogo_rede %}SS{% else %}SG{% endif %}</th>
+                                {% if grupo.has_sets %}
+                                    <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center" title="Saldo de Pontos nos Sets">SP</th>
+                                {% endif %}
                                 <th class="py-2 px-1.5 sm:py-2.5 sm:px-3 text-right">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
-                            {% for tg in grupo.times.all %}
+                            {% for tg in grupo.times_ordenados %}
                             <tr class="{% if tg.delegacao == delegacao %}bg-blue-50/80 font-bold border-l-4 border-l-blue-600{% elif tg.classificado %}bg-emerald-50/50 font-semibold{% else %}hover:bg-slate-50/80{% endif %} transition">
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-bold text-slate-700 text-center sm:text-left">{{ forloop.counter }}º</td>
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-semibold text-slate-800 max-w-[90px] xs:max-w-[130px] sm:max-w-none truncate">
@@ -93,9 +98,14 @@
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center font-black text-blue-600 text-xs sm:text-sm">{{ tg.pontos }}</td>
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.jogos }}</td>
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-700 font-bold text-[10px] sm:text-xs">{{ tg.vitorias }}</td>
-                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.empates }}</td>
+                                {% if not modalidade.is_jogo_rede %}
+                                    <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.empates }}</td>
+                                {% endif %}
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-700 font-bold text-[10px] sm:text-xs">{{ tg.derrotas }}</td>
                                 <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs">{{ tg.saldo_gols }}</td>
+                                {% if grupo.has_sets %}
+                                    <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs" title="Pontos nos sets: {{ tg.pontos_sets_pro }} pró / {{ tg.pontos_sets_contra }} contra">{{ tg.saldo_pontos_sets }}</td>
+                                {% endif %}
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 text-right font-bold">
                                     {% if tg.classificado %}
                                         <span class="text-emerald-700 text-[9px] sm:text-[10px] bg-emerald-100/80 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-200/80 font-extrabold shadow-2xs whitespace-nowrap">
@@ -117,6 +127,13 @@
                     </table>
                 </div>
 
+                {% if grupo.has_sets %}
+                <div class="px-3 py-1.5 bg-indigo-50/70 border border-indigo-100 rounded-xl text-[10px] text-indigo-700 flex flex-wrap items-center justify-between gap-2">
+                    <span><strong>Legenda:</strong> <strong>SS</strong> = Saldo de Sets | <strong>SP</strong> = Saldo de Pontos nos Sets</span>
+                    <span class="text-indigo-500">Vitória = 3 pts (sem empates)</span>
+                </div>
+                {% endif %}
+
                 <!-- Jogos do Grupo -->
                 <div class="pt-4 border-t border-slate-100 space-y-3">
                     <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos e Resultados</h4>
@@ -129,13 +146,16 @@
                                     {{ p.time_a.nome_delegacao|default:p.time_a.email }}
                                 </div>
 
-                                <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0">
+                                <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0 text-center">
                                     {% if p.is_wo_duplo %}
                                         <span class="text-xs font-black text-red-600 block">0 x 0 (D. W.O.)</span>
                                     {% elif p.is_wo %}
                                         <span class="text-xs font-black text-red-600 block">{{ p.placar_a|default:0 }} x {{ p.placar_b|default:0 }} (W.O.)</span>
                                     {% elif p.placar_a != None and p.placar_b != None %}
                                         {{ p.placar_a }} <span class="text-slate-400 font-normal">x</span> {{ p.placar_b }}
+                                        {% if p.sets.exists %}
+                                            <span class="block text-[9px] text-indigo-600 font-bold tracking-tight">({{ p.sets_resumo }})</span>
+                                        {% endif %}
                                     {% else %}
                                         <span class="text-slate-400 font-normal italic">vs</span>
                                     {% endif %}

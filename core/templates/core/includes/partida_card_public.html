@@ -37,6 +37,9 @@
                 <span class="text-white font-black text-sm">{{ partida.placar_a }}</span>
                 <span class="text-slate-400 font-normal px-0.5">x</span>
                 <span class="text-white font-black text-sm">{{ partida.placar_b }}</span>
+                {% if partida.sets.exists %}
+                    <div class="text-[9px] text-indigo-300 font-bold tracking-tight">({{ partida.sets_resumo }})</div>
+                {% endif %}
             {% else %}
                 <span class="text-slate-400 font-normal italic">vs</span>
             {% endif %}
@@ -97,6 +100,22 @@
             </span>
         </div>
     </div>
+
+    <!-- Exibição de Sets na Partida se houver -->
+    {% if partida.sets.exists %}
+        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span class="text-indigo-600 font-bold flex items-center gap-1">
+                <i data-lucide="layers" class="text-[10px]"></i> Sets:
+            </span>
+            <div class="inline-flex flex-wrap items-center gap-1.5">
+                {% for s in partida.sets.all %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border bg-indigo-50 text-indigo-900 border-indigo-200">
+                        Set {{ s.numero_set }}: {{ s.pontos_a }}x{{ s.pontos_b }}
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
 
     <!-- Exibição de Cartões Aplicados na Partida -->
     {% if partida.cartoes.exists %}

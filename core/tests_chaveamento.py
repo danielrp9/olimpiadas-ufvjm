@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from core.models import (
     Modalidade, Campus, Atleta, Inscricao, InscricaoModalidade, Jogo,
-    ChaveamentoModalidade, GrupoChaveamento, TimeGrupo, PartidaChaveamento
+    ChaveamentoModalidade, GrupoChaveamento, TimeGrupo, PartidaChaveamento, SetPartida
 )
 from core.chaveamento_services import (
     gerar_chaveamento_modalidade,
@@ -1458,6 +1458,203 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertContains(resp, 'name="time_b"')
         self.assertContains(resp, 'Definição Manual')
         self.assertContains(resp, 'Manual')
+
+    def test_is_jogo_rede_modalidades(self):
+        """Testa a detecção automática de esportes de rede/sets."""
+        volei = Modalidade.objects.create(nome="Voleibol Masculino", genero="M")
+        tenis = Modalidade.objects.create(nome="Tênis de Mesa Feminino", genero="F")
+        beach = Modalidade.objects.create(nome="Beach Tennis Misto", genero="X")
+        futsal = Modalidade.objects.create(nome="Futsal Feminino", genero="F")
+        basquete = Modalidade.objects.create(nome="Basquetebol Masculino", genero="M")
+
+        self.assertTrue(volei.is_jogo_rede)
+        self.assertTrue(tenis.is_jogo_rede)
+        self.assertTrue(beach.is_jogo_rede)
+        self.assertFalse(futsal.is_jogo_rede)
+        self.assertFalse(basquete.is_jogo_rede)
+
+    def test_salvar_e_remover_set_ajax(self):
+        """Testa adição e remoção de sets via AJAX em uma partida."""
+        mod = Modalidade.objects.create(nome="Vôlei de Praia Masculino", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            fase='FINAL',
+            time_a=self.rep_user,
+            time_b=self.admin_user
+        )
+
+        self.client.force_login(self.admin_user)
+        url_salvar = reverse('chaveamento_set_salvar', kwargs={'pk': partida.pk})
+
+        # 1. Tenta lançar empate no set (20x20) -> deve ser rejeitado
+        resp = self.client.post(
+            url_salvar,
+            {'numero_set': 1, 'pontos_a': 20, 'pontos_b': 20},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp.status_code, 400)
+        data = resp.json()
+        self.assertFalse(data.get('success', True))
+
+        # 2. Lança Set 1 (25x20 para time A)
+        resp1 = self.client.post(
+            url_salvar,
+            {'numero_set': 1, 'pontos_a': 25, 'pontos_b': 20},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp1.status_code, 200)
+        data1 = resp1.json()
+        self.assertEqual(data1['placar_a'], 1)
+        self.assertEqual(data1['placar_b'], 0)
+        self.assertEqual(data1['sets_resumo'], '25x20')
+
+        # 3. Lança Set 2 (21x25 para time B)
+        resp2 = self.client.post(
+            url_salvar,
+            {'numero_set': 2, 'pontos_a': 21, 'pontos_b': 25},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp2.status_code, 200)
+        data2 = resp2.json()
+        self.assertEqual(data2['placar_a'], 1)
+        self.assertEqual(data2['placar_b'], 1)
+        self.assertEqual(data2['sets_resumo'], '25x20, 21x25')
+
+        # 4. Lança Set 3 (15x11 para time A)
+        resp3 = self.client.post(
+            url_salvar,
+            {'numero_set': 3, 'pontos_a': 15, 'pontos_b': 11},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(resp3.status_code, 200)
+        data3 = resp3.json()
+        self.assertEqual(data3['placar_a'], 2)
+        self.assertEqual(data3['placar_b'], 1)
+        self.assertEqual(data3['sets_resumo'], '25x20, 21x25, 15x11')
+        set3_id = data3['set_id']
+
+        # 5. Remove Set 3
+        url_remover = reverse('chaveamento_set_remover', kwargs={'pk': set3_id})
+        resp_rem = self.client.post(url_remover, HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(resp_rem.status_code, 200)
+        data_rem = resp_rem.json()
+        self.assertEqual(data_rem['placar_a'], 1)
+        self.assertEqual(data_rem['placar_b'], 1)
+        self.assertEqual(data_rem['sets_resumo'], '25x20, 21x25')
+
+    def test_partida_sets_computa_pontuacao_grupo_e_saldo_pontos(self):
+        """Testa que os sets computam saldo de sets e saldo de pontos no grupo."""
+        mod = Modalidade.objects.create(nome="Voleibol Feminino", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = GrupoChaveamento.objects.create(
+            chaveamento=chaveamento,
+            nome="Grupo Único",
+            tipo='GERAL'
+        )
+        team1 = self._create_delegation("vol1@ufvjm.edu.br", "Vôlei Time 1", self.campus_dia)
+        team2 = self._create_delegation("vol2@ufvjm.edu.br", "Vôlei Time 2", self.campus_dia)
+
+        tg1 = TimeGrupo.objects.create(grupo=grupo, delegacao=team1)
+        tg2 = TimeGrupo.objects.create(grupo=grupo, delegacao=team2)
+
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            grupo=grupo,
+            fase='GRUPOS',
+            time_a=team1,
+            time_b=team2
+        )
+
+        # Adiciona sets (2x0 para team1: 25x18, 25x20)
+        SetPartida.objects.create(partida=partida, numero_set=1, pontos_a=25, pontos_b=18)
+        SetPartida.objects.create(partida=partida, numero_set=2, pontos_a=25, pontos_b=20)
+
+        # Finaliza partida via salvar_resultado_partida_view
+        self.client.force_login(self.admin_user)
+        url = reverse('chaveamento_partida_resultado', kwargs={'pk': partida.pk})
+        resp = self.client.post(url, {
+            'placar_a': 2,
+            'placar_b': 0,
+            'finalizada': 'on'
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        partida.refresh_from_db()
+        self.assertTrue(partida.finalizada)
+        self.assertEqual(partida.vencedor, team1)
+        self.assertEqual(partida.placar_a, 2)
+        self.assertEqual(partida.placar_b, 0)
+
+        tg1.refresh_from_db()
+        tg2.refresh_from_db()
+
+        # tg1: 3 pts, 1 V, 0 E, 0 D, saldo sets +2 (gols_pro=2, gols_contra=0)
+        self.assertEqual(tg1.pontos, 3)
+        self.assertEqual(tg1.vitorias, 1)
+        self.assertEqual(tg1.empates, 0)
+        self.assertEqual(tg1.derrotas, 0)
+        self.assertEqual(tg1.saldo_gols, 2)
+        # Saldo de pontos nos sets: (25+25) - (18+20) = 50 - 38 = +12
+        self.assertEqual(tg1.saldo_pontos_sets, 12)
+        self.assertEqual(tg1.pontos_sets_pro, 50)
+        self.assertEqual(tg1.pontos_sets_contra, 38)
+
+        # tg2: 0 pts, 0 V, 0 E, 1 D, saldo sets -2
+        self.assertEqual(tg2.pontos, 0)
+        self.assertEqual(tg2.vitorias, 0)
+        self.assertEqual(tg2.derrotas, 1)
+        self.assertEqual(tg2.saldo_gols, -2)
+        self.assertEqual(tg2.saldo_pontos_sets, -12)
+
+    def test_desempate_grupo_por_saldo_pontos_sets(self):
+        """Testa o desempate na fase de grupos quando dois times empatam em pts, vitorias e saldo de sets."""
+        from core.chaveamento_services import ordenar_times_grupo
+
+        mod = Modalidade.objects.create(nome="Tênis de Mesa Masculino", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = GrupoChaveamento.objects.create(
+            chaveamento=chaveamento,
+            nome="Grupo Desempate",
+            tipo='GERAL'
+        )
+        team_a = self._create_delegation("tma@ufvjm.edu.br", "Tênis Time A", self.campus_dia)
+        team_b = self._create_delegation("tmb@ufvjm.edu.br", "Tênis Time B", self.campus_dia)
+        team_c = self._create_delegation("tmc@ufvjm.edu.br", "Tênis Time C", self.campus_dia)
+
+        tg_a = TimeGrupo.objects.create(grupo=grupo, delegacao=team_a)
+        tg_b = TimeGrupo.objects.create(grupo=grupo, delegacao=team_b)
+        tg_c = TimeGrupo.objects.create(grupo=grupo, delegacao=team_c)
+
+        # Partida 1: Team A vence Team C por 2x1 (sets: 11x4, 4x11, 11x5) -> sets +1, pontos: 26 pró, 20 contra = +6
+        p1 = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento, grupo=grupo, fase='GRUPOS', time_a=team_a, time_b=team_c
+        )
+        SetPartida.objects.create(partida=p1, numero_set=1, pontos_a=11, pontos_b=4)
+        SetPartida.objects.create(partida=p1, numero_set=2, pontos_a=4, pontos_b=11)
+        SetPartida.objects.create(partida=p1, numero_set=3, pontos_a=11, pontos_b=5)
+        self.client.force_login(self.admin_user)
+        self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': p1.pk}), {
+            'placar_a': 2, 'placar_b': 1, 'finalizada': 'on'
+        })
+
+        # Partida 2: Team B vence Team C por 2x1 (sets: 11x9, 9x11, 11x9) -> sets +1, pontos: 31 pró, 29 contra = +2
+        p2 = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento, grupo=grupo, fase='GRUPOS', time_a=team_b, time_b=team_c
+        )
+        SetPartida.objects.create(partida=p2, numero_set=1, pontos_a=11, pontos_b=9)
+        SetPartida.objects.create(partida=p2, numero_set=2, pontos_a=9, pontos_b=11)
+        SetPartida.objects.create(partida=p2, numero_set=3, pontos_a=11, pontos_b=9)
+        self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': p2.pk}), {
+            'placar_a': 2, 'placar_b': 1, 'finalizada': 'on'
+        })
+
+        # Team A e Team B têm: 3 pontos, 1 vitória, 0 empates, 0 derrotas, saldo_sets = +1, sets_pro = 2.
+        # Desempate deve ser saldo_pontos_sets: Team A (+6) > Team B (+2).
+        ordenados = ordenar_times_grupo(grupo)
+        self.assertEqual(ordenados[0].delegacao, team_a)
+        self.assertEqual(ordenados[1].delegacao, team_b)
+        self.assertEqual(ordenados[2].delegacao, team_c)
 
 
 

@@ -94,6 +94,18 @@ class Modalidade(models.Model):
     limite_minimo_jogadores = models.PositiveIntegerField(default=1)
     limite_maximo_jogadores = models.PositiveIntegerField(default=20)
     inscricoes_abertas = models.BooleanField(default=True)
+
+    @property
+    def is_jogo_rede(self):
+        nome = (self.nome or '').lower()
+        termos = [
+            'volei', 'vôlei', 'voleibol',
+            'tenis', 'tênis',
+            'peteca', 'beach tennis', 'badminton',
+            'futevolei', 'futevôlei', 'rede'
+        ]
+        return any(t in nome for t in termos)
+
     def __str__(self):
         return f"{self.nome} ({self.get_genero_display()})"
 
@@ -233,6 +245,17 @@ class Jogo(models.Model):
             return self.time_b.nome_completo
         except ObjectDoesNotExist:
             return "Inexistente"
+
+    @property
+    def is_jogo_rede(self):
+        return self.modalidade.is_jogo_rede if self.modalidade else False
+
+    @property
+    def sets_resumo(self):
+        sets_list = list(self.sets.all().order_by('numero_set', 'id'))
+        if not sets_list:
+            return ""
+        return ", ".join(f"{s.pontos_a}x{s.pontos_b}" for s in sets_list)
 
     def __str__(self):
         horario_str = f" às {self.horario_jogo.strftime('%H:%M')}" if self.horario_jogo else ""
@@ -492,6 +515,10 @@ class ChaveamentoModalidade(models.Model):
             return self.datas_fases.get(fase_key, '')
         return ''
 
+    @property
+    def has_sets(self):
+        return self.partidas.filter(sets__isnull=False).distinct().exists()
+
 
 class GrupoChaveamento(models.Model):
     """
@@ -512,6 +539,15 @@ class GrupoChaveamento(models.Model):
         verbose_name = "Grupo de Chaveamento"
         verbose_name_plural = "Grupos de Chaveamento"
         ordering = ['nome']
+
+    @property
+    def has_sets(self):
+        return self.partidas.filter(sets__isnull=False).distinct().exists()
+
+    @property
+    def times_ordenados(self):
+        from core.chaveamento_services import ordenar_times_grupo
+        return ordenar_times_grupo(self)
 
     def __str__(self):
         return f"{self.chaveamento.modalidade.nome} - {self.nome}"
@@ -543,6 +579,56 @@ class TimeGrupo(models.Model):
     @property
     def is_desclassificado_por_wo(self):
         return self.quantidade_wo > 0
+
+    @property
+    def estatisticas_sets(self):
+        partidas = self.grupo.partidas.filter(finalizada=True)
+        pontos_pro = 0
+        pontos_contra = 0
+        sets_pro = 0
+        sets_contra = 0
+        tem_sets = False
+        for p in partidas:
+            p_sets = list(p.sets.all())
+            if p_sets:
+                tem_sets = True
+            if p.time_a_id == self.delegacao_id:
+                for s in p_sets:
+                    pontos_pro += s.pontos_a
+                    pontos_contra += s.pontos_b
+                    if s.pontos_a > s.pontos_b:
+                        sets_pro += 1
+                    elif s.pontos_b > s.pontos_a:
+                        sets_contra += 1
+            elif p.time_b_id == self.delegacao_id:
+                for s in p_sets:
+                    pontos_pro += s.pontos_b
+                    pontos_contra += s.pontos_a
+                    if s.pontos_b > s.pontos_a:
+                        sets_pro += 1
+                    elif s.pontos_a > s.pontos_b:
+                        sets_contra += 1
+        return {
+            'tem_sets': tem_sets,
+            'sets_pro': sets_pro if tem_sets else self.gols_pro,
+            'sets_contra': sets_contra if tem_sets else self.gols_contra,
+            'saldo_sets': (sets_pro - sets_contra) if tem_sets else self.saldo_gols,
+            'pontos_pro': pontos_pro,
+            'pontos_contra': pontos_contra,
+            'saldo_pontos': pontos_pro - pontos_contra,
+        }
+
+    @property
+    def saldo_pontos_sets(self):
+        return self.estatisticas_sets['saldo_pontos']
+
+    @property
+    def pontos_sets_pro(self):
+        return self.estatisticas_sets['pontos_pro']
+
+    @property
+    def pontos_sets_contra(self):
+        return self.estatisticas_sets['pontos_contra']
 
     def __str__(self):
         nome_del = self.delegacao.nome_delegacao or self.delegacao.nome_completo or self.delegacao.email
@@ -643,6 +729,31 @@ class PartidaChaveamento(models.Model):
     def horario_jogo_exibicao(self):
         h = self.horario_partida or (self.jogo.horario_jogo if self.jogo else None)
         return h.strftime('%H:%M') if h else ''
+
+    @property
+    def is_jogo_rede(self):
+        mod = self.modalidade
+        return mod.is_jogo_rede if mod else False
+
+    @property
+    def sets_resumo(self):
+        sets_list = list(self.sets.all().order_by('numero_set', 'id'))
+        if not sets_list:
+            return ""
+        return ", ".join(f"{s.pontos_a}x{s.pontos_b}" for s in sets_list)
+
+    @property
+    def proximo_numero_set(self):
+        ultimo = self.sets.order_by('-numero_set').first()
+        return (ultimo.numero_set + 1) if ultimo else 1
+
+    @property
+    def sets_vencidos_a(self):
+        return sum(1 for s in self.sets.all() if s.pontos_a > s.pontos_b)
+
+    @property
+    def sets_vencidos_b(self):
+        return sum(1 for s in self.sets.all() if s.pontos_b > s.pontos_a)
 
     @property
     def modalidade(self):
@@ -796,5 +907,33 @@ class CartaoPartida(models.Model):
 
     def __str__(self):
         return f"[{self.get_tipo_display()}] {self.atleta.nome_completo} ({self.modalidade.nome})"
+
+
+class SetPartida(models.Model):
+    """
+    Registro individual de set jogado em uma partida (ex: Vôlei, Tênis, etc.).
+    """
+    partida = models.ForeignKey(PartidaChaveamento, on_delete=models.CASCADE, related_name='sets', null=True, blank=True)
+    jogo = models.ForeignKey(Jogo, on_delete=models.CASCADE, related_name='sets', null=True, blank=True)
+    numero_set = models.PositiveIntegerField(default=1, verbose_name="Número do Set")
+    pontos_a = models.PositiveIntegerField(default=0, verbose_name="Pontos Time A")
+    pontos_b = models.PositiveIntegerField(default=0, verbose_name="Pontos Time B")
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Set da Partida"
+        verbose_name_plural = "Sets da Partida"
+        ordering = ['numero_set', 'id']
+
+    def __str__(self):
+        return f"Set {self.numero_set}: {self.pontos_a} x {self.pontos_b}"
+
+    @property
+    def vencedor(self):
+        if self.pontos_a > self.pontos_b:
+            return 'A'
+        elif self.pontos_b > self.pontos_a:
+            return 'B'
+        return None
 
 

@@ -227,6 +227,9 @@
                                     <span class="block text-[8px] text-red-400 font-bold uppercase mt-0.5">W.O.</span>
                                 {% elif jogo.placar_a != None and jogo.placar_b != None %}
                                     <span class="text-xs font-black text-white">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
+                                    {% if jogo.sets_resumo %}
+                                        <span class="block text-[8px] text-indigo-300 font-bold leading-tight mt-0.5">({{ jogo.sets_resumo }})</span>
+                                    {% endif %}
                                 {% else %}
                                     <span class="text-xs font-bold text-slate-300 uppercase">vs</span>
                                 {% endif %}
@@ -312,6 +315,9 @@
                                     <span class="block text-[8px] text-red-400 font-bold uppercase tracking-wider">W.O.</span>
                                 {% elif jogo.placar_a != None and jogo.placar_b != None %}
                                     <span class="text-sm font-black text-white">{{ jogo.placar_a }} x {{ jogo.placar_b }}</span>
+                                    {% if jogo.sets_resumo %}
+                                        <span class="block text-[9px] text-indigo-300 font-bold tracking-tight mt-0.5">({{ jogo.sets_resumo }})</span>
+                                    {% endif %}
                                 {% else %}
                                     <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">vs</span>
                                 {% endif %}

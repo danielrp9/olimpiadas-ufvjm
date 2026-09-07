@@ -287,8 +287,12 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             
             if p.placar_a is not None and p.placar_b is not None:
                 placar_str = f"{p.placar_a} x {p.placar_b}"
+                if p.sets_resumo:
+                    placar_str += f" ({p.sets_resumo})"
             elif jogo_obj and jogo_obj.placar_time_a is not None and jogo_obj.placar_time_b is not None:
                 placar_str = f"{jogo_obj.placar_time_a} x {jogo_obj.placar_time_b}"
+                if jogo_obj.sets_resumo:
+                    placar_str += f" ({jogo_obj.sets_resumo})"
             else:
                 placar_str = "-"
                 
@@ -324,6 +328,8 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             
             if j.placar_time_a is not None and j.placar_time_b is not None:
                 placar_str = f"{j.placar_time_a} x {j.placar_time_b}"
+                if j.sets_resumo:
+                    placar_str += f" ({j.sets_resumo})"
             else:
                 placar_str = "-"
                 
@@ -385,8 +391,12 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             
             if p.placar_a is not None and p.placar_b is not None:
                 placar_str = f"{p.placar_a} x {p.placar_b}"
+                if p.sets_resumo:
+                    placar_str += f" ({p.sets_resumo})"
             elif jogo_obj and jogo_obj.placar_time_a is not None and jogo_obj.placar_time_b is not None:
                 placar_str = f"{jogo_obj.placar_time_a} x {jogo_obj.placar_time_b}"
+                if jogo_obj.sets_resumo:
+                    placar_str += f" ({jogo_obj.sets_resumo})"
             else:
                 placar_str = "-"
                 
@@ -433,7 +443,12 @@ def gerar_planilha_jogos_xlsx(modalidade_id=None):
             hora_str = j.horario_jogo.strftime('%H:%M') if j.horario_jogo else ""
             local_str = j.local or ""
             
-            placar_str = f"{j.placar_time_a} x {j.placar_time_b}" if (j.placar_time_a is not None and j.placar_time_b is not None) else "-"
+            if j.placar_time_a is not None and j.placar_time_b is not None:
+                placar_str = f"{j.placar_time_a} x {j.placar_time_b}"
+                if j.sets_resumo:
+                    placar_str += f" ({j.sets_resumo})"
+            else:
+                placar_str = "-"
             status_str = "Finalizado (W.O.)" if (j.wo_tipo) else ("Finalizado" if j.finalizado else ("Agendado" if data_str else "Pendente"))
             
             row_values = [

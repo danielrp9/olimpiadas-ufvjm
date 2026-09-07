@@ -42,6 +42,9 @@
                     <span class="text-white font-black text-sm">{{ partida.placar_a }}</span>
                     <span class="text-slate-400 font-normal px-0.5">x</span>
                     <span class="text-white font-black text-sm">{{ partida.placar_b }}</span>
+                    {% if partida.sets.exists %}
+                        <div class="text-[9px] text-indigo-300 font-bold tracking-tight">({{ partida.sets_resumo }})</div>
+                    {% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">vs</span>
                 {% endif %}
@@ -113,6 +116,20 @@
                 <i data-lucide="pencil" class="text-[10px] text-blue-600"></i>
                 <span class="hidden sm:inline text-[11px]">Editar</span>
             </button>
+        </div>
+
+        <!-- Exibição de Sets na Partida (Modo Leitura) -->
+        <div id="sets-read-container-{{ partida.pk }}" class="pt-2 border-t border-slate-100 {% if not partida.sets.exists %}hidden{% endif %} flex flex-wrap items-center gap-1.5 text-[11px]">
+            <span class="text-indigo-600 font-bold flex items-center gap-1">
+                <i data-lucide="layers" class="text-[10px]"></i> Sets:
+            </span>
+            <div id="sets-read-list-{{ partida.pk }}" class="inline-flex flex-wrap items-center gap-1.5">
+                {% for s in partida.sets.all %}
+                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border bg-indigo-50 text-indigo-900 border-indigo-200">
+                        Set {{ s.numero_set }}: {{ s.pontos_a }}x{{ s.pontos_b }}
+                    </span>
+                {% endfor %}
+            </div>
         </div>
 
         <!-- Exibição de Cartões Aplicados na Partida (Modo Leitura) -->
@@ -304,6 +321,86 @@
                 </button>
             </div>
         </div>
+
+        <!-- Opção de Lançamento de Sets (Disponível para Vôlei, Tênis, Rede, etc.) -->
+        {% if partida.is_jogo_rede or partida.sets.exists %}
+            <div class="pt-2 border-t border-slate-100">
+                <div class="flex items-center justify-between gap-2">
+                    <button type="button" onclick="toggleSecaoSets({{ partida.pk }})" id="btn-toggle-sets-{{ partida.pk }}" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer {% if partida.sets.exists %}bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200{% else %}bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border border-slate-200 hover:border-indigo-200{% endif %}" title="Clique para abrir ou fechar o lançamento de sets">
+                        <i data-lucide="layers" class="w-3.5 h-3.5 text-indigo-600"></i>
+                        <span id="btn-toggle-sets-text-{{ partida.pk }}">
+                            {% if partida.sets.exists %}
+                                Sets Lançados (<span id="sets-count-badge-{{ partida.pk }}">{{ partida.sets.count }}</span>)
+                            {% else %}
+                                + Lançar Sets (Opcional)
+                            {% endif %}
+                        </span>
+                    </button>
+                    <span class="text-[10px] text-slate-400 font-medium">
+                        {% if partida.sets.exists %}
+                            <span id="sets-resumo-edit-badge-{{ partida.pk }}" class="text-indigo-600 font-bold">({{ partida.sets_resumo }})</span>
+                        {% else %}
+                            Usado apenas ao adicionar os resultados dos sets
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div id="secao-sets-{{ partida.pk }}" class="{% if not partida.sets.exists %}hidden{% endif %} mt-2.5 space-y-2.5 bg-indigo-50/70 p-3 rounded-xl border border-indigo-200/70">
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-800 text-[11px] flex items-center gap-1.5">
+                            <i data-lucide="layers" class="text-indigo-600"></i> Lançar Sets da Partida
+                        </span>
+                        <span class="text-[9px] text-indigo-700 font-bold bg-indigo-100/90 px-2 py-0.5 rounded-full border border-indigo-200">
+                            Pontuação por Set
+                        </span>
+                    </div>
+
+                    <!-- Lista de Sets Registrados -->
+                    <div class="space-y-1">
+                        <span class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Sets Registrados:</span>
+                        <div id="sets-edit-list-{{ partida.pk }}" class="flex flex-wrap gap-1.5">
+                            {% if partida.sets.exists %}
+                                {% for s in partida.sets.all %}
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-white shadow-2xs">
+                                        <span class="text-indigo-700 font-black">Set {{ s.numero_set }}:</span>
+                                        <span class="{% if s.pontos_a > s.pontos_b %}text-emerald-700 font-extrabold{% endif %}">{{ s.pontos_a }}</span>
+                                        <span class="text-slate-400">x</span>
+                                        <span class="{% if s.pontos_b > s.pontos_a %}text-emerald-700 font-extrabold{% endif %}">{{ s.pontos_b }}</span>
+                                        <button type="button" onclick="removerSetAjax({{ s.pk }}, {{ partida.pk }})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs cursor-pointer" title="Remover Set">&times;</button>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                                <span class="text-[10px] text-slate-400 italic">Nenhum set lançado</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Formulário para Lançar Novo Set -->
+                    <div class="flex flex-wrap items-center gap-1.5 pt-1">
+                        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-300">
+                            <span class="text-[10px] font-bold text-indigo-700">Set:</span>
+                            <input type="number" min="1" id="set_num_{{ partida.pk }}" value="{{ partida.proximo_numero_set }}" class="w-9 text-center text-xs font-bold text-slate-800 border-0 p-0 focus:ring-0">
+                        </div>
+                        
+                        <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-lg border border-slate-300">
+                            <span class="text-[10px] font-bold text-slate-500 truncate max-w-[75px]" title="{% if partida.time_a %}{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}{% else %}A definir{% endif %}">
+                                {% if partida.time_a %}{{ partida.time_a.nome_delegacao|default:"A"|truncatechars:8 }}{% else %}A{% endif %}:
+                            </span>
+                            <input type="number" min="0" id="set_pontos_a_{{ partida.pk }}" placeholder="Pts A" class="w-12 text-center text-xs font-bold text-slate-800 border-0 p-0 focus:ring-0">
+                            <span class="text-slate-400 font-bold">x</span>
+                            <input type="number" min="0" id="set_pontos_b_{{ partida.pk }}" placeholder="Pts B" class="w-12 text-center text-xs font-bold text-slate-800 border-0 p-0 focus:ring-0">
+                            <span class="text-[10px] font-bold text-slate-500 truncate max-w-[75px]" title="{% if partida.time_b %}{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}{% else %}A definir{% endif %}">
+                                :{% if partida.time_b %}{{ partida.time_b.nome_delegacao|default:"B"|truncatechars:8 }}{% else %}B{% endif %}
+                            </span>
+                        </div>
+
+                        <button type="button" onclick="adicionarSetAjax({{ partida.pk }})" class="px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-2xs cursor-pointer" title="Lançar Set (+)">
+                            <i data-lucide="plus" class="text-[10px]"></i> Lançar Set
+                        </button>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
 
         <!-- Seção de Aplicação de Cartões Disciplinares -->
         {% if partida.time_a or partida.time_b %}
@@ -635,6 +732,175 @@ if (typeof window.onWoTipoChange === 'undefined') {
                 if (placarB) placarB.value = '0';
             }
         }
+    };
+}
+
+if (typeof window.atualizarSetsDOM === 'undefined') {
+    window.atualizarSetsDOM = function(partidaId, data) {
+        const readContainer = document.getElementById('sets-read-container-' + partidaId);
+        const readList = document.getElementById('sets-read-list-' + partidaId);
+        const editList = document.getElementById('sets-edit-list-' + partidaId);
+        const inputNum = document.getElementById('set_num_' + partidaId);
+        const inputPtsA = document.getElementById('set_pontos_a_' + partidaId);
+        const inputPtsB = document.getElementById('set_pontos_b_' + partidaId);
+        const formPartida = document.getElementById('partida-edit-' + partidaId);
+
+        const sets = data.sets || [];
+
+        if (inputNum && data.proximo_set) {
+            inputNum.value = data.proximo_set;
+        }
+        if (inputPtsA) inputPtsA.value = '';
+        if (inputPtsB) inputPtsB.value = '';
+
+        if (formPartida) {
+            const placarA = formPartida.querySelector('[name=placar_a]');
+            const placarB = formPartida.querySelector('[name=placar_b]');
+            if (placarA && data.placar_a !== undefined) placarA.value = data.placar_a;
+            if (placarB && data.placar_b !== undefined) placarB.value = data.placar_b;
+        }
+
+        const toggleText = document.getElementById('btn-toggle-sets-text-' + partidaId);
+        const resumoBadge = document.getElementById('sets-resumo-edit-badge-' + partidaId);
+
+        if (sets.length === 0) {
+            if (toggleText) toggleText.innerText = '+ Lançar Sets (Opcional)';
+            if (resumoBadge) resumoBadge.innerText = 'Usado apenas ao adicionar os resultados dos sets';
+            if (readContainer) readContainer.classList.add('hidden');
+            if (readList) readList.innerHTML = '';
+            if (editList) editList.innerHTML = '<span class="text-[10px] text-slate-400 italic">Nenhum set lançado</span>';
+            return;
+        }
+
+        if (toggleText) toggleText.innerHTML = `Sets Lançados (<span id="sets-count-badge-${partidaId}">${sets.length}</span>)`;
+        if (resumoBadge) {
+            const resumo = data.resumo || data.sets_resumo || '';
+            resumoBadge.innerText = resumo ? `(${resumo})` : '';
+        }
+
+        if (readContainer) readContainer.classList.remove('hidden');
+
+        let readHtml = '';
+        let editHtml = '';
+
+        sets.forEach(s => {
+            readHtml += `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold border bg-indigo-50 text-indigo-900 border-indigo-200">
+                Set ${s.numero_set}: ${s.pontos_a}x${s.pontos_b}
+            </span> `;
+
+            const classA = s.pontos_a > s.pontos_b ? 'text-emerald-700 font-extrabold' : '';
+            const classB = s.pontos_b > s.pontos_a ? 'text-emerald-700 font-extrabold' : '';
+
+            editHtml += `<div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border bg-white shadow-2xs">
+                <span class="text-indigo-700 font-black">Set ${s.numero_set}:</span>
+                <span class="${classA}">${s.pontos_a}</span>
+                <span class="text-slate-400">x</span>
+                <span class="${classB}">${s.pontos_b}</span>
+                <button type="button" onclick="removerSetAjax(${s.id}, ${partidaId})" class="text-red-500 hover:text-red-700 font-bold ml-1 text-xs cursor-pointer" title="Remover Set">&times;</button>
+            </div> `;
+        });
+
+        if (readList) readList.innerHTML = readHtml;
+        if (editList) editList.innerHTML = editHtml;
+    };
+}
+
+if (typeof window.adicionarSetAjax === 'undefined') {
+    window.adicionarSetAjax = function(partidaId) {
+        const inputNum = document.getElementById('set_num_' + partidaId);
+        const inputPtsA = document.getElementById('set_pontos_a_' + partidaId);
+        const inputPtsB = document.getElementById('set_pontos_b_' + partidaId);
+
+        const numeroSet = inputNum ? inputNum.value : '';
+        const pontosA = inputPtsA ? inputPtsA.value : '';
+        const pontosB = inputPtsB ? inputPtsB.value : '';
+
+        if (pontosA === '' || pontosB === '') {
+            alert('Informe a pontuação de ambas as equipes para o set.');
+            return;
+        }
+        if (parseInt(pontosA, 10) === parseInt(pontosB, 10)) {
+            alert('Um set não pode terminar empatado. É necessária a pontuação de desempate.');
+            return;
+        }
+
+        const csrfToken = window.getCsrfTokenCartao ? window.getCsrfTokenCartao() : '';
+        const formData = new FormData();
+        formData.append('numero_set', numeroSet);
+        formData.append('pontos_a', pontosA);
+        formData.append('pontos_b', pontosB);
+        if (csrfToken) formData.append('csrfmiddlewaretoken', csrfToken);
+
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+
+        fetch('/comissao/chaveamento/partida/' + partidaId + '/set/salvar/', {
+            method: 'POST',
+            body: formData,
+            headers: headers
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => { throw new Error(data.error || 'Erro ao lançar set.'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.atualizarSetsDOM(partidaId, data);
+            } else {
+                alert(data.error || 'Erro ao adicionar set.');
+            }
+        })
+        .catch(err => {
+            alert(err.message || 'Erro ao processar requisição de set.');
+        });
+    };
+}
+
+if (typeof window.removerSetAjax === 'undefined') {
+    window.removerSetAjax = function(setId, partidaId) {
+        if (!confirm('Tem certeza que deseja remover este set?')) return;
+
+        const csrfToken = window.getCsrfTokenCartao ? window.getCsrfTokenCartao() : '';
+        const formData = new FormData();
+        if (csrfToken) formData.append('csrfmiddlewaretoken', csrfToken);
+
+        const headers = {
+            'X-Requested-With': 'XMLHttpRequest'
+        };
+        if (csrfToken) headers['X-CSRFToken'] = csrfToken;
+
+        fetch('/comissao/chaveamento/set/' + setId + '/remover/', {
+            method: 'POST',
+            body: formData,
+            headers: headers
+        })
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(data => { throw new Error(data.error || 'Erro ao remover set.'); });
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.atualizarSetsDOM(partidaId, data);
+            } else {
+                alert(data.error || 'Erro ao remover set.');
+            }
+        })
+        .catch(err => {
+            alert(err.message || 'Erro ao processar remoção do set.');
+        });
+    };
+}
+
+if (typeof window.toggleSecaoSets === 'undefined') {
+    window.toggleSecaoSets = function(partidaId) {
+        const el = document.getElementById('secao-sets-' + partidaId);
+        if (el) el.classList.toggle('hidden');
     };
 }
 </script>
