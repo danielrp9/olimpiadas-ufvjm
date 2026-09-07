@@ -4,6 +4,30 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+class SafeCreateModel(migrations.CreateModel):
+    def database_forwards(self, app_label, schema_editor, from_state, to_state):
+        model = to_state.apps.get_model(app_label, self.name)
+        if not self.allow_migrate_model(schema_editor.connection.alias, model):
+            return
+
+        with schema_editor.connection.cursor() as cursor:
+            tables = schema_editor.connection.introspection.table_names(cursor)
+
+        if model._meta.db_table not in tables:
+            schema_editor.create_model(model)
+        else:
+            with schema_editor.connection.cursor() as cursor:
+                existing_cols = {
+                    col.name
+                    for col in schema_editor.connection.introspection.get_table_description(
+                        cursor, model._meta.db_table
+                    )
+                }
+            for field in model._meta.fields:
+                if field.column not in existing_cols:
+                    schema_editor.add_field(model, field)
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -11,7 +35,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.CreateModel(
+        SafeCreateModel(
             name='SetPartida',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
