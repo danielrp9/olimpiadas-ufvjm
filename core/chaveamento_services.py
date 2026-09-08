@@ -777,13 +777,15 @@ def atualizar_tabela_grupo(grupo):
 
 
 @transaction.atomic
-def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo=''):
+def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=None):
     """
     Registra o resultado de uma partida, atualiza tabelas de grupo e avança vencedores na árvore de mata-mata.
     """
     partida.wo_tipo = wo_tipo or ''
     partida.motivo_wo = motivo_wo or ''
     partida.finalizada = True
+    if link_pre_sumula is not None:
+        partida.link_pre_sumula = link_pre_sumula.strip()
 
     if wo_tipo == 'TIME_A':
         partida.placar_a = placar_a if placar_a is not None else 0
@@ -824,6 +826,8 @@ def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_
         jogo.placar_time_b = partida.placar_b
         jogo.wo_tipo = partida.wo_tipo
         jogo.motivo_wo = partida.motivo_wo
+        if partida.link_pre_sumula:
+            jogo.link_pre_sumula = partida.link_pre_sumula
         jogo.finalizado = True
         jogo.save()
 
@@ -1726,10 +1730,16 @@ def _sincronizar_jogo_partida(partida, descricao_local="Quadra Principal"):
     if partida.jogo:
         if not partida.jogo.finalizado:
             if partida.time_a and partida.time_b and partida.time_a != partida.time_b:
+                mudou_fields = []
                 if partida.jogo.time_a != partida.time_a or partida.jogo.time_b != partida.time_b:
                     partida.jogo.time_a = partida.time_a
                     partida.jogo.time_b = partida.time_b
-                    partida.jogo.save(update_fields=['time_a', 'time_b'])
+                    mudou_fields.extend(['time_a', 'time_b'])
+                if partida.link_pre_sumula != partida.jogo.link_pre_sumula:
+                    partida.jogo.link_pre_sumula = partida.link_pre_sumula
+                    mudou_fields.append('link_pre_sumula')
+                if mudou_fields:
+                    partida.jogo.save(update_fields=mudou_fields)
             else:
                 jogo_to_delete = partida.jogo
                 partida.jogo = None
@@ -1743,7 +1753,8 @@ def _sincronizar_jogo_partida(partida, descricao_local="Quadra Principal"):
             horario_jogo=partida.horario_partida,
             time_a=partida.time_a,
             time_b=partida.time_b,
-            local=descricao_local
+            local=descricao_local,
+            link_pre_sumula=partida.link_pre_sumula
         )
         partida.jogo = jogo
         partida.save(update_fields=['jogo'])

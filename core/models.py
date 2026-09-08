@@ -136,6 +136,13 @@ class Jogo(models.Model):
         verbose_name="Permitir Lançar Atletas", 
         help_text="Permite que as delegações lancem/escalem atletas mesmo após o encerramento do prazo regulamentar."
     )
+    link_pre_sumula = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="Link da Pré-Súmula",
+        help_text="Link externo ou documento da pré-súmula da partida."
+    )
     data_hora_fim = models.DateTimeField(verbose_name="Fim Real do Jogo", blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
 
@@ -669,6 +676,13 @@ class PartidaChaveamento(models.Model):
         verbose_name="Permitir Lançar Atletas", 
         help_text="Permite que as delegações lancem/escalem atletas mesmo após o encerramento do prazo regulamentar."
     )
+    link_pre_sumula = models.URLField(
+        max_length=500,
+        blank=True,
+        null=True,
+        verbose_name="Link da Pré-Súmula",
+        help_text="Link externo ou documento da pré-súmula da partida."
+    )
     
     data_partida = models.DateField(null=True, blank=True, verbose_name="Data da Partida")
     horario_partida = models.TimeField(null=True, blank=True, verbose_name="Horário da Partida")
@@ -848,6 +862,20 @@ class PartidaChaveamento(models.Model):
             return []
         ids = self._obter_equipe_ids(self.time_b)
         return list(self.cartoes.filter(delegacao_id__in=ids).select_related('atleta'))
+
+    @property
+    def presumula_a(self):
+        if not self.jogo or not self.time_a:
+            return None
+        ids = self._obter_equipe_ids(self.time_a)
+        return self.jogo.presumulas.filter(representante_id__in=ids).first()
+
+    @property
+    def presumula_b(self):
+        if not self.jogo or not self.time_b:
+            return None
+        ids = self._obter_equipe_ids(self.time_b)
+        return self.jogo.presumulas.filter(representante_id__in=ids).first()
 
     def __str__(self):
         ta = self.time_a.nome_delegacao if self.time_a else "A definir"

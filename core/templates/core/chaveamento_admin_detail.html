@@ -473,7 +473,7 @@
 <!-- Scripts de Interatividade para o Modo de Edição -->
 <script>
 
-    function togglePartidaEdit(partidaId, enable) {
+    function togglePartidaEdit(partidaId, enable, focusElementId) {
         const container = document.getElementById(`partida-card-${partidaId}`);
         const readView = document.getElementById(`partida-read-${partidaId}`);
         const editForm = document.getElementById(`partida-edit-${partidaId}`);
@@ -486,6 +486,15 @@
             container.classList.add('ring-2', 'ring-blue-500/40', 'bg-blue-50/40', 'border-blue-300');
             container.classList.remove('bg-white');
             if (window.lucide) window.lucide.createIcons();
+            if (focusElementId) {
+                setTimeout(() => {
+                    const el = document.getElementById(focusElementId);
+                    if (el) {
+                        el.focus();
+                        if (el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 50);
+            }
         } else {
             editForm.classList.add('hidden');
             readView.classList.remove('hidden');

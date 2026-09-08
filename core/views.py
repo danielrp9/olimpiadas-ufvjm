@@ -218,6 +218,19 @@ class JogoUpdateView(LoginRequiredMixin, UpdateView):
             jogo.data_hora_fim = None
         jogo.save()
         form.save_m2m()
+        for p in jogo.partida_chaveamento.all():
+            changed_fields = []
+            if p.link_pre_sumula != jogo.link_pre_sumula:
+                p.link_pre_sumula = jogo.link_pre_sumula
+                changed_fields.append('link_pre_sumula')
+            if jogo.placar_time_a is not None and p.placar_a != jogo.placar_time_a:
+                p.placar_a = jogo.placar_time_a
+                changed_fields.append('placar_a')
+            if jogo.placar_time_b is not None and p.placar_b != jogo.placar_time_b:
+                p.placar_b = jogo.placar_time_b
+                changed_fields.append('placar_b')
+            if changed_fields:
+                p.save(update_fields=changed_fields)
         if not jogo.is_presumula_deadline_passed and not jogo.finalizado:
             deadline_str = f" até às {jogo.presumula_deadline.strftime('%H:%M')}" if jogo.presumula_deadline else ""
             messages.success(self.request, f"Dados do jogo atualizados com sucesso! A pré-súmula está aberta{deadline_str}.")
@@ -267,6 +280,12 @@ def jogo_ajustar_horario(request, pk):
         elif request.POST.get('has_permitir_atletas_field') == '1':
             jogo.permitir_lancamento_atletas = False
 
+        if 'link_pre_sumula' in request.POST:
+            link = request.POST.get('link_pre_sumula', '').strip()
+            if link and not (link.startswith('http://') or link.startswith('https://')):
+                link = f'https://{link}'
+            jogo.link_pre_sumula = link or None
+
         try:
             jogo.full_clean()
             jogo.save()
@@ -275,6 +294,8 @@ def jogo_ajustar_horario(request, pk):
             partida = jogo.partida_chaveamento.first()
             if partida:
                 partida.permitir_lancamento_atletas = jogo.permitir_lancamento_atletas
+                if 'link_pre_sumula' in request.POST:
+                    partida.link_pre_sumula = jogo.link_pre_sumula
                 partida.save()
 
             horario_formatado = novo_horario.strftime('%H:%M')
@@ -371,7 +392,20 @@ def finalizar_jogo(request, pk):
         jogo.finalizado = True
         from django.utils import timezone
         jogo.data_hora_fim = timezone.now()
+
+        if 'link_pre_sumula' in request.POST:
+            link = request.POST.get('link_pre_sumula', '').strip()
+            if link and not (link.startswith('http://') or link.startswith('https://')):
+                link = f'https://{link}'
+            jogo.link_pre_sumula = link or None
+
         jogo.save()
+
+        partida = jogo.partida_chaveamento.first()
+        if partida:
+            if 'link_pre_sumula' in request.POST:
+                partida.link_pre_sumula = jogo.link_pre_sumula
+            partida.save()
         
         from django.core.exceptions import ObjectDoesNotExist
         try:
@@ -2629,11 +2663,23 @@ def salvar_resultado_partida_view(request, pk):
                             partida.proxima_partida.save()
                             _sincronizar_jogo_partida(partida.proxima_partida, "Mata-Mata")
 
+        # Link da Pré-Súmula
+        if 'link_pre_sumula' in request.POST:
+            link_raw = request.POST.get('link_pre_sumula', '').strip()
+            if link_raw and not (link_raw.startswith('http://') or link_raw.startswith('https://')):
+                link_raw = 'https://' + link_raw
+            if (partida.link_pre_sumula or '') != link_raw:
+                partida.link_pre_sumula = link_raw
+                updated_anything = True
+            if partida.jogo and (partida.jogo.link_pre_sumula or '') != link_raw:
+                partida.jogo.link_pre_sumula = link_raw
+                partida.jogo.save(update_fields=['link_pre_sumula'])
+
         if wo_tipo in ['TIME_A', 'TIME_B', 'AMBOS']:
             try:
                 placar_a = int(placar_a_raw) if (placar_a_raw is not None and placar_a_raw != '') else None
                 placar_b = int(placar_b_raw) if (placar_b_raw is not None and placar_b_raw != '') else None
-                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo=wo_tipo, motivo_wo=motivo_wo)
+                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo=wo_tipo, motivo_wo=motivo_wo, link_pre_sumula=partida.link_pre_sumula)
                 updated_anything = True
             except ValueError:
                 messages.error(request, "Placares inválidos para W.O.")
@@ -2647,7 +2693,7 @@ def salvar_resultado_partida_view(request, pk):
                 if partida.sets.exists() and placar_a == placar_b:
                     messages.warning(request, "A partida possui empate em sets. Lance o set de desempate para definir o vencedor.")
                 else:
-                    registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='')
+                    registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=partida.link_pre_sumula)
                     updated_anything = True
             except ValueError:
                 messages.error(request, "Placares inválidos.")
@@ -2657,7 +2703,7 @@ def salvar_resultado_partida_view(request, pk):
             if placar_a == placar_b:
                 messages.warning(request, "A partida possui empate em sets. Lance o set de desempate para definir o vencedor.")
             else:
-                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='')
+                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=partida.link_pre_sumula)
                 updated_anything = True
         elif partida.wo_tipo and wo_tipo == '':
             partida.wo_tipo = ''
@@ -3047,6 +3093,7 @@ class ChaveamentoJogosListaView(View):
                 'vencedor': p.vencedor,
                 'chaveamento_url': chaveamento_url,
                 'sets_resumo': p.sets_resumo,
+                'link_pre_sumula': p.link_pre_sumula,
             })
 
         for j in jogos_avulsos_qs:
@@ -3094,6 +3141,7 @@ class ChaveamentoJogosListaView(View):
                 'vencedor': None,
                 'chaveamento_url': chaveamento_url,
                 'sets_resumo': j.sets_resumo,
+                'link_pre_sumula': j.link_pre_sumula,
             })
 
         # Ordenação cronológica global

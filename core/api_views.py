@@ -103,6 +103,7 @@ def jogo_to_dict(jogo):
         },
         'local': jogo.local,
         'arbitro': jogo.arbitro,
+        'link_pre_sumula': jogo.link_pre_sumula,
         'finalizado': jogo.finalizado,
         'is_finalizado_por_wo': jogo.is_finalizado_por_wo
     }

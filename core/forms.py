@@ -60,18 +60,40 @@ class JogoForm(forms.ModelForm):
         widget=forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'})
     )
 
+    link_pre_sumula = forms.CharField(
+        required=False,
+        label="Link da Pré-Súmula",
+        widget=forms.URLInput(attrs={
+            'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white',
+            'placeholder': 'https://drive.google.com/... ou link da pré-súmula'
+        })
+    )
+
     class Meta:
         model = Jogo
-        fields = ['modalidade', 'data_jogo', 'horario_jogo', 'time_a', 'time_b', 'local', 'arbitro', 'finalizado', 'data_hora_fim']
+        fields = ['modalidade', 'data_jogo', 'horario_jogo', 'time_a', 'time_b', 'local', 'arbitro', 'placar_time_a', 'placar_time_b', 'link_pre_sumula', 'finalizado', 'data_hora_fim']
         widgets = {
             'modalidade': forms.Select(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'data_jogo': forms.DateInput(format='%Y-%m-%d', attrs={'type': 'date', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'horario_jogo': forms.TimeInput(format='%H:%M', attrs={'type': 'time', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'local': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
             'arbitro': forms.TextInput(attrs={'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
+            'placar_time_a': forms.NumberInput(attrs={'min': '0', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white', 'placeholder': '0'}),
+            'placar_time_b': forms.NumberInput(attrs={'min': '0', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white', 'placeholder': '0'}),
             'finalizado': forms.CheckboxInput(attrs={'class': 'h-4 w-4 text-blue-600 border-slate-200 rounded focus:ring-blue-500/20 focus:outline-none accent-blue-600'}),
             'data_hora_fim': forms.DateTimeInput(format='%Y-%m-%dT%H:%M', attrs={'type': 'datetime-local', 'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white'}),
         }
+
+    def clean_link_pre_sumula(self):
+        link = self.cleaned_data.get('link_pre_sumula', '')
+        if link:
+            link = link.strip()
+            if not (link.startswith('http://') or link.startswith('https://')):
+                link = f'https://{link}'
+            from django.core.validators import URLValidator
+            validator = URLValidator()
+            validator(link)
+        return link or None
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

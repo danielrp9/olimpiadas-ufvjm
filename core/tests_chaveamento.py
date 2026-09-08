@@ -1656,6 +1656,171 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertEqual(ordenados[1].delegacao, team_b)
         self.assertEqual(ordenados[2].delegacao, team_c)
 
+    def test_salvar_resultado_partida_com_link_pre_sumula(self):
+        """Testa o salvamento e sincronização do link da pré-súmula via salvar_resultado_partida_view."""
+        mod = Modalidade.objects.create(nome="Vôlei de Praia Masculino", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        team_a = self._create_delegation("vpa@ufvjm.edu.br", "Vôlei Time A", self.campus_dia)
+        team_b = self._create_delegation("vpb@ufvjm.edu.br", "Vôlei Time B", self.campus_dia)
+
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento, fase='FINAL_LOCAL', time_a=team_a, time_b=team_b
+        )
+        from core.chaveamento_services import _sincronizar_jogo_partida
+        _sincronizar_jogo_partida(partida)
+        self.assertIsNotNone(partida.jogo)
+
+        self.client.force_login(self.admin_user)
+        url = reverse('chaveamento_partida_resultado', kwargs={'pk': partida.pk})
+
+        # Salva resultado com link da pré-súmula (sem protocolo para testar auto-adição de https://)
+        resp = self.client.post(url, {
+            'placar_a': 2,
+            'placar_b': 1,
+            'link_pre_sumula': 'drive.google.com/file/d/12345/view'
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        partida.refresh_from_db()
+        self.assertEqual(partida.link_pre_sumula, 'https://drive.google.com/file/d/12345/view')
+        self.assertEqual(partida.placar_a, 2)
+        self.assertEqual(partida.placar_b, 1)
+
+        # Verifica sincronização com o modelo Jogo
+        self.assertIsNotNone(partida.jogo)
+        partida.jogo.refresh_from_db()
+        self.assertEqual(partida.jogo.link_pre_sumula, 'https://drive.google.com/file/d/12345/view')
+        self.assertEqual(partida.jogo.placar_time_a, 2)
+        self.assertEqual(partida.jogo.placar_time_b, 1)
+
+    def test_registrar_resultado_partida_com_link_pre_sumula_service(self):
+        """Testa o service registrar_resultado_partida aceitando link_pre_sumula diretamente."""
+        from core.chaveamento_services import registrar_resultado_partida, _sincronizar_jogo_partida
+
+        mod = Modalidade.objects.create(nome="Handebol Feminino", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        team_a = self._create_delegation("hfa@ufvjm.edu.br", "Hand Time A", self.campus_dia)
+        team_b = self._create_delegation("hfb@ufvjm.edu.br", "Hand Time B", self.campus_dia)
+
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento, fase='FINAL_GERAL', time_a=team_a, time_b=team_b
+        )
+        _sincronizar_jogo_partida(partida)
+
+        link_teste = "https://docs.google.com/document/d/abcdef/edit"
+        registrar_resultado_partida(partida, placar_a=20, placar_b=18, link_pre_sumula=link_teste)
+
+        partida.refresh_from_db()
+        self.assertEqual(partida.link_pre_sumula, link_teste)
+        self.assertEqual(partida.jogo.link_pre_sumula, link_teste)
+        self.assertTrue(partida.finalizada)
+        self.assertEqual(partida.vencedor, team_a)
+
+    def test_finalizar_jogo_com_link_pre_sumula(self):
+        """Testa encerramento de jogo com adição do link de pré-súmula."""
+        from core.chaveamento_services import _sincronizar_jogo_partida
+        mod = Modalidade.objects.create(nome="Basquete Feminino", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        team_a = self._create_delegation("bfa@ufvjm.edu.br", "Basquete A", self.campus_dia)
+        team_b = self._create_delegation("bfb@ufvjm.edu.br", "Basquete B", self.campus_dia)
+
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento, fase='FINAL_GERAL', time_a=team_a, time_b=team_b
+        )
+        _sincronizar_jogo_partida(partida)
+        jogo = partida.jogo
+
+        self.client.force_login(self.admin_user)
+        url = reverse('jogo_finalizar', kwargs={'pk': jogo.pk})
+
+        resp = self.client.post(url, {
+            'link_pre_sumula': 'drive.google.com/presumula/basquete_final.pdf'
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        jogo.refresh_from_db()
+        self.assertTrue(jogo.finalizado)
+        self.assertEqual(jogo.link_pre_sumula, 'https://drive.google.com/presumula/basquete_final.pdf')
+
+        partida.refresh_from_db()
+        self.assertEqual(partida.link_pre_sumula, 'https://drive.google.com/presumula/basquete_final.pdf')
+
+    def test_jogo_ajustar_horario_com_link_pre_sumula(self):
+        """Testa ajuste de horário com atualização do link da pré-súmula."""
+        from core.chaveamento_services import _sincronizar_jogo_partida
+        mod = Modalidade.objects.create(nome="Futsal Feminino", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        team_a = self._create_delegation("ffa@ufvjm.edu.br", "Futsal A", self.campus_dia)
+        team_b = self._create_delegation("ffb@ufvjm.edu.br", "Futsal B", self.campus_dia)
+
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento, fase='FINAL_GERAL', time_a=team_a, time_b=team_b
+        )
+        _sincronizar_jogo_partida(partida)
+        jogo = partida.jogo
+
+        self.client.force_login(self.admin_user)
+        url = reverse('jogo_ajustar_horario', kwargs={'pk': jogo.pk})
+
+        resp = self.client.post(url, {
+            'data_jogo': '2026-10-15',
+            'horario_jogo': '14:30',
+            'link_pre_sumula': 'https://storage.ufvjm.edu.br/sumulas/futsal.pdf'
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        jogo.refresh_from_db()
+        self.assertEqual(str(jogo.data_jogo), '2026-10-15')
+        self.assertEqual(jogo.horario_jogo.strftime('%H:%M'), '14:30')
+        self.assertEqual(jogo.link_pre_sumula, 'https://storage.ufvjm.edu.br/sumulas/futsal.pdf')
+
+        partida.refresh_from_db()
+        self.assertEqual(partida.link_pre_sumula, 'https://storage.ufvjm.edu.br/sumulas/futsal.pdf')
+
+    def test_jogo_update_view_com_link_pre_sumula(self):
+        """Testa edição completa de jogo com link_pre_sumula e sincronização com chaveamento."""
+        from core.chaveamento_services import _sincronizar_jogo_partida
+        mod = Modalidade.objects.create(nome="Xadrez Aberto", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        team_a = self._create_delegation("xaa@ufvjm.edu.br", "Xadrez A", self.campus_dia)
+        team_b = self._create_delegation("xab@ufvjm.edu.br", "Xadrez B", self.campus_dia)
+
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento, fase='FINAL_GERAL', time_a=team_a, time_b=team_b
+        )
+        _sincronizar_jogo_partida(partida)
+        jogo = partida.jogo
+
+        self.client.force_login(self.admin_user)
+        url = reverse('jogo_update', kwargs={'pk': jogo.pk})
+
+        resp = self.client.post(url, {
+            'modalidade': mod.pk,
+            'data_jogo': '2026-10-20',
+            'horario_jogo': '16:00',
+            'time_a': team_a.pk,
+            'time_b': team_b.pk,
+            'local': 'Ginásio Campus I',
+            'arbitro': 'Juiz Oficial',
+            'placar_time_a': 1,
+            'placar_time_b': 0,
+            'link_pre_sumula': 'docs.google.com/spreadsheets/d/xadrez123',
+            'finalizado': 'on'
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        jogo.refresh_from_db()
+        self.assertEqual(jogo.link_pre_sumula, 'https://docs.google.com/spreadsheets/d/xadrez123')
+        self.assertEqual(jogo.placar_time_a, 1)
+        self.assertEqual(jogo.placar_time_b, 0)
+
+        partida.refresh_from_db()
+        self.assertEqual(partida.link_pre_sumula, 'https://docs.google.com/spreadsheets/d/xadrez123')
+        self.assertEqual(partida.placar_a, 1)
+        self.assertEqual(partida.placar_b, 0)
+
+
+
 
 
 
