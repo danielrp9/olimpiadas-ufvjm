@@ -9,12 +9,17 @@ from pathlib import Path
 
 from django.conf import settings
 from django.utils import timezone
-from pypdf import PdfReader, PdfWriter
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import Paragraph
-from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
+
+try:
+    from pypdf import PdfReader, PdfWriter
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.styles import ParagraphStyle
+    from reportlab.platypus import Paragraph
+    from reportlab.lib.enums import TA_JUSTIFY, TA_CENTER
+except ImportError:
+    PdfReader = None
+    PdfWriter = None
 
 from core.models import Atleta, Campus
 from .models import MembroComissao, HistoricoEmissao
@@ -89,6 +94,12 @@ def gerar_pdf_declaracao_bytes(
     Gera uma declaração individual mesclando o texto dinâmico sobre o template oficial PDF.
     Retorna os bytes do PDF gerado.
     """
+    if PdfReader is None:
+        raise ImportError(
+            "As bibliotecas 'pypdf' e 'reportlab' são obrigatórias para emitir declarações. "
+            "Por favor, execute: pip install -r requirements.txt"
+        )
+
     if template_path is None:
         template_path = get_template_pdf_path()
 
