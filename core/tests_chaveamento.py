@@ -1858,6 +1858,34 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertEqual(resp_jogos.status_code, 200)
         self.assertContains(resp_jogos, 'https://docs.google.com/sumula-publica-teste')
 
+        # Teste para partida na Fase de Grupos
+        grupo = GrupoChaveamento.objects.create(
+            chaveamento=chaveamento,
+            nome="Grupo Teste Súmula",
+            tipo='GERAL'
+        )
+        partida_grupo = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            grupo=grupo,
+            fase='GRUPOS',
+            time_a=team_a,
+            time_b=team_b,
+            link_pre_sumula='https://docs.google.com/sumula-grupo-publico'
+        )
+        _sincronizar_jogo_partida(partida_grupo)
+
+        # Usuário anônimo acessando link de compartilhamento aberto deve ver a súmula da fase de grupos
+        self.client.logout()
+        resp_share_grupo = self.client.get(reverse('chaveamento_share', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_share_grupo.status_code, 200)
+        self.assertContains(resp_share_grupo, 'https://docs.google.com/sumula-grupo-publico')
+
+        # Usuário de delegação acessando detalhe do chaveamento deve ver a súmula da fase de grupos
+        self.client.force_login(self.rep_user)
+        resp_pub_grupo = self.client.get(reverse('chaveamento_public_detail', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_pub_grupo.status_code, 200)
+        self.assertContains(resp_pub_grupo, 'https://docs.google.com/sumula-grupo-publico')
+
 
 
 

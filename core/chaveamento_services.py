@@ -1728,6 +1728,14 @@ def _sincronizar_jogo_partida(partida, descricao_local="Quadra Principal"):
         return
 
     if partida.jogo:
+        # Garante sincronização bidirecional do link da súmula mesmo com o jogo finalizado
+        if partida.link_pre_sumula and partida.link_pre_sumula != partida.jogo.link_pre_sumula:
+            partida.jogo.link_pre_sumula = partida.link_pre_sumula
+            partida.jogo.save(update_fields=['link_pre_sumula'])
+        elif partida.jogo.link_pre_sumula and not partida.link_pre_sumula:
+            partida.link_pre_sumula = partida.jogo.link_pre_sumula
+            partida.save(update_fields=['link_pre_sumula'])
+
         if not partida.jogo.finalizado:
             if partida.time_a and partida.time_b and partida.time_a != partida.time_b:
                 mudou_fields = []
@@ -1735,9 +1743,6 @@ def _sincronizar_jogo_partida(partida, descricao_local="Quadra Principal"):
                     partida.jogo.time_a = partida.time_a
                     partida.jogo.time_b = partida.time_b
                     mudou_fields.extend(['time_a', 'time_b'])
-                if partida.link_pre_sumula != partida.jogo.link_pre_sumula:
-                    partida.jogo.link_pre_sumula = partida.link_pre_sumula
-                    mudou_fields.append('link_pre_sumula')
                 if mudou_fields:
                     partida.jogo.save(update_fields=mudou_fields)
             else:

@@ -216,7 +216,7 @@
                                     </div>
                                 </div>
 
-                                <div class="flex items-center justify-end sm:justify-start gap-2 text-[11px] text-slate-500">
+                                <div class="flex items-center justify-end sm:justify-start gap-2 text-[11px] text-slate-500 flex-wrap">
                                     <div class="flex items-center gap-1 bg-white px-2 py-1 rounded-xl border border-slate-200" title="Data do Jogo">
                                         <i data-lucide="calendar" class="text-slate-400 text-[10px]"></i>
                                         <span>{{ p.data_jogo_exibicao|default:"A definir" }}</span>
@@ -225,6 +225,12 @@
                                         <i data-lucide="clock" class="text-slate-400 text-[10px]"></i>
                                         <span>{{ p.horario_jogo_exibicao|default:"A definir" }}</span>
                                     </div>
+                                    {% if p.link_sumula_publica %}
+                                        <a href="{{ p.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-1 text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition font-bold text-[10px] shadow-2xs shrink-0 active:scale-95" title="Acessar Súmula Oficial">
+                                            <i data-lucide="file-text" class="w-3 h-3"></i>
+                                            <span>Súmula</span>
+                                        </a>
+                                    {% endif %}
                                 </div>
                             </div>
                             {% endfor %}

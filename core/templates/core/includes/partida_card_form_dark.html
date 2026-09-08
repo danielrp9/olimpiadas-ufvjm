@@ -37,10 +37,10 @@
                 <i data-lucide="file-text" class="text-indigo-400 text-[10px]"></i> Súmula:
             </span>
             <div class="flex-1 flex items-center gap-1 bg-slate-900/80 px-2 py-1 rounded-xl border border-white/30">
-                <input type="url" name="link_pre_sumula" value="{{ partida.link_pre_sumula|default:'' }}" placeholder="https://drive.google.com/..." class="w-full text-[11px] font-medium text-white border-0 p-0 focus:ring-0 bg-transparent" title="Link da Súmula">
+                <input type="url" name="link_pre_sumula" value="{{ partida.link_sumula_publica|default:'' }}" placeholder="https://drive.google.com/..." class="w-full text-[11px] font-medium text-white border-0 p-0 focus:ring-0 bg-transparent" title="Link da Súmula">
             </div>
-            {% if partida.link_pre_sumula %}
-                <a href="{{ partida.link_pre_sumula }}" target="_blank" rel="noopener noreferrer" class="p-1 text-indigo-300 hover:text-white transition" title="Abrir link atual">
+            {% if partida.link_sumula_publica %}
+                <a href="{{ partida.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="p-1 text-indigo-300 hover:text-white transition" title="Abrir link atual">
                     <i data-lucide="external-link" class="text-xs"></i>
                 </a>
             {% endif %}

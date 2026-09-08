@@ -2886,7 +2886,15 @@ class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
 
         atualizar_classificados_e_preencher_mata_mata(chaveamento)
 
-        grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
+        grupos = chaveamento.grupos.prefetch_related(
+            'times__delegacao',
+            'partidas__time_a',
+            'partidas__time_b',
+            'partidas__vencedor',
+            'partidas__perdedor',
+            'partidas__jogo',
+            'partidas__sets'
+        ).all()
         partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
 
         partidas_por_fase = {
@@ -2943,7 +2951,15 @@ def chaveamento_share_view(request, pk):
 
     atualizar_classificados_e_preencher_mata_mata(chaveamento)
 
-    grupos = chaveamento.grupos.prefetch_related('times__delegacao', 'partidas__time_a', 'partidas__time_b', 'partidas__vencedor', 'partidas__perdedor').all()
+    grupos = chaveamento.grupos.prefetch_related(
+        'times__delegacao',
+        'partidas__time_a',
+        'partidas__time_b',
+        'partidas__vencedor',
+        'partidas__perdedor',
+        'partidas__jogo',
+        'partidas__sets'
+    ).all()
     partidas_mata_mata = chaveamento.partidas.filter(grupo__isnull=True).select_related('time_a', 'time_b', 'vencedor', 'perdedor', 'jogo').order_by('id')
 
     partidas_por_fase = {
