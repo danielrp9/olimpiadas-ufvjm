@@ -80,6 +80,24 @@
                     </div>
                 </div>
 
+                <!-- Súmula Oficial da Partida (Pública se adicionada) -->
+                {% if presumula.jogo.link_sumula_publica %}
+                <div class="bg-indigo-500/20 border border-indigo-400/30 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-white shadow-sm">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="p-2.5 bg-indigo-600 text-white rounded-xl shadow-2xs shrink-0">
+                            <i data-lucide="file-text" class="w-5 h-5"></i>
+                        </span>
+                        <div class="min-w-0">
+                            <span class="text-[10px] font-black uppercase tracking-wider text-indigo-300 block">Súmula Oficial Disponível</span>
+                            <span class="text-xs text-white/90 font-medium block truncate">A súmula oficial com os resultados finais desta partida está pública para consulta.</span>
+                        </div>
+                    </div>
+                    <a href="{{ presumula.jogo.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-sm flex items-center gap-1.5 shrink-0 active:scale-95 border border-indigo-400/30" title="Acessar documento da Súmula Oficial">
+                        <i data-lucide="external-link" class="w-3.5 h-3.5"></i> Acessar Súmula
+                    </a>
+                </div>
+                {% endif %}
+
                 <!-- Cards de Informação Internos do Cabeçalho Escuro -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Confronto -->

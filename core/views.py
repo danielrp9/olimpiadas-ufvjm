@@ -3093,7 +3093,7 @@ class ChaveamentoJogosListaView(View):
                 'vencedor': p.vencedor,
                 'chaveamento_url': chaveamento_url,
                 'sets_resumo': p.sets_resumo,
-                'link_pre_sumula': p.link_pre_sumula,
+                'link_pre_sumula': p.link_sumula_publica,
             })
 
         for j in jogos_avulsos_qs:
@@ -3141,7 +3141,7 @@ class ChaveamentoJogosListaView(View):
                 'vencedor': None,
                 'chaveamento_url': chaveamento_url,
                 'sets_resumo': j.sets_resumo,
-                'link_pre_sumula': j.link_pre_sumula,
+                'link_pre_sumula': j.link_sumula_publica,
             })
 
         # Ordenação cronológica global

@@ -1819,6 +1819,46 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertEqual(partida.placar_a, 1)
         self.assertEqual(partida.placar_b, 0)
 
+    def test_link_sumula_publica_renderizacao_publica(self):
+        """Testa que a súmula adicionada é exibida publicamente em páginas abertas e anônimas."""
+        mod = Modalidade.objects.create(nome="Natação Revezamento", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        team_a = self._create_delegation("nat_a@ufvjm.edu.br", "Natação A", self.campus_dia)
+        team_b = self._create_delegation("nat_b@ufvjm.edu.br", "Natação B", self.campus_dia)
+
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            fase='FINAL_GERAL',
+            time_a=team_a,
+            time_b=team_b,
+            link_pre_sumula='https://docs.google.com/sumula-publica-teste'
+        )
+        from core.chaveamento_services import _sincronizar_jogo_partida
+        _sincronizar_jogo_partida(partida)
+
+        # Propriedades de fallback público
+        self.assertEqual(partida.link_sumula_publica, 'https://docs.google.com/sumula-publica-teste')
+        self.assertEqual(partida.jogo.link_sumula_publica, 'https://docs.google.com/sumula-publica-teste')
+
+        # Usuário logado (representante/estudante) acessando chaveamento detalhado
+        self.client.force_login(self.rep_user)
+        resp = self.client.get(reverse('chaveamento_public_detail', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, 'https://docs.google.com/sumula-publica-teste')
+        self.assertContains(resp, 'Acessar Súmula')
+
+        # Usuário anônimo acessando link de compartilhamento aberto
+        self.client.logout()
+        resp_share = self.client.get(reverse('chaveamento_share', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_share.status_code, 200)
+        self.assertContains(resp_share, 'https://docs.google.com/sumula-publica-teste')
+
+        # Usuário anônimo acessando lista cronológica pública de jogos
+        resp_jogos = self.client.get(reverse('chaveamento_jogos_lista'))
+        self.assertEqual(resp_jogos.status_code, 200)
+        self.assertContains(resp_jogos, 'https://docs.google.com/sumula-publica-teste')
+
+
 
 
 

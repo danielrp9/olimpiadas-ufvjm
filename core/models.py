@@ -146,6 +146,18 @@ class Jogo(models.Model):
     data_hora_fim = models.DateTimeField(verbose_name="Fim Real do Jogo", blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
 
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.link_pre_sumula and hasattr(self, 'partida_chaveamento'):
+            self.partida_chaveamento.exclude(link_pre_sumula=self.link_pre_sumula).update(link_pre_sumula=self.link_pre_sumula)
+
+    @property
+    def link_sumula_publica(self):
+        if self.link_pre_sumula:
+            return self.link_pre_sumula
+        p = self.partida_chaveamento.first() if hasattr(self, 'partida_chaveamento') else None
+        return p.link_pre_sumula if p and p.link_pre_sumula else ''
+
     @property
     def is_wo(self):
         return bool(self.wo_tipo)
@@ -707,6 +719,18 @@ class PartidaChaveamento(models.Model):
         verbose_name = "Partida do Chaveamento"
         verbose_name_plural = "Partidas do Chaveamento"
         ordering = ['id']
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        if self.jogo_id and self.link_pre_sumula:
+            from core.models import Jogo
+            Jogo.objects.filter(pk=self.jogo_id).exclude(link_pre_sumula=self.link_pre_sumula).update(link_pre_sumula=self.link_pre_sumula)
+
+    @property
+    def link_sumula_publica(self):
+        if self.link_pre_sumula:
+            return self.link_pre_sumula
+        return self.jogo.link_pre_sumula if self.jogo and self.jogo.link_pre_sumula else ''
 
     @property
     def is_wo(self):

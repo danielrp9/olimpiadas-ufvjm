@@ -87,6 +87,28 @@
         </div>
     {% endif %}
 
+    <!-- Linha da Súmula Oficial (Visível Publicamente quando Adicionada) -->
+    {% if partida.link_sumula_publica %}
+        <div class="flex items-center justify-between gap-2 px-3 py-2 rounded-xl text-xs bg-indigo-50/80 border border-indigo-200 text-indigo-950">
+            <div class="flex items-center gap-2 min-w-0 truncate">
+                <span class="p-1 rounded-lg bg-indigo-100 text-indigo-700 shrink-0">
+                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                </span>
+                <div class="min-w-0 truncate">
+                    <span class="font-black text-[10px] uppercase tracking-wider block text-indigo-900">Súmula Oficial:</span>
+                    <a href="{{ partida.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="text-indigo-600 hover:text-indigo-800 font-bold underline truncate block text-xs" title="{{ partida.link_sumula_publica }}">
+                        {{ partida.link_sumula_publica|truncatechars:38 }}
+                    </a>
+                </div>
+            </div>
+            <div class="shrink-0 flex items-center gap-1.5">
+                <a href="{{ partida.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white transition shadow-2xs flex items-center gap-1 active:scale-95" title="Acessar documento da súmula oficial">
+                    <i data-lucide="external-link" class="w-3 h-3"></i> Acessar Súmula
+                </a>
+            </div>
+        </div>
+    {% endif %}
+
     <!-- Data e Horário Exibição -->
     <div class="flex items-center justify-between gap-2 pt-2 border-t border-slate-100 text-slate-500 text-[11px]">
         <div class="flex items-center gap-3 text-slate-500 flex-wrap">
@@ -98,8 +120,8 @@
                 <i data-lucide="clock" class="text-blue-600 text-[10px]"></i>
                 <strong class="text-slate-700 font-semibold">{{ partida.horario_jogo_exibicao|default:"A definir" }}</strong>
             </span>
-            {% if partida.link_pre_sumula %}
-                <a href="{{ partida.link_pre_sumula }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition shadow-2xs" title="Abrir link da súmula em nova guia">
+            {% if partida.link_sumula_publica %}
+                <a href="{{ partida.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition shadow-2xs" title="Abrir link da súmula em nova guia">
                     <i data-lucide="file-text" class="w-3 h-3 text-indigo-600"></i> Súmula <i data-lucide="external-link" class="w-2.5 h-2.5 opacity-60"></i>
                 </a>
             {% endif %}

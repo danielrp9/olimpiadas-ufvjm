@@ -442,24 +442,29 @@
                     <tr class="hover:bg-slate-50/30 transition">
                         <!-- 1. Botão de Ação (Sempre Visível) -->
                         <td class="px-6 py-4">
-                            {% if jogo.minha_presumula %}
-                                <div class="flex items-center gap-2">
+                            <div class="flex items-center gap-2">
+                                {% if jogo.link_sumula_publica %}
+                                    <a href="{{ jogo.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-2.5 py-1.5 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 rounded-xl text-[10px] font-bold transition shadow-sm gap-1" title="Acessar Súmula Oficial">
+                                        <i data-lucide="file-text" class="w-3 h-3"></i> Súmula
+                                    </a>
+                                {% endif %}
+                                {% if jogo.minha_presumula %}
                                     <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" class="inline-flex items-center px-2.5 py-1.5 border border-slate-200 hover:bg-slate-50 rounded-xl text-[10px] font-bold text-slate-600 bg-white transition shadow-sm gap-1">
                                         Ver
                                     </a>
                                     <a href="{% url 'presumula_update' jogo.minha_presumula.id %}" class="inline-flex items-center px-2.5 py-1.5 border border-blue-200 text-blue-600 hover:bg-blue-50 bg-white rounded-xl text-[10px] font-bold transition shadow-sm gap-1">
                                         Editar
                                     </a>
-                                </div>
-                            {% else %}
-                                {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
-                                    <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95 whitespace-nowrap">
-                                        <i data-lucide="plus"></i> Escalar
-                                    </a>
                                 {% else %}
-                                    <span class="text-[10px] text-slate-400 italic">Delegação pendente</span>
+                                    {% if user.delegacao_ativa.status_delegacao == 'deferido' %}
+                                        <a href="{% url 'presumula_create' %}?jogo={{ jogo.id }}" class="inline-flex items-center px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-xl shadow-sm transition gap-1.5 active:scale-95 whitespace-nowrap">
+                                            <i data-lucide="plus"></i> Escalar
+                                        </a>
+                                    {% else %}
+                                        <span class="text-[10px] text-slate-400 italic">Delegação pendente</span>
+                                    {% endif %}
                                 {% endif %}
-                            {% endif %}
+                            </div>
                         </td>
 
                         <!-- 2. Modalidade (Sempre Visível - Exibe confronto no mobile) -->

@@ -142,9 +142,9 @@
                                     <div class="text-[11px] text-slate-700 font-bold mt-2 md:hidden">
                                         {{ jogo.time_a_display }} <span class="text-slate-400 font-normal px-0.5">vs</span> {{ jogo.time_b_display }}
                                     </div>
-                                    {% if jogo.link_pre_sumula %}
+                                    {% if jogo.link_sumula_publica %}
                                         <div class="mt-1 md:hidden">
-                                            <a href="{{ jogo.link_pre_sumula }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="Link da Súmula Oficial">
+                                            <a href="{{ jogo.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200" title="Link da Súmula Oficial">
                                                 <i data-lucide="file-text" class="w-2.5 h-2.5 text-indigo-600"></i> Súmula <i data-lucide="external-link" class="w-2 h-2 opacity-60"></i>
                                             </a>
                                         </div>
@@ -186,9 +186,9 @@
                                             <p class="text-[10px] text-slate-400 mt-0.5 font-medium">Responsável: {{ jogo.time_b_responsavel }}</p>
                                         </div>
                                     </div>
-                                    {% if jogo.link_pre_sumula %}
+                                    {% if jogo.link_sumula_publica %}
                                         <div class="mt-2">
-                                            <a href="{{ jogo.link_pre_sumula }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition shadow-2xs" title="Link da Súmula Oficial">
+                                            <a href="{{ jogo.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition shadow-2xs" title="Link da Súmula Oficial">
                                                 <i data-lucide="file-text" class="w-3 h-3 text-indigo-600"></i> Súmula Oficial <i data-lucide="external-link" class="w-2.5 h-2.5 opacity-60"></i>
                                             </a>
                                         </div>
@@ -288,6 +288,11 @@
                                     {% else %}
                                         <!-- REPRESENTATIVE ACTIONS (Botão + Escalar Atletas Moderno) -->
                                         <div class="flex items-center justify-end gap-2">
+                                            {% if jogo.link_sumula_publica %}
+                                                <a href="{{ jogo.link_sumula_publica }}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl text-[10px] font-black bg-indigo-600 hover:bg-indigo-700 text-white transition shadow-2xs shrink-0 active:scale-95" title="Acessar Súmula Oficial">
+                                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i> Súmula
+                                                </a>
+                                            {% endif %}
                                             {% if jogo.is_finalizado_por_wo %}
                                                 {% if jogo.minha_presumula %}
                                                     <a href="{% url 'presumula_detail' jogo.minha_presumula.id %}" 
