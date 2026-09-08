@@ -94,11 +94,24 @@ def gerar_pdf_declaracao_bytes(
     Gera uma declaração individual mesclando o texto dinâmico sobre o template oficial PDF.
     Retorna os bytes do PDF gerado.
     """
+    global PdfReader, PdfWriter, canvas, ParagraphStyle, Paragraph, TA_JUSTIFY
     if PdfReader is None:
-        raise ImportError(
-            "As bibliotecas 'pypdf' e 'reportlab' são obrigatórias para emitir declarações. "
-            "Por favor, execute: pip install -r requirements.txt"
-        )
+        try:
+            from pypdf import PdfReader as _PR, PdfWriter as _PW
+            from reportlab.pdfgen import canvas as _canvas
+            from reportlab.lib.styles import ParagraphStyle as _PS
+            from reportlab.platypus import Paragraph as _Paragraph
+            from reportlab.lib.enums import TA_JUSTIFY as _TAJ
+            PdfReader, PdfWriter = _PR, _PW
+            canvas = _canvas
+            ParagraphStyle = _PS
+            Paragraph = _Paragraph
+            TA_JUSTIFY = _TAJ
+        except ImportError as err:
+            raise ImportError(
+                f"As bibliotecas 'pypdf' e 'reportlab' são obrigatórias para emitir declarações ({err}). "
+                "Por favor, execute: pip install pypdf reportlab pillow (e recarregue o servidor na aba Web)."
+            )
 
     if template_path is None:
         template_path = get_template_pdf_path()
