@@ -1,0 +1,839 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Emissão de Declarações | Olimpíadas UFVJM{% endblock %}
+
+{% block content %}
+<div class="w-full space-y-8 pb-12">
+    
+    <!-- Cabeçalho Principal -->
+    <div class="bg-white border border-slate-200/60 rounded-3xl p-6 sm:p-8 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+        <div class="flex items-center gap-4">
+            <a href="{% url 'dashboard' %}" class="text-slate-400 hover:text-blue-600 transition flex items-center justify-center p-1.5" title="Voltar ao Dashboard">
+                <i data-lucide="arrow-left" class="text-xl"></i>
+            </a>
+            <span class="p-3.5 bg-blue-50 text-blue-600 rounded-2xl shrink-0 shadow-sm">
+                <i data-lucide="award" class="text-xl"></i>
+            </span>
+            <div>
+                <h1 class="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Emissão de Declarações</h1>
+                <p class="text-slate-500 mt-1 text-xs sm:text-sm">Gere certificados e declarações oficiais para Atletas Deferidos e Comissão Organizadora.</p>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <button type="button" onclick="abrirModalHistorico()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-2">
+                <i data-lucide="history" class="text-slate-500"></i>
+                <span>Histórico de Lotes</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Navegação por Abas (Atletas vs Comissão) -->
+    <div class="flex items-center space-x-2 border-b border-slate-200/80 pb-px">
+        <button id="tab-btn-atletas" onclick="alternarAba('atletas')" class="px-5 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 flex items-center gap-2.5 transition">
+            <i data-lucide="users" class="w-4 h-4"></i>
+            <span>Declarações de Atletas Deferidos</span>
+            <span class="ml-1.5 px-2 py-0.5 text-[11px] font-extrabold bg-blue-100 text-blue-700 rounded-full">{{ total_atletas_deferidos }}</span>
+        </button>
+        <button id="tab-btn-comissao" onclick="alternarAba('comissao')" class="px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2.5 transition">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <span>Comissão Organizadora</span>
+            <span class="ml-1.5 px-2 py-0.5 text-[11px] font-extrabold bg-slate-100 text-slate-700 rounded-full">{{ total_comissao }}</span>
+        </button>
+    </div>
+
+    <!-- CONTEÚDO DA ABA: ATLETAS DEFERIDOS -->
+    <div id="aba-atletas" class="space-y-6">
+        
+        <!-- Formulário de Parâmetros dos Atletas -->
+        <div class="bg-white border border-slate-200/70 rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <span class="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                    <i data-lucide="sliders" class="w-4 h-4"></i>
+                </span>
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">1. Parâmetros de Emissão (Atletas)</h2>
+                    <p class="text-xs text-slate-500">Configure as horas, período e filtre pelos Campi desejados.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Carga Horária -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Carga Horária Total (Horas)
+                    </label>
+                    <input type="number" id="atleta-horas" min="1" max="1000" value="{{ valores_padrao.horas_atleta }}" 
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm bg-slate-50/40 focus:bg-white font-semibold text-slate-800">
+                    <span class="text-[11px] text-slate-400 mt-1 block">Ex: 60 ou 100 horas</span>
+                </div>
+
+                <!-- Período de Realização -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Período Realizado (Manual)
+                    </label>
+                    <input type="text" id="atleta-periodo" value="{{ valores_padrao.periodo }}" 
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm bg-slate-50/40 focus:bg-white font-semibold text-slate-800">
+                    <span class="text-[11px] text-slate-400 mt-1 block">Texto descritivo do período do evento</span>
+                </div>
+
+                <!-- Data e Cidade de Emissão -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Cidade e Data de Emissão
+                    </label>
+                    <input type="text" id="atleta-cidade-data" value="{{ valores_padrao.cidade_data }}" 
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-sm bg-slate-50/40 focus:bg-white font-semibold text-slate-800">
+                    <span class="text-[11px] text-slate-400 mt-1 block">Localidade e data por extenso</span>
+                </div>
+            </div>
+
+            <!-- Seleção de Campi -->
+            <div class="mt-6 pt-5 border-t border-slate-100">
+                <div class="flex items-center justify-between mb-3">
+                    <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <i data-lucide="building" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Filtrar por Campi Participantes
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="marcarTodosCampi(true)" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 transition">Marcar Todos</button>
+                        <span class="text-slate-300">•</span>
+                        <button type="button" onclick="marcarTodosCampi(false)" class="text-[11px] font-bold text-slate-500 hover:text-slate-700 transition">Desmarcar Todos</button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                    {% for campus in campis %}
+                    <label class="flex items-center gap-2.5 p-3 rounded-2xl border border-slate-200/80 bg-slate-50/30 hover:bg-blue-50/40 hover:border-blue-200 transition cursor-pointer">
+                        <input type="checkbox" name="filtro_campus" value="{{ campus.id }}" checked onchange="filtrarAtletasPorCampus()" 
+                            class="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500/20 accent-blue-600">
+                        <span class="text-xs font-semibold text-slate-700">{{ campus.nome }}</span>
+                    </label>
+                    {% endfor %}
+                    <label class="flex items-center gap-2.5 p-3 rounded-2xl border border-slate-200/80 bg-slate-50/30 hover:bg-blue-50/40 hover:border-blue-200 transition cursor-pointer">
+                        <input type="checkbox" name="filtro_campus" value="sem_campus" checked onchange="filtrarAtletasPorCampus()" 
+                            class="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500/20 accent-blue-600">
+                        <span class="text-xs font-semibold text-slate-700">Outros / Não Especificado</span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Atletas Deferidos -->
+        <div class="bg-white border border-slate-200/70 rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <span>2. Seleção de Atletas Deferidos</span>
+                        <span id="badge-atletas-visiveis" class="px-2.5 py-0.5 text-xs font-black bg-blue-50 text-blue-700 rounded-full">{{ total_atletas_deferidos }} selecionados</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">Somente atletas com status "Deferido" são listados conforme as regras.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button type="button" onclick="visualizarPrevia('atleta')" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-2">
+                        <i data-lucide="eye" class="w-4 h-4 text-slate-500"></i>
+                        <span>Visualizar Prévia (1 PDF)</span>
+                    </button>
+                    <button type="button" onclick="iniciarGeracao('atleta')" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs transition shadow-sm hover:shadow-md flex items-center gap-2 active:scale-95">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Gerar Declarações (.ZIP)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela com Checkbox de Seleção -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="tabela-atletas">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                            <th class="p-3 w-10 text-center">
+                                <input type="checkbox" id="check-todos-atletas" checked onchange="toggleTodosAtletas(this)" 
+                                    class="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500/20 accent-blue-600 cursor-pointer">
+                            </th>
+                            <th class="p-3">Nome do Atleta</th>
+                            <th class="p-3">Matrícula</th>
+                            <th class="p-3">Curso</th>
+                            <th class="p-3">Campus</th>
+                            <th class="p-3">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for atleta in atletas_deferidos %}
+                        <tr class="hover:bg-slate-50/60 transition atleta-row" data-campus-id="{{ atleta.campus.id|default:'sem_campus' }}" data-atleta-id="{{ atleta.id }}">
+                            <td class="p-3 text-center">
+                                <input type="checkbox" name="atleta_id" value="{{ atleta.id }}" checked onchange="atualizarContagemAtletas()" 
+                                    class="h-4 w-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500/20 accent-blue-600 atleta-check cursor-pointer">
+                            </td>
+                            <td class="p-3 font-bold text-slate-800">{{ atleta.nome_completo }}</td>
+                            <td class="p-3 font-mono text-slate-600">{{ atleta.matricula|default:"—" }}</td>
+                            <td class="p-3 text-slate-600">{{ atleta.curso|default:"—" }}</td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-700">
+                                    {{ atleta.campus.nome|default:"Não especificado" }}
+                                </span>
+                            </td>
+                            <td class="p-3">
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 flex items-center gap-1 w-max">
+                                    <i data-lucide="check-circle" class="w-3 h-3"></i> Deferido
+                                </span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-slate-400">
+                                Nenhum atleta com status "Deferido" foi encontrado no sistema.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO DA ABA: COMISSÃO ORGANIZADORA -->
+    <div id="aba-comissao" class="space-y-6 hidden">
+        
+        <!-- Formulário de Parâmetros da Comissão -->
+        <div class="bg-white border border-slate-200/70 rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div class="flex items-center gap-3 mb-6 pb-4 border-b border-slate-100">
+                <span class="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
+                    <i data-lucide="sliders" class="w-4 h-4"></i>
+                </span>
+                <div>
+                    <h2 class="text-base font-bold text-slate-800">1. Parâmetros de Emissão (Comissão Organizadora)</h2>
+                    <p class="text-xs text-slate-500">Configure as horas e período para os membros organizadores do projeto.</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <!-- Carga Horária -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Carga Horária Total (Horas)
+                    </label>
+                    <input type="number" id="comissao-horas" min="1" max="1000" value="{{ valores_padrao.horas_comissao }}" 
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-sm bg-slate-50/40 focus:bg-white font-semibold text-slate-800">
+                    <span class="text-[11px] text-slate-400 mt-1 block">Ex: 100 horas</span>
+                </div>
+
+                <!-- Período de Realização -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Período Realizado (Manual)
+                    </label>
+                    <input type="text" id="comissao-periodo" value="{{ valores_padrao.periodo }}" 
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-sm bg-slate-50/40 focus:bg-white font-semibold text-slate-800">
+                    <span class="text-[11px] text-slate-400 mt-1 block">Texto do período do evento</span>
+                </div>
+
+                <!-- Data e Cidade de Emissão -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                        <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
+                        Cidade e Data de Emissão
+                    </label>
+                    <input type="text" id="comissao-cidade-data" value="{{ valores_padrao.cidade_data }}" 
+                        class="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-sm bg-slate-50/40 focus:bg-white font-semibold text-slate-800">
+                    <span class="text-[11px] text-slate-400 mt-1 block">Localidade e data por extenso</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Membros da Comissão -->
+        <div class="bg-white border border-slate-200/70 rounded-3xl p-6 sm:p-8 shadow-sm">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-4 border-b border-slate-100">
+                <div>
+                    <h2 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                        <span>2. Membros da Comissão Organizadora</span>
+                        <span id="badge-comissao-visiveis" class="px-2.5 py-0.5 text-xs font-black bg-indigo-50 text-indigo-700 rounded-full">{{ total_comissao }} membros ativos</span>
+                    </h2>
+                    <p class="text-xs text-slate-500 mt-0.5">As declarações constarão o papel de "Organizador" e seus respectivos dados.</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-2.5">
+                    <a href="{% url 'declaracoes_comissao_sincronizar' %}" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5" title="Importar usuários com papel Comissão">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                        <span>Sincronizar Usuários</span>
+                    </a>
+                    <button type="button" onclick="abrirModalMembro()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm">
+                        <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                        <span>Adicionar Membro</span>
+                    </button>
+                    <button type="button" onclick="visualizarPrevia('comissao')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition flex items-center gap-1.5">
+                        <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span>Prévia (1 PDF)</span>
+                    </button>
+                    <button type="button" onclick="iniciarGeracao('comissao')" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-sm hover:shadow-md flex items-center gap-2 active:scale-95">
+                        <i data-lucide="download" class="w-4 h-4"></i>
+                        <span>Gerar Declarações (.ZIP)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabela Comissão -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse" id="tabela-comissao">
+                    <thead>
+                        <tr class="border-b border-slate-200 text-[11px] font-bold text-slate-400 uppercase tracking-wider bg-slate-50/50">
+                            <th class="p-3 w-10 text-center">
+                                <input type="checkbox" id="check-todos-comissao" checked onchange="toggleTodosComissao(this)" 
+                                    class="h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20 accent-indigo-600 cursor-pointer">
+                            </th>
+                            <th class="p-3">Nome Completo</th>
+                            <th class="p-3">Matrícula / SIAPE</th>
+                            <th class="p-3">Papel / Função</th>
+                            <th class="p-3">E-mail</th>
+                            <th class="p-3 text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100 text-xs">
+                        {% for membro in membros_comissao %}
+                        <tr class="hover:bg-slate-50/60 transition" data-membro-id="{{ membro.id }}">
+                            <td class="p-3 text-center">
+                                <input type="checkbox" name="comissao_id" value="{{ membro.id }}" {% if membro.ativo %}checked{% endif %} onchange="atualizarContagemComissao()" 
+                                    class="h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20 accent-indigo-600 comissao-check cursor-pointer">
+                            </td>
+                            <td class="p-3 font-bold text-slate-800">{{ membro.nome_completo }}</td>
+                            <td class="p-3 font-mono text-slate-600">{{ membro.matricula|default:"—" }}</td>
+                            <td class="p-3">
+                                <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700">
+                                    {{ membro.cargo|default:"Organizador" }}
+                                </span>
+                            </td>
+                            <td class="p-3 text-slate-500">{{ membro.email|default:"—" }}</td>
+                            <td class="p-3 text-right">
+                                <div class="flex items-center justify-end gap-1.5">
+                                    <button type="button" onclick="editarMembro('{{ membro.id }}', '{{ membro.nome_completo|escapejs }}', '{{ membro.matricula|default:''|escapejs }}', '{{ membro.cargo|default:'Organizador'|escapejs }}', '{{ membro.email|default:''|escapejs }}', {{ membro.ativo|yesno:'true,false' }})" 
+                                        class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Editar dados">
+                                        <i data-lucide="edit-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <form method="POST" action="{% url 'declaracoes_comissao_excluir' membro.id %}" onsubmit="return confirm('Deseja realmente remover este membro da comissão?');" class="inline">
+                                        {% csrf_token %}
+                                        <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition" title="Remover">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="p-8 text-center text-slate-400">
+                                Nenhum membro da comissão cadastrado ainda.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL DE PROGRESSO EM TEMPO REAL COM PORCENTAGEM                          -->
+<!-- ========================================================================= -->
+<div id="modal-progresso" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-100 transform transition-all">
+        <div class="text-center">
+            
+            <!-- Ícone de Status -->
+            <div id="icone-processando" class="w-16 h-16 bg-blue-50 text-blue-600 rounded-3xl mx-auto flex items-center justify-center mb-4 relative">
+                <i data-lucide="loader-2" class="w-8 h-8 animate-spin"></i>
+            </div>
+            <div id="icone-sucesso" class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl mx-auto flex items-center justify-center mb-4 hidden">
+                <i data-lucide="check" class="w-8 h-8 stroke-[3]"></i>
+            </div>
+            <div id="icone-erro" class="w-16 h-16 bg-red-50 text-red-600 rounded-3xl mx-auto flex items-center justify-center mb-4 hidden">
+                <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+            </div>
+
+            <!-- Título e Mensagem -->
+            <h3 id="progresso-titulo" class="text-lg font-black text-slate-800">Gerando Declarações Oficiais...</h3>
+            <p id="progresso-subtitulo" class="text-xs text-slate-500 mt-1 mb-5">Aguarde enquanto os documentos são processados e compactados.</p>
+
+            <!-- Barra de Progresso com Porcentagem -->
+            <div class="space-y-2 mb-6">
+                <div class="flex justify-between text-xs font-bold text-slate-700">
+                    <span id="progresso-etapa">Processando documentos...</span>
+                    <span id="progresso-porcentagem" class="text-blue-600 font-black text-sm">0%</span>
+                </div>
+                <div class="w-full bg-slate-100 rounded-full h-3.5 overflow-hidden p-0.5 border border-slate-200/60">
+                    <div id="progresso-barra" class="bg-gradient-to-r from-blue-600 to-indigo-600 h-full rounded-full transition-all duration-300 w-0"></div>
+                </div>
+                <div id="progresso-individuo" class="text-[11px] text-slate-400 text-left truncate pt-1 font-mono">
+                    Preparando ambiente...
+                </div>
+            </div>
+
+            <!-- Botões de Ação do Modal -->
+            <div id="acoes-concluido" class="hidden space-y-2">
+                <a id="btn-download-zip" href="#" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl text-xs transition shadow-md hover:shadow-lg flex items-center justify-center gap-2">
+                    <i data-lucide="download" class="w-4 h-4"></i>
+                    <span>Baixar Arquivo Compactado (.ZIP)</span>
+                </a>
+                <button type="button" onclick="fecharModalProgresso()" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-xs transition">
+                    Fechar Janela
+                </button>
+            </div>
+
+            <div id="acoes-erro" class="hidden">
+                <button type="button" onclick="fecharModalProgresso()" class="w-full py-2.5 px-4 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-2xl text-xs transition">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL DE CADASTRO / EDIÇÃO DE MEMBRO DA COMISSÃO                          -->
+<!-- ========================================================================= -->
+<div id="modal-membro" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full mx-4 shadow-2xl border border-slate-100">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+            <h3 id="modal-membro-titulo" class="text-base font-bold text-slate-800">Adicionar Membro da Comissão</h3>
+            <button type="button" onclick="fecharModalMembro()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{% url 'declaracoes_comissao_salvar' %}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" id="form-membro-id" name="membro_id" value="">
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Nome Completo *</label>
+                <input type="text" id="form-nome" name="nome_completo" required
+                    class="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-xs bg-slate-50/40 focus:bg-white"
+                    placeholder="Ex: Daniel Rodrigues Pereira">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Matrícula / SIAPE institucional</label>
+                <input type="text" id="form-matricula" name="matricula"
+                    class="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-xs bg-slate-50/40 focus:bg-white"
+                    placeholder="Ex: 20212016010">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">Função / Cargo no Projeto</label>
+                <input type="text" id="form-cargo" name="cargo" value="Organizador"
+                    class="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-xs bg-slate-50/40 focus:bg-white"
+                    placeholder="Ex: Organizador">
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1">E-mail (opcional)</label>
+                <input type="email" id="form-email" name="email"
+                    class="w-full px-3.5 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition text-xs bg-slate-50/40 focus:bg-white"
+                    placeholder="email@ufvjm.edu.br">
+            </div>
+
+            <div class="flex items-center gap-2 pt-2">
+                <input type="checkbox" id="form-ativo" name="ativo" checked
+                    class="h-4 w-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500/20 accent-indigo-600">
+                <label for="form-ativo" class="text-xs font-semibold text-slate-700">Membro ativo para emissão</label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                <button type="button" onclick="fecharModalMembro()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-sm">
+                    Salvar Membro
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL DE HISTÓRICO DE EMISSÕES                                            -->
+<!-- ========================================================================= -->
+<div id="modal-historico" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-2xl w-full mx-4 shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-800">Histórico de Lotes Gerados</h3>
+                <p class="text-xs text-slate-500">Últimas emissões registradas no sistema.</p>
+            </div>
+            <button type="button" onclick="fecharModalHistorico()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="overflow-y-auto flex-grow divide-y divide-slate-100 pr-1">
+            {% for h in historicos %}
+            <div class="py-3 flex items-center justify-between gap-4">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black {% if h.tipo == 'atleta' %}bg-blue-50 text-blue-700{% else %}bg-indigo-50 text-indigo-700{% endif %} uppercase">
+                            {{ h.get_tipo_display }}
+                        </span>
+                        <span class="text-xs font-bold text-slate-800">{{ h.total_documentos }} documentos</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-1">
+                        Carga: <strong>{{ h.carga_horaria }}h</strong> • Período: {{ h.periodo }}
+                    </p>
+                </div>
+                <div class="text-right shrink-0">
+                    <span class="text-[11px] font-semibold text-slate-400 block">{{ h.data_emissao|date:"d/m/Y H:i" }}</span>
+                    {% if h.solicitado_por %}
+                    <span class="text-[10px] text-slate-400">Por: {{ h.solicitado_por.nome_completo|default:h.solicitado_por.email }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="py-8 text-center text-slate-400 text-xs">
+                Nenhum lote foi gerado ainda.
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="pt-4 border-t border-slate-100 flex justify-end">
+            <button type="button" onclick="fecharModalHistorico()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition">
+                Fechar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT DE INTERATIVIDADE, FILTRAGEM, POLLING E DOWNLOAD               -->
+<!-- ========================================================================= -->
+<script>
+    let abaAtiva = 'atletas';
+    let pollingInterval = null;
+
+    function alternarAba(aba) {
+        abaAtiva = aba;
+        const btnAtletas = document.getElementById('tab-btn-atletas');
+        const btnComissao = document.getElementById('tab-btn-comissao');
+        const secAtletas = document.getElementById('aba-atletas');
+        const secComissao = document.getElementById('aba-comissao');
+
+        if (aba === 'atletas') {
+            btnAtletas.className = "px-5 py-3 text-sm font-bold border-b-2 border-blue-600 text-blue-600 flex items-center gap-2.5 transition";
+            btnComissao.className = "px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2.5 transition";
+            secAtletas.classList.remove('hidden');
+            secComissao.classList.add('hidden');
+        } else {
+            btnComissao.className = "px-5 py-3 text-sm font-bold border-b-2 border-indigo-600 text-indigo-600 flex items-center gap-2.5 transition";
+            btnAtletas.className = "px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-2.5 transition";
+            secComissao.classList.remove('hidden');
+            secAtletas.classList.add('hidden');
+        }
+        if (window.lucide) { lucide.createIcons(); }
+    }
+
+    // Filtro de Campi para Atletas
+    function marcarTodosCampi(marcar) {
+        document.querySelectorAll('input[name="filtro_campus"]').forEach(cb => {
+            cb.checked = marcar;
+        });
+        filtrarAtletasPorCampus();
+    }
+
+    function filtrarAtletasPorCampus() {
+        const campisChecked = Array.from(document.querySelectorAll('input[name="filtro_campus"]:checked')).map(cb => cb.value);
+        const rows = document.querySelectorAll('.atleta-row');
+        let visiveis = 0;
+
+        rows.forEach(row => {
+            const campusId = row.getAttribute('data-campus-id');
+            if (campisChecked.includes(campusId)) {
+                row.style.display = '';
+                const cb = row.querySelector('.atleta-check');
+                if (cb) cb.checked = true;
+                visiveis++;
+            } else {
+                row.style.display = 'none';
+                const cb = row.querySelector('.atleta-check');
+                if (cb) cb.checked = false;
+            }
+        });
+
+        atualizarContagemAtletas();
+    }
+
+    function toggleTodosAtletas(masterCb) {
+        const rows = document.querySelectorAll('.atleta-row');
+        rows.forEach(row => {
+            if (row.style.display !== 'none') {
+                const cb = row.querySelector('.atleta-check');
+                if (cb) cb.checked = masterCb.checked;
+            }
+        });
+        atualizarContagemAtletas();
+    }
+
+    function atualizarContagemAtletas() {
+        const checks = document.querySelectorAll('.atleta-check:checked');
+        const badge = document.getElementById('badge-atletas-visiveis');
+        if (badge) {
+            badge.innerText = `${checks.length} selecionados`;
+        }
+    }
+
+    // Comissão Checkbox
+    function toggleTodosComissao(masterCb) {
+        document.querySelectorAll('.comissao-check').forEach(cb => {
+            cb.checked = masterCb.checked;
+        });
+        atualizarContagemComissao();
+    }
+
+    function atualizarContagemComissao() {
+        const checks = document.querySelectorAll('.comissao-check:checked');
+        const badge = document.getElementById('badge-comissao-visiveis');
+        if (badge) {
+            badge.innerText = `${checks.length} membros selecionados`;
+        }
+    }
+
+    // Visualizar Prévia (1 PDF)
+    function visualizarPrevia(tipo) {
+        let horas, periodo, cidade_data, id;
+        if (tipo === 'atleta') {
+            horas = document.getElementById('atleta-horas').value;
+            periodo = document.getElementById('atleta-periodo').value;
+            cidade_data = document.getElementById('atleta-cidade-data').value;
+            const primeiroCb = document.querySelector('.atleta-check:checked');
+            id = primeiroCb ? primeiroCb.value : '';
+        } else {
+            horas = document.getElementById('comissao-horas').value;
+            periodo = document.getElementById('comissao-periodo').value;
+            cidade_data = document.getElementById('comissao-cidade-data').value;
+            const primeiroCb = document.querySelector('.comissao-check:checked');
+            id = primeiroCb ? primeiroCb.value : '';
+        }
+
+        const params = new URLSearchParams({
+            tipo: tipo,
+            horas: horas,
+            periodo: periodo,
+            cidade_data: cidade_data,
+            id: id
+        });
+
+        window.open(`{% url 'declaracoes_previa' %}?${params.toString()}`, '_blank');
+    }
+
+    // Iniciar Geração com Porcentagem
+    function iniciarGeracao(tipo) {
+        let horas, periodo, cidade_data, selecionados = [], campis = [];
+
+        if (tipo === 'atleta') {
+            horas = parseInt(document.getElementById('atleta-horas').value) || 60;
+            periodo = document.getElementById('atleta-periodo').value;
+            cidade_data = document.getElementById('atleta-cidade-data').value;
+            document.querySelectorAll('.atleta-check:checked').forEach(cb => {
+                selecionados.push(parseInt(cb.value));
+            });
+            document.querySelectorAll('input[name="filtro_campus"]:checked').forEach(cb => {
+                campis.push(cb.value);
+            });
+
+            if (selecionados.length === 0) {
+                alert("Selecione pelo menos um atleta para gerar as declarações.");
+                return;
+            }
+        } else {
+            horas = parseInt(document.getElementById('comissao-horas').value) || 100;
+            periodo = document.getElementById('comissao-periodo').value;
+            cidade_data = document.getElementById('comissao-cidade-data').value;
+            document.querySelectorAll('.comissao-check:checked').forEach(cb => {
+                selecionados.push(parseInt(cb.value));
+            });
+
+            if (selecionados.length === 0) {
+                alert("Selecione pelo menos um membro da comissão.");
+                return;
+            }
+        }
+
+        // Abre o modal de progresso
+        abrirModalProgresso();
+
+        const payload = {
+            tipo: tipo,
+            horas: horas,
+            periodo: periodo,
+            cidade_data: cidade_data,
+            selecionados: selecionados,
+            campis: campis
+        };
+
+        fetch("{% url 'declaracoes_iniciar' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCsrfToken()
+            },
+            body: JSON.stringify(payload)
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                acompanharProgresso(data.task_id);
+            } else {
+                exibirErroProgresso(data.error || "Erro ao iniciar geração.");
+            }
+        })
+        .catch(err => {
+            exibirErroProgresso("Erro de comunicação com o servidor.");
+        });
+    }
+
+    function acompanharProgresso(taskId) {
+        if (pollingInterval) clearInterval(pollingInterval);
+
+        pollingInterval = setInterval(() => {
+            fetch(`{% url 'declaracoes_index' %}progresso/${taskId}/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'processando' || data.status === 'iniciando') {
+                    atualizarUIProgresso(data.porcentagem || 0, data.atual || 0, data.total || 0, data.individuo_atual || '');
+                } else if (data.status === 'concluido') {
+                    clearInterval(pollingInterval);
+                    atualizarUIProgresso(100, data.total, data.total, 'Compactação concluída!');
+                    exibirSucessoProgresso(taskId, data.mensagem);
+                } else if (data.status === 'erro') {
+                    clearInterval(pollingInterval);
+                    exibirErroProgresso(data.mensagem);
+                }
+            })
+            .catch(() => {
+                // Erro de rede pontual
+            });
+        }, 350);
+    }
+
+    function atualizarUIProgresso(pct, atual, total, individuo) {
+        document.getElementById('progresso-porcentagem').innerText = `${pct}%`;
+        document.getElementById('progresso-barra').style.width = `${pct}%`;
+        
+        if (total > 0) {
+            document.getElementById('progresso-etapa').innerText = `Gerando ${atual} de ${total} declarações...`;
+        }
+        if (individuo) {
+            document.getElementById('progresso-individuo').innerText = `Arquivo atual: ${individuo}`;
+        }
+    }
+
+    function exibirSucessoProgresso(taskId, mensagem) {
+        document.getElementById('icone-processando').classList.add('hidden');
+        document.getElementById('icone-erro').classList.add('hidden');
+        document.getElementById('icone-sucesso').classList.remove('hidden');
+
+        document.getElementById('progresso-titulo').innerText = "Geração Concluída!";
+        document.getElementById('progresso-subtitulo').innerText = mensagem || "Todos os arquivos foram gerados e agrupados no arquivo ZIP.";
+
+        const btnDownload = document.getElementById('btn-download-zip');
+        const urlDownload = `{% url 'declaracoes_index' %}download/${taskId}/`;
+        btnDownload.href = urlDownload;
+
+        document.getElementById('acoes-concluido').classList.remove('hidden');
+
+        // Disparo automático do download para conveniência do usuário
+        setTimeout(() => {
+            window.location.href = urlDownload;
+        }, 600);
+
+        if (window.lucide) { lucide.createIcons(); }
+    }
+
+    function exibirErroProgresso(erro) {
+        document.getElementById('icone-processando').classList.add('hidden');
+        document.getElementById('icone-sucesso').classList.add('hidden');
+        document.getElementById('icone-erro').classList.remove('hidden');
+
+        document.getElementById('progresso-titulo').innerText = "Falha na Geração";
+        document.getElementById('progresso-subtitulo').innerText = erro || "Ocorreu um erro durante o processamento dos arquivos.";
+
+        document.getElementById('acoes-erro').classList.remove('hidden');
+        if (window.lucide) { lucide.createIcons(); }
+    }
+
+    function abrirModalProgresso() {
+        document.getElementById('modal-progresso').classList.remove('hidden');
+        document.getElementById('icone-processando').classList.remove('hidden');
+        document.getElementById('icone-sucesso').classList.add('hidden');
+        document.getElementById('icone-erro').classList.add('hidden');
+
+        document.getElementById('progresso-titulo').innerText = "Gerando Declarações Oficiais...";
+        document.getElementById('progresso-subtitulo').innerText = "Aguarde enquanto os documentos são processados e compactados.";
+        document.getElementById('progresso-porcentagem').innerText = "0%";
+        document.getElementById('progresso-barra').style.width = "0%";
+        document.getElementById('progresso-etapa').innerText = "Iniciando...";
+        document.getElementById('progresso-individuo').innerText = "Preparando modelos...";
+
+        document.getElementById('acoes-concluido').classList.add('hidden');
+        document.getElementById('acoes-erro').classList.add('hidden');
+        if (window.lucide) { lucide.createIcons(); }
+    }
+
+    function fecharModalProgresso() {
+        if (pollingInterval) clearInterval(pollingInterval);
+        document.getElementById('modal-progresso').classList.add('hidden');
+    }
+
+    // Modal de Membro da Comissão
+    function abrirModalMembro() {
+        document.getElementById('modal-membro-titulo').innerText = "Adicionar Membro da Comissão";
+        document.getElementById('form-membro-id').value = "";
+        document.getElementById('form-nome').value = "";
+        document.getElementById('form-matricula').value = "";
+        document.getElementById('form-cargo').value = "Organizador";
+        document.getElementById('form-email').value = "";
+        document.getElementById('form-ativo').checked = true;
+        document.getElementById('modal-membro').classList.remove('hidden');
+    }
+
+    function editarMembro(id, nome, matricula, cargo, email, ativo) {
+        document.getElementById('modal-membro-titulo').innerText = "Editar Membro da Comissão";
+        document.getElementById('form-membro-id').value = id;
+        document.getElementById('form-nome').value = nome;
+        document.getElementById('form-matricula').value = matricula;
+        document.getElementById('form-cargo').value = cargo;
+        document.getElementById('form-email').value = email;
+        document.getElementById('form-ativo').checked = ativo;
+        document.getElementById('modal-membro').classList.remove('hidden');
+    }
+
+    function fecharModalMembro() {
+        document.getElementById('modal-membro').classList.add('hidden');
+    }
+
+    // Modal de Histórico
+    function abrirModalHistorico() {
+        document.getElementById('modal-historico').classList.remove('hidden');
+    }
+
+    function fecharModalHistorico() {
+        document.getElementById('modal-historico').classList.add('hidden');
+    }
+
+    function getCsrfToken() {
+        const cookieValue = document.cookie
+            .split('; ')
+            .find(row => row.startsWith('csrftoken='))
+            ?.split('=')[1];
+        return cookieValue || '{{ csrf_token }}';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        if (window.lucide) {
+            lucide.createIcons();
+        }
+    });
+</script>
+{% endblock %}

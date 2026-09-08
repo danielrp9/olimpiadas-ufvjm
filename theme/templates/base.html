@@ -152,6 +152,10 @@
                                 <i data-lucide="mail-open" class="mr-3 text-base sidebar-icon shrink-0"></i>
                                 <span class="sidebar-text whitespace-nowrap">Autorizar Comissão</span>
                             </a>
+                            <a href="{% url 'declaracoes_index' %}" title="Declarações" class="sidebar-item {% if 'declaracoes' in request.path %}bg-slate-900 text-white shadow-sm shadow-slate-900/10{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition-all duration-200">
+                                <i data-lucide="award" class="mr-3 text-base sidebar-icon shrink-0"></i>
+                                <span class="sidebar-text whitespace-nowrap">Declarações</span>
+                            </a>
                             <div class="pt-3 pb-1 sidebar-text">
                                 <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alimentação</span>
                             </div>
@@ -285,6 +289,10 @@
                                 <a href="{% url 'admin_whitelist' %}" class="{% if 'comissao/whitelist' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
                                     <i data-lucide="mail-open" class="mr-3 text-base"></i>
                                     Autorizar Comissão
+                                </a>
+                                <a href="{% url 'declaracoes_index' %}" class="{% if 'declaracoes' in request.path %}bg-slate-900 text-white{% else %}text-slate-500 hover:bg-slate-50 hover:text-slate-900{% endif %} group flex items-center px-4 py-2.5 text-sm font-semibold rounded-2xl transition">
+                                    <i data-lucide="award" class="mr-3 text-base"></i>
+                                    Declarações
                                 </a>
                                 <div class="pt-3 pb-1">
                                     <span class="px-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Alimentação</span>

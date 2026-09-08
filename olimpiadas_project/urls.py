@@ -11,6 +11,7 @@ urlpatterns = [
     path('refeicoes/', include('refeicoes.urls')),
     path('exportador/', include('exportador.urls')),
     path('agendamento/', include('agendamento.urls')),
+    path('declaracoes/', include('declaracoes.urls')),
 ]
 
 # Adiciona o reload apenas se estiver nas apps instaladas
