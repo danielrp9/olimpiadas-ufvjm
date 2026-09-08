@@ -62,10 +62,10 @@ class JogoForm(forms.ModelForm):
 
     link_pre_sumula = forms.CharField(
         required=False,
-        label="Link da Pré-Súmula",
+        label="Link da Súmula",
         widget=forms.URLInput(attrs={
             'class': 'w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500 transition text-xs bg-slate-50/30 focus:bg-white',
-            'placeholder': 'https://drive.google.com/... ou link da pré-súmula'
+            'placeholder': 'https://drive.google.com/... ou link da súmula'
         })
     )
 

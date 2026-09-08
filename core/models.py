@@ -140,8 +140,8 @@ class Jogo(models.Model):
         max_length=500,
         blank=True,
         null=True,
-        verbose_name="Link da Pré-Súmula",
-        help_text="Link externo ou documento da pré-súmula da partida."
+        verbose_name="Link da Súmula",
+        help_text="Link externo ou documento da súmula da partida."
     )
     data_hora_fim = models.DateTimeField(verbose_name="Fim Real do Jogo", blank=True, null=True)
     data_criacao = models.DateTimeField(auto_now_add=True)
@@ -680,8 +680,8 @@ class PartidaChaveamento(models.Model):
         max_length=500,
         blank=True,
         null=True,
-        verbose_name="Link da Pré-Súmula",
-        help_text="Link externo ou documento da pré-súmula da partida."
+        verbose_name="Link da Súmula",
+        help_text="Link externo ou documento da súmula da partida."
     )
     
     data_partida = models.DateField(null=True, blank=True, verbose_name="Data da Partida")

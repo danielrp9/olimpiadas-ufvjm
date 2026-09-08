@@ -31,13 +31,13 @@
             </button>
         </div>
 
-        <!-- Linha da Pré-Súmula dentro da estrutura de lançamento -->
+        <!-- Linha da Súmula dentro da estrutura de lançamento -->
         <div class="flex items-center justify-between gap-2 text-xs pt-1.5 border-t border-white/10">
             <span class="text-[10px] font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1">
-                <i data-lucide="file-text" class="text-indigo-400 text-[10px]"></i> Pré-Súmula:
+                <i data-lucide="file-text" class="text-indigo-400 text-[10px]"></i> Súmula:
             </span>
             <div class="flex-1 flex items-center gap-1 bg-slate-900/80 px-2 py-1 rounded-xl border border-white/30">
-                <input type="url" name="link_pre_sumula" value="{{ partida.link_pre_sumula|default:'' }}" placeholder="https://drive.google.com/..." class="w-full text-[11px] font-medium text-white border-0 p-0 focus:ring-0 bg-transparent" title="Link da Pré-Súmula">
+                <input type="url" name="link_pre_sumula" value="{{ partida.link_pre_sumula|default:'' }}" placeholder="https://drive.google.com/..." class="w-full text-[11px] font-medium text-white border-0 p-0 focus:ring-0 bg-transparent" title="Link da Súmula">
             </div>
             {% if partida.link_pre_sumula %}
                 <a href="{{ partida.link_pre_sumula }}" target="_blank" rel="noopener noreferrer" class="p-1 text-indigo-300 hover:text-white transition" title="Abrir link atual">
