@@ -2293,3 +2293,158 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         self.assertEqual(len(chaveamento.get_fases_iniciais()), 1)
         self.assertFalse(chaveamento.grupos.filter(nome='Grupo Final 2').exists())
 
+    def test_independencia_times_grupos_entre_fases(self):
+        """
+        Testa que adicionar um time a um grupo de outra fase NÃO o remove da fase anterior,
+        pois fases distintas são totalmente independentes.
+        """
+        from core.chaveamento_services import (
+            adicionar_fase_inicial,
+            adicionar_grupo_chaveamento,
+            adicionar_time_grupo,
+        )
+        mod = Modalidade.objects.create(nome="Xadrez Fases", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        t1 = self._create_delegation("t1_fase@ufvjm.edu.br", "Time 1", self.campus_dia)
+        t2 = self._create_delegation("t2_fase@ufvjm.edu.br", "Time 2", self.campus_dia)
+
+        # 1. Cria grupo na Fase 1 e adiciona t1 e t2
+        g_f1_a = adicionar_grupo_chaveamento(chaveamento, nome="Grupo A Fase 1", fase_numero=1)
+        adicionar_time_grupo(g_f1_a, t1)
+        adicionar_time_grupo(g_f1_a, t2)
+        self.assertEqual(g_f1_a.times.count(), 2)
+
+        # 2. Cria Fase 2 e grupo na Fase 2
+        adicionar_fase_inicial(chaveamento, nome="Fase 2")
+        g_f2 = adicionar_grupo_chaveamento(chaveamento, nome="Grupo Ouro Fase 2", fase_numero=2)
+
+        # 3. Adiciona t1 ao grupo da Fase 2
+        adicionar_time_grupo(g_f2, t1)
+
+        # 4. Verifica que t1 permanece no Grupo A da Fase 1 E também está no Grupo da Fase 2!
+        self.assertTrue(TimeGrupo.objects.filter(grupo=g_f1_a, delegacao=t1).exists())
+        self.assertTrue(TimeGrupo.objects.filter(grupo=g_f2, delegacao=t1).exists())
+        self.assertEqual(g_f1_a.times.count(), 2)
+        self.assertEqual(g_f2.times.count(), 1)
+
+        # 5. Se adicionar t2 a outro grupo DA MESMA Fase 1, aí sim transfere dentro da Fase 1
+        g_f1_b = adicionar_grupo_chaveamento(chaveamento, nome="Grupo B Fase 1", fase_numero=1)
+        adicionar_time_grupo(g_f1_b, t2)
+        self.assertFalse(TimeGrupo.objects.filter(grupo=g_f1_a, delegacao=t2).exists())
+        self.assertTrue(TimeGrupo.objects.filter(grupo=g_f1_b, delegacao=t2).exists())
+        # E t1 continua intacto em ambas as fases
+        self.assertTrue(TimeGrupo.objects.filter(grupo=g_f1_a, delegacao=t1).exists())
+        self.assertTrue(TimeGrupo.objects.filter(grupo=g_f2, delegacao=t1).exists())
+
+    def test_partida_criterio_classificacao_ambos_e_avanco_duplo(self):
+        """
+        Testa o critério de classificação 'AMBOS' (ex: empate combinado no Xadrez),
+        onde ambos os times são classificados e, caso haja vaga na fase seguinte, ambos avançam.
+        """
+        from core.chaveamento_services import registrar_resultado_partida
+        mod = Modalidade.objects.create(nome="Xadrez Mata-Mata", genero="M")
+        ch = ChaveamentoModalidade.objects.create(modalidade=mod)
+        t_a = self._create_delegation("xadrez_a@ufvjm.edu.br", "Xadrez A", self.campus_dia)
+        t_b = self._create_delegation("xadrez_b@ufvjm.edu.br", "Xadrez B", self.campus_dia)
+
+        final = PartidaChaveamento.objects.create(
+            chaveamento=ch,
+            fase='FINAL_LOCAL',
+            rodada=2
+        )
+        semi = PartidaChaveamento.objects.create(
+            chaveamento=ch,
+            fase='SEMI_LOCAL',
+            rodada=1,
+            time_a=t_a,
+            time_b=t_b,
+            proxima_partida=final,
+            posicao_proxima_partida='A'
+        )
+
+        # Registra empate em 1 x 1 com classificação de AMBOS
+        registrar_resultado_partida(semi, placar_a=1, placar_b=1, tipo_classificacao='AMBOS')
+        semi.refresh_from_db()
+        final.refresh_from_db()
+
+        self.assertEqual(semi.tipo_classificacao, 'AMBOS')
+        self.assertTrue(semi.is_classificacao_ambos)
+        self.assertIsNone(semi.vencedor)
+        self.assertIsNone(semi.perdedor)
+        # Time A foi para a posição A da Final
+        self.assertEqual(final.time_a, t_a)
+        # Time B encontrou vaga aberta na posição B da Final!
+        self.assertEqual(final.time_b, t_b)
+
+    def test_partida_criterios_diretos_time_a_time_b_e_nenhum(self):
+        """Testa critérios de classificação TIME_A, TIME_B e NENHUM."""
+        from core.chaveamento_services import registrar_resultado_partida
+        mod = Modalidade.objects.create(nome="Futsal Critérios", genero="M")
+        ch = ChaveamentoModalidade.objects.create(modalidade=mod)
+        t_a = self._create_delegation("crit_a@ufvjm.edu.br", "Crit A", self.campus_dia)
+        t_b = self._create_delegation("crit_b@ufvjm.edu.br", "Crit B", self.campus_dia)
+
+        p = PartidaChaveamento.objects.create(
+            chaveamento=ch,
+            fase='QUARTAS_LOCAL',
+            rodada=1,
+            time_a=t_a,
+            time_b=t_b
+        )
+
+        # 1. TIME_A mesmo com empate
+        registrar_resultado_partida(p, placar_a=2, placar_b=2, tipo_classificacao='TIME_A')
+        p.refresh_from_db()
+        self.assertEqual(p.vencedor, t_a)
+        self.assertEqual(p.perdedor, t_b)
+        self.assertTrue(p.is_classificacao_time_a)
+
+        # 2. TIME_B
+        registrar_resultado_partida(p, placar_a=5, placar_b=0, tipo_classificacao='TIME_B')
+        p.refresh_from_db()
+        self.assertEqual(p.vencedor, t_b)
+        self.assertEqual(p.perdedor, t_a)
+        self.assertTrue(p.is_classificacao_time_b)
+
+        # 3. NENHUM
+        registrar_resultado_partida(p, placar_a=1, placar_b=1, tipo_classificacao='NENHUM')
+        p.refresh_from_db()
+        self.assertIsNone(p.vencedor)
+        self.assertIsNone(p.perdedor)
+        self.assertTrue(p.is_classificacao_nenhum)
+
+    def test_views_salvar_resultado_com_tipo_classificacao(self):
+        """Testa o endpoint de salvar resultado com envio do campo tipo_classificacao."""
+        mod = Modalidade.objects.create(nome="Xadrez HTTP", genero="M")
+        ch = ChaveamentoModalidade.objects.create(modalidade=mod)
+        t_a = self._create_delegation("xh_a@ufvjm.edu.br", "XH A", self.campus_dia)
+        t_b = self._create_delegation("xh_b@ufvjm.edu.br", "XH B", self.campus_dia)
+
+        p = PartidaChaveamento.objects.create(
+            chaveamento=ch,
+            fase='QUARTAS_LOCAL',
+            rodada=1,
+            time_a=t_a,
+            time_b=t_b
+        )
+
+        resp = self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': p.pk}), {
+            'placar_a': '1',
+            'placar_b': '1',
+            'tipo_classificacao': 'AMBOS',
+        })
+        self.assertEqual(resp.status_code, 302)
+        p.refresh_from_db()
+        self.assertEqual(p.tipo_classificacao, 'AMBOS')
+        self.assertTrue(p.finalizada)
+
+        # GET no admin e público deve conter o badge de 'Ambos os times classificados'
+        resp_admin = self.client.get(reverse('chaveamento_admin_detail', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_admin.status_code, 200)
+        self.assertContains(resp_admin, "Ambos os times classificados para a próxima fase")
+
+        resp_public = self.client.get(reverse('chaveamento_public_detail', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_public.status_code, 200)
+        self.assertContains(resp_public, "Ambos os times classificados para a próxima fase")
+
+

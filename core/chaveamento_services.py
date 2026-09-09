@@ -777,13 +777,92 @@ def atualizar_tabela_grupo(grupo):
 
 
 @transaction.atomic
-def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=None):
+def _alocar_vaga_avanco_duplo(partida, time_b):
+    """
+    Quando uma partida tem ambos os times classificados (ex: empate no xadrez),
+    aloca o segundo time em uma vaga disponível na fase seguinte ("caso se tenha vaga").
+    """
+    if not partida.proxima_partida or not time_b or not partida.chaveamento:
+        return None
+
+    fase_alvo = partida.proxima_partida.fase
+    prox_p = partida.proxima_partida
+    partidas_fase = list(partida.chaveamento.partidas.filter(fase=fase_alvo).order_by('rodada', 'id'))
+
+    # Verifica se time_b já está alocado em alguma partida desta fase alvo
+    for m in partidas_fase:
+        if m.time_a == time_b or m.time_b == time_b:
+            return m
+
+    # 1. Procura em outras partidas da mesma fase alvo que tenham vaga aberta
+    for m in partidas_fase:
+        if m.pk == prox_p.pk or m.definicao_manual:
+            continue
+
+        # Checa vaga na posição A
+        if m.time_a is None:
+            feeders_a = partida.chaveamento.partidas.filter(proxima_partida=m, posicao_proxima_partida='A').exclude(pk=partida.pk)
+            tem_feeder_ativo = any(
+                (not f.finalizada) or (f.vencedor is not None) or (getattr(f, 'tipo_classificacao', '') == 'AMBOS')
+                for f in feeders_a
+            )
+            if not tem_feeder_ativo:
+                m.time_a = time_b
+                m.save(update_fields=['time_a'])
+                _sincronizar_jogo_partida(m, "Mata-Mata")
+                return m
+
+        # Checa vaga na posição B
+        if m.time_b is None:
+            feeders_b = partida.chaveamento.partidas.filter(proxima_partida=m, posicao_proxima_partida='B').exclude(pk=partida.pk)
+            tem_feeder_ativo = any(
+                (not f.finalizada) or (f.vencedor is not None) or (getattr(f, 'tipo_classificacao', '') == 'AMBOS')
+                for f in feeders_b
+            )
+            if not tem_feeder_ativo:
+                m.time_b = time_b
+                m.save(update_fields=['time_b'])
+                _sincronizar_jogo_partida(m, "Mata-Mata")
+                return m
+
+    # 2. Se não encontrou em outras partidas, verifica se a própria proxima_partida tem a outra posição vaga
+    if not prox_p.definicao_manual:
+        pos_oposta = 'B' if partida.posicao_proxima_partida == 'A' else 'A'
+        if pos_oposta == 'A' and prox_p.time_a is None:
+            feeders_a = partida.chaveamento.partidas.filter(proxima_partida=prox_p, posicao_proxima_partida='A').exclude(pk=partida.pk)
+            tem_feeder_ativo = any(
+                (not f.finalizada) or (f.vencedor is not None) or (getattr(f, 'tipo_classificacao', '') == 'AMBOS')
+                for f in feeders_a
+            )
+            if not tem_feeder_ativo:
+                prox_p.time_a = time_b
+                prox_p.save(update_fields=['time_a'])
+                _sincronizar_jogo_partida(prox_p, "Mata-Mata")
+                return prox_p
+
+        elif pos_oposta == 'B' and prox_p.time_b is None:
+            feeders_b = partida.chaveamento.partidas.filter(proxima_partida=prox_p, posicao_proxima_partida='B').exclude(pk=partida.pk)
+            tem_feeder_ativo = any(
+                (not f.finalizada) or (f.vencedor is not None) or (getattr(f, 'tipo_classificacao', '') == 'AMBOS')
+                for f in feeders_b
+            )
+            if not tem_feeder_ativo:
+                prox_p.time_b = time_b
+                prox_p.save(update_fields=['time_b'])
+                _sincronizar_jogo_partida(prox_p, "Mata-Mata")
+                return prox_p
+
+    return None
+
+
+def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=None, tipo_classificacao='AUTOMATICO'):
     """
     Registra o resultado de uma partida, atualiza tabelas de grupo e avança vencedores na árvore de mata-mata.
     """
     partida.wo_tipo = wo_tipo or ''
     partida.motivo_wo = motivo_wo or ''
     partida.finalizada = True
+    partida.tipo_classificacao = tipo_classificacao or 'AUTOMATICO'
     if link_pre_sumula is not None:
         partida.link_pre_sumula = link_pre_sumula.strip()
 
@@ -805,17 +884,30 @@ def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_
     else:
         partida.placar_a = placar_a
         partida.placar_b = placar_b
-        if placar_a is not None and placar_b is not None:
-            if placar_a > placar_b:
-                partida.vencedor = partida.time_a
-                partida.perdedor = partida.time_b
-            elif placar_b > placar_a:
-                partida.vencedor = partida.time_b
-                partida.perdedor = partida.time_a
-            else:
-                # Se for partida de mata-mata com empate, atribui vencedor ao time A por padrão para evitar travamento
-                partida.vencedor = partida.time_a
-                partida.perdedor = partida.time_b
+        if partida.tipo_classificacao == 'AMBOS':
+            partida.vencedor = None
+            partida.perdedor = None
+        elif partida.tipo_classificacao == 'TIME_A':
+            partida.vencedor = partida.time_a
+            partida.perdedor = partida.time_b
+        elif partida.tipo_classificacao == 'TIME_B':
+            partida.vencedor = partida.time_b
+            partida.perdedor = partida.time_a
+        elif partida.tipo_classificacao == 'NENHUM':
+            partida.vencedor = None
+            partida.perdedor = None
+        else:
+            if placar_a is not None and placar_b is not None:
+                if placar_a > placar_b:
+                    partida.vencedor = partida.time_a
+                    partida.perdedor = partida.time_b
+                elif placar_b > placar_a:
+                    partida.vencedor = partida.time_b
+                    partida.perdedor = partida.time_a
+                else:
+                    # Se for partida de mata-mata com empate, atribui vencedor ao time A por padrão para evitar travamento
+                    partida.vencedor = partida.time_a
+                    partida.perdedor = partida.time_b
 
     partida.save()
 
@@ -836,27 +928,55 @@ def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_
         atualizar_tabela_grupo(partida.grupo)
         atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
 
-    # Avança vencedor para a próxima partida se configurado
-    if partida.proxima_partida and partida.vencedor:
-        prox = partida.proxima_partida
-        if not prox.definicao_manual:
-            if partida.posicao_proxima_partida == 'A':
-                prox.time_a = partida.vencedor
-            elif partida.posicao_proxima_partida == 'B':
-                prox.time_b = partida.vencedor
-            prox.save()
-            _sincronizar_jogo_partida(prox, "Mata-Mata")
+    # Avança classificado(s) para a próxima partida se configurado
+    if partida.tipo_classificacao == 'AMBOS':
+        if partida.proxima_partida and partida.time_a:
+            prox = partida.proxima_partida
+            if not prox.definicao_manual:
+                if partida.posicao_proxima_partida == 'A':
+                    prox.time_a = partida.time_a
+                elif partida.posicao_proxima_partida == 'B':
+                    prox.time_b = partida.time_a
+                prox.save()
+                _sincronizar_jogo_partida(prox, "Mata-Mata")
 
-    # Avança perdedor para partida de perdedor (Chave Bronze / 3º lugar) se configurado
-    if partida.partida_perdedor_destino and partida.perdedor:
-        dest = partida.partida_perdedor_destino
-        if not dest.definicao_manual:
-            if partida.posicao_perdedor_destino == 'A':
-                dest.time_a = partida.perdedor
-            elif partida.posicao_perdedor_destino == 'B':
-                dest.time_b = partida.perdedor
-            dest.save()
-            _sincronizar_jogo_partida(dest, "Chave Bronze / 3º Lugar")
+        if partida.proxima_partida and partida.time_b:
+            _alocar_vaga_avanco_duplo(partida, partida.time_b)
+
+    elif partida.tipo_classificacao == 'NENHUM':
+        if partida.proxima_partida and not partida.proxima_partida.definicao_manual and not partida.proxima_partida.finalizada:
+            prox = partida.proxima_partida
+            if partida.posicao_proxima_partida == 'A' and prox.time_a in [partida.time_a, partida.time_b]:
+                prox.time_a = None
+                prox.save(update_fields=['time_a'])
+                _sincronizar_jogo_partida(prox, "Mata-Mata")
+            elif partida.posicao_proxima_partida == 'B' and prox.time_b in [partida.time_a, partida.time_b]:
+                prox.time_b = None
+                prox.save(update_fields=['time_b'])
+                _sincronizar_jogo_partida(prox, "Mata-Mata")
+
+    else:
+        # Avança vencedor para a próxima partida se configurado
+        if partida.proxima_partida and partida.vencedor:
+            prox = partida.proxima_partida
+            if not prox.definicao_manual:
+                if partida.posicao_proxima_partida == 'A':
+                    prox.time_a = partida.vencedor
+                elif partida.posicao_proxima_partida == 'B':
+                    prox.time_b = partida.vencedor
+                prox.save()
+                _sincronizar_jogo_partida(prox, "Mata-Mata")
+
+        # Avança perdedor para partida de perdedor (Chave Bronze / 3º lugar) se configurado
+        if partida.partida_perdedor_destino and partida.perdedor:
+            dest = partida.partida_perdedor_destino
+            if not dest.definicao_manual:
+                if partida.posicao_perdedor_destino == 'A':
+                    dest.time_a = partida.perdedor
+                elif partida.posicao_perdedor_destino == 'B':
+                    dest.time_b = partida.perdedor
+                dest.save()
+                _sincronizar_jogo_partida(dest, "Chave Bronze / 3º Lugar")
 
     # Processa cumprimento de suspensões disciplinares para esta modalidade
     from core.disciplinar_services import processar_cumprimento_suspensao_partida
@@ -2104,11 +2224,14 @@ def adicionar_time_grupo(grupo, delegacao):
     if tg_existente:
         return tg_existente
 
-    # Se estiver em outro grupo do mesmo chaveamento, remove do outro grupo
+    # Se estiver em outro grupo da MESMA FASE, remove do outro grupo apenas dessa mesma fase (transferência)
+    # Fases distintas (fase_numero diferente) são independentes e mantêm suas composições
+    fase_num = getattr(grupo, 'fase_numero', 1) or 1
     tg_outro = TimeGrupo.objects.filter(
         grupo__chaveamento=chaveamento,
+        grupo__fase_numero=fase_num,
         delegacao=delegacao
-    ).first()
+    ).exclude(grupo=grupo).first()
     if tg_outro:
         remover_time_grupo(tg_outro.grupo, delegacao)
 

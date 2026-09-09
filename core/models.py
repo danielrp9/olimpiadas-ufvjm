@@ -725,6 +725,22 @@ class PartidaChaveamento(models.Model):
         help_text="Indica se as equipes foram selecionadas manualmente pela organização, impedindo substituição automática."
     )
 
+    TIPO_CLASSIFICACAO_CHOICES = [
+        ('AUTOMATICO', 'Automático (Pelo Placar)'),
+        ('AMBOS', 'Ambos Classificados (Avanço Duplo)'),
+        ('TIME_A', 'Apenas Time A Classificado'),
+        ('TIME_B', 'Apenas Time B Classificado'),
+        ('NENHUM', 'Nenhum Classificado (Eliminação Mútua)'),
+    ]
+
+    tipo_classificacao = models.CharField(
+        max_length=20,
+        choices=TIPO_CLASSIFICACAO_CHOICES,
+        default='AUTOMATICO',
+        verbose_name="Critério de Classificação",
+        help_text="Define quem avança de fase: automático pelo placar, ambos os times, apenas um ou nenhum."
+    )
+
     class Meta:
         verbose_name = "Partida do Chaveamento"
         verbose_name_plural = "Partidas do Chaveamento"
@@ -735,6 +751,22 @@ class PartidaChaveamento(models.Model):
         if self.jogo_id and self.link_pre_sumula:
             from core.models import Jogo
             Jogo.objects.filter(pk=self.jogo_id).exclude(link_pre_sumula=self.link_pre_sumula).update(link_pre_sumula=self.link_pre_sumula)
+
+    @property
+    def is_classificacao_ambos(self):
+        return self.tipo_classificacao == 'AMBOS'
+
+    @property
+    def is_classificacao_time_a(self):
+        return self.tipo_classificacao == 'TIME_A'
+
+    @property
+    def is_classificacao_time_b(self):
+        return self.tipo_classificacao == 'TIME_B'
+
+    @property
+    def is_classificacao_nenhum(self):
+        return self.tipo_classificacao == 'NENHUM'
 
     @property
     def link_sumula_publica(self):

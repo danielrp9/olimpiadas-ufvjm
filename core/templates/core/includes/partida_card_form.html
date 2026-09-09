@@ -16,7 +16,11 @@
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
                     {% endif %}
                     <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_a or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
-                    {% if partida.vencedor == partida.time_a %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
+                    {% if partida.tipo_classificacao == 'AMBOS' %}
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0 flex items-center gap-0.5" title="Classificado (Avanço Duplo)"><i data-lucide="check" class="w-2.5 h-2.5"></i> Passou</span>
+                    {% elif partida.vencedor == partida.time_a and partida.tipo_classificacao != 'NENHUM' %}
+                        <i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>
+                    {% endif %}
                 {% else %}
                     <span class="text-slate-400 font-normal italic">A definir</span>
                 {% endif %}
@@ -57,7 +61,11 @@
                         <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
                     {% endif %}
                     <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_b or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
-                    {% if partida.vencedor == partida.time_b %}<i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>{% endif %}
+                    {% if partida.tipo_classificacao == 'AMBOS' %}
+                        <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0 flex items-center gap-0.5" title="Classificado (Avanço Duplo)"><i data-lucide="check" class="w-2.5 h-2.5"></i> Passou</span>
+                    {% elif partida.vencedor == partida.time_b and partida.tipo_classificacao != 'NENHUM' %}
+                        <i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>
+                    {% endif %}
                     {% if partida.cartoes_time_b_amarelos > 0 or partida.cartoes_time_b_vermelhos > 0 %}
                         <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
                             {% if partida.cartoes_time_b_amarelos > 0 %}<span>🟨 {{ partida.cartoes_time_b_amarelos }}</span>{% endif %}
@@ -69,6 +77,29 @@
                 {% endif %}
             </div>
         </div>
+
+        <!-- Banner de Classificação Customizada / Ambos Classificados se houver -->
+        {% if partida.tipo_classificacao == 'AMBOS' %}
+            <div class="px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-center gap-1.5 text-[11px] text-emerald-800 font-extrabold">
+                <i data-lucide="check-check" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                <span>Ambos os times classificados para a próxima fase</span>
+            </div>
+        {% elif partida.tipo_classificacao == 'NENHUM' and partida.finalizada %}
+            <div class="px-2.5 py-1.5 bg-rose-50 border border-rose-200 rounded-xl flex items-center justify-center gap-1.5 text-[11px] text-rose-800 font-extrabold">
+                <i data-lucide="x-circle" class="w-3.5 h-3.5 text-rose-600 shrink-0"></i>
+                <span>Nenhum time classificado (Ambos eliminados)</span>
+            </div>
+        {% elif partida.tipo_classificacao == 'TIME_A' and partida.finalizada %}
+            <div class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-center gap-1.5 text-[11px] text-indigo-800 font-bold">
+                <i data-lucide="user-check" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
+                <span>Classificado por decisão: {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+            </div>
+        {% elif partida.tipo_classificacao == 'TIME_B' and partida.finalizada %}
+            <div class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-center gap-1.5 text-[11px] text-indigo-800 font-bold">
+                <i data-lucide="user-check" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
+                <span>Classificado por decisão: {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+            </div>
+        {% endif %}
 
         <!-- Alerta de W.O. Registrado se houver -->
         {% if partida.wo_tipo %}
@@ -361,6 +392,57 @@
                     {% endif %}
                 </div>
             {% endif %}
+        </div>
+
+        <!-- Critério de Classificação / Avanço de Fase -->
+        <div class="bg-slate-50 border border-slate-200/90 rounded-xl p-2.5 space-y-2">
+            <div class="flex items-center justify-between">
+                <span class="font-bold text-slate-700 text-[11px] flex items-center gap-1.5">
+                    <i data-lucide="award" class="w-3.5 h-3.5 text-blue-600"></i> Critério de Classificação / Quem Avança
+                </span>
+                <span class="text-[9px] text-slate-400 font-medium">Flexibilidade (ex: empate no xadrez ou avanço duplo)</span>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5 text-[11px]">
+                <label class="flex items-start gap-1.5 p-2 rounded-lg border bg-white cursor-pointer hover:bg-blue-50/50 transition border-slate-200">
+                    <input type="radio" name="tipo_classificacao" value="AUTOMATICO" {% if partida.tipo_classificacao == 'AUTOMATICO' or not partida.tipo_classificacao %}checked{% endif %} class="mt-0.5 text-blue-600 focus:ring-0">
+                    <div>
+                        <span class="font-bold text-slate-800 block text-[11px]">Automático</span>
+                        <span class="text-[9px] text-slate-500 block leading-tight">Pelo placar do confronto</span>
+                    </div>
+                </label>
+                <label class="flex items-start gap-1.5 p-2 rounded-lg border bg-white cursor-pointer hover:bg-emerald-50 transition border-slate-200">
+                    <input type="radio" name="tipo_classificacao" value="AMBOS" {% if partida.tipo_classificacao == 'AMBOS' %}checked{% endif %} class="mt-0.5 text-emerald-600 focus:ring-0">
+                    <div>
+                        <span class="font-bold text-emerald-800 block text-[11px]">Ambos Classificados</span>
+                        <span class="text-[9px] text-emerald-600 block leading-tight">Empate / avanço duplo</span>
+                    </div>
+                </label>
+                <label class="flex items-start gap-1.5 p-2 rounded-lg border bg-white cursor-pointer hover:bg-rose-50 transition border-slate-200">
+                    <input type="radio" name="tipo_classificacao" value="NENHUM" {% if partida.tipo_classificacao == 'NENHUM' %}checked{% endif %} class="mt-0.5 text-rose-600 focus:ring-0">
+                    <div>
+                        <span class="font-bold text-rose-800 block text-[11px]">Nenhum Classificado</span>
+                        <span class="text-[9px] text-rose-600 block leading-tight">Eliminação mútua</span>
+                    </div>
+                </label>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] pt-1 border-t border-slate-200/60">
+                <label class="flex items-start gap-1.5 p-1.5 rounded-lg border bg-white cursor-pointer hover:bg-indigo-50 transition border-slate-200">
+                    <input type="radio" name="tipo_classificacao" value="TIME_A" {% if partida.tipo_classificacao == 'TIME_A' %}checked{% endif %} class="mt-0.5 text-indigo-600 focus:ring-0">
+                    <div class="truncate">
+                        <span class="font-bold text-indigo-900 block text-[10px] truncate">Apenas {{ partida.time_a.nome_delegacao|default:"Time A" }}</span>
+                        <span class="text-[9px] text-indigo-600 block leading-tight">Classificar Time A diretamente</span>
+                    </div>
+                </label>
+                <label class="flex items-start gap-1.5 p-1.5 rounded-lg border bg-white cursor-pointer hover:bg-indigo-50 transition border-slate-200">
+                    <input type="radio" name="tipo_classificacao" value="TIME_B" {% if partida.tipo_classificacao == 'TIME_B' %}checked{% endif %} class="mt-0.5 text-indigo-600 focus:ring-0">
+                    <div class="truncate">
+                        <span class="font-bold text-indigo-900 block text-[10px] truncate">Apenas {{ partida.time_b.nome_delegacao|default:"Time B" }}</span>
+                        <span class="text-[9px] text-indigo-600 block leading-tight">Classificar Time B diretamente</span>
+                    </div>
+                </label>
+            </div>
         </div>
 
         <!-- Seção de W.O. (Não Comparecimento) -->

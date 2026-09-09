@@ -2658,6 +2658,10 @@ def salvar_resultado_partida_view(request, pk):
         updated_anything = False
         mudou_para_automatico = False
 
+        tipo_classificacao = request.POST.get('tipo_classificacao', 'AUTOMATICO').strip()
+        if tipo_classificacao not in ['AUTOMATICO', 'AMBOS', 'TIME_A', 'TIME_B', 'NENHUM']:
+            tipo_classificacao = 'AUTOMATICO'
+
         # Intervenção / Seleção Manual de Equipes (Quartas, Semifinais, Finais, etc.)
         if request.POST.get('has_team_selection') == '1':
             time_a_id = request.POST.get('time_a', '').strip()
@@ -2689,13 +2693,29 @@ def salvar_resultado_partida_view(request, pk):
                     _sincronizar_jogo_partida(partida)
 
                 if partida.finalizada and mudou_times:
-                    if partida.placar_a is not None and partida.placar_b is not None:
+                    if partida.tipo_classificacao == 'TIME_A':
+                        partida.vencedor = partida.time_a
+                        partida.perdedor = partida.time_b
+                    elif partida.tipo_classificacao == 'TIME_B':
+                        partida.vencedor = partida.time_b
+                        partida.perdedor = partida.time_a
+                    elif partida.tipo_classificacao == 'AMBOS':
+                        partida.vencedor = None
+                        partida.perdedor = None
+                    elif partida.tipo_classificacao == 'NENHUM':
+                        partida.vencedor = None
+                        partida.perdedor = None
+                    elif partida.placar_a is not None and partida.placar_b is not None:
                         if partida.placar_a > partida.placar_b:
                             partida.vencedor = partida.time_a
                             partida.perdedor = partida.time_b
                         elif partida.placar_b > partida.placar_a:
                             partida.vencedor = partida.time_b
                             partida.perdedor = partida.time_a
+                        else:
+                            partida.vencedor = partida.time_a
+                            partida.perdedor = partida.time_b
+
                         if partida.proxima_partida and partida.vencedor and not partida.proxima_partida.definicao_manual:
                             if partida.posicao_proxima_partida == 'A':
                                 partida.proxima_partida.time_a = partida.vencedor
@@ -2720,35 +2740,36 @@ def salvar_resultado_partida_view(request, pk):
             try:
                 placar_a = int(placar_a_raw) if (placar_a_raw is not None and placar_a_raw != '') else None
                 placar_b = int(placar_b_raw) if (placar_b_raw is not None and placar_b_raw != '') else None
-                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo=wo_tipo, motivo_wo=motivo_wo, link_pre_sumula=partida.link_pre_sumula)
+                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo=wo_tipo, motivo_wo=motivo_wo, link_pre_sumula=partida.link_pre_sumula, tipo_classificacao=tipo_classificacao)
                 updated_anything = True
             except ValueError:
                 messages.error(request, "Placares inválidos para W.O.")
-        elif placar_a_raw is not None and placar_b_raw is not None and placar_a_raw != '' and placar_b_raw != '':
+        elif (placar_a_raw is not None and placar_b_raw is not None and placar_a_raw != '' and placar_b_raw != '') or tipo_classificacao in ['AMBOS', 'TIME_A', 'TIME_B', 'NENHUM']:
             try:
-                placar_a = int(placar_a_raw)
-                placar_b = int(placar_b_raw)
-                if partida.sets.exists():
+                placar_a = int(placar_a_raw) if (placar_a_raw is not None and placar_a_raw != '') else (partida.placar_a if partida.placar_a is not None else 0)
+                placar_b = int(placar_b_raw) if (placar_b_raw is not None and placar_b_raw != '') else (partida.placar_b if partida.placar_b is not None else 0)
+                if partida.sets.exists() and wo_tipo == '':
                     placar_a = partida.sets_vencidos_a
                     placar_b = partida.sets_vencidos_b
-                if partida.sets.exists() and placar_a == placar_b:
+                if partida.sets.exists() and placar_a == placar_b and tipo_classificacao == 'AUTOMATICO':
                     messages.warning(request, "A partida possui empate em sets. Lance o set de desempate para definir o vencedor.")
                 else:
-                    registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=partida.link_pre_sumula)
+                    registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=partida.link_pre_sumula, tipo_classificacao=tipo_classificacao)
                     updated_anything = True
             except ValueError:
                 messages.error(request, "Placares inválidos.")
         elif partida.sets.exists() and wo_tipo == '':
             placar_a = partida.sets_vencidos_a
             placar_b = partida.sets_vencidos_b
-            if placar_a == placar_b:
+            if placar_a == placar_b and tipo_classificacao == 'AUTOMATICO':
                 messages.warning(request, "A partida possui empate em sets. Lance o set de desempate para definir o vencedor.")
             else:
-                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=partida.link_pre_sumula)
+                registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=partida.link_pre_sumula, tipo_classificacao=tipo_classificacao)
                 updated_anything = True
-        elif partida.wo_tipo and wo_tipo == '':
+        elif (partida.wo_tipo and wo_tipo == '') or (partida.finalizada and placar_a_raw == '' and placar_b_raw == '' and wo_tipo == '' and tipo_classificacao == 'AUTOMATICO'):
             partida.wo_tipo = ''
             partida.motivo_wo = ''
+            partida.tipo_classificacao = 'AUTOMATICO'
             partida.finalizada = False
             partida.placar_a = None
             partida.placar_b = None
