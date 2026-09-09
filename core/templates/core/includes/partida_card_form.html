@@ -196,8 +196,7 @@
             <span class="text-[10px] text-slate-500 font-medium">Edite equipes, placar, horários e cartões</span>
         </div>
 
-        {% if not partida.grupo or partida.fase != 'GRUPO_LOCAL' %}
-        <!-- Seleção e Intervenção Manual de Equipes (Mata-Mata / Eliminatórias) -->
+        <!-- Seleção e Intervenção Manual de Equipes (Qualquer Fase / Grupo) -->
         <div class="space-y-2 p-2.5 bg-blue-50/60 rounded-xl border border-blue-200">
             <div class="flex items-center justify-between">
                 <span class="font-bold text-blue-900 text-[11px] flex items-center gap-1.5">
@@ -212,8 +211,17 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
                     <label class="block text-[10px] font-bold text-slate-700 mb-1">Time A:</label>
-                    <select name="time_a" id="select_time_a_{{ partida.pk }}" onchange="document.getElementById('definicao_manual_{{ partida.pk }}').checked = true;" class="w-full text-xs bg-white border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-800">
+                    <select name="time_a" id="select_time_a_{{ partida.pk }}" onchange="const dm = document.getElementById('definicao_manual_{{ partida.pk }}'); if (dm) dm.checked = true;" class="w-full text-xs bg-white border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-800">
                         <option value="">-- A definir / Vazio --</option>
+                        {% if partida.grupo %}
+                            <optgroup label="Equipes do Grupo ({{ partida.grupo.nome }})">
+                                {% for tg in partida.grupo.times.all %}
+                                    <option value="{{ tg.delegacao.id }}" {% if partida.time_a_id == tg.delegacao.id %}selected{% endif %}>
+                                        {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
+                                    </option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endif %}
                         {% if delegacoes_modalidade %}
                             <optgroup label="Delegações da Modalidade">
                                 {% for del in delegacoes_modalidade %}
@@ -237,8 +245,17 @@
 
                 <div>
                     <label class="block text-[10px] font-bold text-slate-700 mb-1">Time B:</label>
-                    <select name="time_b" id="select_time_b_{{ partida.pk }}" onchange="document.getElementById('definicao_manual_{{ partida.pk }}').checked = true;" class="w-full text-xs bg-white border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-800">
+                    <select name="time_b" id="select_time_b_{{ partida.pk }}" onchange="const dm = document.getElementById('definicao_manual_{{ partida.pk }}'); if (dm) dm.checked = true;" class="w-full text-xs bg-white border border-slate-300 rounded-lg px-2 py-1.5 focus:ring-1 focus:ring-blue-500 text-slate-800">
                         <option value="">-- A definir / Vazio --</option>
+                        {% if partida.grupo %}
+                            <optgroup label="Equipes do Grupo ({{ partida.grupo.nome }})">
+                                {% for tg in partida.grupo.times.all %}
+                                    <option value="{{ tg.delegacao.id }}" {% if partida.time_b_id == tg.delegacao.id %}selected{% endif %}>
+                                        {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
+                                    </option>
+                                {% endfor %}
+                            </optgroup>
+                        {% endif %}
                         {% if delegacoes_modalidade %}
                             <optgroup label="Delegações da Modalidade">
                                 {% for del in delegacoes_modalidade %}
@@ -269,7 +286,6 @@
             {% endif %}
         </div>
         <input type="hidden" name="has_team_selection" value="1">
-        {% endif %}
 
         <!-- Equipes + Inputs de Placar -->
         <div class="flex items-center justify-between gap-2">
@@ -397,11 +413,15 @@
                 </div>
             </div>
 
-            <!-- Botões de Ação: Salvar e Cancelar -->
+            <!-- Botões de Ação: Salvar, Excluir e Fechar -->
             <div class="flex items-center gap-1.5 ml-auto">
                 <button type="submit" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-sm" title="Salvar Alterações do Placar">
                     <i data-lucide="save" class="text-xs"></i>
                     <span>Salvar</span>
+                </button>
+                <button type="button" onclick="if(confirm('Tem certeza que deseja remover esta partida do chaveamento?')) { document.getElementById('form-delete-partida-{{ partida.pk }}').submit(); }" class="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer" title="Remover este confronto do chaveamento">
+                    <i data-lucide="trash-2" class="text-xs"></i>
+                    <span>Excluir</span>
                 </button>
                 <button type="button" onclick="togglePartidaEdit({{ partida.pk }}, false)" class="px-2 py-1 bg-white hover:bg-slate-100 text-slate-600 border border-slate-300 rounded-xl text-xs font-semibold transition flex items-center gap-1" title="Fechar Edição">
                     <i data-lucide="x" class="text-xs"></i>
@@ -570,6 +590,11 @@
                 </div>
             </div>
         {% endif %}
+    </form>
+
+    <!-- Formulário Oculto de Exclusão da Partida -->
+    <form id="form-delete-partida-{{ partida.pk }}" action="{% url 'chaveamento_partida_remover' pk=partida.pk %}" method="POST" class="hidden">
+        {% csrf_token %}
     </form>
 </div>
 

@@ -87,6 +87,11 @@ urlpatterns = [
     path('comissao/chaveamento/partida/<int:pk>/set/salvar/', views.salvar_set_partida_view, name='chaveamento_set_salvar'),
     path('comissao/chaveamento/set/<int:pk>/remover/', views.remover_set_partida_view, name='chaveamento_set_remover'),
     path('comissao/chaveamento/<int:pk>/salvar-data-fase/', views.salvar_fase_data_view, name='chaveamento_fase_data'),
+    path('comissao/chaveamento/<int:pk>/fase/remover/', views.remover_fase_chaveamento_view, name='chaveamento_fase_remover'),
+    path('comissao/chaveamento/<int:pk>/fase/adicionar/', views.adicionar_fase_chaveamento_view, name='chaveamento_fase_adicionar'),
+    path('comissao/chaveamento/<int:pk>/partida/adicionar/', views.adicionar_partida_fase_view, name='chaveamento_partida_adicionar'),
+    path('comissao/chaveamento/partida/<int:pk>/remover/', views.remover_partida_chaveamento_view, name='chaveamento_partida_remover'),
+    path('comissao/chaveamento/grupo/<int:pk>/salvar-vagas/', views.salvar_vagas_grupo_view, name='chaveamento_grupo_salvar_vagas'),
 
     # Módulo de Chaveamento (Delegações & Público)
     path('chaveamentos/', views.ChaveamentoPublicListView.as_view(), name='chaveamento_public_list'),

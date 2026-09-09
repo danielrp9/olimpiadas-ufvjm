@@ -1887,13 +1887,186 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertContains(resp_pub_grupo, 'https://docs.google.com/sumula-grupo-publico')
 
 
+class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
+    """
+    Testes automatizados para a funcionalidade de customização de fases do chaveamento
+    e intervenção manual no número de classificados por grupo.
+    """
+    def setUp(self):
+        super().setUp()
+        self.client.force_login(self.admin_user)
 
+    def test_salvar_vagas_grupo_e_atualizacao_classificados(self):
+        """Testa a alteração manual de vagas de classificação e sua repercussão no grupo."""
+        from core.chaveamento_services import salvar_vagas_grupo, atualizar_classificados_e_preencher_mata_mata
 
+        mod = Modalidade.objects.create(nome="Basquete Teste Vagas", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo A", tipo="grupo_local", vagas_classificacao=2)
 
+        t1 = self._create_delegation("basq1@ufvjm.edu.br", "Basq 1", self.campus_dia)
+        t2 = self._create_delegation("basq2@ufvjm.edu.br", "Basq 2", self.campus_dia)
+        t3 = self._create_delegation("basq3@ufvjm.edu.br", "Basq 3", self.campus_dia)
 
+        tg1 = TimeGrupo.objects.create(grupo=grupo, delegacao=t1, pontos=9, jogos=2, vitorias=2)
+        tg2 = TimeGrupo.objects.create(grupo=grupo, delegacao=t2, pontos=3, jogos=2, vitorias=1)
+        tg3 = TimeGrupo.objects.create(grupo=grupo, delegacao=t3, pontos=0, jogos=2, derrotas=2)
 
+        # Atualiza inicialmente com 2 vagas
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+        tg1.refresh_from_db()
+        tg2.refresh_from_db()
+        tg3.refresh_from_db()
+        self.assertTrue(tg1.classificado)
+        self.assertTrue(tg2.classificado)
+        self.assertFalse(tg3.classificado)
 
+        # Altera para apenas 1 vaga passando
+        salvar_vagas_grupo(grupo, 1)
+        grupo.refresh_from_db()
+        self.assertEqual(grupo.vagas_classificacao, 1)
 
+        tg1.refresh_from_db()
+        tg2.refresh_from_db()
+        tg3.refresh_from_db()
+        self.assertTrue(tg1.classificado)
+        self.assertFalse(tg2.classificado)
+        self.assertFalse(tg3.classificado)
 
+    def test_salvar_vagas_grupo_view(self):
+        """Testa o endpoint de salvar vagas de um grupo via POST."""
+        mod = Modalidade.objects.create(nome="Handebol Teste View Vagas", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo 1", tipo="grupo_local", vagas_classificacao=2)
 
+        url = reverse('chaveamento_grupo_salvar_vagas', kwargs={'pk': grupo.pk})
+        resp = self.client.post(url, {'vagas_classificacao': 3})
+        self.assertEqual(resp.status_code, 302)
 
+        grupo.refresh_from_db()
+        self.assertEqual(grupo.vagas_classificacao, 3)
+
+    def test_remover_e_adicionar_fase_chaveamento(self):
+        """Testa a remoção e reinclusão de fases com religamento da árvore de mata-mata."""
+        from core.chaveamento_services import remover_fase_chaveamento, adicionar_fase_chaveamento
+
+        mod = Modalidade.objects.create(nome="Futsal Fases Custom", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod, datas_fases={'QUARTAS_LOCAL': '2026-10-10'})
+
+        # Cria Quartas e Semis
+        p_q1 = PartidaChaveamento.objects.create(chaveamento=chaveamento, fase='QUARTAS_LOCAL')
+        p_q2 = PartidaChaveamento.objects.create(chaveamento=chaveamento, fase='QUARTAS_LOCAL')
+        p_s1 = PartidaChaveamento.objects.create(chaveamento=chaveamento, fase='SEMI_LOCAL')
+        p_f1 = PartidaChaveamento.objects.create(chaveamento=chaveamento, fase='FINAL_LOCAL')
+
+        p_q1.proxima_partida = p_s1
+        p_q1.save()
+        p_s1.proxima_partida = p_f1
+        p_s1.save()
+
+        # Remove QUARTAS_LOCAL
+        remover_fase_chaveamento(chaveamento, 'QUARTAS_LOCAL')
+
+        self.assertFalse(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='QUARTAS_LOCAL').exists())
+        self.assertNotIn('QUARTAS_LOCAL', chaveamento.datas_fases)
+        self.assertTrue(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='SEMI_LOCAL').exists())
+
+        # Reconexão deve manter p_s1 apontando para p_f1
+        p_s1.refresh_from_db()
+        self.assertEqual(p_s1.proxima_partida_id, p_f1.id)
+
+        # Adiciona Quartas novamente
+        adicionar_fase_chaveamento(chaveamento, 'QUARTAS_LOCAL', quantidade_partidas=2)
+        novas_quartas = PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='QUARTAS_LOCAL')
+        self.assertEqual(novas_quartas.count(), 2)
+
+        # Verifica se as novas quartas foram ligadas à semi
+        p_s1.refresh_from_db()
+        for q in novas_quartas:
+            self.assertEqual(q.proxima_partida_id, p_s1.id)
+
+    def test_adicionar_e_remover_partida_avulsa(self):
+        """Testa inclusão e exclusão de partidas avulsas."""
+        from core.chaveamento_services import adicionar_partida_fase, remover_partida_chaveamento
+
+        mod = Modalidade.objects.create(nome="Volei Partida Avulsa", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+
+        partida = adicionar_partida_fase(chaveamento, 'SEMI_GERAL')
+        self.assertIsNotNone(partida.pk)
+        self.assertEqual(partida.fase, 'SEMI_GERAL')
+
+        # Ao definir as equipes do confronto, o Jogo é criado
+        t1 = self._create_delegation("v1@ufvjm.edu.br", "Volei 1", self.campus_dia)
+        t2 = self._create_delegation("v2@ufvjm.edu.br", "Volei 2", self.campus_dia)
+        partida.time_a = t1
+        partida.time_b = t2
+        partida.save()
+        from core.chaveamento_services import _sincronizar_jogo_partida
+        _sincronizar_jogo_partida(partida)
+
+        self.assertIsNotNone(partida.jogo)
+        self.assertFalse(partida.jogo.finalizado)
+
+        # Remove partida e verifica exclusão segura da Partida e do Jogo
+        partida_id = partida.pk
+        jogo_id = partida.jogo.pk
+        remover_partida_chaveamento(partida)
+
+        self.assertFalse(PartidaChaveamento.objects.filter(pk=partida_id).exists())
+        self.assertFalse(Jogo.objects.filter(pk=jogo_id).exists())
+
+    def test_views_adicionar_e_remover_fase_e_partida(self):
+        """Testa os endpoints HTTP de comissão para fases e partidas."""
+        mod = Modalidade.objects.create(nome="Tenis Views Mod", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+
+        # Adicionar fase via view
+        resp = self.client.post(reverse('chaveamento_fase_adicionar', kwargs={'pk': chaveamento.pk}), {
+            'fase_key': 'FINAL_GERAL',
+            'quantidade_partidas': 1
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='FINAL_GERAL').count(), 1)
+
+        # Adicionar confronto avulso via view
+        resp = self.client.post(reverse('chaveamento_partida_adicionar', kwargs={'pk': chaveamento.pk}), {
+            'fase_key': 'FINAL_GERAL'
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='FINAL_GERAL').count(), 2)
+
+        # Remover confronto avulso via view
+        partida = PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='FINAL_GERAL').first()
+        resp = self.client.post(reverse('chaveamento_partida_remover', kwargs={'pk': partida.pk}))
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='FINAL_GERAL').count(), 1)
+
+        # Remover fase inteira via view
+        resp = self.client.post(reverse('chaveamento_fase_remover', kwargs={'pk': chaveamento.pk}), {
+            'fase_key': 'FINAL_GERAL'
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='FINAL_GERAL').count(), 0)
+
+    def test_atualizar_classificados_com_fases_customizadas_sem_crashes(self):
+        """Testa o preenchimento automático sem quebrar caso fases anteriores tenham sido removidas."""
+        from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
+
+        mod = Modalidade.objects.create(nome="Xadrez Custom", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+
+        # Grupo único de onde passa apenas 1 equipe
+        grupo = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo Único", tipo="grupo_local", vagas_classificacao=1)
+        t1 = self._create_delegation("xad1@ufvjm.edu.br", "Xad 1", self.campus_dia)
+        t2 = self._create_delegation("xad2@ufvjm.edu.br", "Xad 2", self.campus_dia)
+        TimeGrupo.objects.create(grupo=grupo, delegacao=t1, pontos=3, jogos=1, vitorias=1)
+        TimeGrupo.objects.create(grupo=grupo, delegacao=t2, pontos=0, jogos=1, derrotas=1)
+
+        # Mata-mata tem apenas FINAL_GERAL (sem Quartas ou Semis locais)
+        final = PartidaChaveamento.objects.create(chaveamento=chaveamento, fase='FINAL_GERAL')
+
+        # Atualização automática deve rodar perfeitamente sem IndexError
+        atualizar_classificados_e_preencher_mata_mata(chaveamento)
+        final.refresh_from_db()
+        self.assertEqual(final.time_a_id, t1.id)

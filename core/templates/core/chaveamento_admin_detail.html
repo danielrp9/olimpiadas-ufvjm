@@ -57,7 +57,27 @@
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4 gap-2">
                     <div class="min-w-0 flex-1">
                         <h3 class="text-base sm:text-lg font-extrabold text-slate-800 tracking-tight truncate">{{ grupo.nome }}</h3>
-                        <span class="text-[11px] sm:text-xs text-slate-500 font-medium truncate block">{{ grupo.get_tipo_display }} • Passam {{ grupo.vagas_classificacao }} time(s)</span>
+                        <div class="flex items-center gap-2 flex-wrap mt-0.5">
+                            <span class="text-[11px] sm:text-xs text-slate-500 font-medium">
+                                {{ grupo.get_tipo_display }} • Passam <strong class="text-blue-700 font-extrabold bg-blue-50 border border-blue-200/80 px-1.5 py-0.5 rounded-md">{{ grupo.vagas_classificacao }}</strong> time(s)
+                            </span>
+                            <button type="button" onclick="toggleVagasEdit('{{ grupo.pk }}', true)" class="px-2 py-0.5 text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 rounded-lg transition inline-flex items-center gap-1 cursor-pointer" title="Customizar quantas equipes avançam deste grupo">
+                                <i data-lucide="sliders" class="w-2.5 h-2.5"></i> Vagas
+                            </button>
+                        </div>
+
+                        <!-- Form Edição de Vagas -->
+                        <form id="vagas-edit-form-{{ grupo.pk }}" action="{% url 'chaveamento_grupo_salvar_vagas' pk=grupo.pk %}" method="POST" class="hidden mt-2 p-2.5 bg-blue-50/80 border border-blue-300 rounded-2xl flex items-center gap-2 flex-wrap">
+                            {% csrf_token %}
+                            <label class="text-[11px] font-bold text-slate-700">Classificam:</label>
+                            <input type="number" name="vagas_classificacao" value="{{ grupo.vagas_classificacao }}" min="1" max="20" class="w-16 px-2 py-1 text-xs font-black text-center border border-slate-300 rounded-xl bg-white focus:ring-1 focus:ring-blue-500">
+                            <button type="submit" class="px-3 py-1 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition shadow-xs flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="check" class="w-3 h-3"></i> Salvar
+                            </button>
+                            <button type="button" onclick="toggleVagasEdit('{{ grupo.pk }}', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl transition cursor-pointer">
+                                Cancelar
+                            </button>
+                        </form>
                     </div>
                     <span class="px-2.5 py-0.5 sm:px-3.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs shrink-0 whitespace-nowrap">
                         {{ grupo.times.count }} <span class="hidden sm:inline">equipes</span><span class="sm:hidden">eq.</span>
@@ -138,7 +158,17 @@
 
                 <!-- Jogos do Grupo -->
                 <div class="pt-4 border-t border-slate-100 space-y-3">
-                    <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos da Fase</h4>
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos da Fase</h4>
+                        <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="grupo_id" value="{{ grupo.pk }}">
+                            <button type="submit" class="px-2.5 py-0.5 text-[11px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Adicionar confronto a este grupo">
+                                <i data-lucide="plus" class="w-3 h-3"></i>
+                                <span>Confronto</span>
+                            </button>
+                        </form>
+                    </div>
                     <div class="space-y-3">
                         {% for p in grupo.partidas.all %}
                         {% include "core/includes/partida_card_form.html" with partida=p %}
@@ -167,6 +197,12 @@
                     <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Árvore de Mata-Mata e Fase Geral</h2>
                 </div>
             </div>
+            <div class="flex items-center gap-2">
+                <button type="button" onclick="abrirModalAdicionarFase()" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Adicionar uma fase ao mata-mata">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Adicionar Fase</span>
+                </button>
+            </div>
         </div>
 
         <!-- Grid de mesmo tamanho e proporção da fase de grupos (2 Colunas) -->
@@ -176,9 +212,29 @@
             <!-- Quartas de Final (Diamantina) -->
             <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-6 shadow-[0_4px_25px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 space-y-6 flex flex-col justify-between lg:odd:last:col-span-2">
                 <div>
-                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
-                        Quartas de Final (Diamantina)
-                    </h3>
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2 gap-2 flex-wrap">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">
+                            Quartas de Final (Diamantina)
+                        </h3>
+                        <div class="flex items-center gap-1.5">
+                            <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="fase_key" value="QUARTAS_LOCAL">
+                                <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Adicionar um confronto a esta fase">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                    <span>Confronto</span>
+                                </button>
+                            </form>
+                            <form action="{% url 'chaveamento_fase_remover' pk=chaveamento.pk %}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover as Quartas de Final? Todas as partidas desta fase serão excluídas e o chaveamento será reorganizado.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="fase_key" value="QUARTAS_LOCAL">
+                                <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Remover toda a fase de Quartas de Final">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                    <span class="hidden sm:inline">Remover Fase</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
 
                     <!-- Data da Fase: Modo Leitura -->
                     <div id="fase-date-read-QUARTAS_LOCAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
@@ -231,9 +287,29 @@
             {% if partidas_por_fase.SEMI_LOCAL %}
             <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.06)] ring-1 ring-slate-900/5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 space-y-6 flex flex-col justify-between lg:odd:last:col-span-2">
                 <div>
-                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700 border-b border-slate-100 pb-2">
-                        Semifinais (Diamantina)
-                    </h3>
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2 gap-2 flex-wrap">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-slate-700">
+                            Semifinais (Diamantina)
+                        </h3>
+                        <div class="flex items-center gap-1.5">
+                            <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="fase_key" value="SEMI_LOCAL">
+                                <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Adicionar um confronto a esta fase">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                    <span>Confronto</span>
+                                </button>
+                            </form>
+                            <form action="{% url 'chaveamento_fase_remover' pk=chaveamento.pk %}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover as Semifinais Locais? Todas as partidas desta fase serão excluídas e o chaveamento será reorganizado.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="fase_key" value="SEMI_LOCAL">
+                                <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Remover toda a fase de Semifinais Locais">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                    <span class="hidden sm:inline">Remover Fase</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
 
                     <!-- Data da Fase: Modo Leitura -->
                     <div id="fase-date-read-SEMI_LOCAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
@@ -329,15 +405,55 @@
                     </form>
 
                     <div class="space-y-3">
+                        {% if partidas_por_fase.FINAL_LOCAL %}
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-bold text-amber-600 uppercase tracking-wide">Final Local</span>
+                            <div class="flex items-center gap-1.5">
+                                <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="fase_key" value="FINAL_LOCAL">
+                                    <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md transition flex items-center gap-1 cursor-pointer" title="Adicionar confronto">
+                                        <i data-lucide="plus" class="w-2.5 h-2.5"></i> Confronto
+                                    </button>
+                                </form>
+                                <form action="{% url 'chaveamento_fase_remover' pk=chaveamento.pk %}" method="POST" class="inline" onsubmit="return confirm('Remover a Final Local?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="fase_key" value="FINAL_LOCAL">
+                                    <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md transition flex items-center gap-1 cursor-pointer" title="Remover fase">
+                                        <i data-lucide="trash-2" class="w-2.5 h-2.5"></i> Remover
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                         {% for p in partidas_por_fase.FINAL_LOCAL %}
-                        <div class="mb-2"><span class="text-[10px] font-bold text-amber-600 uppercase">Final Local</span></div>
                         {% include "core/includes/partida_card_form.html" with partida=p %}
                         {% endfor %}
+                        {% endif %}
 
+                        {% if partidas_por_fase.DISPUTA_3_LOCAL %}
+                        <div class="flex items-center justify-between mb-2 mt-4 pt-3 border-t border-slate-100">
+                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">3º Lugar Local</span>
+                            <div class="flex items-center gap-1.5">
+                                <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="fase_key" value="DISPUTA_3_LOCAL">
+                                    <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md transition flex items-center gap-1 cursor-pointer" title="Adicionar confronto">
+                                        <i data-lucide="plus" class="w-2.5 h-2.5"></i> Confronto
+                                    </button>
+                                </form>
+                                <form action="{% url 'chaveamento_fase_remover' pk=chaveamento.pk %}" method="POST" class="inline" onsubmit="return confirm('Remover a Disputa de 3º Lugar Local?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="fase_key" value="DISPUTA_3_LOCAL">
+                                    <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md transition flex items-center gap-1 cursor-pointer" title="Remover fase">
+                                        <i data-lucide="trash-2" class="w-2.5 h-2.5"></i> Remover
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                         {% for p in partidas_por_fase.DISPUTA_3_LOCAL %}
-                        <div class="mb-2 mt-4"><span class="text-[10px] font-bold text-slate-500 uppercase">3º Lugar Local</span></div>
                         {% include "core/includes/partida_card_form.html" with partida=p %}
                         {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -347,10 +463,30 @@
             {% if partidas_por_fase.SEMI_GERAL %}
             <div class="bg-white border border-blue-200/90 rounded-3xl p-6 shadow-[0_4px_25px_rgba(0,0,0,0.06)] ring-2 ring-blue-500/20 hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] transition-all duration-300 space-y-6 flex flex-col justify-between lg:odd:last:col-span-2">
                 <div>
-                    <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 border-b border-blue-100 pb-2 flex items-center justify-between">
-                        <span>Semifinais Gerais</span>
-                        <i data-lucide="star" class="text-blue-500"></i>
-                    </h3>
+                    <div class="flex items-center justify-between border-b border-blue-100 pb-2 gap-2 flex-wrap">
+                        <h3 class="text-sm font-extrabold uppercase tracking-wider text-blue-700 flex items-center gap-1.5">
+                            <span>Semifinais Gerais</span>
+                            <i data-lucide="star" class="text-blue-500 w-4 h-4"></i>
+                        </h3>
+                        <div class="flex items-center gap-1.5">
+                            <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="fase_key" value="SEMI_GERAL">
+                                <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Adicionar um confronto a esta fase">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                    <span>Confronto</span>
+                                </button>
+                            </form>
+                            <form action="{% url 'chaveamento_fase_remover' pk=chaveamento.pk %}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover as Semifinais Gerais? Todas as partidas desta fase serão excluídas e o chaveamento será reorganizado.');">
+                                {% csrf_token %}
+                                <input type="hidden" name="fase_key" value="SEMI_GERAL">
+                                <button type="submit" class="px-2.5 py-1 text-[11px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Remover toda a fase de Semifinais Gerais">
+                                    <i data-lucide="trash-2" class="w-3 h-3"></i>
+                                    <span class="hidden sm:inline">Remover Fase</span>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
 
                     <!-- Data da Fase: Modo Leitura -->
                     <div id="fase-date-read-SEMI_GERAL" class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl mt-3 mb-4 text-xs transition-all">
@@ -447,21 +583,77 @@
                     </form>
 
                     <div class="space-y-4">
-                        {% for p in partidas_por_fase.FINAL_GERAL %}
+                        {% if partidas_por_fase.FINAL_GERAL %}
                         <div>
-                            <span class="text-[10px] font-bold text-amber-700 uppercase tracking-widest block mb-1">Grande Final Geral</span>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[10px] font-bold text-amber-700 uppercase tracking-widest block">Grande Final Geral</span>
+                                <div class="flex items-center gap-1.5">
+                                    <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="fase_key" value="FINAL_GERAL">
+                                        <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-md transition flex items-center gap-1 cursor-pointer" title="Adicionar confronto">
+                                            <i data-lucide="plus" class="w-2.5 h-2.5"></i> Confronto
+                                        </button>
+                                    </form>
+                                    <form action="{% url 'chaveamento_fase_remover' pk=chaveamento.pk %}" method="POST" class="inline" onsubmit="return confirm('Remover a Grande Final Geral?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="fase_key" value="FINAL_GERAL">
+                                        <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md transition flex items-center gap-1 cursor-pointer" title="Remover Final Geral">
+                                            <i data-lucide="trash-2" class="w-2.5 h-2.5"></i> Remover
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% for p in partidas_por_fase.FINAL_GERAL %}
                             {% include "core/includes/partida_card_form.html" with partida=p %}
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        {% endif %}
 
-                        {% for p in partidas_por_fase.BRONZE %}
+                        {% if partidas_por_fase.BRONZE %}
                         <div class="pt-3 border-t border-slate-200">
-                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Chave Bronze (3º Lugar Geral)</span>
+                            <div class="flex items-center justify-between mb-1">
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block">Chave Bronze (3º Lugar Geral)</span>
+                                <div class="flex items-center gap-1.5">
+                                    <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="fase_key" value="BRONZE">
+                                        <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-md transition flex items-center gap-1 cursor-pointer" title="Adicionar confronto">
+                                            <i data-lucide="plus" class="w-2.5 h-2.5"></i> Confronto
+                                        </button>
+                                    </form>
+                                    <form action="{% url 'chaveamento_fase_remover' pk=chaveamento.pk %}" method="POST" class="inline" onsubmit="return confirm('Remover a Chave Bronze?');">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="fase_key" value="BRONZE">
+                                        <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md transition flex items-center gap-1 cursor-pointer" title="Remover Chave Bronze">
+                                            <i data-lucide="trash-2" class="w-2.5 h-2.5"></i> Remover
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            {% for p in partidas_por_fase.BRONZE %}
                             {% include "core/includes/partida_card_form.html" with partida=p %}
+                            {% endfor %}
                         </div>
-                        {% endfor %}
+                        {% endif %}
                     </div>
                 </div>
+            </div>
+            {% endif %}
+
+            {% if not partidas_por_fase.QUARTAS_LOCAL and not partidas_por_fase.SEMI_LOCAL and not partidas_por_fase.FINAL_LOCAL and not partidas_por_fase.DISPUTA_3_LOCAL and not partidas_por_fase.SEMI_GERAL and not partidas_por_fase.FINAL_GERAL and not partidas_por_fase.BRONZE %}
+            <div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center text-slate-500 space-y-3">
+                <div class="w-12 h-12 mx-auto rounded-full bg-slate-200/80 flex items-center justify-center text-slate-400">
+                    <i data-lucide="git-commit" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-700">Nenhuma fase de mata-mata ativa</h4>
+                    <p class="text-xs text-slate-500 mt-1">Todas as fases eliminatórias foram removidas ou ainda não foram adicionadas para esta modalidade.</p>
+                </div>
+                <button type="button" onclick="abrirModalAdicionarFase()" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    Adicionar Fase Eliminatória
+                </button>
             </div>
             {% endif %}
 
@@ -470,8 +662,117 @@
 
 </div>
 
+<!-- Modal: Adicionar Fase ao Mata-Mata -->
+<div id="modal-adicionar-fase" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-amber-50 border border-amber-200 text-amber-600 flex items-center justify-center">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-800">Adicionar Fase</h3>
+                    <p class="text-[11px] text-slate-400 font-medium">Inclua uma etapa eliminatória ao chaveamento</p>
+                </div>
+            </div>
+            <button type="button" onclick="fecharModalAdicionarFase()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        {% if fases_disponiveis %}
+        <form action="{% url 'chaveamento_fase_adicionar' pk=chaveamento.pk %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Fase Eliminatória:</label>
+                <select name="fase_key" id="select-modal-fase" onchange="atualizarQtdPadraoFase(this.value)" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" required>
+                    <option value="" disabled selected>Selecione a fase a adicionar...</option>
+                    {% for f in fases_disponiveis %}
+                    <option value="{{ f.key }}" data-qtd="{{ f.qtd_padrao }}" data-desc="{{ f.descricao }}">{{ f.nome }} (Padrão: {{ f.qtd_padrao }} jogo{{ f.qtd_padrao|pluralize:"s" }})</option>
+                    {% endfor %}
+                </select>
+                <p id="fase-descricao-ajuda" class="text-[11px] text-slate-500 mt-1 italic"></p>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Quantidade de Confrontos:</label>
+                <input type="number" name="quantidade_partidas" id="input-modal-qtd" value="1" min="1" max="16" class="w-full text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" required>
+                <span class="text-[10px] text-slate-400 mt-1 block">Você pode manter a quantidade padrão ou customizar conforme o número de equipes.</span>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="fecharModalAdicionarFase()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Adicionar Fase</span>
+                </button>
+            </div>
+        </form>
+        {% else %}
+        <div class="py-4 text-center space-y-2">
+            <p class="text-xs text-slate-600 font-medium">Todas as fases eliminatórias possíveis já estão presentes neste chaveamento.</p>
+            <button type="button" onclick="fecharModalAdicionarFase()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                Fechar
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
 <!-- Scripts de Interatividade para o Modo de Edição -->
 <script>
+
+    function toggleVagasEdit(grupoId, enable) {
+        const form = document.getElementById(`vagas-edit-form-${grupoId}`);
+        if (!form) return;
+        if (enable) {
+            form.classList.remove('hidden');
+        } else {
+            form.classList.add('hidden');
+        }
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    const FASES_QTDS_MAP = {
+        'QUARTAS_LOCAL': 4,
+        'SEMI_LOCAL': 2,
+        'FINAL_LOCAL': 1,
+        'DISPUTA_3_LOCAL': 1,
+        'SEMI_GERAL': 2,
+        'FINAL_GERAL': 1,
+        'BRONZE': 1
+    };
+
+    function abrirModalAdicionarFase() {
+        const modal = document.getElementById('modal-adicionar-fase');
+        if (modal) {
+            modal.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }
+
+    function fecharModalAdicionarFase() {
+        const modal = document.getElementById('modal-adicionar-fase');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    function atualizarQtdPadraoFase(faseKey) {
+        const input = document.getElementById('input-modal-qtd');
+        if (input && FASES_QTDS_MAP[faseKey]) {
+            input.value = FASES_QTDS_MAP[faseKey];
+        }
+        const select = document.getElementById('select-modal-fase');
+        const descEl = document.getElementById('fase-descricao-ajuda');
+        if (select && descEl) {
+            const selectedOpt = select.options[select.selectedIndex];
+            const desc = selectedOpt ? selectedOpt.getAttribute('data-desc') : '';
+            descEl.textContent = desc || '';
+        }
+    }
 
     function togglePartidaEdit(partidaId, enable, focusElementId) {
         const container = document.getElementById(`partida-card-${partidaId}`);

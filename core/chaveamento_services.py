@@ -1163,6 +1163,10 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
             if tg.delegacao not in todos_classificados_diamantina:
                 todos_classificados_diamantina.append(tg.delegacao)
 
+    if not grupos_locais:
+        buckets = classificar_delegacoes_por_campus(chaveamento.modalidade)
+        todos_classificados_diamantina = list(buckets['diamantina'])
+
     quartas = list(chaveamento.partidas.filter(fase='QUARTAS_LOCAL').order_by('id'))
     semis_local = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
     semis_geral = list(chaveamento.partidas.filter(fase='SEMI_GERAL').order_by('id'))
@@ -1380,17 +1384,12 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
 
         s_pairings = _evitar_confrontos_mesmo_grupo(s_pairings, grupos_locais)
 
-        if len(semis_local) >= 1 and not semis_local[0].finalizada and not semis_local[0].definicao_manual:
-            semis_local[0].time_a = s_pairings[0][0]
-            semis_local[0].time_b = s_pairings[0][1]
-            semis_local[0].save()
-            _sincronizar_jogo_partida(semis_local[0], "Semifinal 1 (Diamantina)")
-
-        if len(semis_local) >= 2 and not semis_local[1].finalizada and not semis_local[1].definicao_manual:
-            semis_local[1].time_a = s_pairings[1][0]
-            semis_local[1].time_b = s_pairings[1][1]
-            semis_local[1].save()
-            _sincronizar_jogo_partida(semis_local[1], "Semifinal 2 (Diamantina)")
+        for i, s_match in enumerate(semis_local):
+            if i < len(s_pairings) and not s_match.finalizada and not s_match.definicao_manual:
+                s_match.time_a = s_pairings[i][0]
+                s_match.time_b = s_pairings[i][1]
+                s_match.save()
+                _sincronizar_jogo_partida(s_match, f"Semifinal {i+1} (Diamantina)")
 
     # -----------------------------------------------------------------
     # Cenário C: Não há Quartas nem Semis, mas há Final Local (FINAL_LOCAL)
@@ -1416,27 +1415,40 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     # Cenário D: Semifinais Gerais (SEMI_GERAL)
     # -----------------------------------------------------------------
     if semis_geral:
-        if not final_local and not semis_local and not quartas and len(todos_classificados_diamantina) >= 3:
-            if not semis_geral[0].finalizada and not semis_geral[0].definicao_manual:
-                semis_geral[0].time_a = todos_classificados_diamantina[0] if len(todos_classificados_diamantina) >= 1 else None
-                semis_geral[0].time_b = classificados_externos[0] if len(classificados_externos) >= 1 else None
-                semis_geral[0].save()
-                _sincronizar_jogo_partida(semis_geral[0], "Semifinal Geral 1")
-
-            if not semis_geral[1].finalizada and not semis_geral[1].definicao_manual:
-                semis_geral[1].time_a = todos_classificados_diamantina[1] if len(todos_classificados_diamantina) >= 2 else None
-                semis_geral[1].time_b = todos_classificados_diamantina[2] if len(todos_classificados_diamantina) >= 3 else None
-                semis_geral[1].save()
-                _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
+        if not final_local and not semis_local and not quartas:
+            for i, sg_match in enumerate(semis_geral):
+                if sg_match.finalizada or sg_match.definicao_manual:
+                    continue
+                if i == 0:
+                    sg_match.time_a = todos_classificados_diamantina[0] if len(todos_classificados_diamantina) >= 1 else None
+                    sg_match.time_b = classificados_externos[0] if len(classificados_externos) >= 1 else None
+                elif i == 1:
+                    if len(classificados_externos) >= 2:
+                        sg_match.time_a = todos_classificados_diamantina[1] if len(todos_classificados_diamantina) >= 2 else None
+                        sg_match.time_b = classificados_externos[1]
+                    else:
+                        sg_match.time_a = todos_classificados_diamantina[1] if len(todos_classificados_diamantina) >= 2 else None
+                        sg_match.time_b = todos_classificados_diamantina[2] if len(todos_classificados_diamantina) >= 3 else None
+                sg_match.save()
+                _sincronizar_jogo_partida(sg_match, f"Semifinal Geral {i+1}")
         else:
-            if len(semis_geral) >= 1 and not semis_geral[0].finalizada and not semis_geral[0].definicao_manual:
-                semis_geral[0].time_b = classificados_externos[0] if len(classificados_externos) >= 1 else None
-                semis_geral[0].save()
-                _sincronizar_jogo_partida(semis_geral[0], "Semifinal Geral 1")
-            if len(semis_geral) >= 2 and not semis_geral[1].finalizada and not semis_geral[1].definicao_manual:
-                semis_geral[1].time_b = classificados_externos[1] if len(classificados_externos) >= 2 else None
-                semis_geral[1].save()
-                _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
+            for i, sg_match in enumerate(semis_geral):
+                if not sg_match.finalizada and not sg_match.definicao_manual:
+                    if i < len(classificados_externos):
+                        sg_match.time_b = classificados_externos[i]
+                        sg_match.save()
+                        _sincronizar_jogo_partida(sg_match, f"Semifinal Geral {i+1}")
+
+    # -----------------------------------------------------------------
+    # Cenário E: Grande Final Geral Direta (FINAL_GERAL)
+    # -----------------------------------------------------------------
+    final_geral = chaveamento.partidas.filter(fase='FINAL_GERAL').first()
+    if final_geral and not final_local and not semis_local and not quartas and not semis_geral:
+        if not final_geral.finalizada and not final_geral.definicao_manual:
+            final_geral.time_a = todos_classificados_diamantina[0] if len(todos_classificados_diamantina) >= 1 else None
+            final_geral.time_b = classificados_externos[0] if len(classificados_externos) >= 1 else (todos_classificados_diamantina[1] if len(todos_classificados_diamantina) >= 2 else None)
+            final_geral.save()
+            _sincronizar_jogo_partida(final_geral, "Grande Final Geral")
 
 
 def encerrar_fase_grupos_e_gerar_mata_mata(chaveamento):
@@ -1763,3 +1775,301 @@ def _sincronizar_jogo_partida(partida, descricao_local="Quadra Principal"):
         )
         partida.jogo = jogo
         partida.save(update_fields=['jogo'])
+
+
+FASES_MATA_MATA_CONFIG = {
+    'QUARTAS_LOCAL': {
+        'nome': 'Quartas de Final (Diamantina)',
+        'qtd_padrao': 4,
+        'descricao': '4 partidas eliminatórias de Diamantina'
+    },
+    'SEMI_LOCAL': {
+        'nome': 'Semifinais (Diamantina)',
+        'qtd_padrao': 2,
+        'descricao': '2 partidas de semifinal local'
+    },
+    'FINAL_LOCAL': {
+        'nome': 'Final Local (Diamantina)',
+        'qtd_padrao': 1,
+        'descricao': 'Decisão do título local de Diamantina'
+    },
+    'DISPUTA_3_LOCAL': {
+        'nome': '3º Lugar (Diamantina)',
+        'qtd_padrao': 1,
+        'descricao': 'Disputa de 3º lugar de Diamantina'
+    },
+    'SEMI_GERAL': {
+        'nome': 'Semifinais Gerais',
+        'qtd_padrao': 2,
+        'descricao': 'Cruzamento entre campeões locais e externos'
+    },
+    'FINAL_GERAL': {
+        'nome': 'Grande Final Geral',
+        'qtd_padrao': 1,
+        'descricao': 'Decisão do campeão geral das Olimpíadas'
+    },
+    'BRONZE': {
+        'nome': 'Chave Bronze (3º Lugar Geral)',
+        'qtd_padrao': 1,
+        'descricao': 'Disputa de 3º e 4º lugares gerais'
+    },
+}
+
+
+@transaction.atomic
+def reconectar_arvore_mata_mata(chaveamento):
+    """
+    Reconecta inteligentemente as dependências de avanço de fase (proxima_partida e partida_perdedor_destino)
+    entre as fases ativas do chaveamento.
+    """
+    quartas = list(chaveamento.partidas.filter(fase='QUARTAS_LOCAL').order_by('id'))
+    semis_local = list(chaveamento.partidas.filter(fase='SEMI_LOCAL').order_by('id'))
+    final_local = chaveamento.partidas.filter(fase='FINAL_LOCAL').first()
+    disputa_3_local = chaveamento.partidas.filter(fase='DISPUTA_3_LOCAL').first()
+    semis_geral = list(chaveamento.partidas.filter(fase='SEMI_GERAL').order_by('id'))
+    final_geral = chaveamento.partidas.filter(fase='FINAL_GERAL').first()
+    bronze = chaveamento.partidas.filter(fase='BRONZE').first()
+    vagas_ext = chaveamento.vagas_externas
+
+    # 1. Conexões saindo de QUARTAS_LOCAL
+    if quartas:
+        if semis_local:
+            if len(quartas) >= 1 and len(semis_local) >= 1:
+                quartas[0].proxima_partida = semis_local[0]
+                quartas[0].posicao_proxima_partida = 'A'
+                quartas[0].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(quartas) >= 2 and len(semis_local) >= 1:
+                quartas[1].proxima_partida = semis_local[0]
+                quartas[1].posicao_proxima_partida = 'B'
+                quartas[1].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(quartas) >= 3 and len(semis_local) >= 2:
+                quartas[2].proxima_partida = semis_local[1]
+                quartas[2].posicao_proxima_partida = 'A'
+                quartas[2].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(quartas) >= 4 and len(semis_local) >= 2:
+                quartas[3].proxima_partida = semis_local[1]
+                quartas[3].posicao_proxima_partida = 'B'
+                quartas[3].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+        elif final_local:
+            if len(quartas) >= 1:
+                quartas[0].proxima_partida = final_local
+                quartas[0].posicao_proxima_partida = 'A'
+                quartas[0].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(quartas) >= 2:
+                quartas[1].proxima_partida = final_local
+                quartas[1].posicao_proxima_partida = 'B'
+                quartas[1].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+
+    # 2. Conexões saindo de SEMI_LOCAL
+    if semis_local:
+        if final_local:
+            if len(semis_local) >= 1:
+                semis_local[0].proxima_partida = final_local
+                semis_local[0].posicao_proxima_partida = 'A'
+                semis_local[0].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(semis_local) >= 2:
+                semis_local[1].proxima_partida = final_local
+                semis_local[1].posicao_proxima_partida = 'B'
+                semis_local[1].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+        elif semis_geral:
+            if len(semis_local) >= 1 and len(semis_geral) >= 1:
+                semis_local[0].proxima_partida = semis_geral[0]
+                semis_local[0].posicao_proxima_partida = 'A'
+                semis_local[0].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(semis_local) >= 2 and len(semis_geral) >= 2:
+                semis_local[1].proxima_partida = semis_geral[1]
+                semis_local[1].posicao_proxima_partida = 'A'
+                semis_local[1].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+        elif final_geral:
+            if len(semis_local) >= 1:
+                semis_local[0].proxima_partida = final_geral
+                semis_local[0].posicao_proxima_partida = 'A'
+                semis_local[0].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(semis_local) >= 2:
+                semis_local[1].proxima_partida = final_geral
+                semis_local[1].posicao_proxima_partida = 'B'
+                semis_local[1].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+
+        if disputa_3_local:
+            if len(semis_local) >= 1:
+                semis_local[0].partida_perdedor_destino = disputa_3_local
+                semis_local[0].posicao_perdedor_destino = 'A'
+                semis_local[0].save(update_fields=['partida_perdedor_destino', 'posicao_perdedor_destino'])
+            if len(semis_local) >= 2:
+                semis_local[1].partida_perdedor_destino = disputa_3_local
+                semis_local[1].posicao_perdedor_destino = 'B'
+                semis_local[1].save(update_fields=['partida_perdedor_destino', 'posicao_perdedor_destino'])
+
+    # 3. Conexões saindo de FINAL_LOCAL
+    if final_local:
+        if semis_geral:
+            final_local.proxima_partida = semis_geral[0]
+            final_local.posicao_proxima_partida = 'A'
+            if len(semis_geral) >= 2:
+                final_local.partida_perdedor_destino = semis_geral[1]
+                final_local.posicao_perdedor_destino = 'A'
+            final_local.save(update_fields=['proxima_partida', 'posicao_proxima_partida', 'partida_perdedor_destino', 'posicao_perdedor_destino'])
+        elif final_geral:
+            final_local.proxima_partida = final_geral
+            final_local.posicao_proxima_partida = 'A'
+            final_local.save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+
+    # 4. Conexões saindo de DISPUTA_3_LOCAL
+    if disputa_3_local and semis_geral and len(semis_geral) >= 2 and vagas_ext == 1:
+        disputa_3_local.proxima_partida = semis_geral[1]
+        disputa_3_local.posicao_proxima_partida = 'B'
+        disputa_3_local.save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+
+    # 5. Conexões saindo de SEMI_GERAL
+    if semis_geral:
+        if final_geral:
+            if len(semis_geral) >= 1:
+                semis_geral[0].proxima_partida = final_geral
+                semis_geral[0].posicao_proxima_partida = 'A'
+                semis_geral[0].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+            if len(semis_geral) >= 2:
+                semis_geral[1].proxima_partida = final_geral
+                semis_geral[1].posicao_proxima_partida = 'B'
+                semis_geral[1].save(update_fields=['proxima_partida', 'posicao_proxima_partida'])
+        if bronze:
+            if len(semis_geral) >= 1:
+                semis_geral[0].partida_perdedor_destino = bronze
+                semis_geral[0].posicao_perdedor_destino = 'A'
+                semis_geral[0].save(update_fields=['partida_perdedor_destino', 'posicao_perdedor_destino'])
+            if len(semis_geral) >= 2:
+                semis_geral[1].partida_perdedor_destino = bronze
+                semis_geral[1].posicao_perdedor_destino = 'B'
+                semis_geral[1].save(update_fields=['partida_perdedor_destino', 'posicao_perdedor_destino'])
+
+
+@transaction.atomic
+def remover_fase_chaveamento(chaveamento, fase_key):
+    """
+    Remove todas as partidas vinculadas a uma fase específica do chaveamento.
+    Remove os Jogos vinculados às partidas e reconecta a árvore de mata-mata restante.
+    """
+    partidas = list(chaveamento.partidas.filter(fase=fase_key))
+    if not partidas:
+        return
+
+    partidas_ids = [p.id for p in partidas]
+    jogos_ids = [p.jogo_id for p in partidas if p.jogo_id]
+
+    # Limpa referências em outras partidas
+    PartidaChaveamento.objects.filter(proxima_partida_id__in=partidas_ids).update(
+        proxima_partida=None, posicao_proxima_partida=None
+    )
+    PartidaChaveamento.objects.filter(partida_perdedor_destino_id__in=partidas_ids).update(
+        partida_perdedor_destino=None, posicao_perdedor_destino=None
+    )
+
+    # Exclui as partidas da fase
+    chaveamento.partidas.filter(id__in=partidas_ids).delete()
+
+    # Exclui os jogos vinculados
+    if jogos_ids:
+        Jogo.objects.filter(id__in=jogos_ids).delete()
+
+    # Limpa data da fase se existir
+    if isinstance(chaveamento.datas_fases, dict) and fase_key in chaveamento.datas_fases:
+        datas = dict(chaveamento.datas_fases)
+        del datas[fase_key]
+        chaveamento.datas_fases = datas
+        chaveamento.save(update_fields=['datas_fases'])
+
+    # Reconecta o mata-mata restante e atualiza classificados
+    reconectar_arvore_mata_mata(chaveamento)
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+
+@transaction.atomic
+def adicionar_fase_chaveamento(chaveamento, fase_key, quantidade_partidas=None):
+    """
+    Adiciona uma fase ao chaveamento criando as partidas necessárias e reconectando a árvore.
+    """
+    if fase_key not in FASES_MATA_MATA_CONFIG:
+        raise ValueError(f"Fase '{fase_key}' não é uma fase válida de mata-mata.")
+
+    cfg = FASES_MATA_MATA_CONFIG[fase_key]
+    qtd = int(quantidade_partidas) if (quantidade_partidas and str(quantidade_partidas).strip()) else cfg['qtd_padrao']
+    qtd = max(1, min(qtd, 16))
+
+    partidas_criadas = []
+    for _ in range(qtd):
+        p = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            fase=fase_key,
+            rodada=1
+        )
+        _sincronizar_jogo_partida(p, cfg.get('nome', fase_key))
+        partidas_criadas.append(p)
+
+    reconectar_arvore_mata_mata(chaveamento)
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+    return partidas_criadas
+
+
+@transaction.atomic
+def adicionar_partida_fase(chaveamento, fase_key=None, grupo=None):
+    """
+    Adiciona um novo confronto avulso a uma fase do mata-mata ou a um grupo.
+    """
+    if grupo:
+        fase_final = 'GRUPO_LOCAL' if grupo.tipo == 'grupo_local' else 'ELIMINATORIA_EXT'
+        p = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            grupo=grupo,
+            fase=fase_final,
+            rodada=1
+        )
+        _sincronizar_jogo_partida(p, f"Fase de Grupos - {grupo.nome}")
+        atualizar_tabela_grupo(grupo)
+    else:
+        p = PartidaChaveamento.objects.create(
+            chaveamento=chaveamento,
+            fase=fase_key or 'FINAL_GERAL',
+            rodada=1
+        )
+        fase_nome = FASES_MATA_MATA_CONFIG.get(fase_key, {}).get('nome', fase_key or 'FINAL_GERAL')
+        _sincronizar_jogo_partida(p, fase_nome)
+        reconectar_arvore_mata_mata(chaveamento)
+
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+    return p
+
+
+@transaction.atomic
+def remover_partida_chaveamento(partida):
+    """
+    Remove uma única partida do chaveamento com segurança.
+    """
+    chaveamento = partida.chaveamento
+    jogo = partida.jogo
+    grupo = partida.grupo
+
+    PartidaChaveamento.objects.filter(proxima_partida=partida).update(
+        proxima_partida=None, posicao_proxima_partida=None
+    )
+    PartidaChaveamento.objects.filter(partida_perdedor_destino=partida).update(
+        partida_perdedor_destino=None, posicao_perdedor_destino=None
+    )
+    partida.delete()
+    if jogo:
+        jogo.delete()
+
+    if grupo:
+        atualizar_tabela_grupo(grupo)
+
+    reconectar_arvore_mata_mata(chaveamento)
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+
+@transaction.atomic
+def salvar_vagas_grupo(grupo, novas_vagas):
+    """
+    Atualiza quantas vagas de classificação um grupo possui e recalcula os classificados e mata-mata.
+    """
+    grupo.vagas_classificacao = max(1, int(novas_vagas))
+    grupo.save(update_fields=['vagas_classificacao'])
+    atualizar_classificados_e_preencher_mata_mata(grupo.chaveamento)
+

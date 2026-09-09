@@ -2278,7 +2278,13 @@ from .chaveamento_services import (
     classificar_delegacoes_por_campus,
     obter_resumo_chaveamentos_admin,
     obter_resumo_chaveamentos_publico,
-    _sincronizar_jogo_partida
+    _sincronizar_jogo_partida,
+    remover_fase_chaveamento,
+    adicionar_fase_chaveamento,
+    adicionar_partida_fase,
+    remover_partida_chaveamento,
+    salvar_vagas_grupo,
+    FASES_MATA_MATA_CONFIG
 )
 
 class ChaveamentoAdminListView(LoginRequiredMixin, View):
@@ -2334,6 +2340,17 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
             if p.fase in partidas_por_fase:
                 partidas_por_fase[p.fase].append(p)
 
+        # Fases que atualmente não têm partidas criadas e podem ser adicionadas manualmente
+        fases_disponiveis = []
+        for f_key, f_cfg in FASES_MATA_MATA_CONFIG.items():
+            if len(partidas_por_fase.get(f_key, [])) == 0:
+                fases_disponiveis.append({
+                    'key': f_key,
+                    'nome': f_cfg['nome'],
+                    'qtd_padrao': f_cfg['qtd_padrao'],
+                    'descricao': f_cfg['descricao'],
+                })
+
         buckets = classificar_delegacoes_por_campus(modalidade)
 
         from core.disciplinar_services import obter_relatorio_disciplinar_modalidade
@@ -2374,6 +2391,7 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
             'relatorio_disciplinar': relatorio_disciplinar,
             'delegacoes_modalidade': delegacoes_modalidade,
             'outras_delegacoes': outras_delegacoes,
+            'fases_disponiveis': fases_disponiveis,
         })
 
 
@@ -2774,6 +2792,98 @@ def salvar_fase_data_view(request, pk):
             messages.success(request, "Data da fase salva com sucesso!")
 
         return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def remover_fase_chaveamento_view(request, pk):
+    """
+    Remove uma fase inteira do chaveamento, deletando suas partidas e reorganizando o mata-mata.
+    """
+    if request.method == 'POST':
+        chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
+        fase_key = request.POST.get('fase_key')
+        if fase_key:
+            fase_nome = FASES_MATA_MATA_CONFIG.get(fase_key, {}).get('nome', fase_key)
+            remover_fase_chaveamento(chaveamento, fase_key)
+            messages.success(request, f"Fase '{fase_nome}' removida com sucesso do chaveamento!")
+        return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def adicionar_fase_chaveamento_view(request, pk):
+    """
+    Adiciona uma fase ao chaveamento, criando as partidas e reconectando o mata-mata.
+    """
+    if request.method == 'POST':
+        chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
+        fase_key = request.POST.get('fase_key')
+        quantidade_partidas = request.POST.get('quantidade_partidas')
+        if fase_key:
+            try:
+                fase_nome = FASES_MATA_MATA_CONFIG.get(fase_key, {}).get('nome', fase_key)
+                adicionar_fase_chaveamento(chaveamento, fase_key, quantidade_partidas)
+                messages.success(request, f"Fase '{fase_nome}' adicionada com sucesso ao chaveamento!")
+            except Exception as e:
+                messages.error(request, f"Erro ao adicionar fase: {str(e)}")
+        return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def adicionar_partida_fase_view(request, pk):
+    """
+    Adiciona uma partida avulsa a uma fase existente no chaveamento ou a um grupo.
+    """
+    if request.method == 'POST':
+        chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
+        fase_key = request.POST.get('fase_key')
+        grupo_id = request.POST.get('grupo_id')
+        grupo = None
+        if grupo_id:
+            grupo = get_object_or_404(GrupoChaveamento, pk=grupo_id, chaveamento=chaveamento)
+
+        if fase_key or grupo:
+            adicionar_partida_fase(chaveamento, fase_key=fase_key, grupo=grupo)
+            messages.success(request, "Novo confronto adicionado com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def remover_partida_chaveamento_view(request, pk):
+    """
+    Remove uma partida específica do chaveamento.
+    """
+    if request.method == 'POST':
+        partida = get_object_or_404(PartidaChaveamento, pk=pk)
+        modalidade_pk = partida.chaveamento.modalidade.pk
+        remover_partida_chaveamento(partida)
+        messages.success(request, "Partida removida do chaveamento com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def salvar_vagas_grupo_view(request, pk):
+    """
+    Atualiza quantas equipes se classificam de um determinado grupo.
+    """
+    if request.method == 'POST':
+        grupo = get_object_or_404(GrupoChaveamento, pk=pk)
+        vagas_raw = request.POST.get('vagas_classificacao')
+        try:
+            novas_vagas = int(vagas_raw)
+            if novas_vagas < 1:
+                messages.error(request, "O número de vagas de classificação deve ser pelo menos 1.")
+            else:
+                salvar_vagas_grupo(grupo, novas_vagas)
+                messages.success(request, f"Vagas de classificação do '{grupo.nome}' atualizadas para {novas_vagas} equipe(s)!")
+        except (ValueError, TypeError):
+            messages.error(request, "Informe um valor numérico válido para as vagas de classificação.")
+
+        return redirect('chaveamento_admin_detail', pk=grupo.chaveamento.modalidade.pk)
     return redirect('chaveamento_admin_list')
 
 
