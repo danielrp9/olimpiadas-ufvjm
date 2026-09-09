@@ -2073,3 +2073,81 @@ def salvar_vagas_grupo(grupo, novas_vagas):
     grupo.save(update_fields=['vagas_classificacao'])
     atualizar_classificados_e_preencher_mata_mata(grupo.chaveamento)
 
+
+@transaction.atomic
+def adicionar_time_grupo(grupo, delegacao):
+    """
+    Adiciona uma delegação a um grupo de chaveamento.
+    Se a delegação já estiver em outro grupo do mesmo chaveamento, transfere para este grupo.
+    """
+    chaveamento = grupo.chaveamento
+    tg_existente = TimeGrupo.objects.filter(grupo=grupo, delegacao=delegacao).first()
+    if tg_existente:
+        return tg_existente
+
+    # Se estiver em outro grupo do mesmo chaveamento, remove do outro grupo
+    tg_outro = TimeGrupo.objects.filter(
+        grupo__chaveamento=chaveamento,
+        delegacao=delegacao
+    ).first()
+    if tg_outro:
+        remover_time_grupo(tg_outro.grupo, delegacao)
+
+    tg = TimeGrupo.objects.create(
+        grupo=grupo,
+        delegacao=delegacao
+    )
+    atualizar_tabela_grupo(grupo)
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+    return tg
+
+
+@transaction.atomic
+def remover_time_grupo(grupo, delegacao):
+    """
+    Remove uma delegação de um grupo de chaveamento e limpa partidas não finalizadas que a envolviam.
+    """
+    chaveamento = grupo.chaveamento
+    tg = TimeGrupo.objects.filter(grupo=grupo, delegacao=delegacao).first()
+    if tg:
+        tg.delete()
+
+    # Deleta partidas do grupo não finalizadas em que a equipe estava escalada
+    partidas_para_remover = list(grupo.partidas.filter(
+        Q(time_a=delegacao) | Q(time_b=delegacao),
+        finalizada=False
+    ))
+    for p in partidas_para_remover:
+        remover_partida_chaveamento(p)
+
+    atualizar_tabela_grupo(grupo)
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+
+@transaction.atomic
+def mover_time_grupo(grupo_origem, grupo_destino, delegacao):
+    """
+    Move uma delegação de grupo_origem para grupo_destino.
+    """
+    remover_time_grupo(grupo_origem, delegacao)
+    return adicionar_time_grupo(grupo_destino, delegacao)
+
+
+@transaction.atomic
+def regerar_jogos_grupo(grupo):
+    """
+    Recria os confrontos todos-contra-todos de um grupo com a sua composição atual de equipes.
+    Só é permitido se nenhuma partida do grupo foi finalizada.
+    """
+    if grupo.partidas.filter(finalizada=True).exists():
+        raise ValueError("Não é possível regerar os confrontos automaticamente pois este grupo já possui partidas finalizadas com placar registrado.")
+
+    partidas_atuais = list(grupo.partidas.all())
+    for p in partidas_atuais:
+        remover_partida_chaveamento(p)
+
+    fase_nome = 'GRUPO_LOCAL' if grupo.tipo == 'grupo_local' else 'ELIMINATORIA_EXT'
+    _gerar_partidas_grupo(grupo, fase_nome=fase_nome)
+    atualizar_tabela_grupo(grupo)
+    atualizar_classificados_e_preencher_mata_mata(grupo.chaveamento)
+

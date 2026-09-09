@@ -2284,6 +2284,10 @@ from .chaveamento_services import (
     adicionar_partida_fase,
     remover_partida_chaveamento,
     salvar_vagas_grupo,
+    adicionar_time_grupo,
+    remover_time_grupo,
+    mover_time_grupo,
+    regerar_jogos_grupo,
     FASES_MATA_MATA_CONFIG
 )
 
@@ -2883,6 +2887,75 @@ def salvar_vagas_grupo_view(request, pk):
         except (ValueError, TypeError):
             messages.error(request, "Informe um valor numérico válido para as vagas de classificação.")
 
+        return redirect('chaveamento_admin_detail', pk=grupo.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def adicionar_time_grupo_view(request, pk):
+    """
+    Adiciona uma delegação a um grupo de chaveamento.
+    """
+    if request.method == 'POST':
+        grupo = get_object_or_404(GrupoChaveamento, pk=pk)
+        delegacao_id = request.POST.get('delegacao_id')
+        User = get_user_model()
+        delegacao = get_object_or_404(User, pk=delegacao_id)
+        adicionar_time_grupo(grupo, delegacao)
+        nome_del = delegacao.nome_delegacao or delegacao.email
+        messages.success(request, f"Equipe '{nome_del}' adicionada ao {grupo.nome} com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=grupo.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def remover_time_grupo_view(request, pk):
+    """
+    Remove uma delegação de um grupo de chaveamento.
+    """
+    if request.method == 'POST':
+        grupo = get_object_or_404(GrupoChaveamento, pk=pk)
+        delegacao_id = request.POST.get('delegacao_id')
+        User = get_user_model()
+        delegacao = get_object_or_404(User, pk=delegacao_id)
+        remover_time_grupo(grupo, delegacao)
+        nome_del = delegacao.nome_delegacao or delegacao.email
+        messages.success(request, f"Equipe '{nome_del}' removida do {grupo.nome} com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=grupo.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def mover_time_grupo_view(request, pk):
+    """
+    Move uma delegação de um grupo para outro no chaveamento.
+    """
+    if request.method == 'POST':
+        grupo_origem = get_object_or_404(GrupoChaveamento, pk=pk)
+        delegacao_id = request.POST.get('delegacao_id')
+        novo_grupo_id = request.POST.get('novo_grupo_id')
+        grupo_destino = get_object_or_404(GrupoChaveamento, pk=novo_grupo_id, chaveamento=grupo_origem.chaveamento)
+        User = get_user_model()
+        delegacao = get_object_or_404(User, pk=delegacao_id)
+        mover_time_grupo(grupo_origem, grupo_destino, delegacao)
+        nome_del = delegacao.nome_delegacao or delegacao.email
+        messages.success(request, f"Equipe '{nome_del}' transferida para o {grupo_destino.nome} com sucesso!")
+        return redirect('chaveamento_admin_detail', pk=grupo_origem.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def regerar_jogos_grupo_view(request, pk):
+    """
+    Recria os confrontos todos-contra-todos de um grupo com sua composição atual.
+    """
+    if request.method == 'POST':
+        grupo = get_object_or_404(GrupoChaveamento, pk=pk)
+        try:
+            regerar_jogos_grupo(grupo)
+            messages.success(request, f"Confrontos do {grupo.nome} recriados com sucesso!")
+        except Exception as e:
+            messages.error(request, str(e))
         return redirect('chaveamento_admin_detail', pk=grupo.chaveamento.modalidade.pk)
     return redirect('chaveamento_admin_list')
 

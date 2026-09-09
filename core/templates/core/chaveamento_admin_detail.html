@@ -64,6 +64,9 @@
                             <button type="button" onclick="toggleVagasEdit('{{ grupo.pk }}', true)" class="px-2 py-0.5 text-[10px] font-bold text-blue-600 hover:text-blue-800 hover:bg-blue-50 border border-blue-200 rounded-lg transition inline-flex items-center gap-1 cursor-pointer" title="Customizar quantas equipes avançam deste grupo">
                                 <i data-lucide="sliders" class="w-2.5 h-2.5"></i> Vagas
                             </button>
+                            <button type="button" onclick="toggleAddTeam('{{ grupo.pk }}', true)" class="px-2 py-0.5 text-[10px] font-bold text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 border border-emerald-200 rounded-lg transition inline-flex items-center gap-1 cursor-pointer" title="Adicionar equipe a este grupo">
+                                <i data-lucide="user-plus" class="w-2.5 h-2.5"></i> Equipe
+                            </button>
                         </div>
 
                         <!-- Form Edição de Vagas -->
@@ -75,6 +78,35 @@
                                 <i data-lucide="check" class="w-3 h-3"></i> Salvar
                             </button>
                             <button type="button" onclick="toggleVagasEdit('{{ grupo.pk }}', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl transition cursor-pointer">
+                                Cancelar
+                            </button>
+                        </form>
+
+                        <!-- Form Adicionar Equipe ao Grupo -->
+                        <form id="add-team-form-{{ grupo.pk }}" action="{% url 'chaveamento_grupo_time_adicionar' pk=grupo.pk %}" method="POST" class="hidden mt-2 p-2.5 bg-emerald-50/80 border border-emerald-300 rounded-2xl flex items-center gap-2 flex-wrap">
+                            {% csrf_token %}
+                            <label class="text-[11px] font-bold text-slate-700">Adicionar Equipe:</label>
+                            <select name="delegacao_id" class="text-xs bg-white border border-slate-300 rounded-xl px-2 py-1 max-w-[200px]" required>
+                                <option value="" disabled selected>Selecione a equipe...</option>
+                                {% if delegacoes_modalidade %}
+                                    <optgroup label="Delegações da Modalidade">
+                                        {% for del in delegacoes_modalidade %}
+                                            <option value="{{ del.id }}">{{ del.nome_delegacao|default:del.email }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endif %}
+                                {% if outras_delegacoes %}
+                                    <optgroup label="Outras Delegações">
+                                        {% for del in outras_delegacoes %}
+                                            <option value="{{ del.id }}">{{ del.nome_delegacao|default:del.email }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endif %}
+                            </select>
+                            <button type="submit" class="px-3 py-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl transition shadow-xs flex items-center gap-1 cursor-pointer">
+                                <i data-lucide="plus" class="w-3 h-3"></i> Adicionar
+                            </button>
+                            <button type="button" onclick="toggleAddTeam('{{ grupo.pk }}', false)" class="px-2 py-1 text-[11px] font-semibold bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl transition cursor-pointer">
                                 Cancelar
                             </button>
                         </form>
@@ -103,6 +135,7 @@
                                     <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center" title="Saldo de Pontos nos Sets">SP</th>
                                 {% endif %}
                                 <th class="py-2 px-1.5 sm:py-2.5 sm:px-3 text-right">Status</th>
+                                <th class="py-2 px-1 sm:py-2.5 sm:px-2 text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
@@ -143,6 +176,34 @@
                                         <span class="text-slate-400 text-[9px] sm:text-[10px]">-</span>
                                     {% endif %}
                                 </td>
+                                <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center whitespace-nowrap">
+                                    <div class="inline-flex items-center gap-1">
+                                        {% if grupos.count > 1 %}
+                                        <!-- Form Mover para outro grupo -->
+                                        <form action="{% url 'chaveamento_grupo_time_mover' pk=grupo.pk %}" method="POST" class="inline">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delegacao_id" value="{{ tg.delegacao.id }}">
+                                            <select name="novo_grupo_id" onchange="if(this.value && confirm('Deseja mover {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }} para o grupo selecionado?')) { this.form.submit(); } else { this.value=''; }" class="text-[9px] font-semibold bg-slate-50 hover:bg-white border border-slate-200 rounded-lg px-1 py-0.5 text-slate-600 cursor-pointer" title="Mover para outro grupo">
+                                                <option value="" disabled selected>Mover...</option>
+                                                {% for outro_g in grupos %}
+                                                    {% if outro_g.pk != grupo.pk %}
+                                                        <option value="{{ outro_g.pk }}">{{ outro_g.nome }}</option>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </select>
+                                        </form>
+                                        {% endif %}
+
+                                        <!-- Form Remover do grupo -->
+                                        <form action="{% url 'chaveamento_grupo_time_remover' pk=grupo.pk %}" method="POST" class="inline" onsubmit="return confirm('Tem certeza que deseja remover {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }} do {{ grupo.nome }}? Partidas não finalizadas desta equipe serão excluídas.');">
+                                            {% csrf_token %}
+                                            <input type="hidden" name="delegacao_id" value="{{ tg.delegacao.id }}">
+                                            <button type="submit" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer" title="Remover equipe do grupo">
+                                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -160,14 +221,25 @@
                 <div class="pt-4 border-t border-slate-100 space-y-3">
                     <div class="flex items-center justify-between">
                         <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Jogos da Fase</h4>
-                        <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
-                            {% csrf_token %}
-                            <input type="hidden" name="grupo_id" value="{{ grupo.pk }}">
-                            <button type="submit" class="px-2.5 py-0.5 text-[11px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Adicionar confronto a este grupo">
-                                <i data-lucide="plus" class="w-3 h-3"></i>
-                                <span>Confronto</span>
-                            </button>
-                        </form>
+                        <div class="flex items-center gap-1.5">
+                            {% if grupo.times.count >= 2 %}
+                            <form action="{% url 'chaveamento_grupo_regerar_jogos' pk=grupo.pk %}" method="POST" class="inline" onsubmit="return confirm('Deseja recriar automaticamente todos os confrontos (todos contra todos) com os times atuais deste grupo? Partidas não finalizadas serão substituídas.');">
+                                {% csrf_token %}
+                                <button type="submit" class="px-2 py-0.5 text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-800 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Recriar tabela de jogos todos contra todos com os times deste grupo">
+                                    <i data-lucide="refresh-cw" class="w-2.5 h-2.5"></i>
+                                    <span class="hidden sm:inline">Regerar Jogos</span>
+                                </button>
+                            </form>
+                            {% endif %}
+                            <form action="{% url 'chaveamento_partida_adicionar' pk=chaveamento.pk %}" method="POST" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="grupo_id" value="{{ grupo.pk }}">
+                                <button type="submit" class="px-2.5 py-0.5 text-[11px] font-bold bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-blue-700 rounded-lg transition flex items-center gap-1 cursor-pointer" title="Adicionar confronto a este grupo">
+                                    <i data-lucide="plus" class="w-3 h-3"></i>
+                                    <span>Confronto</span>
+                                </button>
+                            </form>
+                        </div>
                     </div>
                     <div class="space-y-3">
                         {% for p in grupo.partidas.all %}
@@ -726,6 +798,17 @@
 
     function toggleVagasEdit(grupoId, enable) {
         const form = document.getElementById(`vagas-edit-form-${grupoId}`);
+        if (!form) return;
+        if (enable) {
+            form.classList.remove('hidden');
+        } else {
+            form.classList.add('hidden');
+        }
+        if (window.lucide) window.lucide.createIcons();
+    }
+
+    function toggleAddTeam(grupoId, enable) {
+        const form = document.getElementById(`add-team-form-${grupoId}`);
         if (!form) return;
         if (enable) {
             form.classList.remove('hidden');

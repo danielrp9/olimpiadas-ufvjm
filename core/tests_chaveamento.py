@@ -2070,3 +2070,93 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         atualizar_classificados_e_preencher_mata_mata(chaveamento)
         final.refresh_from_db()
         self.assertEqual(final.time_a_id, t1.id)
+
+    def test_adicionar_remover_e_mover_times_grupo(self):
+        """Testa adição, remoção e transferência manual de equipes entre grupos."""
+        from core.chaveamento_services import adicionar_time_grupo, remover_time_grupo, mover_time_grupo
+
+        mod = Modalidade.objects.create(nome="Futsal Gestao Grupos", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        g_a = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo A", tipo="grupo_local")
+        g_b = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo B", tipo="grupo_local")
+
+        team1 = self._create_delegation("futsal1@ufvjm.edu.br", "Futsal 1", self.campus_dia)
+        team2 = self._create_delegation("futsal2@ufvjm.edu.br", "Futsal 2", self.campus_dia)
+
+        # Adiciona team1 ao Grupo A
+        tg1 = adicionar_time_grupo(g_a, team1)
+        self.assertEqual(g_a.times.count(), 1)
+        self.assertEqual(tg1.delegacao, team1)
+
+        # Adiciona team2 ao Grupo A
+        tg2 = adicionar_time_grupo(g_a, team2)
+        self.assertEqual(g_a.times.count(), 2)
+
+        # Move team2 para o Grupo B
+        mover_time_grupo(g_a, g_b, team2)
+        self.assertEqual(g_a.times.count(), 1)
+        self.assertEqual(g_b.times.count(), 1)
+        self.assertTrue(g_b.times.filter(delegacao=team2).exists())
+
+        # Remove team1 do Grupo A
+        remover_time_grupo(g_a, team1)
+        self.assertEqual(g_a.times.count(), 0)
+
+    def test_regerar_jogos_grupo_servico_e_view(self):
+        """Testa a recriação automática dos confrontos todos-contra-todos de um grupo."""
+        from core.chaveamento_services import adicionar_time_grupo, regerar_jogos_grupo
+
+        mod = Modalidade.objects.create(nome="Volei Regerar Jogos", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo Único", tipo="grupo_local")
+
+        t1 = self._create_delegation("v_reg1@ufvjm.edu.br", "Volei 1", self.campus_dia)
+        t2 = self._create_delegation("v_reg2@ufvjm.edu.br", "Volei 2", self.campus_dia)
+        t3 = self._create_delegation("v_reg3@ufvjm.edu.br", "Volei 3", self.campus_dia)
+
+        adicionar_time_grupo(grupo, t1)
+        adicionar_time_grupo(grupo, t2)
+        adicionar_time_grupo(grupo, t3)
+
+        # Recria os confrontos: para 3 equipes devem ser geradas 3 partidas (C(3,2) = 3)
+        regerar_jogos_grupo(grupo)
+        self.assertEqual(grupo.partidas.count(), 3)
+        for p in grupo.partidas.all():
+            self.assertIsNotNone(p.jogo)
+
+        # Via view HTTP
+        resp = self.client.post(reverse('chaveamento_grupo_regerar_jogos', kwargs={'pk': grupo.pk}))
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(grupo.partidas.count(), 3)
+
+    def test_views_adicionar_remover_mover_times_grupo(self):
+        """Testa os endpoints HTTP de gerenciamento de equipes nos grupos."""
+        mod = Modalidade.objects.create(nome="Basquete Views Equipes", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        g1 = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo 1", tipo="grupo_local")
+        g2 = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo 2", tipo="grupo_local")
+
+        team = self._create_delegation("basq_view@ufvjm.edu.br", "Basquete View", self.campus_dia)
+
+        # Adicionar equipe via POST
+        resp = self.client.post(reverse('chaveamento_grupo_time_adicionar', kwargs={'pk': g1.pk}), {
+            'delegacao_id': team.pk
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(g1.times.count(), 1)
+
+        # Mover equipe via POST
+        resp = self.client.post(reverse('chaveamento_grupo_time_mover', kwargs={'pk': g1.pk}), {
+            'delegacao_id': team.pk,
+            'novo_grupo_id': g2.pk
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(g1.times.count(), 0)
+        self.assertEqual(g2.times.count(), 1)
+
+        # Remover equipe via POST
+        resp = self.client.post(reverse('chaveamento_grupo_time_remover', kwargs={'pk': g2.pk}), {
+            'delegacao_id': team.pk
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(g2.times.count(), 0)
