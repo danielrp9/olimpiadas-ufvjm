@@ -2222,3 +2222,74 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         resp = self.client.post(reverse('chaveamento_grupo_remover', kwargs={'pk': grupo2.pk}))
         self.assertEqual(resp.status_code, 302)
         self.assertFalse(GrupoChaveamento.objects.filter(pk=grupo2.pk).exists())
+
+    def test_adicionar_e_remover_fase_inicial_servico(self):
+        """Testa o serviço de criação e exclusão de fases preliminares."""
+        from core.chaveamento_services import (
+            adicionar_fase_inicial,
+            adicionar_grupo_chaveamento,
+            remover_fase_inicial
+        )
+
+        mod = Modalidade.objects.create(nome="Futsal Fases Iniciais", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+
+        # 1. Chaveamento novo tem Fase 1 por padrão
+        fases = chaveamento.get_fases_iniciais()
+        self.assertEqual(len(fases), 1)
+        self.assertEqual(fases[0]['numero'], 1)
+
+        # 2. Adiciona Fase 2
+        f2 = adicionar_fase_inicial(chaveamento, nome="2ª Fase de Grupos")
+        self.assertEqual(f2['numero'], 2)
+        self.assertEqual(f2['nome'], "2ª Fase de Grupos")
+        self.assertEqual(len(chaveamento.get_fases_iniciais()), 2)
+
+        # 3. Cria grupo na Fase 2
+        g_f2 = adicionar_grupo_chaveamento(chaveamento, nome="Grupo Ouro", fase_numero=2)
+        self.assertEqual(g_f2.fase_numero, 2)
+        self.assertEqual(g_f2.nome, "Grupo Ouro")
+
+        # 4. Remove Fase 2 e verifica que o grupo foi excluído junto
+        remover_fase_inicial(chaveamento, fase_numero=2)
+        self.assertEqual(len(chaveamento.get_fases_iniciais()), 1)
+        self.assertFalse(GrupoChaveamento.objects.filter(pk=g_f2.pk).exists())
+
+    def test_views_fase_inicial_e_grupo_com_fase(self):
+        """Testa os endpoints HTTP de adicionar/remover fases iniciais e criar grupo em fase específica."""
+        mod = Modalidade.objects.create(nome="Basquete Fases HTTP", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+
+        # 1. POST para criar Fase 2
+        resp = self.client.post(reverse('chaveamento_fase_inicial_adicionar', kwargs={'pk': chaveamento.pk}), {
+            'nome': 'Fase 2 - Quadrangular'
+        })
+        self.assertEqual(resp.status_code, 302)
+        chaveamento.refresh_from_db()
+        self.assertEqual(len(chaveamento.get_fases_iniciais()), 2)
+
+        # 2. POST para criar grupo na Fase 2
+        resp = self.client.post(reverse('chaveamento_grupo_adicionar', kwargs={'pk': chaveamento.pk}), {
+            'nome': 'Grupo Final 2',
+            'tipo': 'grupo_local',
+            'vagas_classificacao': '2',
+            'fase_numero': '2'
+        })
+        self.assertEqual(resp.status_code, 302)
+        g = chaveamento.grupos.filter(nome='Grupo Final 2').first()
+        self.assertIsNotNone(g)
+        self.assertEqual(g.fase_numero, 2)
+
+        # 3. GET no detalhe admin deve renderizar ambas as fases
+        resp = self.client.get(reverse('chaveamento_admin_detail', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp.status_code, 200)
+        self.assertContains(resp, "Fase 2 - Quadrangular")
+        self.assertContains(resp, "Grupo Final 2")
+
+        # 4. POST para excluir Fase 2
+        resp = self.client.post(reverse('chaveamento_fase_inicial_remover', kwargs={'pk': chaveamento.pk, 'fase_numero': 2}))
+        self.assertEqual(resp.status_code, 302)
+        chaveamento.refresh_from_db()
+        self.assertEqual(len(chaveamento.get_fases_iniciais()), 1)
+        self.assertFalse(chaveamento.grupos.filter(nome='Grupo Final 2').exists())
+

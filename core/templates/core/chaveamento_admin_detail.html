@@ -32,32 +32,55 @@
         </div>
     </div>
 
-    <!-- SEÇÃO 1: FASE DE GRUPOS E CLASSIFICATÓRIAS -->
-    <div class="space-y-6">
-        <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-3.5">
-                <div class="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
-                    <i data-lucide="users" class="text-base"></i>
+    <!-- SEÇÃO 1: FASES INICIAIS E DE CLASSIFICAÇÃO -->
+    <div class="space-y-8">
+        {% for fase_item in fases_iniciais_data %}
+        <div class="space-y-6">
+            <div class="bg-slate-900 border border-slate-800 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center gap-3.5">
+                    <div class="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+                        <i data-lucide="layers" class="text-base"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest block">Etapa Inicial {{ fase_item.numero }}</span>
+                            <span class="text-[10px] font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
+                                {{ fase_item.grupos|length }} grupo{{ fase_item.grupos|length|pluralize:"s" }}
+                            </span>
+                        </div>
+                        <h2 class="text-base sm:text-lg font-extrabold tracking-tight">{{ fase_item.nome }}</h2>
+                        <span class="text-[11px] text-slate-400 block">Fase de Grupos e Classificatórias por Campus</span>
+                    </div>
                 </div>
-                <div>
-                    <span class="text-[10px] font-bold text-blue-400 uppercase tracking-widest block">Etapa 1</span>
-                    <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Fase de Grupos e Classificatórias por Campus</h2>
+                <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                    <button type="button" onclick="abrirModalAdicionarGrupo('{{ fase_item.numero }}', '{{ fase_item.nome|escapejs }}')" class="px-3 py-1.5 text-xs font-bold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer" title="Adicionar grupo a esta fase">
+                        <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+                        <span>+ Adicionar Grupo</span>
+                    </button>
+                    <button type="button" onclick="abrirModalAdicionarFaseInicial()" class="px-3 py-1.5 text-xs font-bold text-indigo-300 bg-indigo-950/40 hover:bg-indigo-900/60 border border-indigo-500/40 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer" title="Adicionar uma nova fase antes do mata-mata">
+                        <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i>
+                        <span>+ Nova Fase</span>
+                    </button>
+                    {% if fase_item.pode_excluir %}
+                    <form action="{% url 'chaveamento_fase_inicial_remover' pk=chaveamento.pk fase_numero=fase_item.numero %}" method="POST" onsubmit="return confirm('ATENÇÃO: Deseja realmente excluir a {{ fase_item.nome|escapejs }}?\n\nTodos os grupos e partidas desta fase serão removidos.');" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="px-2.5 py-1.5 text-xs font-bold text-rose-400 bg-rose-950/30 hover:bg-rose-900/50 border border-rose-500/30 rounded-xl transition shadow-xs flex items-center gap-1 cursor-pointer" title="Excluir esta fase e seus grupos">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">Excluir Fase</span>
+                        </button>
+                    </form>
+                    {% endif %}
+                    {% if forloop.first %}
+                    <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60">
+                        <span class="font-medium text-slate-300">Fase Atual:</span>
+                        <span class="font-bold text-white uppercase text-[11px]">{{ chaveamento.get_fase_atual_display }}</span>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
-            <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-                <button type="button" onclick="abrirModalAdicionarGrupo()" class="px-3 py-1.5 text-xs font-bold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer" title="Adicionar novo grupo ao chaveamento">
-                    <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
-                    <span>Adicionar Grupo</span>
-                </button>
-                <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60">
-                    <span class="font-medium text-slate-300">Fase Atual:</span>
-                    <span class="font-bold text-white uppercase text-[11px]">{{ chaveamento.get_fase_atual_display }}</span>
-                </div>
-            </div>
-        </div>
 
-        <div class="grid grid-cols-1 {% if grupos.count > 1 %}lg:grid-cols-2{% endif %} gap-6 sm:gap-8">
-            {% for grupo in grupos %}
+            <div class="grid grid-cols-1 {% if fase_item.grupos|length > 1 %}lg:grid-cols-2{% endif %} gap-6 sm:gap-8">
+                {% for grupo in fase_item.grupos %}
             <div class="bg-white border border-slate-200/80 rounded-3xl p-4 sm:p-6 shadow-[0_4px_20px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_25px_rgba(0,0,0,0.06)] transition-all duration-300 space-y-5 sm:space-y-6">
                 <!-- Nome do Grupo -->
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3 sm:pb-4 gap-2">
@@ -262,21 +285,23 @@
                     </div>
                 </div>
             </div>
-            {% empty %}
-            <div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center text-slate-500 text-sm font-medium space-y-3">
-                <div class="flex items-center justify-center gap-2 text-slate-700 font-bold">
-                    <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
-                    <span>Nenhum grupo cadastrado para esta modalidade.</span>
+                {% empty %}
+                <div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center text-slate-500 text-sm font-medium space-y-3">
+                    <div class="flex items-center justify-center gap-2 text-slate-700 font-bold">
+                        <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
+                        <span>Nenhum grupo cadastrado na {{ fase_item.nome }}.</span>
+                    </div>
+                    <p class="text-xs text-slate-400 max-w-md mx-auto">Você pode criar grupos nesta fase para organizar os confrontos antes do mata-mata.</p>
+                    <div>
+                        <button type="button" onclick="abrirModalAdicionarGrupo('{{ fase_item.numero }}', '{{ fase_item.nome|escapejs }}')" class="px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition shadow-xs inline-flex items-center gap-1.5 cursor-pointer">
+                            <i data-lucide="folder-plus" class="w-4 h-4"></i> + Adicionar Grupo na {{ fase_item.nome }}
+                        </button>
+                    </div>
                 </div>
-                <p class="text-xs text-slate-400 max-w-md mx-auto">Esta modalidade não possui grupos no momento. Você pode adicionar grupos manualmente ou manter apenas o mata-mata direto.</p>
-                <div>
-                    <button type="button" onclick="abrirModalAdicionarGrupo()" class="px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition shadow-xs inline-flex items-center gap-1.5 cursor-pointer">
-                        <i data-lucide="folder-plus" class="w-4 h-4"></i> + Adicionar Grupo
-                    </button>
-                </div>
+                {% endfor %}
             </div>
-            {% endfor %}
         </div>
+        {% endfor %}
     </div>
 
     <!-- SEÇÃO 2: MATA-MATA E FASE GERAL -->
@@ -835,6 +860,12 @@
 
         <form action="{% url 'chaveamento_grupo_adicionar' pk=chaveamento.pk %}" method="POST" class="space-y-4">
             {% csrf_token %}
+            <input type="hidden" name="fase_numero" id="modal-grupo-fase-numero" value="1">
+            <div class="p-2.5 bg-emerald-50/80 border border-emerald-200 rounded-2xl flex items-center justify-between">
+                <span class="text-xs font-semibold text-emerald-800">Fase de Destino:</span>
+                <span id="modal-grupo-fase-label" class="text-xs font-bold text-emerald-900 bg-white px-2.5 py-1 rounded-xl border border-emerald-200 shadow-2xs">Fase 1</span>
+            </div>
+
             <div>
                 <label class="block text-xs font-bold text-slate-700 mb-1.5">Nome do Grupo:</label>
                 <input type="text" name="nome" placeholder="Ex: Grupo A, Grupo B, Grupo Diamantina..." class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
@@ -868,6 +899,45 @@
     </div>
 </div>
 
+<!-- Modal: Adicionar Nova Fase Inicial -->
+<div id="modal-adicionar-fase-inicial" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-600 flex items-center justify-center">
+                    <i data-lucide="plus-circle" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-800">Nova Fase Inicial</h3>
+                    <p class="text-[11px] text-slate-400 font-medium">Adicione uma etapa anterior ao mata-mata final</p>
+                </div>
+            </div>
+            <button type="button" onclick="fecharModalAdicionarFaseInicial()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'chaveamento_fase_inicial_adicionar' pk=chaveamento.pk %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Nome da Nova Fase:</label>
+                <input type="text" name="nome" placeholder="Ex: Fase 2, 2ª Fase de Grupos, Quadrangular..." class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500">
+                <span class="text-[10px] text-slate-400 mt-1 block">Deixe em branco para nomear automaticamente (ex: Fase 2).</span>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="fecharModalAdicionarFaseInicial()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Criar Fase</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Scripts de Interatividade para o Modo de Edição -->
 <script>
 
@@ -893,7 +963,15 @@
         if (window.lucide) window.lucide.createIcons();
     }
 
-    function abrirModalAdicionarGrupo() {
+    function abrirModalAdicionarGrupo(faseNumero, faseNome) {
+        const inputFase = document.getElementById('modal-grupo-fase-numero');
+        const labelFase = document.getElementById('modal-grupo-fase-label');
+        if (inputFase && faseNumero) {
+            inputFase.value = faseNumero;
+        }
+        if (labelFase && faseNome) {
+            labelFase.textContent = faseNome;
+        }
         const modal = document.getElementById('modal-adicionar-grupo');
         if (modal) {
             modal.classList.remove('hidden');
@@ -903,6 +981,21 @@
 
     function fecharModalAdicionarGrupo() {
         const modal = document.getElementById('modal-adicionar-grupo');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    function abrirModalAdicionarFaseInicial() {
+        const modal = document.getElementById('modal-adicionar-fase-inicial');
+        if (modal) {
+            modal.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }
+
+    function fecharModalAdicionarFaseInicial() {
+        const modal = document.getElementById('modal-adicionar-fase-inicial');
         if (modal) {
             modal.classList.add('hidden');
         }

@@ -519,6 +519,7 @@ class ChaveamentoModalidade(models.Model):
     fase_atual = models.CharField(max_length=30, choices=FASE_CHOICES, default='nao_iniciado', db_index=True)
     vagas_externas = models.PositiveIntegerField(default=0, help_text="Total de vagas classificadas dos campi externos (0, 1 ou 2)")
     datas_fases = models.JSONField(default=dict, blank=True, help_text="Mapeamento de datas por fase do chaveamento")
+    fases_iniciais = models.JSONField(default=list, blank=True, help_text="Lista de fases iniciais (ex: [{'numero': 1, 'nome': 'Fase 1'}, ...])")
     criado_em = models.DateTimeField(auto_now_add=True)
     atualizado_em = models.DateTimeField(auto_now=True)
 
@@ -533,6 +534,14 @@ class ChaveamentoModalidade(models.Model):
         if isinstance(self.datas_fases, dict):
             return self.datas_fases.get(fase_key, '')
         return ''
+
+    def get_fases_iniciais(self):
+        if isinstance(self.fases_iniciais, list) and len(self.fases_iniciais) > 0:
+            return self.fases_iniciais
+        numeros = list(self.grupos.values_list('fase_numero', flat=True).distinct().order_by('fase_numero'))
+        if not numeros:
+            numeros = [1]
+        return [{'numero': n, 'nome': f"Fase {n}"} for n in sorted(numeros)]
 
     @property
     def has_sets(self):
@@ -549,6 +558,7 @@ class GrupoChaveamento(models.Model):
     ]
 
     chaveamento = models.ForeignKey(ChaveamentoModalidade, on_delete=models.CASCADE, related_name='grupos')
+    fase_numero = models.PositiveIntegerField(default=1, verbose_name="Número da Fase")
     nome = models.CharField(max_length=100)
     campus = models.ForeignKey(Campus, on_delete=models.SET_NULL, null=True, blank=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='grupo_local')

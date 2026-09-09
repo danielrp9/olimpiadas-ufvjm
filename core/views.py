@@ -2290,6 +2290,8 @@ from .chaveamento_services import (
     regerar_jogos_grupo,
     remover_grupo_chaveamento,
     adicionar_grupo_chaveamento,
+    adicionar_fase_inicial,
+    remover_fase_inicial,
     FASES_MATA_MATA_CONFIG
 )
 
@@ -2388,10 +2390,25 @@ class ChaveamentoAdminDetailView(LoginRequiredMixin, View):
         delegacoes_modalidade = list(User.objects.filter(id__in=delegacoes_modalidade_ids).order_by('nome_delegacao', 'email'))
         outras_delegacoes = list(User.objects.filter(role='REPRESENTANTE').exclude(id__in=delegacoes_modalidade_ids).order_by('nome_delegacao', 'email'))
 
+        # Estrutura as fases iniciais com seus respectivos grupos
+        fases_list = chaveamento.get_fases_iniciais()
+        total_fases = len(fases_list)
+        fases_iniciais_data = []
+        for f in fases_list:
+            num = f['numero']
+            grupos_da_fase = [g for g in grupos if getattr(g, 'fase_numero', 1) == num]
+            fases_iniciais_data.append({
+                'numero': num,
+                'nome': f['nome'],
+                'grupos': grupos_da_fase,
+                'pode_excluir': total_fases > 1,
+            })
+
         return render(request, 'core/chaveamento_admin_detail.html', {
             'modalidade': modalidade,
             'chaveamento': chaveamento,
             'grupos': grupos,
+            'fases_iniciais_data': fases_iniciais_data,
             'partidas_por_fase': partidas_por_fase,
             'buckets': buckets,
             'relatorio_disciplinar': relatorio_disciplinar,
@@ -2983,25 +3000,66 @@ def remover_grupo_chaveamento_view(request, pk):
 @user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def adicionar_grupo_chaveamento_view(request, pk):
     """
-    Adiciona um novo grupo ao chaveamento.
+    Adiciona um novo grupo ao chaveamento em uma fase específica.
     """
     if request.method == 'POST':
         chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
         nome = request.POST.get('nome', '').strip()
         tipo = request.POST.get('tipo', 'grupo_local')
         vagas = request.POST.get('vagas_classificacao', 2)
+        fase_numero = request.POST.get('fase_numero', 1)
         try:
             vagas = int(vagas)
         except (ValueError, TypeError):
             vagas = 2
 
         try:
-            grupo = adicionar_grupo_chaveamento(chaveamento, nome=nome, tipo=tipo, vagas_classificacao=vagas)
-            messages.success(request, f"Grupo '{grupo.nome}' criado com sucesso!")
+            fase_numero = int(fase_numero)
+        except (ValueError, TypeError):
+            fase_numero = 1
+
+        try:
+            grupo = adicionar_grupo_chaveamento(chaveamento, nome=nome, tipo=tipo, vagas_classificacao=vagas, fase_numero=fase_numero)
+            messages.success(request, f"Grupo '{grupo.nome}' criado na Fase {fase_numero} com sucesso!")
         except Exception as e:
             messages.error(request, f"Erro ao criar grupo: {e}")
         return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
     return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def adicionar_fase_inicial_view(request, pk):
+    """
+    Cria uma nova fase inicial (preliminar) no chaveamento.
+    """
+    if request.method == 'POST':
+        chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
+        nome = request.POST.get('nome', '').strip()
+        try:
+            nova_fase = adicionar_fase_inicial(chaveamento, nome=nome)
+            messages.success(request, f"Nova fase '{nova_fase['nome']}' criada com sucesso!")
+        except Exception as e:
+            messages.error(request, f"Erro ao criar fase: {e}")
+        return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def remover_fase_inicial_view(request, pk, fase_numero):
+    """
+    Exclui uma fase inicial e todos os seus grupos e partidas associadas.
+    """
+    if request.method == 'POST':
+        chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
+        modalidade_pk = chaveamento.modalidade.pk
+        try:
+            remover_fase_inicial(chaveamento, fase_numero=fase_numero)
+            messages.success(request, f"Fase {fase_numero} excluída com sucesso!")
+        except Exception as e:
+            messages.error(request, f"Erro ao excluir fase: {e}")
+        return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+    return redirect('chaveamento_admin_list')
+
 
 
 @user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
@@ -3143,10 +3201,22 @@ class ChaveamentoPublicDetailView(LoginRequiredMixin, View):
         from core.disciplinar_services import obter_relatorio_disciplinar_modalidade
         relatorio_disciplinar = obter_relatorio_disciplinar_modalidade(modalidade)
 
+        fases_list = chaveamento.get_fases_iniciais()
+        fases_iniciais_data = []
+        for f in fases_list:
+            num = f['numero']
+            grupos_da_fase = [g for g in grupos if getattr(g, 'fase_numero', 1) == num]
+            fases_iniciais_data.append({
+                'numero': num,
+                'nome': f['nome'],
+                'grupos': grupos_da_fase,
+            })
+
         return render(request, 'core/chaveamento_public_detail.html', {
             'modalidade': modalidade,
             'chaveamento': chaveamento,
             'grupos': grupos,
+            'fases_iniciais_data': fases_iniciais_data,
             'partidas_por_fase': partidas_por_fase,
             'delegacao': delegacao_user,
             'relatorio_disciplinar': relatorio_disciplinar
@@ -3203,10 +3273,22 @@ def chaveamento_share_view(request, pk):
         if p.fase in partidas_por_fase:
             partidas_por_fase[p.fase].append(p)
 
+    fases_list = chaveamento.get_fases_iniciais()
+    fases_iniciais_data = []
+    for f in fases_list:
+        num = f['numero']
+        grupos_da_fase = [g for g in grupos if getattr(g, 'fase_numero', 1) == num]
+        fases_iniciais_data.append({
+            'numero': num,
+            'nome': f['nome'],
+            'grupos': grupos_da_fase,
+        })
+
     return render(request, 'core/chaveamento_share.html', {
         'modalidade': modalidade,
         'chaveamento': chaveamento,
         'grupos': grupos,
+        'fases_iniciais_data': fases_iniciais_data,
         'partidas_por_fase': partidas_por_fase,
     })
 

@@ -2,14 +2,17 @@ from django.db import migrations
 
 
 def atualizar_chaveamentos_producao(apps, schema_editor):
-    from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
-    from core.models import ChaveamentoModalidade
+    try:
+        from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
+        ChaveamentoModalidade = apps.get_model('core', 'ChaveamentoModalidade')
 
-    for chaveamento in ChaveamentoModalidade.objects.all():
-        try:
-            atualizar_classificados_e_preencher_mata_mata(chaveamento)
-        except Exception:
-            pass
+        for chaveamento in ChaveamentoModalidade.objects.all():
+            try:
+                atualizar_classificados_e_preencher_mata_mata(chaveamento)
+            except Exception:
+                pass
+    except Exception:
+        pass
 
 
 class Migration(migrations.Migration):

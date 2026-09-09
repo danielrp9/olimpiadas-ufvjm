@@ -935,8 +935,27 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     for g in chaveamento.grupos.all():
         atualizar_tabela_grupo(g)
 
-    grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local').order_by('nome'))
+    # Identifica a fase inicial máxima dos grupos locais para alimentar o mata-mata
+    fase_max_local = chaveamento.grupos.filter(tipo='grupo_local').values_list('fase_numero', flat=True).order_by('-fase_numero').first() or 1
+    grupos_locais = list(chaveamento.grupos.filter(tipo='grupo_local', fase_numero=fase_max_local).order_by('nome'))
     grupos_externos = list(chaveamento.grupos.filter(tipo='eliminatoria_ext').order_by('nome'))
+
+    # Atualiza classificados dos grupos locais de fases intermediárias/anteriores
+    grupos_anteriores = chaveamento.grupos.filter(tipo='grupo_local').exclude(id__in=[g.id for g in grupos_locais])
+    for g in grupos_anteriores:
+        has_matches = g.partidas.exists()
+        grupo_concluido = (not g.partidas.filter(finalizada=False).exists()) if has_matches else True
+        times_ordenados = ordenar_times_grupo(g)
+        vagas = g.vagas_classificacao
+        for idx, tg in enumerate(times_ordenados):
+            if grupo_concluido and idx < vagas and tg.quantidade_wo == 0:
+                if not tg.classificado:
+                    tg.classificado = True
+                    tg.save(update_fields=['classificado'])
+            else:
+                if tg.classificado:
+                    tg.classificado = False
+                    tg.save(update_fields=['classificado'])
 
     # 1. Atualiza classificados dos grupos externos (equipes com W.O. não se classificam)
     classificados_externos = []
@@ -2177,25 +2196,74 @@ def remover_grupo_chaveamento(grupo):
 
 
 @transaction.atomic
-def adicionar_grupo_chaveamento(chaveamento, nome, tipo='grupo_local', vagas_classificacao=2):
+def adicionar_grupo_chaveamento(chaveamento, nome, tipo='grupo_local', vagas_classificacao=2, fase_numero=1):
     """
-    Cria um novo grupo no chaveamento da modalidade.
+    Cria um novo grupo no chaveamento da modalidade em uma fase específica.
     """
+    fase_num = max(1, int(fase_numero or 1))
     nome_limpo = (nome or '').strip()
     if not nome_limpo:
-        qtd_grupos = chaveamento.grupos.count()
+        qtd_grupos = chaveamento.grupos.filter(fase_numero=fase_num).count()
         letra = chr(ord('A') + qtd_grupos) if qtd_grupos < 26 else str(qtd_grupos + 1)
         nome_limpo = f"Grupo {letra}"
 
     vagas = max(1, int(vagas_classificacao or 2))
     tipo_final = tipo if tipo in ['grupo_local', 'eliminatoria_ext'] else 'grupo_local'
 
+    # Garante que a fase está na lista de fases_iniciais
+    fases = list(chaveamento.get_fases_iniciais())
+    if not any(f['numero'] == fase_num for f in fases):
+        fases.append({'numero': fase_num, 'nome': f"Fase {fase_num}"})
+        fases.sort(key=lambda x: x['numero'])
+        chaveamento.fases_iniciais = fases
+        chaveamento.save(update_fields=['fases_iniciais'])
+
     grupo = GrupoChaveamento.objects.create(
         chaveamento=chaveamento,
+        fase_numero=fase_num,
         nome=nome_limpo,
         tipo=tipo_final,
         vagas_classificacao=vagas
     )
     atualizar_classificados_e_preencher_mata_mata(chaveamento)
     return grupo
+
+
+@transaction.atomic
+def adicionar_fase_inicial(chaveamento, nome=None):
+    """
+    Adiciona uma nova fase inicial (preliminar) ao chaveamento da modalidade.
+    """
+    fases = list(chaveamento.get_fases_iniciais())
+    prox_num = (max(f['numero'] for f in fases) + 1) if fases else 1
+    nome_fase = (nome or '').strip()
+    if not nome_fase:
+        nome_fase = f"Fase {prox_num}"
+
+    nova_fase = {'numero': prox_num, 'nome': nome_fase}
+    fases.append(nova_fase)
+    fases.sort(key=lambda x: x['numero'])
+    chaveamento.fases_iniciais = fases
+    chaveamento.save(update_fields=['fases_iniciais'])
+    return nova_fase
+
+
+@transaction.atomic
+def remover_fase_inicial(chaveamento, fase_numero):
+    """
+    Remove uma fase inicial e todos os seus grupos e partidas associadas.
+    """
+    fase_num = int(fase_numero)
+    grupos_fase = list(chaveamento.grupos.filter(fase_numero=fase_num))
+    for g in grupos_fase:
+        remover_grupo_chaveamento(g)
+
+    fases = [f for f in chaveamento.get_fases_iniciais() if f['numero'] != fase_num]
+    if not fases:
+        fases = [{'numero': 1, 'nome': 'Fase 1'}]
+    chaveamento.fases_iniciais = fases
+    chaveamento.save(update_fields=['fases_iniciais'])
+    reconectar_arvore_mata_mata(chaveamento)
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
 
