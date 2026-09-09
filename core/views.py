@@ -2848,7 +2848,12 @@ def remover_fase_chaveamento_view(request, pk):
         chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
         fase_key = request.POST.get('fase_key')
         if fase_key:
-            fase_nome = FASES_MATA_MATA_CONFIG.get(fase_key, {}).get('nome', fase_key)
+            if fase_key == 'FINAIS_LOCAIS':
+                fase_nome = 'Finais Locais (Diamantina)'
+            elif fase_key == 'FINAIS_GERAIS':
+                fase_nome = 'Final Geral e Chave Bronze'
+            else:
+                fase_nome = FASES_MATA_MATA_CONFIG.get(fase_key, {}).get('nome', fase_key)
             remover_fase_chaveamento(chaveamento, fase_key)
             messages.success(request, f"Fase '{fase_nome}' removida com sucesso do chaveamento!")
         return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)

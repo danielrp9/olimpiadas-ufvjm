@@ -2049,6 +2049,16 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase='FINAL_GERAL').count(), 0)
 
+        # Testar remoção de FINAIS_LOCAIS (Final Local de Diamantina e 3º Lugar)
+        PartidaChaveamento.objects.create(chaveamento=chaveamento, fase='FINAL_LOCAL')
+        PartidaChaveamento.objects.create(chaveamento=chaveamento, fase='DISPUTA_3_LOCAL')
+        self.assertEqual(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase__in=['FINAL_LOCAL', 'DISPUTA_3_LOCAL']).count(), 2)
+        resp = self.client.post(reverse('chaveamento_fase_remover', kwargs={'pk': chaveamento.pk}), {
+            'fase_key': 'FINAIS_LOCAIS'
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertEqual(PartidaChaveamento.objects.filter(chaveamento=chaveamento, fase__in=['FINAL_LOCAL', 'DISPUTA_3_LOCAL']).count(), 0)
+
     def test_atualizar_classificados_com_fases_customizadas_sem_crashes(self):
         """Testa o preenchimento automático sem quebrar caso fases anteriores tenham sido removidas."""
         from core.chaveamento_services import atualizar_classificados_e_preencher_mata_mata
@@ -2446,5 +2456,62 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         resp_public = self.client.get(reverse('chaveamento_public_detail', kwargs={'pk': mod.pk}))
         self.assertEqual(resp_public.status_code, 200)
         self.assertContains(resp_public, "Ambos os times classificados para a próxima fase")
+
+    def test_grupo_partida_ambos_classificados_exibe_na_tabela_publica(self):
+        """
+        Testa que quando uma partida do grupo tem tipo_classificacao='AMBOS',
+        ambos os times aparecem como 'Classificado' na tabela de classificação do grupo
+        tanto no painel admin quanto na página pública e no link de compartilhamento.
+        """
+        mod = Modalidade.objects.create(nome="Xadrez Tabela Ambos", genero="F")
+        ch = ChaveamentoModalidade.objects.create(modalidade=mod)
+        g = GrupoChaveamento.objects.create(chaveamento=ch, nome="Grupo Único", tipo="grupo_local", fase_numero=1, vagas_classificacao=1)
+
+        t_a = self._create_delegation("xa_ambos@ufvjm.edu.br", "Xadrez A", self.campus_dia)
+        t_b = self._create_delegation("xb_ambos@ufvjm.edu.br", "Xadrez B", self.campus_dia)
+
+        tg_a = TimeGrupo.objects.create(grupo=g, delegacao=t_a)
+        tg_b = TimeGrupo.objects.create(grupo=g, delegacao=t_b)
+
+        p = PartidaChaveamento.objects.create(
+            chaveamento=ch,
+            grupo=g,
+            fase='GRUPO_LOCAL',
+            rodada=1,
+            time_a=t_a,
+            time_b=t_b
+        )
+
+        # Salva resultado com AMBOS classificados
+        resp = self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': p.pk}), {
+            'placar_a': '0',
+            'placar_b': '0',
+            'tipo_classificacao': 'AMBOS',
+        })
+        self.assertEqual(resp.status_code, 302)
+
+        tg_a.refresh_from_db()
+        tg_b.refresh_from_db()
+        self.assertTrue(tg_a.classificado)
+        self.assertTrue(tg_b.classificado)
+        self.assertTrue(tg_a.is_classificado_efetivo)
+        self.assertTrue(tg_b.is_classificado_efetivo)
+
+        # Verifica na página pública do chaveamento
+        resp_public = self.client.get(reverse('chaveamento_public_detail', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_public.status_code, 200)
+        # O badge Classificado deve aparecer pelo menos 2 vezes na tabela
+        self.assertGreaterEqual(resp_public.content.decode().count("Classificado"), 2)
+
+        # Verifica na página de compartilhamento
+        resp_share = self.client.get(reverse('chaveamento_share', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_share.status_code, 200)
+        self.assertGreaterEqual(resp_share.content.decode().count("Classificado"), 2)
+
+        # Verifica na página de admin
+        resp_admin = self.client.get(reverse('chaveamento_admin_detail', kwargs={'pk': mod.pk}))
+        self.assertEqual(resp_admin.status_code, 200)
+        self.assertGreaterEqual(resp_admin.content.decode().count("Classificado"), 2)
+
 
 

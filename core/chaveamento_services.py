@@ -775,6 +775,23 @@ def atualizar_tabela_grupo(grupo):
             tg.quantidade_wo = st.get('quantidade_wo', 0)
             tg.save()
 
+    # Atualiza status de classificado caso alguma partida do grupo tenha classificação específica
+    for p in partidas:
+        if p.tipo_classificacao == 'AMBOS':
+            if p.time_a:
+                grupo.times.filter(delegacao=p.time_a).update(classificado=True)
+            if p.time_b:
+                grupo.times.filter(delegacao=p.time_b).update(classificado=True)
+        elif p.tipo_classificacao == 'TIME_A' and p.time_a:
+            grupo.times.filter(delegacao=p.time_a).update(classificado=True)
+        elif p.tipo_classificacao == 'TIME_B' and p.time_b:
+            grupo.times.filter(delegacao=p.time_b).update(classificado=True)
+        elif p.tipo_classificacao == 'NENHUM':
+            if p.time_a:
+                grupo.times.filter(delegacao=p.time_a).update(classificado=False)
+            if p.time_b:
+                grupo.times.filter(delegacao=p.time_b).update(classificado=False)
+
 
 @transaction.atomic
 def _alocar_vaga_avanco_duplo(partida, time_b):
@@ -1043,6 +1060,35 @@ def ordenar_times_grupo(grupo):
     return times
 
 
+def _aplicar_classificacao_partidas_grupos(chaveamento):
+    """
+    Garante que times com partidas finalizadas com tipo_classificacao específico
+    tenham seu status de 'classificado' refletido no TimeGrupo.
+    - Se tipo_classificacao == 'AMBOS': ambos os times tornam-se classificado=True.
+    - Se tipo_classificacao == 'TIME_A': time_a torna-se classificado=True.
+    - Se tipo_classificacao == 'TIME_B': time_b torna-se classificado=True.
+    - Se tipo_classificacao == 'NENHUM': ambos os times tornam-se classificado=False.
+    """
+    if not chaveamento:
+        return
+    for g in chaveamento.grupos.all():
+        for p in g.partidas.filter(finalizada=True):
+            if p.tipo_classificacao == 'AMBOS':
+                if p.time_a:
+                    TimeGrupo.objects.filter(grupo=g, delegacao=p.time_a).update(classificado=True)
+                if p.time_b:
+                    TimeGrupo.objects.filter(grupo=g, delegacao=p.time_b).update(classificado=True)
+            elif p.tipo_classificacao == 'TIME_A' and p.time_a:
+                TimeGrupo.objects.filter(grupo=g, delegacao=p.time_a).update(classificado=True)
+            elif p.tipo_classificacao == 'TIME_B' and p.time_b:
+                TimeGrupo.objects.filter(grupo=g, delegacao=p.time_b).update(classificado=True)
+            elif p.tipo_classificacao == 'NENHUM':
+                if p.time_a:
+                    TimeGrupo.objects.filter(grupo=g, delegacao=p.time_a).update(classificado=False)
+                if p.time_b:
+                    TimeGrupo.objects.filter(grupo=g, delegacao=p.time_b).update(classificado=False)
+
+
 @transaction.atomic
 def atualizar_classificados_e_preencher_mata_mata(chaveamento):
     """
@@ -1186,6 +1232,7 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
                 semis_geral[1].save()
                 _sincronizar_jogo_partida(semis_geral[1], "Semifinal Geral 2")
 
+        _aplicar_classificacao_partidas_grupos(chaveamento)
         return
 
     # 3. Formato Padrão e Demais Modalidades
@@ -1296,9 +1343,11 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
                 repescados_restantes.remove(escolhido)
                 classificados_por_grupo[g_id].append(escolhido[1].delegacao)
 
+    _aplicar_classificacao_partidas_grupos(chaveamento)
+
     todos_classificados_diamantina = []
     for g in grupos_locais:
-        for tg in [t for t in ordenar_times_grupo(g) if t.classificado]:
+        for tg in [t for t in ordenar_times_grupo(g) if t.is_classificado_efetivo]:
             if tg.delegacao not in todos_classificados_diamantina:
                 todos_classificados_diamantina.append(tg.delegacao)
 
@@ -1588,6 +1637,8 @@ def atualizar_classificados_e_preencher_mata_mata(chaveamento):
             final_geral.time_b = classificados_externos[0] if len(classificados_externos) >= 1 else (todos_classificados_diamantina[1] if len(todos_classificados_diamantina) >= 2 else None)
             final_geral.save()
             _sincronizar_jogo_partida(final_geral, "Grande Final Geral")
+
+    _aplicar_classificacao_partidas_grupos(chaveamento)
 
 
 def encerrar_fase_grupos_e_gerar_mata_mata(chaveamento):
@@ -2086,8 +2137,17 @@ def remover_fase_chaveamento(chaveamento, fase_key):
     """
     Remove todas as partidas vinculadas a uma fase específica do chaveamento.
     Remove os Jogos vinculados às partidas e reconecta a árvore de mata-mata restante.
+    Suporta chaves compostas como 'FINAIS_LOCAIS' (FINAL_LOCAL e DISPUTA_3_LOCAL)
+    e 'FINAIS_GERAIS' (FINAL_GERAL e BRONZE).
     """
-    partidas = list(chaveamento.partidas.filter(fase=fase_key))
+    if fase_key == 'FINAIS_LOCAIS':
+        fases_alvo = ['FINAL_LOCAL', 'DISPUTA_3_LOCAL']
+    elif fase_key == 'FINAIS_GERAIS':
+        fases_alvo = ['FINAL_GERAL', 'BRONZE']
+    else:
+        fases_alvo = [fase_key]
+
+    partidas = list(chaveamento.partidas.filter(fase__in=fases_alvo))
     if not partidas:
         return
 
@@ -2110,11 +2170,16 @@ def remover_fase_chaveamento(chaveamento, fase_key):
         Jogo.objects.filter(id__in=jogos_ids).delete()
 
     # Limpa data da fase se existir
-    if isinstance(chaveamento.datas_fases, dict) and fase_key in chaveamento.datas_fases:
+    if isinstance(chaveamento.datas_fases, dict):
         datas = dict(chaveamento.datas_fases)
-        del datas[fase_key]
-        chaveamento.datas_fases = datas
-        chaveamento.save(update_fields=['datas_fases'])
+        alterou = False
+        for fk in fases_alvo:
+            if fk in datas:
+                del datas[fk]
+                alterou = True
+        if alterou:
+            chaveamento.datas_fases = datas
+            chaveamento.save(update_fields=['datas_fases'])
 
     # Reconecta o mata-mata restante e atualiza classificados
     reconectar_arvore_mata_mata(chaveamento)

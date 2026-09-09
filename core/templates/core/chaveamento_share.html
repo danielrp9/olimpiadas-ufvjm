@@ -148,7 +148,7 @@
                             </thead>
                             <tbody class="divide-y divide-slate-100 bg-white">
                                 {% for tg in grupo.times_ordenados %}
-                                <tr class="{% if tg.classificado %}bg-emerald-50/60 font-semibold{% else %}hover:bg-slate-50{% endif %} transition">
+                                <tr class="{% if tg.is_classificado_efetivo %}bg-emerald-50/60 font-semibold{% else %}hover:bg-slate-50{% endif %} transition">
                                     <td class="py-2 px-1.5 sm:px-3 font-bold text-slate-700 text-center sm:text-left text-[11px]">{{ forloop.counter }}º</td>
                                     <td class="py-2 px-1.5 sm:px-3 font-bold text-slate-800 text-[11px] truncate max-w-[90px] sm:max-w-none">
                                         {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
@@ -170,7 +170,7 @@
                                         <td class="py-2 px-1 text-center text-slate-500 font-medium text-[11px]" title="Pontos nos sets: {{ tg.pontos_sets_pro }} pró / {{ tg.pontos_sets_contra }} contra">{{ tg.saldo_pontos_sets }}</td>
                                     {% endif %}
                                     <td class="py-2 px-1.5 sm:px-3 text-right font-bold">
-                                        {% if tg.classificado %}
+                                        {% if tg.is_classificado_efetivo %}
                                             <span class="text-emerald-700 text-[9px] sm:text-[10px] bg-emerald-100 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-200 font-extrabold shadow-2xs inline-block">
                                                 Classificado
                                             </span>

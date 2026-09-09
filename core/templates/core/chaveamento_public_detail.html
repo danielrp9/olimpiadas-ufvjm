@@ -92,7 +92,7 @@
                         </thead>
                         <tbody class="divide-y divide-slate-100 bg-white">
                             {% for tg in grupo.times_ordenados %}
-                            <tr class="{% if tg.delegacao == delegacao %}bg-blue-50/80 font-bold border-l-4 border-l-blue-600{% elif tg.classificado %}bg-emerald-50/50 font-semibold{% else %}hover:bg-slate-50/80{% endif %} transition">
+                            <tr class="{% if tg.delegacao == delegacao %}bg-blue-50/80 font-bold border-l-4 border-l-blue-600{% elif tg.is_classificado_efetivo %}bg-emerald-50/50 font-semibold{% else %}hover:bg-slate-50/80{% endif %} transition">
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-bold text-slate-700 text-center sm:text-left">{{ forloop.counter }}º</td>
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 font-semibold text-slate-800 max-w-[90px] xs:max-w-[130px] sm:max-w-none truncate">
                                     {{ tg.delegacao.nome_delegacao|default:tg.delegacao.email }}
@@ -117,7 +117,7 @@
                                     <td class="py-2.5 px-1 sm:py-3 sm:px-2 text-center text-slate-500 font-medium text-[10px] sm:text-xs" title="Pontos nos sets: {{ tg.pontos_sets_pro }} pró / {{ tg.pontos_sets_contra }} contra">{{ tg.saldo_pontos_sets }}</td>
                                 {% endif %}
                                 <td class="py-2.5 px-1.5 sm:py-3 sm:px-3 text-right font-bold">
-                                    {% if tg.classificado %}
+                                    {% if tg.is_classificado_efetivo %}
                                         <span class="text-emerald-700 text-[9px] sm:text-[10px] bg-emerald-100/80 px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded-full border border-emerald-200/80 font-extrabold shadow-2xs whitespace-nowrap">
                                             <span class="hidden sm:inline">Classificado</span>
                                             <span class="sm:hidden">Classif.</span>

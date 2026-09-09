@@ -610,6 +610,35 @@ class TimeGrupo(models.Model):
         return self.quantidade_wo > 0
 
     @property
+    def is_classificado_por_partida_ambos(self):
+        return self.grupo.partidas.filter(
+            models.Q(time_a=self.delegacao) | models.Q(time_b=self.delegacao),
+            finalizada=True,
+            tipo_classificacao='AMBOS'
+        ).exists()
+
+    @property
+    def is_classificado_por_partida(self):
+        return self.grupo.partidas.filter(
+            models.Q(time_a=self.delegacao, tipo_classificacao__in=['AMBOS', 'TIME_A']) |
+            models.Q(time_b=self.delegacao, tipo_classificacao__in=['AMBOS', 'TIME_B']),
+            finalizada=True
+        ).exists()
+
+    @property
+    def is_classificado_efetivo(self):
+        if self.quantidade_wo > 0:
+            return False
+        tem_nenhum = self.grupo.partidas.filter(
+            models.Q(time_a=self.delegacao) | models.Q(time_b=self.delegacao),
+            finalizada=True,
+            tipo_classificacao='NENHUM'
+        ).exists()
+        if tem_nenhum and not self.is_classificado_por_partida:
+            return False
+        return self.classificado or self.is_classificado_por_partida
+
+    @property
     def estatisticas_sets(self):
         partidas = self.grupo.partidas.filter(finalizada=True)
         pontos_pro = 0
