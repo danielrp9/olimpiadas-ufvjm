@@ -96,6 +96,8 @@ urlpatterns = [
     path('comissao/chaveamento/grupo/<int:pk>/time/remover/', views.remover_time_grupo_view, name='chaveamento_grupo_time_remover'),
     path('comissao/chaveamento/grupo/<int:pk>/time/mover/', views.mover_time_grupo_view, name='chaveamento_grupo_time_mover'),
     path('comissao/chaveamento/grupo/<int:pk>/regerar-jogos/', views.regerar_jogos_grupo_view, name='chaveamento_grupo_regerar_jogos'),
+    path('comissao/chaveamento/grupo/<int:pk>/remover/', views.remover_grupo_chaveamento_view, name='chaveamento_grupo_remover'),
+    path('comissao/chaveamento/<int:pk>/grupo/adicionar/', views.adicionar_grupo_chaveamento_view, name='chaveamento_grupo_adicionar'),
 
     # Módulo de Chaveamento (Delegações & Público)
     path('chaveamentos/', views.ChaveamentoPublicListView.as_view(), name='chaveamento_public_list'),

@@ -2160,3 +2160,65 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         })
         self.assertEqual(resp.status_code, 302)
         self.assertEqual(g2.times.count(), 0)
+
+    def test_adicionar_grupo_chaveamento_servico_e_view(self):
+        """Testa o serviço e endpoint de criação manual de grupos."""
+        from core.chaveamento_services import adicionar_grupo_chaveamento
+
+        mod = Modalidade.objects.create(nome="Handebol Add Grupo", genero="M")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+
+        # 1. Serviço com nome explícito
+        g1 = adicionar_grupo_chaveamento(chaveamento, nome="Grupo Especial", tipo="grupo_local", vagas_classificacao=3)
+        self.assertEqual(g1.nome, "Grupo Especial")
+        self.assertEqual(g1.tipo, "grupo_local")
+        self.assertEqual(g1.vagas_classificacao, 3)
+
+        # 2. Serviço com nome automático
+        g2 = adicionar_grupo_chaveamento(chaveamento, nome="")
+        self.assertIn("Grupo", g2.nome)
+
+        # 3. Via POST na view
+        resp = self.client.post(reverse('chaveamento_grupo_adicionar', kwargs={'pk': chaveamento.pk}), {
+            'nome': 'Grupo Teste View',
+            'tipo': 'grupo_local',
+            'vagas_classificacao': '2'
+        })
+        self.assertEqual(resp.status_code, 302)
+        self.assertTrue(chaveamento.grupos.filter(nome='Grupo Teste View').exists())
+
+    def test_remover_grupo_chaveamento_servico_e_view(self):
+        """Testa o serviço e endpoint de exclusão manual de grupos."""
+        from core.chaveamento_services import (
+            adicionar_grupo_chaveamento,
+            adicionar_time_grupo,
+            regerar_jogos_grupo,
+            remover_grupo_chaveamento
+        )
+
+        mod = Modalidade.objects.create(nome="Volei Del Grupo", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = adicionar_grupo_chaveamento(chaveamento, nome="Grupo Para Excluir")
+
+        t1 = self._create_delegation("v_del1@ufvjm.edu.br", "Volei Del 1", self.campus_dia)
+        t2 = self._create_delegation("v_del2@ufvjm.edu.br", "Volei Del 2", self.campus_dia)
+        adicionar_time_grupo(grupo, t1)
+        adicionar_time_grupo(grupo, t2)
+        regerar_jogos_grupo(grupo)
+
+        partida = grupo.partidas.first()
+        self.assertIsNotNone(partida)
+        jogo_id = partida.jogo.id
+
+        # Exclui o grupo pelo serviço
+        remover_grupo_chaveamento(grupo)
+
+        self.assertFalse(GrupoChaveamento.objects.filter(pk=grupo.pk).exists())
+        self.assertFalse(PartidaChaveamento.objects.filter(pk=partida.pk).exists())
+        self.assertFalse(Jogo.objects.filter(pk=jogo_id).exists())
+
+        # Exclui via POST na view
+        grupo2 = adicionar_grupo_chaveamento(chaveamento, nome="Grupo Para Excluir Via View")
+        resp = self.client.post(reverse('chaveamento_grupo_remover', kwargs={'pk': grupo2.pk}))
+        self.assertEqual(resp.status_code, 302)
+        self.assertFalse(GrupoChaveamento.objects.filter(pk=grupo2.pk).exists())

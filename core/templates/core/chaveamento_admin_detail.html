@@ -44,9 +44,15 @@
                     <h2 class="text-base sm:text-lg font-extrabold tracking-tight">Fase de Grupos e Classificatórias por Campus</h2>
                 </div>
             </div>
-            <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60 self-start sm:self-auto">
-                <span class="font-medium text-slate-300">Fase Atual:</span>
-                <span class="font-bold text-white uppercase text-[11px]">{{ chaveamento.get_fase_atual_display }}</span>
+            <div class="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+                <button type="button" onclick="abrirModalAdicionarGrupo()" class="px-3 py-1.5 text-xs font-bold text-emerald-300 bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-500/40 rounded-xl transition shadow-xs flex items-center gap-1.5 cursor-pointer" title="Adicionar novo grupo ao chaveamento">
+                    <i data-lucide="folder-plus" class="w-3.5 h-3.5"></i>
+                    <span>Adicionar Grupo</span>
+                </button>
+                <div class="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 px-3 py-1.5 rounded-xl border border-slate-700/60">
+                    <span class="font-medium text-slate-300">Fase Atual:</span>
+                    <span class="font-bold text-white uppercase text-[11px]">{{ chaveamento.get_fase_atual_display }}</span>
+                </div>
             </div>
         </div>
 
@@ -111,9 +117,17 @@
                             </button>
                         </form>
                     </div>
-                    <span class="px-2.5 py-0.5 sm:px-3.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs shrink-0 whitespace-nowrap">
-                        {{ grupo.times.count }} <span class="hidden sm:inline">equipes</span><span class="sm:hidden">eq.</span>
-                    </span>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="px-2.5 py-0.5 sm:px-3.5 sm:py-1 text-[10px] sm:text-xs font-bold rounded-full bg-blue-50/80 text-blue-700 border border-blue-200/60 shadow-2xs whitespace-nowrap">
+                            {{ grupo.times.count }} <span class="hidden sm:inline">equipes</span><span class="sm:hidden">eq.</span>
+                        </span>
+                        <form action="{% url 'chaveamento_grupo_remover' pk=grupo.pk %}" method="POST" onsubmit="return confirm('ATENÇÃO: Deseja realmente excluir o grupo \'{{ grupo.nome|escapejs }}\'?\n\nTodas as equipes e partidas deste grupo serão removidas e o chaveamento será recalculado.');" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="p-1 sm:p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl transition cursor-pointer" title="Excluir o {{ grupo.nome }}">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                    </div>
                 </div>
 
                 <!-- Tabela de Classificação (Ajustada para Mobile sem Barra de Rolagem) -->
@@ -249,9 +263,17 @@
                 </div>
             </div>
             {% empty %}
-            <div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-6 text-center text-slate-500 text-sm font-medium">
-                <i data-lucide="info" class="text-blue-500 mr-2"></i>
-                Esta modalidade não possui fase de grupos. As equipes qualificadas avançaram diretamente para a fase final.
+            <div class="col-span-full bg-slate-50 border border-slate-200 rounded-3xl p-8 text-center text-slate-500 text-sm font-medium space-y-3">
+                <div class="flex items-center justify-center gap-2 text-slate-700 font-bold">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-500"></i>
+                    <span>Nenhum grupo cadastrado para esta modalidade.</span>
+                </div>
+                <p class="text-xs text-slate-400 max-w-md mx-auto">Esta modalidade não possui grupos no momento. Você pode adicionar grupos manualmente ou manter apenas o mata-mata direto.</p>
+                <div>
+                    <button type="button" onclick="abrirModalAdicionarGrupo()" class="px-4 py-2 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition shadow-xs inline-flex items-center gap-1.5 cursor-pointer">
+                        <i data-lucide="folder-plus" class="w-4 h-4"></i> + Adicionar Grupo
+                    </button>
+                </div>
             </div>
             {% endfor %}
         </div>
@@ -793,6 +815,59 @@
     </div>
 </div>
 
+<!-- Modal: Adicionar Grupo -->
+<div id="modal-adicionar-grupo" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center">
+                    <i data-lucide="folder-plus" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-800">Adicionar Grupo</h3>
+                    <p class="text-[11px] text-slate-400 font-medium">Crie uma nova chave para distribuição de equipes</p>
+                </div>
+            </div>
+            <button type="button" onclick="fecharModalAdicionarGrupo()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl hover:bg-slate-100 transition cursor-pointer">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form action="{% url 'chaveamento_grupo_adicionar' pk=chaveamento.pk %}" method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Nome do Grupo:</label>
+                <input type="text" name="nome" placeholder="Ex: Grupo A, Grupo B, Grupo Diamantina..." class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                <span class="text-[10px] text-slate-400 mt-1 block">Deixe em branco para nomear automaticamente (Grupo A, Grupo B, etc).</span>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Tipo do Grupo:</label>
+                <select name="tipo" class="w-full text-xs font-medium bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+                    <option value="grupo_local" selected>Fase de Grupos (Local / Diamantina)</option>
+                    <option value="eliminatoria_ext">Eliminatória Externa (Outros Campi)</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-xs font-bold text-slate-700 mb-1.5">Vagas de Classificação:</label>
+                <input type="number" name="vagas_classificacao" value="2" min="1" max="20" class="w-full text-xs font-bold bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 focus:bg-white focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500" required>
+                <span class="text-[10px] text-slate-400 mt-1 block">Quantos times deste grupo passam para a fase eliminatória seguinte.</span>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button type="button" onclick="fecharModalAdicionarGrupo()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer">
+                    Cancelar
+                </button>
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Criar Grupo</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <!-- Scripts de Interatividade para o Modo de Edição -->
 <script>
 
@@ -816,6 +891,21 @@
             form.classList.add('hidden');
         }
         if (window.lucide) window.lucide.createIcons();
+    }
+
+    function abrirModalAdicionarGrupo() {
+        const modal = document.getElementById('modal-adicionar-grupo');
+        if (modal) {
+            modal.classList.remove('hidden');
+            if (window.lucide) window.lucide.createIcons();
+        }
+    }
+
+    function fecharModalAdicionarGrupo() {
+        const modal = document.getElementById('modal-adicionar-grupo');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
     }
 
     const FASES_QTDS_MAP = {

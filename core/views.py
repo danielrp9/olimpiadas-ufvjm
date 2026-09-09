@@ -2288,6 +2288,8 @@ from .chaveamento_services import (
     remover_time_grupo,
     mover_time_grupo,
     regerar_jogos_grupo,
+    remover_grupo_chaveamento,
+    adicionar_grupo_chaveamento,
     FASES_MATA_MATA_CONFIG
 )
 
@@ -2957,6 +2959,48 @@ def regerar_jogos_grupo_view(request, pk):
         except Exception as e:
             messages.error(request, str(e))
         return redirect('chaveamento_admin_detail', pk=grupo.chaveamento.modalidade.pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def remover_grupo_chaveamento_view(request, pk):
+    """
+    Exclui um grupo do chaveamento, suas partidas e equipes associadas.
+    """
+    if request.method == 'POST':
+        grupo = get_object_or_404(GrupoChaveamento, pk=pk)
+        modalidade_pk = grupo.chaveamento.modalidade.pk
+        nome_grupo = grupo.nome
+        try:
+            remover_grupo_chaveamento(grupo)
+            messages.success(request, f"Grupo '{nome_grupo}' excluído com sucesso!")
+        except Exception as e:
+            messages.error(request, f"Erro ao excluir grupo: {e}")
+        return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+    return redirect('chaveamento_admin_list')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
+def adicionar_grupo_chaveamento_view(request, pk):
+    """
+    Adiciona um novo grupo ao chaveamento.
+    """
+    if request.method == 'POST':
+        chaveamento = get_object_or_404(ChaveamentoModalidade, pk=pk)
+        nome = request.POST.get('nome', '').strip()
+        tipo = request.POST.get('tipo', 'grupo_local')
+        vagas = request.POST.get('vagas_classificacao', 2)
+        try:
+            vagas = int(vagas)
+        except (ValueError, TypeError):
+            vagas = 2
+
+        try:
+            grupo = adicionar_grupo_chaveamento(chaveamento, nome=nome, tipo=tipo, vagas_classificacao=vagas)
+            messages.success(request, f"Grupo '{grupo.nome}' criado com sucesso!")
+        except Exception as e:
+            messages.error(request, f"Erro ao criar grupo: {e}")
+        return redirect('chaveamento_admin_detail', pk=chaveamento.modalidade.pk)
     return redirect('chaveamento_admin_list')
 
 

@@ -2151,3 +2151,51 @@ def regerar_jogos_grupo(grupo):
     atualizar_tabela_grupo(grupo)
     atualizar_classificados_e_preencher_mata_mata(grupo.chaveamento)
 
+
+@transaction.atomic
+def remover_grupo_chaveamento(grupo):
+    """
+    Remove um grupo de chaveamento por completo, limpando suas partidas, jogos associados
+    e equipes, e reconectando o mata-mata.
+    """
+    chaveamento = grupo.chaveamento
+
+    # Remove todas as partidas deste grupo e seus jogos vinculados
+    partidas = list(grupo.partidas.all())
+    for p in partidas:
+        remover_partida_chaveamento(p)
+
+    # Deleta as equipes vinculadas ao grupo
+    grupo.times.all().delete()
+
+    # Deleta o grupo
+    grupo.delete()
+
+    # Reconecta a árvore e atualiza classificados
+    reconectar_arvore_mata_mata(chaveamento)
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+
+
+@transaction.atomic
+def adicionar_grupo_chaveamento(chaveamento, nome, tipo='grupo_local', vagas_classificacao=2):
+    """
+    Cria um novo grupo no chaveamento da modalidade.
+    """
+    nome_limpo = (nome or '').strip()
+    if not nome_limpo:
+        qtd_grupos = chaveamento.grupos.count()
+        letra = chr(ord('A') + qtd_grupos) if qtd_grupos < 26 else str(qtd_grupos + 1)
+        nome_limpo = f"Grupo {letra}"
+
+    vagas = max(1, int(vagas_classificacao or 2))
+    tipo_final = tipo if tipo in ['grupo_local', 'eliminatoria_ext'] else 'grupo_local'
+
+    grupo = GrupoChaveamento.objects.create(
+        chaveamento=chaveamento,
+        nome=nome_limpo,
+        tipo=tipo_final,
+        vagas_classificacao=vagas
+    )
+    atualizar_classificados_e_preencher_mata_mata(chaveamento)
+    return grupo
+
