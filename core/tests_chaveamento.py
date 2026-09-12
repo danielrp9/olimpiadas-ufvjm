@@ -2513,5 +2513,118 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         self.assertEqual(resp_admin.status_code, 200)
         self.assertGreaterEqual(resp_admin.content.decode().count("Classificado"), 2)
 
+    def test_salvar_resultado_partida_com_pk_do_jogo(self):
+        """
+        Testa que salvar resultado via endpoint com pk do Jogo (diferente do pk da PartidaChaveamento)
+        localiza a partida e atualiza o placar sem retornar erro 404.
+        """
+        from core.models import Jogo
+        from django.utils import timezone
+        mod = Modalidade.objects.create(nome="Futsal Test Resiliente", genero="M")
+        ch = ChaveamentoModalidade.objects.create(modalidade=mod)
+        t_a = self._create_delegation("resil_a@ufvjm.edu.br", "Resil A", self.campus_dia)
+        t_b = self._create_delegation("resil_b@ufvjm.edu.br", "Resil B", self.campus_dia)
+
+        hoje = timezone.localdate()
+        jogo = Jogo.objects.create(modalidade=mod, data_jogo=hoje, time_a=t_a, time_b=t_b)
+        partida = PartidaChaveamento.objects.create(
+            chaveamento=ch,
+            jogo=jogo,
+            fase='QUARTAS_LOCAL',
+            rodada=1,
+            time_a=t_a,
+            time_b=t_b
+        )
+
+        # Envia POST usando o pk do Jogo (jogo.pk)
+        resp = self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': jogo.pk}), {
+            'placar_a': '3',
+            'placar_b': '1',
+            'tipo_classificacao': 'AUTOMATICO',
+        })
+        self.assertEqual(resp.status_code, 302)
+        partida.refresh_from_db()
+        jogo.refresh_from_db()
+        self.assertEqual(partida.placar_a, 3)
+        self.assertEqual(partida.placar_b, 1)
+        self.assertTrue(partida.finalizada)
+        self.assertEqual(jogo.placar_time_a, 3)
+        self.assertEqual(jogo.placar_time_b, 1)
+        self.assertTrue(jogo.finalizado)
+
+    def test_salvar_resultado_partida_jogo_avulso(self):
+        """
+        Testa que salvar resultado para um Jogo avulso (sem partida_chaveamento)
+        atualiza o Jogo diretamente sem erro 404.
+        """
+        from core.models import Jogo
+        from django.utils import timezone
+        mod = Modalidade.objects.create(nome="Jogo Avulso Test", genero="M")
+        t_a = self._create_delegation("avulso_a@ufvjm.edu.br", "Avulso A", self.campus_dia)
+        t_b = self._create_delegation("avulso_b@ufvjm.edu.br", "Avulso B", self.campus_dia)
+
+        hoje = timezone.localdate()
+        jogo = Jogo.objects.create(modalidade=mod, data_jogo=hoje, time_a=t_a, time_b=t_b)
+
+        resp = self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': jogo.pk}), {
+            'placar_a': '2',
+            'placar_b': '0',
+            'tipo_classificacao': 'AUTOMATICO',
+        })
+        self.assertEqual(resp.status_code, 302)
+        jogo.refresh_from_db()
+        self.assertEqual(jogo.placar_time_a, 2)
+        self.assertEqual(jogo.placar_time_b, 0)
+        self.assertTrue(jogo.finalizado)
+
+    def test_salvar_resultado_partida_inexistente_nao_lanca_404(self):
+        """
+        Testa que se o ID não existir nem como PartidaChaveamento nem como Jogo,
+        o sistema não quebra com 404, redirecionando com mensagem de erro.
+        """
+        resp = self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': 999999}), {
+            'placar_a': '1',
+            'placar_b': '0',
+        })
+        self.assertEqual(resp.status_code, 302)
+
+    def test_salvar_resultado_partida_retornar_placar_reset(self):
+        """
+        Testa que ao enviar placares vazios para uma partida finalizada,
+        o placar é resetado e a partida volta para finalizada=False.
+        """
+        mod = Modalidade.objects.create(nome="Reset Placar Test", genero="M")
+        ch = ChaveamentoModalidade.objects.create(modalidade=mod)
+        t_a = self._create_delegation("reset_a@ufvjm.edu.br", "Reset A", self.campus_dia)
+        t_b = self._create_delegation("reset_b@ufvjm.edu.br", "Reset B", self.campus_dia)
+
+        p = PartidaChaveamento.objects.create(
+            chaveamento=ch,
+            fase='QUARTAS_LOCAL',
+            rodada=1,
+            time_a=t_a,
+            time_b=t_b,
+            placar_a=2,
+            placar_b=1,
+            finalizada=True,
+            vencedor=t_a,
+            perdedor=t_b
+        )
+
+        # Retorna o placar para vazio
+        resp = self.client.post(reverse('chaveamento_partida_resultado', kwargs={'pk': p.pk}), {
+            'placar_a': '',
+            'placar_b': '',
+            'wo_tipo': '',
+            'tipo_classificacao': 'AUTOMATICO',
+        })
+        self.assertEqual(resp.status_code, 302)
+        p.refresh_from_db()
+        self.assertFalse(p.finalizada)
+        self.assertIsNone(p.placar_a)
+        self.assertIsNone(p.placar_b)
+        self.assertIsNone(p.vencedor)
+
+
 
 

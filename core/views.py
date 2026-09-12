@@ -2453,18 +2453,42 @@ def resetar_chaveamento_view(request, pk):
     return redirect('chaveamento_admin_list')
 
 
+def _obter_partida_chaveamento(pk):
+    """
+    Localiza de forma resiliente uma PartidaChaveamento por:
+    1. PartidaChaveamento.pk == pk
+    2. PartidaChaveamento.jogo_id == pk
+    3. Jogo.pk == pk -> partida_chaveamento.first()
+    """
+    partida = PartidaChaveamento.objects.filter(pk=pk).first()
+    if not partida:
+        partida = PartidaChaveamento.objects.filter(jogo_id=pk).first()
+    if not partida:
+        jogo = Jogo.objects.filter(pk=pk).first()
+        if jogo:
+            partida = jogo.partida_chaveamento.first()
+    return partida
+
+
 @user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def salvar_set_partida_view(request, pk):
     """
     Registra ou atualiza um set de uma partida de volei/tenis/rede (suporta AJAX e POST tradicional).
     """
     if request.method == 'POST':
-        partida = get_object_or_404(PartidaChaveamento, pk=pk)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+        partida = _obter_partida_chaveamento(pk)
+        if not partida:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': 'Partida não encontrada.'}, status=404)
+            messages.error(request, "Partida não encontrada.")
+            return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
+
         numero_set_raw = request.POST.get('numero_set')
         pontos_a_raw = request.POST.get('pontos_a')
         pontos_b_raw = request.POST.get('pontos_b')
 
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+        redirect_target = ('chaveamento_admin_detail', (partida.chaveamento.modalidade.pk,)) if (partida.chaveamento and partida.chaveamento.modalidade) else (request.META.get('HTTP_REFERER') or 'chaveamento_admin_list', ())
 
         try:
             numero_set = int(numero_set_raw) if (numero_set_raw and str(numero_set_raw).strip()) else partida.proximo_numero_set
@@ -2474,19 +2498,19 @@ def salvar_set_partida_view(request, pk):
             if is_ajax:
                 return JsonResponse({'success': False, 'error': 'Informe valores numéricos válidos para os pontos do set.'}, status=400)
             messages.error(request, "Informe valores válidos para o set.")
-            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+            return redirect(*redirect_target)
 
         if pontos_a < 0 or pontos_b < 0:
             if is_ajax:
                 return JsonResponse({'success': False, 'error': 'Os pontos do set não podem ser negativos.'}, status=400)
             messages.error(request, "Pontos não podem ser negativos.")
-            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+            return redirect(*redirect_target)
 
         if pontos_a == pontos_b:
             if is_ajax:
                 return JsonResponse({'success': False, 'error': 'Um set não pode terminar empatado. É necessária a pontuação de desempate.'}, status=400)
             messages.error(request, "Um set não pode terminar empatado.")
-            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+            return redirect(*redirect_target)
 
         from core.models import SetPartida
         set_obj, created = SetPartida.objects.update_or_create(
@@ -2563,7 +2587,9 @@ def salvar_set_partida_view(request, pk):
             })
 
         messages.success(request, f"Set {numero_set} ({pontos_a} x {pontos_b}) registrado com sucesso!")
-        return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+        if partida.chaveamento and partida.chaveamento.modalidade:
+            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+        return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
 
     return redirect('chaveamento_admin_list')
 
@@ -2647,7 +2673,74 @@ def remover_set_partida_view(request, pk):
 @user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
 def salvar_resultado_partida_view(request, pk):
     if request.method == 'POST':
-        partida = get_object_or_404(PartidaChaveamento, pk=pk)
+        partida = _obter_partida_chaveamento(pk)
+
+        if not partida:
+            # Caso não seja PartidaChaveamento, verifica se o ID pertence a um Jogo avulso
+            jogo_avulso = Jogo.objects.filter(pk=pk).first()
+            if not jogo_avulso:
+                messages.error(request, "Partida ou confronto não encontrado.")
+                return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
+
+            placar_a_raw = request.POST.get('placar_a')
+            placar_b_raw = request.POST.get('placar_b')
+            wo_tipo = request.POST.get('wo_tipo', '').strip()
+            motivo_wo = request.POST.get('motivo_wo', '').strip()
+            data_raw = request.POST.get('data_jogo') or request.POST.get('data_partida')
+            horario_raw = request.POST.get('horario_jogo') or request.POST.get('horario_partida')
+
+            if 'link_pre_sumula' in request.POST:
+                link_raw = request.POST.get('link_pre_sumula', '').strip()
+                if link_raw and not (link_raw.startswith('http://') or link_raw.startswith('https://')):
+                    link_raw = 'https://' + link_raw
+                jogo_avulso.link_pre_sumula = link_raw or None
+
+            if wo_tipo in ['TIME_A', 'TIME_B', 'AMBOS']:
+                try:
+                    placar_a = int(placar_a_raw) if (placar_a_raw is not None and placar_a_raw != '') else (0 if wo_tipo in ['TIME_A', 'AMBOS'] else 1)
+                    placar_b = int(placar_b_raw) if (placar_b_raw is not None and placar_b_raw != '') else (1 if wo_tipo == 'TIME_A' else 0)
+                    jogo_avulso.placar_time_a = placar_a
+                    jogo_avulso.placar_time_b = placar_b
+                    jogo_avulso.wo_tipo = wo_tipo
+                    jogo_avulso.motivo_wo = motivo_wo
+                    jogo_avulso.finalizado = True
+                except ValueError:
+                    messages.error(request, "Placares inválidos para W.O.")
+            elif placar_a_raw is not None and placar_b_raw is not None and placar_a_raw != '' and placar_b_raw != '':
+                try:
+                    jogo_avulso.placar_time_a = int(placar_a_raw)
+                    jogo_avulso.placar_time_b = int(placar_b_raw)
+                    jogo_avulso.wo_tipo = ''
+                    jogo_avulso.motivo_wo = ''
+                    jogo_avulso.finalizado = True
+                except ValueError:
+                    messages.error(request, "Placares inválidos.")
+            elif (jogo_avulso.wo_tipo and wo_tipo == '') or (jogo_avulso.finalizado and placar_a_raw == '' and placar_b_raw == '' and wo_tipo == ''):
+                jogo_avulso.placar_time_a = None
+                jogo_avulso.placar_time_b = None
+                jogo_avulso.wo_tipo = ''
+                jogo_avulso.motivo_wo = ''
+                jogo_avulso.finalizado = False
+
+            import datetime
+            if data_raw:
+                try:
+                    jogo_avulso.data_jogo = datetime.datetime.strptime(data_raw, '%Y-%m-%d').date()
+                except ValueError:
+                    pass
+
+            if horario_raw:
+                try:
+                    jogo_avulso.horario_jogo = datetime.datetime.strptime(horario_raw, '%H:%M').time()
+                except ValueError:
+                    pass
+
+            jogo_avulso.save()
+            messages.success(request, "Dados da partida salvos com sucesso!")
+            if jogo_avulso.modalidade and hasattr(jogo_avulso.modalidade, 'chaveamento'):
+                return redirect('chaveamento_admin_detail', pk=jogo_avulso.modalidade.pk)
+            return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
+
         placar_a_raw = request.POST.get('placar_a')
         placar_b_raw = request.POST.get('placar_b')
         wo_tipo = request.POST.get('wo_tipo', '').strip()
@@ -2766,7 +2859,7 @@ def salvar_resultado_partida_view(request, pk):
             else:
                 registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_wo='', link_pre_sumula=partida.link_pre_sumula, tipo_classificacao=tipo_classificacao)
                 updated_anything = True
-        elif (partida.wo_tipo and wo_tipo == '') or (partida.finalizada and placar_a_raw == '' and placar_b_raw == '' and wo_tipo == '' and tipo_classificacao == 'AUTOMATICO'):
+        elif (partida.wo_tipo and wo_tipo == '') or (partida.finalizada and (placar_a_raw == '' or placar_a_raw is None) and (placar_b_raw == '' or placar_b_raw is None) and wo_tipo == ''):
             partida.wo_tipo = ''
             partida.motivo_wo = ''
             partida.tipo_classificacao = 'AUTOMATICO'
@@ -2785,7 +2878,23 @@ def salvar_resultado_partida_view(request, pk):
                 partida.jogo.save()
             if partida.grupo:
                 atualizar_tabela_grupo(partida.grupo)
-                atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
+                if partida.chaveamento:
+                    atualizar_classificados_e_preencher_mata_mata(partida.chaveamento)
+            else:
+                if partida.proxima_partida and not partida.proxima_partida.definicao_manual:
+                    if partida.posicao_proxima_partida == 'A':
+                        partida.proxima_partida.time_a = None
+                    elif partida.posicao_proxima_partida == 'B':
+                        partida.proxima_partida.time_b = None
+                    partida.proxima_partida.save()
+                    _sincronizar_jogo_partida(partida.proxima_partida, "Mata-Mata")
+                if partida.partida_perdedor_destino and not partida.partida_perdedor_destino.definicao_manual:
+                    if partida.posicao_perdedor_destino == 'A':
+                        partida.partida_perdedor_destino.time_a = None
+                    elif partida.posicao_perdedor_destino == 'B':
+                        partida.partida_perdedor_destino.time_b = None
+                    partida.partida_perdedor_destino.save()
+                    _sincronizar_jogo_partida(partida.partida_perdedor_destino, "Disputa de 3º Lugar")
             updated_anything = True
 
         import datetime
@@ -2817,8 +2926,10 @@ def salvar_resultado_partida_view(request, pk):
         if updated_anything:
             messages.success(request, "Dados da partida salvos com sucesso!")
 
-        return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
-    return redirect('chaveamento_admin_list')
+        if partida and getattr(partida, 'chaveamento', None) and getattr(partida.chaveamento, 'modalidade', None):
+            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+        return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
+    return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
 
 
 @user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
@@ -2906,11 +3017,16 @@ def remover_partida_chaveamento_view(request, pk):
     Remove uma partida específica do chaveamento.
     """
     if request.method == 'POST':
-        partida = get_object_or_404(PartidaChaveamento, pk=pk)
-        modalidade_pk = partida.chaveamento.modalidade.pk
+        partida = _obter_partida_chaveamento(pk)
+        if not partida:
+            messages.error(request, "Partida não encontrada.")
+            return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
+        modalidade_pk = partida.chaveamento.modalidade.pk if (partida.chaveamento and partida.chaveamento.modalidade) else None
         remover_partida_chaveamento(partida)
         messages.success(request, "Partida removida do chaveamento com sucesso!")
-        return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+        if modalidade_pk:
+            return redirect('chaveamento_admin_detail', pk=modalidade_pk)
+        return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
     return redirect('chaveamento_admin_list')
 
 
@@ -3094,12 +3210,17 @@ def salvar_cartao_partida_view(request, pk):
     Registra um cartão para um atleta em uma partida (suporta POST normal e AJAX).
     """
     if request.method == 'POST':
-        partida = get_object_or_404(PartidaChaveamento, pk=pk)
+        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
+        partida = _obter_partida_chaveamento(pk)
+        if not partida:
+            if is_ajax:
+                return JsonResponse({'success': False, 'error': 'Partida não encontrada.'}, status=404)
+            messages.error(request, "Partida não encontrada.")
+            return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
+
         atleta_id = request.POST.get('atleta_id')
         tipo_cartao = request.POST.get('tipo_cartao')
         observacao = request.POST.get('observacao', '').strip()
-
-        is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest' or 'application/json' in request.headers.get('Accept', '')
 
         if atleta_id and tipo_cartao:
             atleta = get_object_or_404(Atleta, pk=atleta_id)
@@ -3129,8 +3250,10 @@ def salvar_cartao_partida_view(request, pk):
                 return JsonResponse({'success': False, 'error': 'Selecione o atleta e o tipo de cartão.'}, status=400)
             messages.error(request, "Selecione o atleta e o tipo de cartão.")
 
-        return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
-    return redirect('chaveamento_admin_list')
+        if partida and getattr(partida, 'chaveamento', None) and getattr(partida.chaveamento, 'modalidade', None):
+            return redirect('chaveamento_admin_detail', pk=partida.chaveamento.modalidade.pk)
+        return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
+    return redirect(request.META.get('HTTP_REFERER') or 'chaveamento_admin_list')
 
 
 @user_passes_test(lambda u: u.is_authenticated and (getattr(u, 'is_comissao', False) or u.is_staff or u.is_superuser))
