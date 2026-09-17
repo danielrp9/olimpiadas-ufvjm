@@ -2531,6 +2531,53 @@ class PresumulaDelegacoesEFiltrosTestCase(TestCase):
         self.assertNotIn(self.del_indeferida, qs)
         self.assertNotIn(self.sub_delegado, qs)
 
+class ChaveamentoShareNoneTeamTestCase(TestCase):
+    def setUp(self):
+        from core.models import Modalidade, ChaveamentoModalidade, GrupoChaveamento, PartidaChaveamento
+        self.modalidade = Modalidade.objects.create(
+            nome='Futsal Teste',
+            genero='MASCULINO'
+        )
+        self.chaveamento = ChaveamentoModalidade.objects.create(
+            modalidade=self.modalidade
+        )
+        self.grupo = GrupoChaveamento.objects.create(
+            chaveamento=self.chaveamento,
+            nome='Grupo A',
+            fase_numero=1
+        )
+        self.partida = PartidaChaveamento.objects.create(
+            chaveamento=self.chaveamento,
+            grupo=self.grupo,
+            fase='GRUPO_LOCAL',
+            time_a=None,
+            time_b=None
+        )
 
+    def test_display_properties_with_none_teams(self):
+        self.assertEqual(self.partida.time_a_display, "A definir")
+        self.assertEqual(self.partida.time_b_display, "A definir")
+        self.assertIn("A definir vs A definir", str(self.partida))
 
+    def test_chaveamento_share_view_with_none_teams_returns_200(self):
+        from django.urls import reverse
+        url = reverse('chaveamento_share', kwargs={'pk': self.modalidade.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "A definir")
+
+    def test_chaveamento_public_detail_with_none_teams_returns_200(self):
+        from django.urls import reverse
+        user = User.objects.create_user(
+            email='public_user@example.com',
+            nome_completo='Usuario Publico',
+            role='REPRESENTANTE',
+            cpf='111.444.777-35',
+            nome_delegacao='Delegação Teste'
+        )
+        self.client.force_login(user)
+        url = reverse('chaveamento_public_detail', kwargs={'pk': self.modalidade.pk})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "A definir")
 

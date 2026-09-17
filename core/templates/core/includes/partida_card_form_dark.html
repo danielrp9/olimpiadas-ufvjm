@@ -5,7 +5,7 @@
         <div class="flex items-center justify-between gap-2">
             <div class="flex-1 font-semibold text-white text-right truncate min-w-0">
                 {% if partida.time_a %}
-                    {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}
+                    {{ partida.time_a_display }}
                 {% else %}
                     <span class="text-slate-300 font-normal italic">A definir</span>
                 {% endif %}
@@ -19,7 +19,7 @@
 
             <div class="flex-1 font-semibold text-white text-left truncate min-w-0">
                 {% if partida.time_b %}
-                    {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}
+                    {{ partida.time_b_display }}
                 {% else %}
                     <span class="text-slate-300 font-normal italic">A definir</span>
                 {% endif %}

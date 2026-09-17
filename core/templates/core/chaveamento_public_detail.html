@@ -153,7 +153,11 @@
                             <!-- Linha 1 no Mobile / Esquerda no Desktop: Time A vs Time B -->
                             <div class="flex items-center justify-between gap-2 flex-1 w-full sm:w-auto">
                                 <div class="flex-1 font-semibold text-slate-800 text-right truncate min-w-0 {% if p.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
-                                    {{ p.time_a.nome_delegacao|default:p.time_a.email }}
+                                    {% if p.time_a %}
+                                        {{ p.time_a_display }}
+                                    {% else %}
+                                        <span class="text-slate-400 font-normal italic">A definir</span>
+                                    {% endif %}
                                 </div>
 
                                 <div class="px-2.5 py-1 bg-white rounded-xl border border-slate-200 font-extrabold text-slate-900 shadow-inner flex-shrink-0 text-center">
@@ -172,7 +176,11 @@
                                 </div>
 
                                 <div class="flex-1 font-semibold text-slate-800 text-left truncate min-w-0 {% if p.time_b == delegacao %}text-blue-700 font-extrabold{% endif %}">
-                                    {{ p.time_b.nome_delegacao|default:p.time_b.email }}
+                                    {% if p.time_b %}
+                                        {{ p.time_b_display }}
+                                    {% else %}
+                                        <span class="text-slate-400 font-normal italic">A definir</span>
+                                    {% endif %}
                                 </div>
                             </div>
 

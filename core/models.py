@@ -237,33 +237,42 @@ class Jogo(models.Model):
     def time_a_display(self):
         from django.core.exceptions import ObjectDoesNotExist
         try:
-            return self.time_a.nome_delegacao or self.time_a.email
-        except ObjectDoesNotExist:
+            if not self.time_a:
+                return "A definir"
+            return self.time_a.nome_delegacao or self.time_a.nome_completo or self.time_a.email or "A definir"
+        except (ObjectDoesNotExist, AttributeError):
             return "Time Inexistente"
 
     @property
     def time_a_responsavel(self):
         from django.core.exceptions import ObjectDoesNotExist
         try:
-            return self.time_a.nome_completo
-        except ObjectDoesNotExist:
+            if not self.time_a:
+                return "Inexistente"
+            return self.time_a.nome_completo or self.time_a.email or "Inexistente"
+        except (ObjectDoesNotExist, AttributeError):
             return "Inexistente"
 
     @property
     def time_b_display(self):
         from django.core.exceptions import ObjectDoesNotExist
         try:
-            return self.time_b.nome_delegacao or self.time_b.email
-        except ObjectDoesNotExist:
+            if not self.time_b:
+                return "A definir"
+            return self.time_b.nome_delegacao or self.time_b.nome_completo or self.time_b.email or "A definir"
+        except (ObjectDoesNotExist, AttributeError):
             return "Time Inexistente"
 
     @property
     def time_b_responsavel(self):
         from django.core.exceptions import ObjectDoesNotExist
         try:
-            return self.time_b.nome_completo
-        except ObjectDoesNotExist:
+            if not self.time_b:
+                return "Inexistente"
+            return self.time_b.nome_completo or self.time_b.email or "Inexistente"
+        except (ObjectDoesNotExist, AttributeError):
             return "Inexistente"
+
 
     @property
     def is_jogo_rede(self):
@@ -972,10 +981,49 @@ class PartidaChaveamento(models.Model):
         ids = self._obter_equipe_ids(self.time_b)
         return self.jogo.presumulas.filter(representante_id__in=ids).first()
 
+    @property
+    def time_a_display(self):
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            if not self.time_a:
+                return "A definir"
+            return self.time_a.nome_delegacao or self.time_a.nome_completo or self.time_a.email or "A definir"
+        except (ObjectDoesNotExist, AttributeError):
+            return "A definir"
+
+    @property
+    def time_a_responsavel(self):
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            if not self.time_a:
+                return "Inexistente"
+            return self.time_a.nome_completo or self.time_a.email or "Inexistente"
+        except (ObjectDoesNotExist, AttributeError):
+            return "Inexistente"
+
+    @property
+    def time_b_display(self):
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            if not self.time_b:
+                return "A definir"
+            return self.time_b.nome_delegacao or self.time_b.nome_completo or self.time_b.email or "A definir"
+        except (ObjectDoesNotExist, AttributeError):
+            return "A definir"
+
+    @property
+    def time_b_responsavel(self):
+        from django.core.exceptions import ObjectDoesNotExist
+        try:
+            if not self.time_b:
+                return "Inexistente"
+            return self.time_b.nome_completo or self.time_b.email or "Inexistente"
+        except (ObjectDoesNotExist, AttributeError):
+            return "Inexistente"
+
     def __str__(self):
-        ta = self.time_a.nome_delegacao if self.time_a else "A definir"
-        tb = self.time_b.nome_delegacao if self.time_b else "A definir"
-        return f"[{self.get_fase_display()}] {ta} vs {tb}"
+        return f"[{self.get_fase_display()}] {self.time_a_display} vs {self.time_b_display}"
+
 
 
 class RegistroDisciplinarAtleta(models.Model):

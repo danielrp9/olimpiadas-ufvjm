@@ -8,7 +8,7 @@
                     <i data-lucide="id-card"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base leading-tight">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</h3>
+                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base leading-tight">{{ partida.time_a_display }}</h3>
                     <span class="text-[10px] text-slate-400 font-semibold block">Cartões nesta partida</span>
                 </div>
             </div>
@@ -55,7 +55,7 @@
                     <i data-lucide="id-card"></i>
                 </div>
                 <div>
-                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base leading-tight">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</h3>
+                    <h3 class="font-extrabold text-slate-800 text-sm sm:text-base leading-tight">{{ partida.time_b_display }}</h3>
                     <span class="text-[10px] text-slate-400 font-semibold block">Cartões nesta partida</span>
                 </div>
             </div>

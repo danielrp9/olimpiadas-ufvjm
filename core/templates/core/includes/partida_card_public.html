@@ -3,7 +3,7 @@
         <div class="flex-1 font-bold text-slate-800 text-right truncate min-w-0 flex items-center justify-end gap-1.5 {% if partida.time_a == delegacao %}text-blue-700 font-extrabold{% endif %}">
             {% if partida.time_a %}
                 {% if partida.cartoes_time_a_amarelos > 0 or partida.cartoes_time_a_vermelhos > 0 %}
-                    <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'a')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}">
+                    <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'a')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_a_display }}">
                         {% if partida.cartoes_time_a_amarelos > 0 %}<span>🟨 {{ partida.cartoes_time_a_amarelos }}</span>{% endif %}
                         {% if partida.cartoes_time_a_vermelhos > 0 %}<span>🟥 {{ partida.cartoes_time_a_vermelhos }}</span>{% endif %}
                     </button>
@@ -11,7 +11,7 @@
                 {% if partida.is_wo_time_a or partida.is_wo_duplo %}
                     <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
                 {% endif %}
-                <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_a or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+                <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_a or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_a_display }}</span>
                 {% if partida.tipo_classificacao == 'AMBOS' %}
                     <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0 flex items-center gap-0.5" title="Classificado (Avanço Duplo)"><i data-lucide="check-circle" class="w-2.5 h-2.5 text-emerald-600"></i> Classificado</span>
                 {% elif partida.vencedor == partida.time_a and partida.tipo_classificacao != 'NENHUM' %}
@@ -54,14 +54,14 @@
                 {% if partida.is_wo_time_b or partida.is_wo_duplo %}
                     <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-red-100 text-red-700 border border-red-200 shrink-0" title="W.O. Registrado">W.O.</span>
                 {% endif %}
-                <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_b or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+                <span class="text-slate-900 font-extrabold tracking-tight truncate {% if partida.is_wo_time_b or partida.is_wo_duplo %}text-red-700/80 line-through{% endif %}">{{ partida.time_b_display }}</span>
                 {% if partida.tipo_classificacao == 'AMBOS' %}
                     <span class="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 shrink-0 flex items-center gap-0.5" title="Classificado (Avanço Duplo)"><i data-lucide="check-circle" class="w-2.5 h-2.5 text-emerald-600"></i> Classificado</span>
                 {% elif partida.vencedor == partida.time_b and partida.tipo_classificacao != 'NENHUM' %}
                     <i data-lucide="crown" class="text-amber-500 text-xs shrink-0" title="Vencedor"></i>
                 {% endif %}
                 {% if partida.cartoes_time_b_amarelos > 0 or partida.cartoes_time_b_vermelhos > 0 %}
-                    <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}">
+                    <button type="button" onclick="abrirModalCartoesEquipe({{ partida.pk }}, 'b')" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-black bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition cursor-pointer shrink-0" title="Clique para ver os cartões de {{ partida.time_b_display }}">
                         {% if partida.cartoes_time_b_amarelos > 0 %}<span>🟨 {{ partida.cartoes_time_b_amarelos }}</span>{% endif %}
                         {% if partida.cartoes_time_b_vermelhos > 0 %}<span>🟥 {{ partida.cartoes_time_b_vermelhos }}</span>{% endif %}
                     </button>
@@ -86,12 +86,12 @@
     {% elif partida.tipo_classificacao == 'TIME_A' and partida.finalizada %}
         <div class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-center gap-1.5 text-[11px] text-indigo-800 font-bold">
             <i data-lucide="user-check" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
-            <span>Classificado: {{ partida.time_a.nome_delegacao|default:partida.time_a.email }}</span>
+            <span>Classificado: {{ partida.time_a_display }}</span>
         </div>
     {% elif partida.tipo_classificacao == 'TIME_B' and partida.finalizada %}
         <div class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-center gap-1.5 text-[11px] text-indigo-800 font-bold">
             <i data-lucide="user-check" class="w-3.5 h-3.5 text-indigo-600 shrink-0"></i>
-            <span>Classificado: {{ partida.time_b.nome_delegacao|default:partida.time_b.email }}</span>
+            <span>Classificado: {{ partida.time_b_display }}</span>
         </div>
     {% endif %}
 
@@ -104,9 +104,9 @@
                     {% if partida.wo_tipo == 'AMBOS' %}
                         Duplo W.O. (Ambos os times não compareceram)
                     {% elif partida.wo_tipo == 'TIME_A' %}
-                        W.O. de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }} (Vitória de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }})
+                        W.O. de {{ partida.time_a_display }} (Vitória de {{ partida.time_b_display }})
                     {% elif partida.wo_tipo == 'TIME_B' %}
-                        W.O. de {{ partida.time_b.nome_delegacao|default:partida.time_b.email }} (Vitória de {{ partida.time_a.nome_delegacao|default:partida.time_a.email }})
+                        W.O. de {{ partida.time_b_display }} (Vitória de {{ partida.time_a_display }})
                     {% endif %}
                 </span>
                 {% if partida.motivo_wo %}

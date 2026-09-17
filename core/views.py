@@ -407,15 +407,8 @@ def finalizar_jogo(request, pk):
                 partida.link_pre_sumula = jogo.link_pre_sumula
             partida.save()
         
-        from django.core.exceptions import ObjectDoesNotExist
-        try:
-            nome_a = jogo.time_a.nome_delegacao or jogo.time_a.email
-        except ObjectDoesNotExist:
-            nome_a = "Time Inexistente"
-        try:
-            nome_b = jogo.time_b.nome_delegacao or jogo.time_b.email
-        except ObjectDoesNotExist:
-            nome_b = "Time Inexistente"
+        nome_a = jogo.time_a_display
+        nome_b = jogo.time_b_display
             
         messages.success(request, f"O jogo {jogo.modalidade.nome} ({nome_a} vs {nome_b}) foi encerrado com sucesso!")
     return redirect('presumula_list')
