@@ -20,6 +20,18 @@ def _is_queimada(modalidade):
     return 'queimada' in nome or 'dodgeball' in nome
 
 
+def _is_futsal(modalidade):
+    if not modalidade:
+        return False
+    if isinstance(modalidade, str):
+        nome = modalidade
+    else:
+        nome = getattr(modalidade, 'nome', '') or ''
+    import unicodedata
+    nome_norm = unicodedata.normalize('NFKD', str(nome)).encode('ASCII', 'ignore').decode('ASCII').lower()
+    return 'futsal' in nome_norm
+
+
 def _is_formato_3_grupos_melhor_segundo(modalidade):
     if not modalidade:
         return False
@@ -1002,6 +1014,259 @@ def registrar_resultado_partida(partida, placar_a, placar_b, wo_tipo='', motivo_
     return partida
 
 
+def _desempatar_futsal(tied_teams, grupo, partidas_finalizadas, penalidades_map):
+    """
+    Critérios de desempate regulamentares exclusivos do Futsal:
+    1. Confronto direto
+    2. Maior saldo de gol
+    3. Maior número de gols feitos (gols pró)
+    4. Menor número de gols sofridos (gols contra)
+    (com salvaguarda disciplinar por menor número de cartões e estabilidade por ID)
+    """
+    if len(tied_teams) <= 1:
+        return list(tied_teams)
+
+    team_ids = {t.delegacao_id for t in tied_teams}
+
+    # Critério 1: Confronto direto
+    if len(tied_teams) == 2:
+        t1, t2 = tied_teams[0], tied_teams[1]
+        pts1, pts2 = 0, 0
+        saldo1, saldo2 = 0, 0
+        pro1, pro2 = 0, 0
+        tem_jogo = False
+
+        for p in partidas_finalizadas:
+            if not p.time_a_id or not p.time_b_id:
+                continue
+            if {p.time_a_id, p.time_b_id} == {t1.delegacao_id, t2.delegacao_id}:
+                tem_jogo = True
+                ga = p.placar_a if p.placar_a is not None else 0
+                gb = p.placar_b if p.placar_b is not None else 0
+                if p.time_a_id == t1.delegacao_id:
+                    g1, g2 = ga, gb
+                else:
+                    g1, g2 = gb, ga
+
+                if p.wo_tipo == 'AMBOS':
+                    pass
+                elif p.wo_tipo == 'TIME_A':
+                    if p.time_a_id == t1.delegacao_id:
+                        pts2 += 3
+                        g2 = p.placar_b if p.placar_b is not None else 1
+                        g1 = p.placar_a if p.placar_a is not None else 0
+                    else:
+                        pts1 += 3
+                        g1 = p.placar_a if p.placar_a is not None else 1
+                        g2 = p.placar_b if p.placar_b is not None else 0
+                    pro1 += g1
+                    pro2 += g2
+                    saldo1 += (g1 - g2)
+                    saldo2 += (g2 - g1)
+                elif p.wo_tipo == 'TIME_B':
+                    if p.time_b_id == t1.delegacao_id:
+                        pts2 += 3
+                        g2 = p.placar_b if p.placar_b is not None else 1
+                        g1 = p.placar_a if p.placar_a is not None else 0
+                    else:
+                        pts1 += 3
+                        g1 = p.placar_a if p.placar_a is not None else 1
+                        g2 = p.placar_b if p.placar_b is not None else 0
+                    pro1 += g1
+                    pro2 += g2
+                    saldo1 += (g1 - g2)
+                    saldo2 += (g2 - g1)
+                elif p.placar_a is not None and p.placar_b is not None:
+                    pro1 += g1
+                    pro2 += g2
+                    saldo1 += (g1 - g2)
+                    saldo2 += (g2 - g1)
+                    if g1 > g2:
+                        pts1 += 3
+                    elif g2 > g1:
+                        pts2 += 3
+                    else:
+                        pts1 += 1
+                        pts2 += 1
+
+        if tem_jogo:
+            if pts1 != pts2:
+                return [t1, t2] if pts1 > pts2 else [t2, t1]
+            if saldo1 != saldo2:
+                return [t1, t2] if saldo1 > saldo2 else [t2, t1]
+            if pro1 != pro2:
+                return [t1, t2] if pro1 > pro2 else [t2, t1]
+
+    elif len(tied_teams) > 2:
+        jogos_entre_pares = set()
+        for p in partidas_finalizadas:
+            if not p.time_a_id or not p.time_b_id:
+                continue
+            if p.time_a_id in team_ids and p.time_b_id in team_ids:
+                pair = (min(p.time_a_id, p.time_b_id), max(p.time_a_id, p.time_b_id))
+                jogos_entre_pares.add(pair)
+
+        num_pares_necessarios = len(tied_teams) * (len(tied_teams) - 1) // 2
+        todos_jogaram = len(jogos_entre_pares) >= num_pares_necessarios
+
+        if todos_jogaram:
+            h2h_pts = {t.id: 0 for t in tied_teams}
+            h2h_saldo = {t.id: 0 for t in tied_teams}
+            h2h_pro = {t.id: 0 for t in tied_teams}
+
+            for p in partidas_finalizadas:
+                if not p.time_a_id or not p.time_b_id:
+                    continue
+                if p.time_a_id in team_ids and p.time_b_id in team_ids:
+                    ga = p.placar_a if p.placar_a is not None else 0
+                    gb = p.placar_b if p.placar_b is not None else 0
+                    id_a = p.time_a_id
+                    id_b = p.time_b_id
+                    tg_a = next(t for t in tied_teams if t.delegacao_id == id_a)
+                    tg_b = next(t for t in tied_teams if t.delegacao_id == id_b)
+
+                    if p.wo_tipo == 'AMBOS':
+                        pass
+                    elif p.wo_tipo == 'TIME_A':
+                        h2h_pts[tg_b.id] += 3
+                        ga = p.placar_a if p.placar_a is not None else 0
+                        gb = p.placar_b if p.placar_b is not None else 1
+                        h2h_pro[tg_a.id] += ga
+                        h2h_pro[tg_b.id] += gb
+                        h2h_saldo[tg_a.id] += (ga - gb)
+                        h2h_saldo[tg_b.id] += (gb - ga)
+                    elif p.wo_tipo == 'TIME_B':
+                        h2h_pts[tg_a.id] += 3
+                        ga = p.placar_a if p.placar_a is not None else 1
+                        gb = p.placar_b if p.placar_b is not None else 0
+                        h2h_pro[tg_a.id] += ga
+                        h2h_pro[tg_b.id] += gb
+                        h2h_saldo[tg_a.id] += (ga - gb)
+                        h2h_saldo[tg_b.id] += (gb - ga)
+                    elif p.placar_a is not None and p.placar_b is not None:
+                        h2h_pro[tg_a.id] += ga
+                        h2h_pro[tg_b.id] += gb
+                        h2h_saldo[tg_a.id] += (ga - gb)
+                        h2h_saldo[tg_b.id] += (gb - ga)
+                        if ga > gb:
+                            h2h_pts[tg_a.id] += 3
+                        elif gb > ga:
+                            h2h_pts[tg_b.id] += 3
+                        else:
+                            h2h_pts[tg_a.id] += 1
+                            h2h_pts[tg_b.id] += 1
+
+            # 1.1 Pontos no confronto direto
+            if len(set(h2h_pts.values())) > 1:
+                from collections import defaultdict
+                buckets = defaultdict(list)
+                for t in tied_teams:
+                    buckets[h2h_pts[t.id]].append(t)
+                resultado = []
+                for val in sorted(buckets.keys(), reverse=True):
+                    resultado.extend(_desempatar_futsal(buckets[val], grupo, partidas_finalizadas, penalidades_map))
+                return resultado
+
+            # 1.2 Saldo de gols no confronto direto
+            if len(set(h2h_saldo.values())) > 1:
+                from collections import defaultdict
+                buckets = defaultdict(list)
+                for t in tied_teams:
+                    buckets[h2h_saldo[t.id]].append(t)
+                resultado = []
+                for val in sorted(buckets.keys(), reverse=True):
+                    resultado.extend(_desempatar_futsal(buckets[val], grupo, partidas_finalizadas, penalidades_map))
+                return resultado
+
+            # 1.3 Gols pró no confronto direto
+            if len(set(h2h_pro.values())) > 1:
+                from collections import defaultdict
+                buckets = defaultdict(list)
+                for t in tied_teams:
+                    buckets[h2h_pro[t.id]].append(t)
+                resultado = []
+                for val in sorted(buckets.keys(), reverse=True):
+                    resultado.extend(_desempatar_futsal(buckets[val], grupo, partidas_finalizadas, penalidades_map))
+                return resultado
+
+    # Critério 2: Maior saldo de gol
+    if len(set(t.saldo_gols for t in tied_teams)) > 1:
+        from collections import defaultdict
+        buckets = defaultdict(list)
+        for t in tied_teams:
+            buckets[t.saldo_gols].append(t)
+        resultado = []
+        for val in sorted(buckets.keys(), reverse=True):
+            resultado.extend(_desempatar_futsal(buckets[val], grupo, partidas_finalizadas, penalidades_map))
+        return resultado
+
+    # Critério 3: Maior número de gols feitos (gols pró)
+    if len(set(t.gols_pro for t in tied_teams)) > 1:
+        from collections import defaultdict
+        buckets = defaultdict(list)
+        for t in tied_teams:
+            buckets[t.gols_pro].append(t)
+        resultado = []
+        for val in sorted(buckets.keys(), reverse=True):
+            resultado.extend(_desempatar_futsal(buckets[val], grupo, partidas_finalizadas, penalidades_map))
+        return resultado
+
+    # Critério 4: Menor número de gols sofridos (gols contra)
+    if len(set(t.gols_contra for t in tied_teams)) > 1:
+        from collections import defaultdict
+        buckets = defaultdict(list)
+        for t in tied_teams:
+            buckets[t.gols_contra].append(t)
+        resultado = []
+        for val in sorted(buckets.keys()):  # Menor número primeiro
+            resultado.extend(_desempatar_futsal(buckets[val], grupo, partidas_finalizadas, penalidades_map))
+        return resultado
+
+    # Salvaguarda: Menor número de penalidades (cartões), seguido de ID estável
+    def _criterio_salvaguarda(tg):
+        return (penalidades_map.get(tg.id, 0), tg.id)
+
+    return sorted(tied_teams, key=_criterio_salvaguarda)
+
+
+def _ordenar_times_grupo_futsal(grupo, times, mod):
+    if not times or len(times) <= 1:
+        return list(times)
+
+    penalidades_map = {}
+    if mod:
+        from core.models import CartaoPartida
+        for tg in times:
+            penalidades_map[tg.id] = CartaoPartida.objects.filter(
+                modalidade=mod,
+                delegacao=tg.delegacao,
+                partida__grupo=grupo
+            ).count()
+
+    partidas_finalizadas = list(grupo.partidas.filter(finalizada=True))
+
+    # 0. Prioridade absoluta para quem NÃO tem W.O.
+    times_sem_wo = [tg for tg in times if getattr(tg, 'quantidade_wo', 0) == 0]
+    times_com_wo = [tg for tg in times if getattr(tg, 'quantidade_wo', 0) > 0]
+
+    def _ordenar_bloco(bloco):
+        if not bloco or len(bloco) <= 1:
+            return list(bloco)
+
+        from collections import defaultdict
+        por_pontos = defaultdict(list)
+        for tg in bloco:
+            por_pontos[tg.pontos].append(tg)
+
+        ordenados = []
+        for pts in sorted(por_pontos.keys(), reverse=True):
+            grupo_empate = por_pontos[pts]
+            ordenados.extend(_desempatar_futsal(grupo_empate, grupo, partidas_finalizadas, penalidades_map))
+        return ordenados
+
+    return _ordenar_bloco(times_sem_wo) + _ordenar_bloco(times_com_wo)
+
+
 def ordenar_times_grupo(grupo):
     """
     Retorna a lista de times do grupo devidamente ordenada pelos critérios de classificação:
@@ -1015,10 +1280,20 @@ def ordenar_times_grupo(grupo):
     6. Maior número de pontos pró nos sets (-pontos_pro)
     7. Menor número de penalidades disciplinares (cartões)
     8. ID estável
+
+    Exceção Regulamentar (Futsal):
+    Para o Futsal, os critérios de desempate em caso de igualdade de pontos são:
+    1. Confronto direto
+    2. Maior saldo de gol
+    3. Maior número de gols feitos
+    4. Menor número de gols sofridos
     """
     times = list(grupo.times.all())
     mod = getattr(grupo.chaveamento, 'modalidade', None) if hasattr(grupo, 'chaveamento') else None
     is_rede = getattr(mod, 'is_jogo_rede', False) if mod else False
+
+    if _is_futsal(mod):
+        return _ordenar_times_grupo_futsal(grupo, times, mod)
 
     def sort_key(tg):
         st = tg.estatisticas_sets

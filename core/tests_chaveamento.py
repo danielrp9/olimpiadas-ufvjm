@@ -1656,6 +1656,176 @@ class ChaveamentoModuleTestCase(TestCase):
         self.assertEqual(ordenados[1].delegacao, team_b)
         self.assertEqual(ordenados[2].delegacao, team_c)
 
+    def test_desempate_futsal_confronto_direto_prioridade(self):
+        """
+        Testa o critério de desempate exclusivo para Futsal:
+        1. Confronto direto tem prioridade sobre saldo de gols quando dois times empatam em pontos.
+        Team A venceu Team B (3x2), mas Team B tem saldo de gols muito maior (+8 vs +2).
+        Em Futsal, Team A deve ficar em 1º devido ao confronto direto.
+        Em modalidades que não sejam Futsal (ex: Handebol), Team B ficaria em 1º pelo saldo de gols.
+        """
+        from core.chaveamento_services import ordenar_times_grupo, registrar_resultado_partida
+
+        # 1. Configuração para Futsal
+        mod_futsal = Modalidade.objects.create(nome="Futsal Masculino", genero="M")
+        ch_futsal = ChaveamentoModalidade.objects.create(modalidade=mod_futsal)
+        grupo_futsal = GrupoChaveamento.objects.create(chaveamento=ch_futsal, nome="Grupo Futsal", tipo='GERAL')
+
+        t_a = self._create_delegation("fa@ufvjm.edu.br", "Futsal Time A", self.campus_dia)
+        t_b = self._create_delegation("fb@ufvjm.edu.br", "Futsal Time B", self.campus_dia)
+        t_c = self._create_delegation("fc@ufvjm.edu.br", "Futsal Time C", self.campus_dia)
+        t_d = self._create_delegation("fd@ufvjm.edu.br", "Futsal Time D", self.campus_dia)
+
+        for t in [t_a, t_b, t_c, t_d]:
+            TimeGrupo.objects.create(grupo=grupo_futsal, delegacao=t)
+
+        # Partidas Futsal:
+        # A vence B por 3x2 (confronto direto)
+        p1 = PartidaChaveamento.objects.create(chaveamento=ch_futsal, grupo=grupo_futsal, fase='GRUPOS', time_a=t_a, time_b=t_b)
+        registrar_resultado_partida(p1, placar_a=3, placar_b=2)
+
+        # A vence C por 2x0
+        p2 = PartidaChaveamento.objects.create(chaveamento=ch_futsal, grupo=grupo_futsal, fase='GRUPOS', time_a=t_a, time_b=t_c)
+        registrar_resultado_partida(p2, placar_a=2, placar_b=0)
+
+        # A perde para D por 0x1 (A termina com 6 pts, saldo +2: 5 pró, 3 contra)
+        p3 = PartidaChaveamento.objects.create(chaveamento=ch_futsal, grupo=grupo_futsal, fase='GRUPOS', time_a=t_a, time_b=t_d)
+        registrar_resultado_partida(p3, placar_a=0, placar_b=1)
+
+        # B vence C por 5x0
+        p4 = PartidaChaveamento.objects.create(chaveamento=ch_futsal, grupo=grupo_futsal, fase='GRUPOS', time_a=t_b, time_b=t_c)
+        registrar_resultado_partida(p4, placar_a=5, placar_b=0)
+
+        # B vence D por 4x0 (B termina com 6 pts, saldo +8: 11 pró, 3 contra)
+        p5 = PartidaChaveamento.objects.create(chaveamento=ch_futsal, grupo=grupo_futsal, fase='GRUPOS', time_a=t_b, time_b=t_d)
+        registrar_resultado_partida(p5, placar_a=4, placar_b=0)
+
+        # C vence D por 1x0 (C termina com 3 pts, D com 3 pts)
+        p6 = PartidaChaveamento.objects.create(chaveamento=ch_futsal, grupo=grupo_futsal, fase='GRUPOS', time_a=t_c, time_b=t_d)
+        registrar_resultado_partida(p6, placar_a=1, placar_b=0)
+
+        ord_futsal = ordenar_times_grupo(grupo_futsal)
+        # Em Futsal:
+        # Entre A e B (ambos 6 pts): A venceu B no confronto direto -> A em 1º, B em 2º (mesmo B tendo saldo +8 contra +2 de A)
+        self.assertEqual(ord_futsal[0].delegacao, t_a)
+        self.assertEqual(ord_futsal[1].delegacao, t_b)
+        # Entre C e D (ambos 3 pts): C venceu D no confronto direto -> C em 3º, D em 4º
+        self.assertEqual(ord_futsal[2].delegacao, t_c)
+        self.assertEqual(ord_futsal[3].delegacao, t_d)
+
+        # 2. Configuração IDÊNTICA para Handebol (não é Futsal):
+        # Deve manter a regra padrão (desempate por saldo de gols, sem confronto direto antes)
+        mod_handebol = Modalidade.objects.create(nome="Handebol Masculino", genero="M")
+        ch_handebol = ChaveamentoModalidade.objects.create(modalidade=mod_handebol)
+        grupo_handebol = GrupoChaveamento.objects.create(chaveamento=ch_handebol, nome="Grupo Handebol", tipo='GERAL')
+
+        for t in [t_a, t_b, t_c, t_d]:
+            TimeGrupo.objects.create(grupo=grupo_handebol, delegacao=t)
+
+        hp1 = PartidaChaveamento.objects.create(chaveamento=ch_handebol, grupo=grupo_handebol, fase='GRUPOS', time_a=t_a, time_b=t_b)
+        registrar_resultado_partida(hp1, placar_a=3, placar_b=2)
+        hp2 = PartidaChaveamento.objects.create(chaveamento=ch_handebol, grupo=grupo_handebol, fase='GRUPOS', time_a=t_a, time_b=t_c)
+        registrar_resultado_partida(hp2, placar_a=2, placar_b=0)
+        hp3 = PartidaChaveamento.objects.create(chaveamento=ch_handebol, grupo=grupo_handebol, fase='GRUPOS', time_a=t_a, time_b=t_d)
+        registrar_resultado_partida(hp3, placar_a=0, placar_b=1)
+        hp4 = PartidaChaveamento.objects.create(chaveamento=ch_handebol, grupo=grupo_handebol, fase='GRUPOS', time_a=t_b, time_b=t_c)
+        registrar_resultado_partida(hp4, placar_a=5, placar_b=0)
+        hp5 = PartidaChaveamento.objects.create(chaveamento=ch_handebol, grupo=grupo_handebol, fase='GRUPOS', time_a=t_b, time_b=t_d)
+        registrar_resultado_partida(hp5, placar_a=4, placar_b=0)
+        hp6 = PartidaChaveamento.objects.create(chaveamento=ch_handebol, grupo=grupo_handebol, fase='GRUPOS', time_a=t_c, time_b=t_d)
+        registrar_resultado_partida(hp6, placar_a=1, placar_b=0)
+
+        ord_handebol = ordenar_times_grupo(grupo_handebol)
+        # No Handebol (não-futsal): B fica em 1º pois tem maior saldo (+8 > +2)
+        self.assertEqual(ord_handebol[0].delegacao, t_b)
+        self.assertEqual(ord_handebol[1].delegacao, t_a)
+
+    def test_desempate_futsal_saldo_gols_e_gols_pro(self):
+        """
+        Testa desempate no futsal quando o confronto direto empata (ex: 2x2):
+        2. Maior saldo de gols
+        3. Maior número de gols feitos (gols pró)
+        """
+        from core.chaveamento_services import ordenar_times_grupo, registrar_resultado_partida
+
+        mod = Modalidade.objects.create(nome="Futsal Feminino", genero="F")
+        chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = GrupoChaveamento.objects.create(chaveamento=chaveamento, nome="Grupo Futsal Fem", tipo='GERAL')
+
+        t1 = self._create_delegation("ff1@ufvjm.edu.br", "Futsal Fem 1", self.campus_dia)
+        t2 = self._create_delegation("ff2@ufvjm.edu.br", "Futsal Fem 2", self.campus_dia)
+        t3 = self._create_delegation("ff3@ufvjm.edu.br", "Futsal Fem 3", self.campus_dia)
+
+        for t in [t1, t2, t3]:
+            TimeGrupo.objects.create(grupo=grupo, delegacao=t)
+
+        # Partida 1: T1 2 x 2 T2 (empate no confronto direto)
+        p1 = PartidaChaveamento.objects.create(chaveamento=chaveamento, grupo=grupo, fase='GRUPOS', time_a=t1, time_b=t2)
+        registrar_resultado_partida(p1, placar_a=2, placar_b=2)
+
+        # Partida 2: T1 5 x 1 T3 (T1 fica com 4 pts, saldo 6-3 = +3, 6 gols feitos)
+        p2 = PartidaChaveamento.objects.create(chaveamento=chaveamento, grupo=grupo, fase='GRUPOS', time_a=t1, time_b=t3)
+        registrar_resultado_partida(p2, placar_a=5, placar_b=1)
+
+        # Partida 3: T2 3 x 0 T3 (T2 fica com 4 pts, saldo 5-2 = +3, 5 gols feitos)
+        p3 = PartidaChaveamento.objects.create(chaveamento=chaveamento, grupo=grupo, fase='GRUPOS', time_a=t2, time_b=t3)
+        registrar_resultado_partida(p3, placar_a=3, placar_b=0)
+
+        # T1 e T2 empataram no confronto direto (2x2).
+        # T1 e T2 têm o mesmo saldo (+3).
+        # T1 tem mais gols feitos (6 vs 5) -> T1 em 1º, T2 em 2º!
+        ordenados = ordenar_times_grupo(grupo)
+        self.assertEqual(ordenados[0].delegacao, t1)
+        self.assertEqual(ordenados[1].delegacao, t2)
+        self.assertEqual(ordenados[2].delegacao, t3)
+
+    def test_desempate_futsal_triplice_empate_por_saldo(self):
+        """
+        Testa empate tríplice no futsal (A vence B, B vence C, C vence A):
+        Todos têm 3 pontos e 0 de saldo no confronto entre si.
+        O desempate geral ocorre pelo maior saldo de gols geral na fase.
+        """
+        from core.chaveamento_services import ordenar_times_grupo, registrar_resultado_partida
+
+        mod = Modalidade.objects.create(nome="Futsal Masculino", genero="M")
+        ch = ChaveamentoModalidade.objects.create(modalidade=mod)
+        grupo = GrupoChaveamento.objects.create(chaveamento=ch, nome="Grupo Tríplice", tipo='GERAL')
+
+        ta = self._create_delegation("f3a@ufvjm.edu.br", "Time A", self.campus_dia)
+        tb = self._create_delegation("f3b@ufvjm.edu.br", "Time B", self.campus_dia)
+        tc = self._create_delegation("f3c@ufvjm.edu.br", "Time C", self.campus_dia)
+        td = self._create_delegation("f3d@ufvjm.edu.br", "Time D", self.campus_dia)
+
+        for t in [ta, tb, tc, td]:
+            TimeGrupo.objects.create(grupo=grupo, delegacao=t)
+
+        # A vence B (2x1), B vence C (2x1), C vence A (2x1) -> ciclo perfeito entre A, B, C
+        p1 = PartidaChaveamento.objects.create(chaveamento=ch, grupo=grupo, fase='GRUPOS', time_a=ta, time_b=tb)
+        registrar_resultado_partida(p1, placar_a=2, placar_b=1)
+        p2 = PartidaChaveamento.objects.create(chaveamento=ch, grupo=grupo, fase='GRUPOS', time_a=tb, time_b=tc)
+        registrar_resultado_partida(p2, placar_a=2, placar_b=1)
+        p3 = PartidaChaveamento.objects.create(chaveamento=ch, grupo=grupo, fase='GRUPOS', time_a=tc, time_b=ta)
+        registrar_resultado_partida(p3, placar_a=2, placar_b=1)
+
+        # Todos vencem D, mas com saldos diferentes:
+        # A vence D por 6x0 (A saldo total: +6)
+        p4 = PartidaChaveamento.objects.create(chaveamento=ch, grupo=grupo, fase='GRUPOS', time_a=ta, time_b=td)
+        registrar_resultado_partida(p4, placar_a=6, placar_b=0)
+        # B vence D por 4x0 (B saldo total: +4)
+        p5 = PartidaChaveamento.objects.create(chaveamento=ch, grupo=grupo, fase='GRUPOS', time_a=tb, time_b=td)
+        registrar_resultado_partida(p5, placar_a=4, placar_b=0)
+        # C vence D por 1x0 (C saldo total: +1)
+        p6 = PartidaChaveamento.objects.create(chaveamento=ch, grupo=grupo, fase='GRUPOS', time_a=tc, time_b=td)
+        registrar_resultado_partida(p6, placar_a=1, placar_b=0)
+
+        # Todos com 6 pontos. Confronto direto entre si empatado (3 pts cada, saldo 0 cada, 3 gols pró cada).
+        # Desempate pelo maior saldo de gols: A (+6) > B (+4) > C (+1).
+        ordenados = ordenar_times_grupo(grupo)
+        self.assertEqual(ordenados[0].delegacao, ta)
+        self.assertEqual(ordenados[1].delegacao, tb)
+        self.assertEqual(ordenados[2].delegacao, tc)
+        self.assertEqual(ordenados[3].delegacao, td)
+
     def test_salvar_resultado_partida_com_link_pre_sumula(self):
         """Testa o salvamento e sincronização do link da pré-súmula via salvar_resultado_partida_view."""
         mod = Modalidade.objects.create(nome="Vôlei de Praia Masculino", genero="M")
