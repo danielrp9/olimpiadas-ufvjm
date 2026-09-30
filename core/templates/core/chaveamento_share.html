@@ -64,11 +64,17 @@
 
             <!-- Botões de Ação da Tela (Ícones sutis no mobile, texto no desktop) -->
             <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 no-print">
+                <a href="{% url 'chaveamento_share_podium' %}?mod={{ modalidade.id }}&voltar={{ request.path }}" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-95 text-slate-950 font-black text-xs rounded-xl sm:rounded-2xl shadow-md transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0 border border-amber-300/40" title="Ver Pódio e Campeões">
+                    <i data-lucide="trophy" class="text-xs text-slate-950"></i>
+                    <span class="hidden sm:inline">Pódio & Campeões</span>
+                    <span class="sm:hidden">Pódio</span>
+                </a>
                 <a href="{% url 'chaveamento_share_jogos_lista' %}" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Ver programação de jogos por dia">
                     <i data-lucide="list" class="text-xs text-blue-400"></i>
                     <span class="hidden sm:inline">Jogos em Lista</span>
                     <span class="sm:hidden">Jogos</span>
                 </a>
+
                 <button type="button" onclick="abrirModalCompartilhamento(window.location.href, '{{ modalidade.nome }} - Olimpíadas UFVJM')" class="h-8 sm:h-10 px-2.5 sm:px-4 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs rounded-xl sm:rounded-2xl shadow-xs transition flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer whitespace-nowrap shrink-0" title="Compartilhar">
                     <i data-lucide="share-2" class="text-xs"></i>
                     <span class="hidden sm:inline">Compartilhar</span>
@@ -432,4 +438,5 @@
 
     {% include "core/includes/modal_compartilhar.html" %}
 </body>
+
 </html>

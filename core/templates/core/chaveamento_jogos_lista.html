@@ -35,7 +35,13 @@
         </div>
 
         <div class="relative z-10 flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0">
+            <a href="{% url 'chaveamento_podium' %}?voltar={{ request.path }}" class="px-2.5 sm:px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-2xl transition shadow-md active:scale-95 flex items-center gap-2 cursor-pointer border border-amber-300/40" title="Ver Pódio">
+                <i data-lucide="trophy" class="w-4 h-4 text-slate-950"></i>
+                <span class="hidden sm:inline">Pódio</span>
+            </a>
+
             {% if user.is_comissao or user.is_staff %}
+
             <a href="{% url 'exportador:exportar_jogos_excel' %}" class="px-2.5 sm:px-3.5 py-2 bg-white/5 hover:bg-white/10 text-white text-xs font-extrabold rounded-2xl transition backdrop-blur-sm active:scale-95 flex items-center gap-2 border border-white/10 shadow-inner cursor-pointer" title="Extrair Planilha Excel de Jogos (.xlsx)">
                 <i data-lucide="file-spreadsheet" class="text-emerald-400 text-sm"></i>
                 <span class="hidden sm:inline">Extrair Excel</span>
@@ -66,12 +72,17 @@
             <p class="text-xs text-slate-500 mt-0.5">Confira datas, horários, locais e confrontos de todas as modalidades da competição.</p>
         </div>
         <div class="flex items-center gap-2 shrink-0">
+            <a href="{% if is_public %}{% url 'chaveamento_share_podium' %}{% else %}{% url 'chaveamento_podium' %}{% endif %}?voltar={{ request.path }}" class="px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl transition shadow-md active:scale-95 flex items-center gap-2 cursor-pointer border border-amber-300/40" title="Ver Pódio">
+                <i data-lucide="trophy" class="w-4 h-4 text-slate-950"></i>
+                <span class="hidden sm:inline">Pódio</span>
+            </a>
             <button type="button" onclick="if(typeof abrirModalCompartilhamento === 'function'){ abrirModalCompartilhamento(window.location.origin + '{% url 'chaveamento_share_jogos_lista' %}', 'Programação de Jogos - UFVJM'); } else { copiarLinkPublico(); }" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-bold rounded-xl transition shadow-sm flex items-center gap-2 cursor-pointer">
                 <i data-lucide="share-2" class="text-xs"></i> Compartilhar Link
             </button>
         </div>
     </div>
     {% endif %}
+
 
     <!-- Barra de Filtros e Busca Rápida com Quantitativo Integrado -->
     <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-sm space-y-4">
@@ -539,3 +550,4 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 {% endblock %}
+

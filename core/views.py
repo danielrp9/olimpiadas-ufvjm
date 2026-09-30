@@ -3676,6 +3676,50 @@ class ChaveamentoJogosListaView(View):
         })
 
 
+def api_podium_view(request):
+    """
+    Endpoint JSON para fornecer os dados do pódio das modalidades e do campeão geral.
+    Consumido pelo modal interativo de pódio tanto na Comissão quanto no Link Público.
+    """
+    from django.http import JsonResponse
+    from core.chaveamento_services import obter_dados_podium
+    dados = obter_dados_podium()
+    return JsonResponse(dados, safe=False)
+
+
+def chaveamento_podium_view(request, is_public_route=False):
+    """
+    Página independente e completa de exibição visual do Pódio e Campeão Geral.
+    Suporta tanto a visualização pela Comissão quanto pelo Link Público e compartilhamento.
+    """
+    from core.chaveamento_services import obter_dados_podium
+    is_public = is_public_route or (not request.user.is_authenticated) or (request.GET.get('public') == '1')
+    base_template = 'core/chaveamento_podium_share_base.html' if is_public else 'base.html'
+
+    if not is_public:
+        if getattr(request.user, 'is_comissao', False) or request.user.is_staff:
+            voltar_url = reverse('chaveamento_admin_list')
+        else:
+            voltar_url = reverse('chaveamento_public_list')
+    else:
+        voltar_url = reverse('chaveamento_share_list')
+
+    voltar_param = request.GET.get('voltar')
+    if voltar_param and voltar_param.startswith('/'):
+        voltar_url = voltar_param
+
+    dados = obter_dados_podium()
+    return render(request, 'core/chaveamento_podium.html', {
+        'base_template': base_template,
+        'is_public': is_public,
+        'voltar_url': voltar_url,
+        'modalidades': dados['modalidades'],
+        'campeao_geral': dados['campeao_geral'],
+        'mod_destaque': request.GET.get('mod'),
+    })
+
+
+
 
 
 

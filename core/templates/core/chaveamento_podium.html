@@ -1,0 +1,461 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Pódio - Olimpíadas Universitárias UFVJM{% endblock %}
+
+{% block content %}
+<div class="space-y-6 sm:space-y-8 w-full pb-16">
+
+    <!-- Banner Superior / Header -->
+    <div class="relative bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-sm overflow-hidden flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
+        <!-- Abstract Wave -->
+        <div class="absolute inset-0 opacity-20 pointer-events-none">
+            <svg class="w-full h-full object-cover" viewBox="0 0 800 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M-50,150 Q150,50 350,120 T750,70 T1150,100" stroke="url(#wave-podium-grad)" stroke-width="2" stroke-dasharray="10 15" />
+                <path d="M-50,120 Q150,20 350,90 T750,40 T1150,70" stroke="url(#wave-podium-grad)" stroke-width="1.5" stroke-dasharray="8 12" />
+                <defs>
+                    <linearGradient id="wave-podium-grad" x1="0" y1="0" x2="800" y2="0" gradientUnits="userSpaceOnUse">
+                        <stop offset="0%" stop-color="#f59e0b" />
+                        <stop offset="50%" stop-color="#3b82f6" />
+                        <stop offset="100%" stop-color="#ec4899" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <div class="relative z-10 min-w-0">
+            <div class="flex items-center gap-3">
+                <a href="{{ voltar_url }}" class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/15 text-white flex items-center justify-center transition shrink-0 active:scale-95 cursor-pointer shadow-xs" title="Voltar">
+                    <i data-lucide="arrow-left" class="w-4 h-4 sm:w-5 sm:h-5"></i>
+                </a>
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-widest text-amber-400">Classificação Oficial</span>
+                    <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
+                        <i data-lucide="trophy" class="w-7 h-7 text-amber-400"></i>
+                        <span>Pódio</span>
+                    </h1>
+                </div>
+            </div>
+            <p class="text-xs text-slate-400 mt-2 max-w-xl">
+                Acompanhe o pódio de cada modalidade e o ranking geral das delegações campeãs das Olimpíadas.
+            </p>
+        </div>
+
+        <div class="relative z-10 flex flex-wrap items-center gap-2 sm:gap-2.5 shrink-0 no-print">
+            <button type="button" onclick="window.print()" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-white text-xs font-extrabold rounded-2xl transition shadow-xs active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700" title="Imprimir Quadro de Medalhas">
+                <i data-lucide="printer" class="w-4 h-4 text-slate-300"></i>
+                <span>Imprimir</span>
+            </button>
+            <button type="button" onclick="window.location.reload()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold rounded-2xl transition shadow-xs active:scale-95 flex items-center gap-2 cursor-pointer" title="Atualizar dados">
+                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                <span>Atualizar</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Barra de Controle: Abas Principais e Filtros -->
+    <div class="bg-white border border-slate-200/90 rounded-3xl p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4 no-print">
+        <!-- Alternador de Abas -->
+        <div class="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200/80 shadow-inner">
+            <button type="button" id="page-tab-mod" onclick="mudarAbaPagina('modalidades')" class="px-4 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 bg-amber-500 text-slate-950 shadow-sm cursor-pointer">
+                <i data-lucide="trophy" class="w-3.5 h-3.5"></i>
+                <span>Por Modalidade</span>
+            </button>
+            <button type="button" id="page-tab-geral" onclick="mudarAbaPagina('geral')" class="px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer">
+                <i data-lucide="crown" class="w-3.5 h-3.5"></i>
+                <span>Campeão Geral</span>
+            </button>
+        </div>
+
+        <!-- Filtros em Tempo Real -->
+        <div id="page-filters-area" class="flex flex-wrap items-center gap-2 flex-1 md:justify-end">
+            <div class="relative w-full sm:w-64">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+                <input type="text" id="page-search-input" oninput="filtrarCardsPagina()" placeholder="Buscar modalidade..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500">
+            </div>
+
+            <div id="page-subfilters" class="flex items-center gap-1.5 text-xs">
+                <button type="button" onclick="filtrarGeneroPagina('TODOS')" class="page-gen-btn px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 cursor-pointer" data-gen="TODOS">Todos</button>
+                <button type="button" onclick="filtrarGeneroPagina('M')" class="page-gen-btn px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 cursor-pointer" data-gen="M">Masc</button>
+                <button type="button" onclick="filtrarGeneroPagina('F')" class="page-gen-btn px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 cursor-pointer" data-gen="F">Fem</button>
+                <button type="button" onclick="filtrarGeneroPagina('Misto')" class="page-gen-btn px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 cursor-pointer" data-gen="Misto">Misto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEÇÃO 1: PÓDIOS POR MODALIDADE -->
+    <div id="section-modalidades" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for mod in modalidades %}
+            <div id="mod-card-{{ mod.modalidade_id }}" class="page-mod-card bg-white border {% if mod_destaque and mod_destaque|stringformat:'s' == mod.modalidade_id|stringformat:'s' %}border-amber-500 ring-2 ring-amber-400/50 shadow-md{% else %}border-slate-200/90 shadow-sm{% endif %} rounded-3xl p-5 sm:p-6 hover:shadow-md transition space-y-4" data-nome="{{ mod.nome|lower }}" data-genero="{{ mod.genero }}" data-status="{{ mod.status }}">
+                <!-- Header do Card -->
+                <div class="flex items-start justify-between border-b border-slate-100 pb-3 gap-2">
+                    <div class="min-w-0">
+                        <span class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-blue-50 text-blue-700 border border-blue-200 inline-block mb-1">
+                            {{ mod.genero_display }}
+                        </span>
+                        <h3 class="text-base font-black text-slate-800 tracking-tight truncate">{{ mod.nome }}</h3>
+                    </div>
+                    <div>
+                        {% if mod.status == 'finalizado' %}
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
+                                <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i> Finalizado
+                            </span>
+                        {% elif mod.status == 'em_andamento' %}
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 inline-flex items-center gap-1">
+                                <i data-lucide="activity" class="w-3 h-3 text-blue-600"></i> Em Andamento
+                            </span>
+                        {% else %}
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 inline-flex items-center gap-1">
+                                <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i> Não Iniciado
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                {% if mod.detalhes %}
+                    <p class="text-[11px] text-amber-700 font-semibold -mt-2 bg-amber-50/70 p-2 rounded-xl border border-amber-200/60">{{ mod.detalhes }}</p>
+                {% endif %}
+
+                <!-- Pódio Visual 3D -->
+                <div class="relative w-full flex items-end justify-center gap-2 pt-6 pb-1 select-none">
+                    
+                    <!-- 2º Lugar (Prata - Segundo Maior) -->
+                    <div class="flex-1 flex flex-col items-center min-w-0 z-10">
+                        <div class="flex flex-col items-center text-center mb-1.5 px-0.5 w-full">
+                            <span class="px-1.5 py-0.2 rounded-full text-[8px] font-black uppercase tracking-wider bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs mb-1">
+                                🥈 2º
+                            </span>
+                            {% if mod.segundo %}
+                                <div class="w-10 h-10 rounded-full bg-slate-100 border-2 border-slate-300 shadow-sm flex items-center justify-center font-black text-slate-800 text-[11px]">
+                                    {{ mod.segundo.nome|slice:":2"|upper }}
+                                </div>
+                                <span class="mt-1 text-[11px] font-extrabold text-slate-800 max-w-full truncate leading-tight block">{{ mod.segundo.nome }}</span>
+                                {% if mod.segundo.campus %}<span class="text-[8px] text-slate-400 truncate block">{{ mod.segundo.campus }}</span>{% endif %}
+                            {% else %}
+                                <div class="w-8 h-8 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                    <i data-lucide="help-circle" class="w-3.5 h-3.5"></i>
+                                </div>
+                                <span class="mt-1 text-[10px] text-slate-400 italic">A definir</span>
+                            {% endif %}
+                        </div>
+                        <div class="w-full {% if mod.segundo %}bg-gradient-to-t from-slate-400 via-slate-300 to-slate-200 border-t-2 border-slate-100 text-slate-800 shadow-sm{% else %}bg-slate-100 border-2 border-dashed border-slate-200 text-slate-400{% endif %} rounded-t-xl flex flex-col items-center justify-center" style="height: 72px; min-height: 72px;">
+                            <span class="text-xl sm:text-2xl font-black">2</span>
+                            <span class="text-[8px] font-black uppercase tracking-widest text-slate-700/80 -mt-0.5">Prata</span>
+                        </div>
+                    </div>
+
+                    <!-- 1º Lugar (Ouro - Maior de Todos) -->
+                    <div class="flex-1 flex flex-col items-center min-w-0 z-20 -mx-1">
+                        <div class="flex flex-col items-center text-center mb-1.5 px-0.5 w-full">
+                            <div class="relative">
+                                <span class="text-base absolute -top-4 -left-1">👑</span>
+                                <span class="px-2 py-0.2 rounded-full text-[9px] font-black uppercase tracking-wider bg-amber-400 text-slate-950 border border-amber-300 shadow-xs mb-1 inline-block">
+                                    🥇 1º
+                                </span>
+                            </div>
+                            {% if mod.primeiro %}
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-amber-300 to-amber-500 border-2 border-amber-300 ring-2 ring-amber-400/50 shadow-md flex items-center justify-center font-black text-slate-950 text-xs">
+                                    {{ mod.primeiro.nome|slice:":2"|upper }}
+                                </div>
+                                <span class="mt-1 text-xs font-black text-slate-900 max-w-full truncate leading-tight block">{{ mod.primeiro.nome }}</span>
+                                {% if mod.primeiro.campus %}<span class="text-[9px] text-amber-700 font-bold truncate block">{{ mod.primeiro.campus }}</span>{% endif %}
+                            {% else %}
+                                <div class="w-10 h-10 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                    <i data-lucide="help-circle" class="w-4 h-4"></i>
+                                </div>
+                                <span class="mt-1 text-[10px] text-slate-400 italic">A definir</span>
+                            {% endif %}
+                        </div>
+                        <div class="w-full {% if mod.primeiro %}bg-gradient-to-t from-amber-500 via-amber-400 to-amber-300 border-t-2 border-yellow-200 text-amber-950 shadow-md{% else %}bg-slate-100 border-2 border-dashed border-slate-200 text-slate-400{% endif %} rounded-t-xl flex flex-col items-center justify-center" style="height: 104px; min-height: 104px;">
+                            <span class="text-2xl sm:text-3xl font-black">1</span>
+                            <span class="text-[9px] font-black uppercase tracking-widest text-amber-950/80 -mt-0.5">Ouro</span>
+                        </div>
+                    </div>
+
+                    <!-- 3º Lugar (Bronze - Menor) -->
+                    <div class="flex-1 flex flex-col items-center min-w-0 z-10">
+                        <div class="flex flex-col items-center text-center mb-1.5 px-0.5 w-full">
+                            <span class="px-1.5 py-0.2 rounded-full text-[8px] font-black uppercase tracking-wider bg-amber-800 text-amber-100 border border-amber-700 shadow-2xs mb-1">
+                                🥉 3º
+                            </span>
+                            {% if mod.terceiro %}
+                                <div class="w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-600 shadow-sm flex items-center justify-center font-black text-amber-900 text-[10px]">
+                                    {{ mod.terceiro.nome|slice:":2"|upper }}
+                                </div>
+                                <span class="mt-1 text-[11px] font-extrabold text-slate-800 max-w-full truncate leading-tight block">{{ mod.terceiro.nome }}</span>
+                                {% if mod.terceiro.campus %}<span class="text-[8px] text-slate-400 truncate block">{{ mod.terceiro.campus }}</span>{% endif %}
+                            {% else %}
+                                <div class="w-7 h-7 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                    <i data-lucide="help-circle" class="w-3 h-3"></i>
+                                </div>
+                                <span class="mt-1 text-[10px] text-slate-400 italic">A definir</span>
+                            {% endif %}
+                        </div>
+                        <div class="w-full {% if mod.terceiro %}bg-gradient-to-t from-amber-800 via-amber-700 to-amber-600 border-t-2 border-amber-400 text-amber-100 shadow-xs{% else %}bg-slate-100 border-2 border-dashed border-slate-200 text-slate-400{% endif %} rounded-t-xl flex flex-col items-center justify-center" style="height: 48px; min-height: 48px;">
+                            <span class="text-lg sm:text-xl font-black">3</span>
+                            <span class="text-[8px] font-black uppercase tracking-widest text-amber-100/80 -mt-0.5">Bronze</span>
+                        </div>
+                    </div>
+
+                </div>
+
+                {% if mod.tem_chaveamento and mod.chaveamento_id %}
+                <div class="pt-2 border-t border-slate-100 text-right no-print">
+                    <a href="{% if is_public %}{% url 'chaveamento_share' pk=mod.chaveamento_id %}{% elif user.is_comissao or user.is_staff %}{% url 'chaveamento_admin_detail' pk=mod.chaveamento_id %}{% else %}{% url 'chaveamento_public_detail' pk=mod.chaveamento_id %}{% endif %}" class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition">
+                        <span>Ver Chaveamento</span>
+                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- SEÇÃO 2: CAMPEÃO GERAL E QUADRO DE MEDALHAS -->
+    <div id="section-geral" class="space-y-8 hidden">
+        <!-- Banner Explicativo -->
+        <div class="bg-gradient-to-r from-amber-500/10 via-blue-500/5 to-indigo-500/10 border border-amber-500/30 rounded-3xl p-5 sm:p-7 text-slate-800 space-y-2">
+            <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-2xl bg-amber-500/20 text-amber-700 flex items-center justify-center">
+                    <i data-lucide="award" class="w-5 h-5"></i>
+                </div>
+                <h2 class="text-base sm:text-lg font-black tracking-tight text-slate-900">Classificação Geral das Olimpíadas</h2>
+            </div>
+            <p class="text-xs sm:text-sm text-slate-600 max-w-3xl leading-relaxed">
+                O <strong>Campeão Geral das Olimpíadas Universitárias</strong> é determinado pelo número de vitórias/medalhas conquistadas pelas delegações em todas as modalidades: primeiro lugar no critério de maior número de <strong>1º lugares (Ouros)</strong>, seguido por <strong>2º lugares (Pratas)</strong> e <strong>3º lugares (Bronzes)</strong>.
+            </p>
+        </div>
+
+        <!-- Grande Pódio Master -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-10 shadow-sm space-y-6">
+            <div class="text-center space-y-1">
+                <span class="text-xs font-black uppercase tracking-widest text-amber-600">Pódio Geral</span>
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900">Delegações Campeãs Gerais</h3>
+            </div>
+
+            <div class="relative w-full max-w-2xl mx-auto flex items-end justify-center gap-3 sm:gap-6 pt-8 pb-2 select-none">
+                
+                <!-- 2º Lugar Geral -->
+                <div class="flex-1 flex flex-col items-center min-w-0 z-10">
+                    <div class="flex flex-col items-center text-center mb-2 px-1 w-full">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-200 text-slate-800 border border-slate-300 shadow-2xs mb-2">
+                            🥈 2º Lugar Geral
+                        </span>
+                        {% if campeao_geral.segundo %}
+                            <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-slate-100 border-3 border-slate-300 shadow-md flex items-center justify-center font-black text-slate-800 text-sm">
+                                {{ campeao_geral.segundo.nome|slice:":2"|upper }}
+                            </div>
+                            <span class="mt-2 text-xs sm:text-sm font-black text-slate-900 truncate max-w-full block">{{ campeao_geral.segundo.nome }}</span>
+                            {% if campeao_geral.segundo.campus %}<span class="text-[10px] text-slate-500 truncate block">{{ campeao_geral.segundo.campus }}</span>{% endif %}
+                            <span class="mt-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                🥇 {{ campeao_geral.segundo.ouros }} • 🥈 {{ campeao_geral.segundo.pratas }} • 🥉 {{ campeao_geral.segundo.bronzes }}
+                            </span>
+                        {% else %}
+                            <div class="w-11 h-11 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                <i data-lucide="help-circle" class="w-5 h-5"></i>
+                            </div>
+                            <span class="mt-2 text-xs text-slate-400 italic">A definir</span>
+                        {% endif %}
+                    </div>
+                    <div class="w-full {% if campeao_geral.segundo %}bg-gradient-to-t from-slate-500 via-slate-400 to-slate-300 border-t-3 border-slate-200 text-slate-900 shadow-lg{% else %}bg-slate-100 border-2 border-dashed border-slate-200 text-slate-400{% endif %} rounded-t-2xl flex flex-col items-center justify-center" style="height: 125px; min-height: 125px;">
+                        <span class="text-3xl sm:text-4xl font-black">2</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-slate-900/80">Prata</span>
+                    </div>
+                </div>
+
+                <!-- 1º Lugar Geral (Maior de Todos) -->
+                <div class="flex-1 flex flex-col items-center min-w-0 z-20 -mx-1">
+                    <div class="flex flex-col items-center text-center mb-2 px-1 w-full">
+                        <div class="relative">
+                            <span class="text-xl sm:text-2xl absolute -top-5 -left-1.5 animate-bounce">👑</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-400 text-slate-950 border border-amber-300 shadow-md mb-2 inline-block">
+                                🥇 Campeão Geral
+                            </span>
+                        </div>
+                        {% if campeao_geral.primeiro %}
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-br from-amber-400 to-amber-500 border-3 border-amber-300 ring-4 ring-amber-400/40 shadow-xl flex items-center justify-center font-black text-slate-950 text-lg sm:text-xl">
+                                {{ campeao_geral.primeiro.nome|slice:":2"|upper }}
+                            </div>
+                            <span class="mt-2 text-sm sm:text-base font-black text-slate-950 truncate max-w-full block">{{ campeao_geral.primeiro.nome }}</span>
+                            {% if campeao_geral.primeiro.campus %}<span class="text-xs text-amber-800 font-extrabold truncate block">{{ campeao_geral.primeiro.campus }}</span>{% endif %}
+                            <span class="mt-1 text-xs font-black text-amber-900 bg-amber-100 px-2.5 py-0.5 rounded-lg border border-amber-300">
+                                🥇 {{ campeao_geral.primeiro.ouros }} • 🥈 {{ campeao_geral.primeiro.pratas }} • 🥉 {{ campeao_geral.primeiro.bronzes }}
+                            </span>
+                        {% else %}
+                            <div class="w-14 h-14 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                <i data-lucide="help-circle" class="w-6 h-6"></i>
+                            </div>
+                            <span class="mt-2 text-xs text-slate-400 italic">A definir</span>
+                        {% endif %}
+                    </div>
+                    <div class="w-full {% if campeao_geral.primeiro %}bg-gradient-to-t from-amber-500 via-amber-400 to-amber-300 border-t-4 border-yellow-100 text-amber-950 shadow-xl shadow-amber-500/20{% else %}bg-slate-100 border-2 border-dashed border-slate-200 text-slate-400{% endif %} rounded-t-2xl flex flex-col items-center justify-center" style="height: 180px; min-height: 180px;">
+                        <span class="text-5xl sm:text-6xl font-black">1</span>
+                        <span class="text-xs font-black uppercase tracking-widest text-amber-950/80">Ouro</span>
+                    </div>
+                </div>
+
+                <!-- 3º Lugar Geral (Menor) -->
+                <div class="flex-1 flex flex-col items-center min-w-0 z-10">
+                    <div class="flex flex-col items-center text-center mb-2 px-1 w-full">
+                        <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-800 text-amber-100 border border-amber-700 shadow-2xs mb-2">
+                            🥉 3º Lugar Geral
+                        </span>
+                        {% if campeao_geral.terceiro %}
+                            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-amber-100 border-3 border-amber-600 shadow-md flex items-center justify-center font-black text-amber-900 text-sm">
+                                {{ campeao_geral.terceiro.nome|slice:":2"|upper }}
+                            </div>
+                            <span class="mt-2 text-xs sm:text-sm font-black text-slate-900 truncate max-w-full block">{{ campeao_geral.terceiro.nome }}</span>
+                            {% if campeao_geral.terceiro.campus %}<span class="text-[10px] text-slate-500 truncate block">{{ campeao_geral.terceiro.campus }}</span>{% endif %}
+                            <span class="mt-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
+                                🥇 {{ campeao_geral.terceiro.ouros }} • 🥈 {{ campeao_geral.terceiro.pratas }} • 🥉 {{ campeao_geral.terceiro.bronzes }}
+                            </span>
+                        {% else %}
+                            <div class="w-10 h-10 rounded-full bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center text-slate-400">
+                                <i data-lucide="help-circle" class="w-5 h-5"></i>
+                            </div>
+                            <span class="mt-2 text-xs text-slate-400 italic">A definir</span>
+                        {% endif %}
+                    </div>
+                    <div class="w-full {% if campeao_geral.terceiro %}bg-gradient-to-t from-amber-800 via-amber-700 to-amber-600 border-t-3 border-amber-400 text-amber-100 shadow-lg{% else %}bg-slate-100 border-2 border-dashed border-slate-200 text-slate-400{% endif %} rounded-t-2xl flex flex-col items-center justify-center" style="height: 80px; min-height: 80px;">
+                        <span class="text-2xl sm:text-3xl font-black">3</span>
+                        <span class="text-[10px] font-black uppercase tracking-widest text-amber-100/80">Bronze</span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- Tabela do Quadro Geral de Medalhas -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <h3 class="text-base font-extrabold text-slate-900">Quadro Geral de Medalhas</h3>
+                    <p class="text-xs text-slate-500">Ranking completo de todas as delegações participantes</p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                    {{ campeao_geral.ranking_completo|length }} Delegações
+                </span>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-50 text-slate-600 border-b border-slate-200/80 text-[10px] font-black uppercase tracking-wider">
+                            <th class="py-3 px-4 text-center w-14">Pos</th>
+                            <th class="py-3 px-4">Delegação</th>
+                            <th class="py-3 px-4 text-center text-amber-600 font-extrabold" title="1º Lugar">🥇 Ouro</th>
+                            <th class="py-3 px-4 text-center text-slate-600 font-extrabold" title="2º Lugar">🥈 Prata</th>
+                            <th class="py-3 px-4 text-center text-amber-800 font-extrabold" title="3º Lugar">🥉 Bronze</th>
+                            <th class="py-3 px-4 text-center text-slate-900 font-black">Total Pódios</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        {% for r in campeao_geral.ranking_completo %}
+                        <tr class="{% if forloop.counter <= 3 and r.total > 0 %}bg-amber-50/40 font-bold{% else %}hover:bg-slate-50/80{% endif %} transition">
+                            <td class="py-3.5 px-4 text-center">
+                                <span class="w-6 h-6 rounded-full inline-flex items-center justify-center text-[10px] font-black {% if r.posicao == 1 and r.total > 0 %}bg-amber-400 text-slate-950{% elif r.posicao == 2 and r.total > 0 %}bg-slate-300 text-slate-950{% elif r.posicao == 3 and r.total > 0 %}bg-amber-800 text-white{% else %}bg-slate-100 text-slate-600{% endif %}">
+                                    {{ r.posicao }}º
+                                </span>
+                            </td>
+                            <td class="py-3.5 px-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs shrink-0">
+                                        {{ r.nome|slice:":2"|upper }}
+                                    </div>
+                                    <div class="min-w-0">
+                                        <span class="font-extrabold text-slate-900 block truncate">{{ r.nome }}</span>
+                                        {% if r.campus %}<span class="text-[10px] text-slate-500 block truncate">{{ r.campus }}</span>{% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="py-3.5 px-4 text-center font-black text-amber-600 text-sm">{{ r.ouros }}</td>
+                            <td class="py-3.5 px-4 text-center font-black text-slate-600 text-sm">{{ r.pratas }}</td>
+                            <td class="py-3.5 px-4 text-center font-black text-amber-800 text-sm">{{ r.bronzes }}</td>
+                            <td class="py-3.5 px-4 text-center font-black text-slate-900 text-sm bg-slate-50/50">{{ r.total }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+let abaPagina = 'modalidades';
+let generoFiltro = 'TODOS';
+
+function mudarAbaPagina(aba) {
+    abaPagina = aba;
+    const btnMod = document.getElementById('page-tab-mod');
+    const btnGeral = document.getElementById('page-tab-geral');
+    const secMod = document.getElementById('section-modalidades');
+    const secGeral = document.getElementById('section-geral');
+    const subfilters = document.getElementById('page-subfilters');
+    const searchInput = document.getElementById('page-search-input');
+
+    if (aba === 'modalidades') {
+        btnMod.className = 'px-4 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 bg-amber-500 text-slate-950 shadow-sm cursor-pointer';
+        btnGeral.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer';
+        secMod.classList.remove('hidden');
+        secGeral.classList.add('hidden');
+        if (subfilters) subfilters.classList.remove('hidden');
+        if (searchInput) searchInput.placeholder = 'Buscar modalidade...';
+    } else {
+        btnGeral.className = 'px-4 py-2 rounded-xl text-xs font-black transition flex items-center justify-center gap-2 bg-amber-500 text-slate-950 shadow-sm cursor-pointer';
+        btnMod.className = 'px-4 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 text-slate-600 hover:text-slate-900 cursor-pointer';
+        secMod.classList.add('hidden');
+        secGeral.classList.remove('hidden');
+        if (subfilters) subfilters.classList.add('hidden');
+        if (searchInput) searchInput.placeholder = 'Buscar delegação no quadro...';
+    }
+}
+
+function filtrarGeneroPagina(gen) {
+    generoFiltro = gen;
+    document.querySelectorAll('.page-gen-btn').forEach(btn => {
+        if (btn.dataset.gen === gen) {
+            btn.className = 'page-gen-btn px-2.5 py-1 rounded-xl text-[11px] font-bold bg-amber-100 text-amber-900 border border-amber-300 cursor-pointer';
+        } else {
+            btn.className = 'page-gen-btn px-2.5 py-1 rounded-xl text-[11px] font-semibold bg-slate-100 text-slate-600 hover:text-slate-900 border border-slate-200 cursor-pointer';
+        }
+    });
+    filtrarCardsPagina();
+}
+
+function filtrarCardsPagina() {
+    const input = document.getElementById('page-search-input');
+    const termo = (input ? input.value : '').toLowerCase().trim();
+
+    document.querySelectorAll('.page-mod-card').forEach(card => {
+        const nome = card.dataset.nome || '';
+        const gen = card.dataset.genero || '';
+        const matchNome = !termo || nome.includes(termo);
+        const matchGen = generoFiltro === 'TODOS' || gen === generoFiltro || (generoFiltro === 'Misto' && gen === 'Misto');
+
+        if (matchNome && matchGen) {
+            card.classList.remove('hidden');
+        } else {
+            card.classList.add('hidden');
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const modId = urlParams.get('mod');
+    if (modId) {
+        setTimeout(() => {
+            const el = document.getElementById('mod-card-' + modId);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.classList.add('ring-4', 'ring-amber-400');
+            }
+        }, 150);
+    }
+});
+</script>
+{% endblock %}

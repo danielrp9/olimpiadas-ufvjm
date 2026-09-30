@@ -2796,5 +2796,92 @@ class ChaveamentoCustomizacaoFasesTestCase(ChaveamentoModuleTestCase):
         self.assertIsNone(p.vencedor)
 
 
+class PodiumAndCampeaoGeralTests(ChaveamentoModuleTestCase):
+
+    """
+    Testes automatizados para a funcionalidade do Pódio por Modalidade e Campeão Geral.
+    """
+
+    def test_obter_dados_podium_sem_jogos_finalizados(self):
+        from core.chaveamento_services import obter_dados_podium
+        dados = obter_dados_podium()
+        self.assertIn('modalidades', dados)
+        self.assertIn('campeao_geral', dados)
+        cg = dados['campeao_geral']
+        self.assertIn('ranking_completo', cg)
+        # Sem jogos finalizados, os pódios do campeão geral devem ser None
+        self.assertIsNone(cg['primeiro'])
+        self.assertIsNone(cg['segundo'])
+        self.assertIsNone(cg['terceiro'])
+
+    def test_obter_dados_podium_com_final_e_bronze_finalizados(self):
+        from core.chaveamento_services import obter_dados_podium
+        mod, teams, chaveamento = self._setup_modalidade_com_quartas("podium_test")
+        final_local = chaveamento.partidas.filter(fase='FINAL_LOCAL').first()
+        disputa_3 = chaveamento.partidas.filter(fase='DISPUTA_3_LOCAL').first()
+
+        self.assertIsNotNone(final_local)
+        self.assertIsNotNone(disputa_3)
+
+        # Simula finalização da final e disputa de 3º
+        final_local.time_a = teams[0]
+        final_local.time_b = teams[1]
+        final_local.vencedor = teams[0]
+        final_local.perdedor = teams[1]
+        final_local.finalizada = True
+        final_local.save()
+
+        disputa_3.time_a = teams[2]
+        disputa_3.time_b = teams[3]
+        disputa_3.vencedor = teams[2]
+        disputa_3.perdedor = teams[3]
+        disputa_3.finalizada = True
+        disputa_3.save()
+
+        dados = obter_dados_podium()
+        mod_podium = next(m for m in dados['modalidades'] if m['modalidade_id'] == mod.id)
+
+        self.assertEqual(mod_podium['status'], 'finalizado')
+        self.assertEqual(mod_podium['primeiro']['id'], teams[0].id)
+        self.assertEqual(mod_podium['segundo']['id'], teams[1].id)
+        self.assertEqual(mod_podium['terceiro']['id'], teams[2].id)
+
+        # Verifica Campeão Geral
+        cg = dados['campeao_geral']
+        self.assertIsNotNone(cg['primeiro'])
+        self.assertEqual(cg['primeiro']['id'], teams[0].id)
+        self.assertEqual(cg['primeiro']['ouros'], 1)
+
+        self.assertIsNotNone(cg['segundo'])
+        self.assertEqual(cg['segundo']['id'], teams[1].id)
+        self.assertEqual(cg['segundo']['pratas'], 1)
+
+        self.assertIsNotNone(cg['terceiro'])
+        self.assertEqual(cg['terceiro']['id'], teams[2].id)
+        self.assertEqual(cg['terceiro']['bronzes'], 1)
+
+    def test_api_podium_view(self):
+        url = reverse('api_podium')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        json_data = response.json()
+        self.assertIn('modalidades', json_data)
+        self.assertIn('campeao_geral', json_data)
+
+    def test_chaveamento_podium_views(self):
+        # Rota interna autenticada
+        self.client.force_login(self.admin_user)
+        resp_admin = self.client.get(reverse('chaveamento_podium'))
+        self.assertEqual(resp_admin.status_code, 200)
+        self.assertContains(resp_admin, "Pódio & Campeões")
+
+        # Rota pública de compartilhamento
+        self.client.logout()
+        resp_public = self.client.get(reverse('chaveamento_share_podium'))
+        self.assertEqual(resp_public.status_code, 200)
+        self.assertContains(resp_public, "Pódio & Campeões")
+
+
+
 
 

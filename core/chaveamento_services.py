@@ -2730,3 +2730,241 @@ def remover_fase_inicial(chaveamento, fase_numero):
     atualizar_classificados_e_preencher_mata_mata(chaveamento)
 
 
+def obter_dados_podium():
+    """
+    Calcula e retorna os dados do pódio (1º, 2º e 3º lugares) de cada modalidade,
+    além do Campeão Geral (delegações com maior número de vitórias/medalhas).
+    Garante visualização tanto para a Comissão quanto para o Link Público.
+    """
+    from collections import defaultdict
+    from django.contrib.auth import get_user_model
+    from core.models import Modalidade, ChaveamentoModalidade, PartidaChaveamento, Atleta
+
+    User = get_user_model()
+
+    # Mapeamento rápido de campus por delegação
+    campus_map = {}
+    for a in Atleta.objects.filter(campus__isnull=False).select_related('campus'):
+        if a.cadastrado_por_id not in campus_map:
+            campus_map[a.cadastrado_por_id] = a.campus.nome
+
+    def _resolver_equipe(equipe):
+        if not equipe:
+            return None
+        return getattr(equipe, 'parent_delegate', None) or equipe
+
+    def _formatar_equipe(equipe, ouros=0, pratas=0, bronzes=0, total=0):
+        can = _resolver_equipe(equipe)
+        if not can:
+            return None
+        nome = getattr(can, 'nome_delegacao', None) or getattr(can, 'nome_completo', None) or can.email
+        campus_nome = campus_map.get(can.id, '')
+        foto = getattr(can, 'foto_url', None) or ''
+        return {
+            'id': can.id,
+            'nome': nome,
+            'campus': campus_nome,
+            'foto_url': foto,
+            'ouros': ouros,
+            'pratas': pratas,
+            'bronzes': bronzes,
+            'total': total,
+        }
+
+    # Inicializa todas as delegações principais com 0 medalhas
+    medalhas_delegacoes = defaultdict(lambda: {
+        'delegacao': None,
+        'ouros': 0,
+        'pratas': 0,
+        'bronzes': 0,
+        'total': 0,
+    })
+
+    for d in User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True):
+        medalhas_delegacoes[d.id]['delegacao'] = d
+
+    modalidades_qs = Modalidade.objects.select_related('chaveamento').prefetch_related(
+        'chaveamento__partidas',
+        'chaveamento__partidas__time_a',
+        'chaveamento__partidas__time_b',
+        'chaveamento__partidas__vencedor',
+        'chaveamento__partidas__perdedor',
+        'chaveamento__grupos',
+        'chaveamento__grupos__times',
+        'chaveamento__grupos__times__delegacao',
+    ).order_by('nome', 'genero')
+
+    resultado_modalidades = []
+
+    for mod in modalidades_qs:
+        chaveamento = getattr(mod, 'chaveamento', None)
+        primeiro, segundo, terceiro = None, None, None
+        status = 'nao_iniciado'
+        detalhes = ''
+
+        if not chaveamento:
+            resultado_modalidades.append({
+                'modalidade_id': mod.id,
+                'nome': mod.nome,
+                'genero': mod.genero,
+                'genero_display': mod.get_genero_display(),
+                'status': 'sem_chaveamento',
+                'status_display': 'Sem Chaveamento',
+                'primeiro': None,
+                'segundo': None,
+                'terceiro': None,
+                'detalhes': 'Chaveamento ainda não foi gerado.',
+                'tem_chaveamento': False,
+                'chaveamento_id': None,
+            })
+            continue
+
+        partidas = list(chaveamento.partidas.all())
+        final_geral = next((p for p in partidas if p.fase == 'FINAL_GERAL'), None)
+        final_local = next((p for p in partidas if p.fase == 'FINAL_LOCAL'), None)
+        bronze_geral = next((p for p in partidas if p.fase == 'BRONZE'), None)
+        disputa_3_local = next((p for p in partidas if p.fase == 'DISPUTA_3_LOCAL'), None)
+
+        final_match = final_geral or final_local
+        terceiro_match = bronze_geral or disputa_3_local
+
+        if final_match:
+            if final_match.finalizada and final_match.vencedor:
+                primeiro = final_match.vencedor
+                if final_match.perdedor:
+                    segundo = final_match.perdedor
+                elif final_match.vencedor_id == final_match.time_a_id:
+                    segundo = final_match.time_b
+                elif final_match.vencedor_id == final_match.time_b_id:
+                    segundo = final_match.time_a
+                status = 'finalizado'
+            elif final_match.time_a or final_match.time_b or any(p.finalizada for p in partidas):
+                status = 'em_andamento'
+                if final_match.time_a and final_match.time_b:
+                    detalhes = f"Final: {final_match.time_a_display} vs {final_match.time_b_display}"
+
+            if terceiro_match:
+                if terceiro_match.finalizada and terceiro_match.vencedor:
+                    terceiro = terceiro_match.vencedor
+                elif terceiro_match.time_a or terceiro_match.time_b:
+                    if status != 'finalizado':
+                        status = 'em_andamento'
+        else:
+            grupos = list(chaveamento.grupos.all())
+            if len(grupos) == 1:
+                grupo = grupos[0]
+                partidas_grupo = list(grupo.partidas.all())
+                if partidas_grupo:
+                    if all(p.finalizada for p in partidas_grupo):
+                        times = grupo.times_ordenados
+                        if len(times) >= 1: primeiro = times[0].delegacao
+                        if len(times) >= 2: segundo = times[1].delegacao
+                        if len(times) >= 3: terceiro = times[2].delegacao
+                        status = 'finalizado'
+                    elif any(p.finalizada for p in partidas_grupo):
+                        status = 'em_andamento'
+            elif any(p.finalizada for p in partidas):
+                status = 'em_andamento'
+
+        if chaveamento.fase_atual == 'finalizado':
+            status = 'finalizado'
+
+        status_display_map = {
+            'finalizado': 'Finalizado',
+            'em_andamento': 'Em Andamento',
+            'nao_iniciado': 'Não Iniciado',
+        }
+
+        # Contabiliza medalhas se posições forem decididas
+        if primeiro:
+            can = _resolver_equipe(primeiro)
+            if can:
+                medalhas_delegacoes[can.id]['delegacao'] = can
+                medalhas_delegacoes[can.id]['ouros'] += 1
+                medalhas_delegacoes[can.id]['total'] += 1
+        if segundo:
+            can = _resolver_equipe(segundo)
+            if can:
+                medalhas_delegacoes[can.id]['delegacao'] = can
+                medalhas_delegacoes[can.id]['pratas'] += 1
+                medalhas_delegacoes[can.id]['total'] += 1
+        if terceiro:
+            can = _resolver_equipe(terceiro)
+            if can:
+                medalhas_delegacoes[can.id]['delegacao'] = can
+                medalhas_delegacoes[can.id]['bronzes'] += 1
+                medalhas_delegacoes[can.id]['total'] += 1
+
+        resultado_modalidades.append({
+            'modalidade_id': mod.id,
+            'nome': mod.nome,
+            'genero': mod.genero,
+            'genero_display': mod.get_genero_display(),
+            'status': status,
+            'status_display': status_display_map.get(status, 'Não Iniciado'),
+            'primeiro': _formatar_equipe(primeiro),
+            'segundo': _formatar_equipe(segundo),
+            'terceiro': _formatar_equipe(terceiro),
+            'detalhes': detalhes,
+            'tem_chaveamento': True,
+            'chaveamento_id': chaveamento.id,
+        })
+
+    ordem_status = {'finalizado': 0, 'em_andamento': 1, 'nao_iniciado': 2, 'sem_chaveamento': 3}
+    resultado_modalidades.sort(key=lambda x: (ordem_status.get(x['status'], 9), x['nome']))
+
+    ranking_delegacoes = []
+    for del_id, dados in medalhas_delegacoes.items():
+        can = dados['delegacao']
+        if not can:
+            continue
+        nome = getattr(can, 'nome_delegacao', None) or getattr(can, 'nome_completo', None) or can.email
+        campus_nome = campus_map.get(can.id, '')
+        foto = getattr(can, 'foto_url', None) or ''
+        ranking_delegacoes.append({
+            'id': can.id,
+            'nome': nome,
+            'campus': campus_nome,
+            'foto_url': foto,
+            'ouros': dados['ouros'],
+            'pratas': dados['pratas'],
+            'bronzes': dados['bronzes'],
+            'total': dados['total'],
+        })
+
+    # Ordenação olímpica: Delegações que mais venceram (Ouro), depois Prata, depois Bronze, depois Total
+    ranking_delegacoes.sort(
+        key=lambda x: (-x['ouros'], -x['pratas'], -x['bronzes'], -x['total'], x['nome'].lower())
+    )
+
+    for i, r in enumerate(ranking_delegacoes):
+        if i > 0:
+            ant = ranking_delegacoes[i - 1]
+            if (r['ouros'], r['pratas'], r['bronzes'], r['total']) == (ant['ouros'], ant['pratas'], ant['bronzes'], ant['total']):
+                r['posicao'] = ant['posicao']
+            else:
+                r['posicao'] = i + 1
+        else:
+            r['posicao'] = 1
+
+    # Para subir ao pódio do Campeão Geral, a equipe deve ter conquistado ao menos 1 medalha
+    campeao_1 = ranking_delegacoes[0] if len(ranking_delegacoes) >= 1 and ranking_delegacoes[0]['total'] > 0 else None
+    campeao_2 = ranking_delegacoes[1] if len(ranking_delegacoes) >= 2 and ranking_delegacoes[1]['total'] > 0 else None
+    campeao_3 = ranking_delegacoes[2] if len(ranking_delegacoes) >= 3 and ranking_delegacoes[2]['total'] > 0 else None
+
+    campeao_geral = {
+        'primeiro': campeao_1,
+        'segundo': campeao_2,
+        'terceiro': campeao_3,
+        'ranking_completo': ranking_delegacoes,
+        'total_finalizadas': sum(1 for m in resultado_modalidades if m['status'] == 'finalizado'),
+        'total_modalidades': len(resultado_modalidades),
+    }
+
+    return {
+        'modalidades': resultado_modalidades,
+        'campeao_geral': campeao_geral,
+    }
+
+
+

@@ -42,11 +42,18 @@
                 <span class="hidden sm:inline">Extrair</span>
             </a>
 
+            <!-- Botão Pódio (Troféu) -->
+            <a href="{% url 'chaveamento_podium' %}" class="px-2.5 sm:px-3.5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-2xl transition shadow-md active:scale-95 flex items-center gap-2 cursor-pointer border border-amber-300/40" title="Ver Pódio">
+                <i data-lucide="trophy" class="w-4 h-4 text-slate-950"></i>
+                <span class="hidden sm:inline">Pódio</span>
+            </a>
+
             <!-- Botão de Compartilhar (Padrão de estilo 'Imprimir Relatório') -->
             <button type="button" onclick="abrirModalCompartilhamento('{% url 'chaveamento_share_list' %}', 'Todas as Modalidades - UFVJM')" class="px-2.5 sm:px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-extrabold rounded-2xl transition shadow-sm active:scale-95 flex items-center gap-2 cursor-pointer border border-slate-700/60" title="Compartilhar visualização de todas as modalidades">
                 <i data-lucide="share-2" class="text-amber-400 text-sm"></i>
                 <span class="hidden sm:inline">Compartilhar</span>
             </button>
+
 
 
 
@@ -144,3 +151,4 @@
 
 {% include "core/includes/modal_compartilhar.html" %}
 {% endblock %}
+

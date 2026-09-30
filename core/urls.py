@@ -108,4 +108,8 @@ urlpatterns = [
     path('chaveamento/compartilhar/<int:pk>/', views.chaveamento_share_view, name='chaveamento_share'),
     path('chaveamentos/compartilhar/jogos/', views.ChaveamentoJogosListaView.as_view(), {'is_public_route': True}, name='chaveamento_share_jogos_lista'),
     path('chaveamentos/jogos/', views.ChaveamentoJogosListaView.as_view(), name='chaveamento_jogos_lista'),
+    path('chaveamentos/podium/', views.chaveamento_podium_view, name='chaveamento_podium'),
+    path('chaveamentos/compartilhar/podium/', views.chaveamento_podium_view, {'is_public_route': True}, name='chaveamento_share_podium'),
+    path('api/podium/', views.api_podium_view, name='api_podium'),
 ]
+

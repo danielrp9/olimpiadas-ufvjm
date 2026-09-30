@@ -19,7 +19,12 @@
         </div>
 
         <div class="flex flex-wrap items-center gap-3">
+            <a href="{% url 'chaveamento_podium' %}?mod={{ modalidade.id }}&voltar={{ request.path }}" class="py-2 px-2.5 sm:px-3.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs rounded-xl transition shadow-md active:scale-95 flex items-center gap-2 cursor-pointer border border-amber-300/40 shrink-0" title="Ver Pódio">
+                <i data-lucide="trophy" class="w-4 h-4 text-slate-950"></i>
+                <span class="hidden sm:inline">Pódio</span>
+            </a>
             <a href="{% url 'exportador:exportar_jogos_excel' %}?modalidade_id={{ modalidade.id }}" class="py-2 px-2.5 sm:px-3.5 bg-emerald-50 hover:bg-emerald-100/80 text-emerald-800 text-xs font-extrabold rounded-xl transition border border-emerald-200/80 shadow-2xs flex items-center gap-2 shrink-0 cursor-pointer" title="Extrair Planilha Excel desta modalidade">
+
                 <i data-lucide="file-spreadsheet" class="text-emerald-600 text-sm"></i>
                 <span class="hidden sm:inline">Extrair</span>
             </a>
@@ -1140,4 +1145,5 @@
     });
 </script>
 {% endblock %}
+
 
