@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao, Inscricao, InscricaoModalidade, ConfiguracaoPeriodoInscricao, SubstituicaoAtleta, CartaoPartida, RegistroDisciplinarAtleta, SetPartida
+from .models import Campus, Atleta, Modalidade, Jogo, PreSumula, PreSumulaAtleta, Recurso, RecursoMensagem, Notificacao, Inscricao, InscricaoModalidade, ConfiguracaoPeriodoInscricao, SubstituicaoAtleta, CartaoPartida, RegistroDisciplinarAtleta, SetPartida, PodioModalidade
 
 
 @admin.register(ConfiguracaoPeriodoInscricao)
@@ -185,6 +185,14 @@ class SetPartidaAdmin(admin.ModelAdmin):
     list_display = ('id', 'partida', 'jogo', 'numero_set', 'pontos_a', 'pontos_b', 'criado_em')
     list_filter = ('numero_set', 'criado_em')
     search_fields = ('partida__id', 'jogo__id')
+
+
+@admin.register(PodioModalidade)
+class PodioModalidadeAdmin(admin.ModelAdmin):
+    list_display = ('modalidade', 'primeiro_lugar', 'segundo_lugar', 'terceiro_lugar', 'atualizado_em')
+    search_fields = ('modalidade__nome', 'primeiro_lugar__nome_delegacao', 'segundo_lugar__nome_delegacao', 'terceiro_lugar__nome_delegacao')
+    raw_id_fields = ('modalidade', 'primeiro_lugar', 'segundo_lugar', 'terceiro_lugar')
+
 
 
 

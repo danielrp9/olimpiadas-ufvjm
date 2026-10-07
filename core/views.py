@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, HttpResponseNotAllowed
 from django.db import models
 from django.views.generic import ListView, CreateView, UpdateView, DeleteView, TemplateView, DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -3693,6 +3693,9 @@ def chaveamento_podium_view(request, is_public_route=False):
     Suporta tanto a visualização pela Comissão quanto pelo Link Público e compartilhamento.
     """
     from core.chaveamento_services import obter_dados_podium
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
     is_public = is_public_route or (not request.user.is_authenticated) or (request.GET.get('public') == '1')
     base_template = 'core/chaveamento_podium_share_base.html' if is_public else 'base.html'
 
@@ -3709,6 +3712,13 @@ def chaveamento_podium_view(request, is_public_route=False):
         voltar_url = voltar_param
 
     dados = obter_dados_podium()
+
+    delegacoes_deferidas = User.objects.filter(
+        role__iexact='REPRESENTANTE',
+        status_delegacao='deferido',
+        parent_delegate__isnull=True
+    ).exclude(nome_delegacao__isnull=True).exclude(nome_delegacao__exact='').order_by('nome_delegacao')
+
     return render(request, 'core/chaveamento_podium.html', {
         'base_template': base_template,
         'is_public': is_public,
@@ -3716,7 +3726,89 @@ def chaveamento_podium_view(request, is_public_route=False):
         'modalidades': dados['modalidades'],
         'campeao_geral': dados['campeao_geral'],
         'mod_destaque': request.GET.get('mod'),
+        'delegacoes_deferidas': delegacoes_deferidas,
     })
+
+
+def salvar_podio_manual_view(request, pk):
+    """
+    Salva ou remove o pódio manual de uma modalidade (1º, 2º e 3º colocados).
+    Acesso restrito à Comissão Organizadora.
+    """
+    if request.method != 'POST':
+        return HttpResponseNotAllowed(['POST'])
+
+    if not (getattr(request.user, 'is_comissao', False) or request.user.is_staff):
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            return JsonResponse({'success': False, 'error': 'Acesso restrito à Comissão Organizadora.'}, status=403)
+        messages.error(request, "Acesso restrito à Comissão Organizadora.")
+        return redirect('dashboard')
+
+    from core.models import Modalidade, PodioModalidade
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    modalidade = get_object_or_404(Modalidade, pk=pk)
+    acao = request.POST.get('acao', 'salvar')
+
+    if acao == 'remover':
+        PodioModalidade.objects.filter(modalidade=modalidade).delete()
+        msg = f"Pódio manual da modalidade '{modalidade.nome}' removido com sucesso."
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': msg})
+        messages.success(request, msg)
+    else:
+        primeiro_id = request.POST.get('primeiro_lugar') or None
+        segundo_id = request.POST.get('segundo_lugar') or None
+        terceiro_id = request.POST.get('terceiro_lugar') or None
+        observacoes = request.POST.get('observacoes', '').strip()
+
+        # Validação: garantir que os IDs pertençam a delegações deferidas
+        delegacoes_deferidas_ids = set(
+            User.objects.filter(
+                role__iexact='REPRESENTANTE',
+                status_delegacao='deferido',
+                parent_delegate__isnull=True
+            ).values_list('id', flat=True)
+        )
+
+        def _valida_id(del_id):
+            if not del_id:
+                return None
+            try:
+                i = int(del_id)
+                return i if i in delegacoes_deferidas_ids else None
+            except (ValueError, TypeError):
+                return None
+
+        p_id = _valida_id(primeiro_id)
+        s_id = _valida_id(segundo_id)
+        t_id = _valida_id(terceiro_id)
+
+        if not p_id and not s_id and not t_id:
+            PodioModalidade.objects.filter(modalidade=modalidade).delete()
+            msg = f"Pódio manual da modalidade '{modalidade.nome}' limpo."
+        else:
+            PodioModalidade.objects.update_or_create(
+                modalidade=modalidade,
+                defaults={
+                    'primeiro_lugar_id': p_id,
+                    'segundo_lugar_id': s_id,
+                    'terceiro_lugar_id': t_id,
+                    'observacoes': observacoes,
+                }
+            )
+            msg = f"Pódio manual da modalidade '{modalidade.nome}' salvo com sucesso!"
+
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'success': True, 'message': msg})
+        messages.success(request, msg)
+
+    next_url = request.POST.get('next')
+    if next_url and next_url.startswith('/'):
+        return redirect(next_url)
+    return redirect(f"{reverse('chaveamento_podium')}?mod={modalidade.id}")
+
 
 
 

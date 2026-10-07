@@ -2881,6 +2881,142 @@ class PodiumAndCampeaoGeralTests(ChaveamentoModuleTestCase):
         self.assertEqual(resp_public.status_code, 200)
         self.assertContains(resp_public, "Pódio & Campeões")
 
+    def test_quadro_medalhas_apenas_delegacoes_deferidas(self):
+        """
+        Garante que apenas delegações deferidas com nome_delegacao são listadas no quadro geral
+        e que usuários soltos, delegações pendentes/indeferidas ou comissão não aparecem no ranking.
+        """
+        from core.chaveamento_services import obter_dados_podium
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        # Cria delegação deferida
+        del_deferida = self._create_delegation("deferida@ufvjm.edu.br", "Delegação Deferida Teste", self.campus_dia)
+
+        # Cria delegação pendente
+        del_pendente = User.objects.create_user(
+            email="pendente@ufvjm.edu.br",
+            nome_completo="Usuário Pendente",
+            role="REPRESENTANTE",
+            nome_delegacao="Delegação Pendente",
+            status_delegacao="pendente"
+        )
+
+        # Cria delegação indeferida
+        del_indeferida = User.objects.create_user(
+            email="indeferida@ufvjm.edu.br",
+            nome_completo="Usuário Indeferido",
+            role="REPRESENTANTE",
+            nome_delegacao="Delegação Indeferida",
+            status_delegacao="indeferido"
+        )
+
+        # Cria usuário comissão sem nome de delegação
+        user_comissao = User.objects.create_user(
+            email="comissao_teste@ufvjm.edu.br",
+            nome_completo="Membro Comissão",
+            role="COMISSAO",
+            status_delegacao="pendente"
+        )
+
+        dados = obter_dados_podium()
+        cg = dados['campeao_geral']
+        ranking_ids = [r['id'] for r in cg['ranking_completo']]
+
+        self.assertIn(del_deferida.id, ranking_ids)
+        self.assertNotIn(del_pendente.id, ranking_ids)
+        self.assertNotIn(del_indeferida.id, ranking_ids)
+        self.assertNotIn(user_comissao.id, ranking_ids)
+
+    def test_podio_manual_modalidade_sem_chaveamento(self):
+        """
+        Testa que uma modalidade sem chaveamento pode ter seu pódio inserido manualmente
+        e que as medalhas são computadas para o quadro de medalhas do campeão geral.
+        """
+        from core.chaveamento_services import obter_dados_podium
+        from core.models import Modalidade, PodioModalidade
+
+        mod_sem_ch = Modalidade.objects.create(nome="Atletismo 100m", genero="M")
+        del_a = self._create_delegation("atleta_a@ufvjm.edu.br", "Delegação Ouro Manual", self.campus_dia)
+        del_b = self._create_delegation("atleta_b@ufvjm.edu.br", "Delegação Prata Manual", self.campus_dia)
+        del_c = self._create_delegation("atleta_c@ufvjm.edu.br", "Delegação Bronze Manual", self.campus_dia)
+
+        # Antes de inserir o pódio manual, status é 'sem_chaveamento'
+        dados_antes = obter_dados_podium()
+        mod_antes = next(m for m in dados_antes['modalidades'] if m['modalidade_id'] == mod_sem_ch.id)
+        self.assertEqual(mod_antes['status'], 'sem_chaveamento')
+        self.assertIsNone(mod_antes['primeiro'])
+
+        # Lança pódio manual
+        PodioModalidade.objects.create(
+            modalidade=mod_sem_ch,
+            primeiro_lugar=del_a,
+            segundo_lugar=del_b,
+            terceiro_lugar=del_c,
+            observacoes="Resultado manual da corrida homologado"
+        )
+
+        dados_depois = obter_dados_podium()
+        mod_depois = next(m for m in dados_depois['modalidades'] if m['modalidade_id'] == mod_sem_ch.id)
+
+        self.assertEqual(mod_depois['status'], 'finalizado')
+        self.assertTrue(mod_depois['is_manual'])
+        self.assertEqual(mod_depois['primeiro']['id'], del_a.id)
+        self.assertEqual(mod_depois['segundo']['id'], del_b.id)
+        self.assertEqual(mod_depois['terceiro']['id'], del_c.id)
+        self.assertEqual(mod_depois['detalhes'], "Resultado manual da corrida homologado")
+
+        # Verifica se as medalhas foram computadas no ranking geral
+        cg = dados_depois['campeao_geral']
+        r_a = next(r for r in cg['ranking_completo'] if r['id'] == del_a.id)
+        r_b = next(r for r in cg['ranking_completo'] if r['id'] == del_b.id)
+        r_c = next(r for r in cg['ranking_completo'] if r['id'] == del_c.id)
+
+        self.assertEqual(r_a['ouros'], 1)
+        self.assertEqual(r_b['pratas'], 1)
+        self.assertEqual(r_c['bronzes'], 1)
+
+    def test_salvar_podio_manual_view(self):
+        """
+        Testa a rota de salvar e remover pódio manual pela Comissão.
+        """
+        from core.models import Modalidade, PodioModalidade
+
+        mod = Modalidade.objects.create(nome="Xadrez Rápido", genero="M")
+        del_ouro = self._create_delegation("xadrez_ouro@ufvjm.edu.br", "Xadrez Ouro", self.campus_dia)
+        del_prata = self._create_delegation("xadrez_prata@ufvjm.edu.br", "Xadrez Prata", self.campus_dia)
+
+        url = reverse('salvar_podio_manual', kwargs={'pk': mod.id})
+
+        # Não autenticado / Não comissão -> bloqueado
+        self.client.logout()
+        resp_anon = self.client.post(url, {'primeiro_lugar': del_ouro.id})
+        self.assertEqual(resp_anon.status_code, 302)
+
+        # Autenticado como comissão -> salva
+        self.client.force_login(self.admin_user)
+        resp_salvar = self.client.post(url, {
+            'primeiro_lugar': del_ouro.id,
+            'segundo_lugar': del_prata.id,
+            'terceiro_lugar': '',
+            'observacoes': 'Torneio suíço finalizado',
+            'acao': 'salvar'
+        })
+        self.assertEqual(resp_salvar.status_code, 302)
+
+        podio = PodioModalidade.objects.filter(modalidade=mod).first()
+        self.assertIsNotNone(podio)
+        self.assertEqual(podio.primeiro_lugar_id, del_ouro.id)
+        self.assertEqual(podio.segundo_lugar_id, del_prata.id)
+        self.assertIsNone(podio.terceiro_lugar)
+        self.assertEqual(podio.observacoes, 'Torneio suíço finalizado')
+
+        # Remover pódio manual
+        resp_remover = self.client.post(url, {'acao': 'remover'})
+        self.assertEqual(resp_remover.status_code, 302)
+        self.assertFalse(PodioModalidade.objects.filter(modalidade=mod).exists())
+
+
 
 
 

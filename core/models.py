@@ -1108,3 +1108,57 @@ class SetPartida(models.Model):
         return None
 
 
+class PodioModalidade(models.Model):
+    """
+    Permite à Comissão Organizadora lançar manualmente o pódio (1º, 2º e 3º lugares)
+    de uma modalidade esportiva, especialmente quando o chaveamento não foi gerado
+    ou não possui dados automáticos no sistema.
+    """
+    modalidade = models.OneToOneField(
+        Modalidade,
+        on_delete=models.CASCADE,
+        related_name='podio_manual',
+        verbose_name="Modalidade"
+    )
+    primeiro_lugar = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='podios_primeiro_lugar',
+        verbose_name="1º Lugar (Ouro)"
+    )
+    segundo_lugar = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='podios_segundo_lugar',
+        verbose_name="2º Lugar (Prata)"
+    )
+    terceiro_lugar = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='podios_terceiro_lugar',
+        verbose_name="3º Lugar (Bronze)"
+    )
+    observacoes = models.CharField(
+        max_length=255,
+        blank=True,
+        default='',
+        verbose_name="Observações / Detalhes"
+    )
+    criado_em = models.DateTimeField(auto_now_add=True)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Pódio Manual de Modalidade"
+        verbose_name_plural = "Pódios Manuais de Modalidades"
+
+    def __str__(self):
+        return f"Pódio Manual: {self.modalidade}"
+
+
+

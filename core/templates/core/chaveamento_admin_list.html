@@ -125,19 +125,23 @@
             </div>
 
             <!-- Botões de Ação -->
-            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-3">
+            <div class="mt-6 pt-4 border-t border-slate-100 flex items-center gap-2">
                 {% if item.chaveamento %}
-                    <a href="{% url 'chaveamento_admin_detail' pk=item.modalidade.pk %}" class="flex-1 text-center py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl transition shadow-sm">
-                        <i data-lucide="settings" class="mr-1.5"></i> Gerenciar Chaveamento
+                    <a href="{% url 'chaveamento_admin_detail' pk=item.modalidade.pk %}" class="flex-1 text-center py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-1.5">
+                        <i data-lucide="settings" class="w-3.5 h-3.5"></i> <span>Gerenciar</span>
                     </a>
                 {% else %}
-                    <form action="{% url 'chaveamento_gerar' pk=item.modalidade.pk %}" method="POST" class="w-full">
+                    <form action="{% url 'chaveamento_gerar' pk=item.modalidade.pk %}" method="POST" class="flex-1">
                         {% csrf_token %}
-                        <button type="submit" class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-2">
-                            <i data-lucide="wand-2"></i> Gerar Chaveamento
+                        <button type="submit" class="w-full py-2.5 px-3 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-2xl transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+                            <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> <span>Gerar Chaveamento</span>
                         </button>
                     </form>
                 {% endif %}
+                <a href="{% url 'chaveamento_podium' %}?mod={{ item.modalidade.pk }}" class="py-2.5 px-3 bg-amber-50 hover:bg-amber-100/90 text-amber-900 border border-amber-300/80 font-bold text-xs rounded-2xl transition shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer" title="Lançar ou visualizar pódio desta modalidade">
+                    <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-600"></i>
+                    <span>Pódio</span>
+                </a>
             </div>
         </div>
         {% empty %}

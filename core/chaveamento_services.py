@@ -2735,10 +2735,12 @@ def obter_dados_podium():
     Calcula e retorna os dados do pódio (1º, 2º e 3º lugares) de cada modalidade,
     além do Campeão Geral (delegações com maior número de vitórias/medalhas).
     Garante visualização tanto para a Comissão quanto para o Link Público.
+    Suporta pódios inseridos manualmente para modalidades sem chaveamento gerado.
+    Garante que APENAS delegações deferidas sejam exibidas no quadro geral de medalhas.
     """
     from collections import defaultdict
     from django.contrib.auth import get_user_model
-    from core.models import Modalidade, ChaveamentoModalidade, PartidaChaveamento, Atleta
+    from core.models import Modalidade, ChaveamentoModalidade, PartidaChaveamento, Atleta, PodioModalidade
 
     User = get_user_model()
 
@@ -2771,7 +2773,7 @@ def obter_dados_podium():
             'total': total,
         }
 
-    # Inicializa todas as delegações principais com 0 medalhas
+    # Inicializa SOMENTE as delegações deferidas no quadro de medalhas
     medalhas_delegacoes = defaultdict(lambda: {
         'delegacao': None,
         'ouros': 0,
@@ -2780,10 +2782,24 @@ def obter_dados_podium():
         'total': 0,
     })
 
-    for d in User.objects.filter(role='REPRESENTANTE', parent_delegate__isnull=True):
+    delegacoes_deferidas_qs = User.objects.filter(
+        role__iexact='REPRESENTANTE',
+        status_delegacao='deferido',
+        parent_delegate__isnull=True
+    ).exclude(nome_delegacao__isnull=True).exclude(nome_delegacao__exact='')
+
+    for d in delegacoes_deferidas_qs:
         medalhas_delegacoes[d.id]['delegacao'] = d
 
-    modalidades_qs = Modalidade.objects.select_related('chaveamento').prefetch_related(
+    delegacoes_deferidas_ids = set(medalhas_delegacoes.keys())
+
+    modalidades_qs = Modalidade.objects.select_related(
+        'chaveamento',
+        'podio_manual',
+        'podio_manual__primeiro_lugar',
+        'podio_manual__segundo_lugar',
+        'podio_manual__terceiro_lugar',
+    ).prefetch_related(
         'chaveamento__partidas',
         'chaveamento__partidas__time_a',
         'chaveamento__partidas__time_b',
@@ -2796,13 +2812,33 @@ def obter_dados_podium():
 
     resultado_modalidades = []
 
+    status_display_map = {
+        'finalizado': 'Finalizado',
+        'em_andamento': 'Em Andamento',
+        'nao_iniciado': 'Não Iniciado',
+        'sem_chaveamento': 'Sem Chaveamento',
+    }
+
     for mod in modalidades_qs:
         chaveamento = getattr(mod, 'chaveamento', None)
+        podio_man = getattr(mod, 'podio_manual', None)
+        tem_podio_manual = bool(
+            podio_man and (podio_man.primeiro_lugar_id or podio_man.segundo_lugar_id or podio_man.terceiro_lugar_id)
+        )
+
         primeiro, segundo, terceiro = None, None, None
         status = 'nao_iniciado'
         detalhes = ''
+        is_manual = False
 
-        if not chaveamento:
+        if tem_podio_manual:
+            is_manual = True
+            primeiro = podio_man.primeiro_lugar
+            segundo = podio_man.segundo_lugar
+            terceiro = podio_man.terceiro_lugar
+            status = 'finalizado'
+            detalhes = podio_man.observacoes or 'Pódio lançado manualmente pela Comissão'
+        elif not chaveamento:
             resultado_modalidades.append({
                 'modalidade_id': mod.id,
                 'nome': mod.nome,
@@ -2816,82 +2852,78 @@ def obter_dados_podium():
                 'detalhes': 'Chaveamento ainda não foi gerado.',
                 'tem_chaveamento': False,
                 'chaveamento_id': None,
+                'is_manual': False,
+                'manual_primeiro_id': podio_man.primeiro_lugar_id if podio_man else None,
+                'manual_segundo_id': podio_man.segundo_lugar_id if podio_man else None,
+                'manual_terceiro_id': podio_man.terceiro_lugar_id if podio_man else None,
+                'manual_observacoes': podio_man.observacoes if podio_man else '',
             })
             continue
-
-        partidas = list(chaveamento.partidas.all())
-        final_geral = next((p for p in partidas if p.fase == 'FINAL_GERAL'), None)
-        final_local = next((p for p in partidas if p.fase == 'FINAL_LOCAL'), None)
-        bronze_geral = next((p for p in partidas if p.fase == 'BRONZE'), None)
-        disputa_3_local = next((p for p in partidas if p.fase == 'DISPUTA_3_LOCAL'), None)
-
-        final_match = final_geral or final_local
-        terceiro_match = bronze_geral or disputa_3_local
-
-        if final_match:
-            if final_match.finalizada and final_match.vencedor:
-                primeiro = final_match.vencedor
-                if final_match.perdedor:
-                    segundo = final_match.perdedor
-                elif final_match.vencedor_id == final_match.time_a_id:
-                    segundo = final_match.time_b
-                elif final_match.vencedor_id == final_match.time_b_id:
-                    segundo = final_match.time_a
-                status = 'finalizado'
-            elif final_match.time_a or final_match.time_b or any(p.finalizada for p in partidas):
-                status = 'em_andamento'
-                if final_match.time_a and final_match.time_b:
-                    detalhes = f"Final: {final_match.time_a_display} vs {final_match.time_b_display}"
-
-            if terceiro_match:
-                if terceiro_match.finalizada and terceiro_match.vencedor:
-                    terceiro = terceiro_match.vencedor
-                elif terceiro_match.time_a or terceiro_match.time_b:
-                    if status != 'finalizado':
-                        status = 'em_andamento'
         else:
-            grupos = list(chaveamento.grupos.all())
-            if len(grupos) == 1:
-                grupo = grupos[0]
-                partidas_grupo = list(grupo.partidas.all())
-                if partidas_grupo:
-                    if all(p.finalizada for p in partidas_grupo):
-                        times = grupo.times_ordenados
-                        if len(times) >= 1: primeiro = times[0].delegacao
-                        if len(times) >= 2: segundo = times[1].delegacao
-                        if len(times) >= 3: terceiro = times[2].delegacao
-                        status = 'finalizado'
-                    elif any(p.finalizada for p in partidas_grupo):
-                        status = 'em_andamento'
-            elif any(p.finalizada for p in partidas):
-                status = 'em_andamento'
+            partidas = list(chaveamento.partidas.all())
+            final_geral = next((p for p in partidas if p.fase == 'FINAL_GERAL'), None)
+            final_local = next((p for p in partidas if p.fase == 'FINAL_LOCAL'), None)
+            bronze_geral = next((p for p in partidas if p.fase == 'BRONZE'), None)
+            disputa_3_local = next((p for p in partidas if p.fase == 'DISPUTA_3_LOCAL'), None)
 
-        if chaveamento.fase_atual == 'finalizado':
-            status = 'finalizado'
+            final_match = final_geral or final_local
+            terceiro_match = bronze_geral or disputa_3_local
 
-        status_display_map = {
-            'finalizado': 'Finalizado',
-            'em_andamento': 'Em Andamento',
-            'nao_iniciado': 'Não Iniciado',
-        }
+            if final_match:
+                if final_match.finalizada and final_match.vencedor:
+                    primeiro = final_match.vencedor
+                    if final_match.perdedor:
+                        segundo = final_match.perdedor
+                    elif final_match.vencedor_id == final_match.time_a_id:
+                        segundo = final_match.time_b
+                    elif final_match.vencedor_id == final_match.time_b_id:
+                        segundo = final_match.time_a
+                    status = 'finalizado'
+                elif final_match.time_a or final_match.time_b or any(p.finalizada for p in partidas):
+                    status = 'em_andamento'
+                    if final_match.time_a and final_match.time_b:
+                        detalhes = f"Final: {final_match.time_a_display} vs {final_match.time_b_display}"
 
-        # Contabiliza medalhas se posições forem decididas
+                if terceiro_match:
+                    if terceiro_match.finalizada and terceiro_match.vencedor:
+                        terceiro = terceiro_match.vencedor
+                    elif terceiro_match.time_a or terceiro_match.time_b:
+                        if status != 'finalizado':
+                            status = 'em_andamento'
+            else:
+                grupos = list(chaveamento.grupos.all())
+                if len(grupos) == 1:
+                    grupo = grupos[0]
+                    partidas_grupo = list(grupo.partidas.all())
+                    if partidas_grupo:
+                        if all(p.finalizada for p in partidas_grupo):
+                            times = grupo.times_ordenados
+                            if len(times) >= 1: primeiro = times[0].delegacao
+                            if len(times) >= 2: segundo = times[1].delegacao
+                            if len(times) >= 3: terceiro = times[2].delegacao
+                            status = 'finalizado'
+                        elif any(p.finalizada for p in partidas_grupo):
+                            status = 'em_andamento'
+                elif any(p.finalizada for p in partidas):
+                    status = 'em_andamento'
+
+            if chaveamento.fase_atual == 'finalizado':
+                status = 'finalizado'
+
+        # Contabiliza medalhas se posições forem decididas (APENAS para delegações deferidas)
         if primeiro:
             can = _resolver_equipe(primeiro)
-            if can:
-                medalhas_delegacoes[can.id]['delegacao'] = can
+            if can and can.id in delegacoes_deferidas_ids:
                 medalhas_delegacoes[can.id]['ouros'] += 1
                 medalhas_delegacoes[can.id]['total'] += 1
         if segundo:
             can = _resolver_equipe(segundo)
-            if can:
-                medalhas_delegacoes[can.id]['delegacao'] = can
+            if can and can.id in delegacoes_deferidas_ids:
                 medalhas_delegacoes[can.id]['pratas'] += 1
                 medalhas_delegacoes[can.id]['total'] += 1
         if terceiro:
             can = _resolver_equipe(terceiro)
-            if can:
-                medalhas_delegacoes[can.id]['delegacao'] = can
+            if can and can.id in delegacoes_deferidas_ids:
                 medalhas_delegacoes[can.id]['bronzes'] += 1
                 medalhas_delegacoes[can.id]['total'] += 1
 
@@ -2906,8 +2938,13 @@ def obter_dados_podium():
             'segundo': _formatar_equipe(segundo),
             'terceiro': _formatar_equipe(terceiro),
             'detalhes': detalhes,
-            'tem_chaveamento': True,
-            'chaveamento_id': chaveamento.id,
+            'tem_chaveamento': bool(chaveamento),
+            'chaveamento_id': chaveamento.id if chaveamento else None,
+            'is_manual': is_manual,
+            'manual_primeiro_id': podio_man.primeiro_lugar_id if podio_man else None,
+            'manual_segundo_id': podio_man.segundo_lugar_id if podio_man else None,
+            'manual_terceiro_id': podio_man.terceiro_lugar_id if podio_man else None,
+            'manual_observacoes': podio_man.observacoes if podio_man else '',
         })
 
     ordem_status = {'finalizado': 0, 'em_andamento': 1, 'nao_iniciado': 2, 'sem_chaveamento': 3}

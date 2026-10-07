@@ -32,7 +32,7 @@
                     <span class="text-[10px] font-black uppercase tracking-widest text-amber-400">Classificação Oficial</span>
                     <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2.5">
                         <i data-lucide="trophy" class="w-7 h-7 text-amber-400"></i>
-                        <span>Pódio</span>
+                        <span>Pódio & Campeões</span>
                     </h1>
                 </div>
             </div>
@@ -96,7 +96,12 @@
                         </span>
                         <h3 class="text-base font-black text-slate-800 tracking-tight truncate">{{ mod.nome }}</h3>
                     </div>
-                    <div>
+                    <div class="flex items-center gap-1.5 flex-wrap justify-end">
+                        {% if mod.is_manual %}
+                            <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-300 inline-flex items-center gap-1" title="Pódio inserido manualmente pela comissão">
+                                <i data-lucide="award" class="w-3 h-3 text-amber-600"></i> Manual
+                            </span>
+                        {% endif %}
                         {% if mod.status == 'finalizado' %}
                             <span class="px-2 py-0.5 rounded-lg text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 inline-flex items-center gap-1">
                                 <i data-lucide="check-circle-2" class="w-3 h-3 text-emerald-600"></i> Finalizado
@@ -107,7 +112,7 @@
                             </span>
                         {% else %}
                             <span class="px-2 py-0.5 rounded-lg text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 inline-flex items-center gap-1">
-                                <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i> Não Iniciado
+                                <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i> {% if not mod.tem_chaveamento %}Sem Chaveamento{% else %}Não Iniciado{% endif %}
                             </span>
                         {% endif %}
                     </div>
@@ -200,14 +205,28 @@
 
                 </div>
 
-                {% if mod.tem_chaveamento and mod.chaveamento_id %}
-                <div class="pt-2 border-t border-slate-100 text-right no-print">
-                    <a href="{% if is_public %}{% url 'chaveamento_share' pk=mod.chaveamento_id %}{% elif user.is_comissao or user.is_staff %}{% url 'chaveamento_admin_detail' pk=mod.chaveamento_id %}{% else %}{% url 'chaveamento_public_detail' pk=mod.chaveamento_id %}{% endif %}" class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition">
-                        <span>Ver Chaveamento</span>
-                        <i data-lucide="arrow-right" class="w-3 h-3"></i>
-                    </a>
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 no-print">
+                    <div>
+                        {% if not is_public and user.is_authenticated and user.is_comissao or not is_public and user.is_authenticated and user.is_staff %}
+                        <button type="button" 
+                                onclick="abrirModalPodioManual({{ mod.modalidade_id }}, '{{ mod.nome|escapejs }}', '{{ mod.genero_display|escapejs }}', '{{ mod.manual_primeiro_id|default:'' }}', '{{ mod.manual_segundo_id|default:'' }}', '{{ mod.manual_terceiro_id|default:'' }}', '{{ mod.manual_observacoes|escapejs }}', {{ mod.is_manual|yesno:'true,false' }})"
+                                class="inline-flex items-center gap-1.5 text-xs font-bold text-amber-700 hover:text-amber-800 bg-amber-50 hover:bg-amber-100/90 px-2.5 py-1.5 rounded-xl border border-amber-200/90 transition shadow-2xs active:scale-95 cursor-pointer"
+                                title="Inserir ou editar pódio manualmente para esta modalidade">
+                            <i data-lucide="trophy" class="w-3.5 h-3.5 text-amber-600"></i>
+                            <span>{% if mod.is_manual %}Editar Pódio{% else %}Lançar Pódio{% endif %}</span>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    {% if mod.tem_chaveamento and mod.chaveamento_id %}
+                    <div>
+                        <a href="{% if is_public %}{% url 'chaveamento_share' pk=mod.chaveamento_id %}{% elif user.is_comissao or user.is_staff %}{% url 'chaveamento_admin_detail' pk=mod.chaveamento_id %}{% else %}{% url 'chaveamento_public_detail' pk=mod.chaveamento_id %}{% endif %}" class="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800 transition">
+                            <span>Ver Chaveamento</span>
+                            <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
-                {% endif %}
             </div>
             {% endfor %}
         </div>
@@ -457,5 +476,184 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 150);
     }
 });
+
+function abrirModalPodioManual(modalidadeId, nome, genero, primeiroId, segundoId, terceiroId, obs, isManual) {
+    const modal = document.getElementById('modal-podio-manual');
+    const form = document.getElementById('form-podio-manual');
+    const titulo = document.getElementById('modal-podio-titulo');
+    const subtitulo = document.getElementById('modal-podio-subtitulo');
+    const selPrimeiro = document.getElementById('select-podio-primeiro');
+    const selSegundo = document.getElementById('select-podio-segundo');
+    const selTerceiro = document.getElementById('select-podio-terceiro');
+    const inputObs = document.getElementById('input-podio-obs');
+    const btnRemover = document.getElementById('btn-podio-remover');
+    const acao = document.getElementById('podio-form-acao');
+
+    if (!modal || !form) return;
+
+    form.action = `/comissao/modalidade/${modalidadeId}/podio/salvar/`;
+    if (acao) acao.value = 'salvar';
+
+    if (titulo) titulo.textContent = `${isManual ? 'Editar' : 'Lançar'} Pódio - ${nome} (${genero})`;
+    if (subtitulo) subtitulo.textContent = 'Defina as delegações medalhistas desta modalidade.';
+
+    if (selPrimeiro) selPrimeiro.value = primeiroId || '';
+    if (selSegundo) selSegundo.value = segundoId || '';
+    if (selTerceiro) selTerceiro.value = terceiroId || '';
+    if (inputObs) inputObs.value = obs || '';
+
+    if (btnRemover) {
+        if (isManual) {
+            btnRemover.classList.remove('hidden');
+        } else {
+            btnRemover.classList.add('hidden');
+        }
+    }
+
+    modal.classList.remove('hidden');
+    void modal.offsetWidth;
+    modal.classList.remove('opacity-0', 'pointer-events-none');
+    modal.classList.add('opacity-100');
+    const card = modal.querySelector('div');
+    if (card) {
+        card.classList.remove('scale-95');
+        card.classList.add('scale-100');
+    }
+
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
+
+function fecharModalPodioManual(e) {
+    if (e && e.target && e.target.id !== 'modal-podio-manual') return;
+    const modal = document.getElementById('modal-podio-manual');
+    if (!modal) return;
+
+    modal.classList.add('opacity-0', 'pointer-events-none');
+    modal.classList.remove('opacity-100');
+    const card = modal.querySelector('div');
+    if (card) {
+        card.classList.remove('scale-100');
+        card.classList.add('scale-95');
+    }
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 250);
+}
+
+function removerPodioManual() {
+    if (!confirm('Deseja realmente remover o pódio manual desta modalidade? Caso haja chaveamento, o sistema voltará a considerar o resultado dos jogos.')) {
+        return;
+    }
+    const form = document.getElementById('form-podio-manual');
+    const acao = document.getElementById('podio-form-acao');
+    if (form && acao) {
+        acao.value = 'remover';
+        form.submit();
+    }
+}
 </script>
+
+{% if not is_public and user.is_authenticated and user.is_comissao or not is_public and user.is_authenticated and user.is_staff %}
+<!-- Modal de Lançamento de Pódio Manual -->
+<div id="modal-podio-manual" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 transition-all duration-300 opacity-0 pointer-events-none hidden no-print" onclick="fecharModalPodioManual(event)">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-200 transform scale-95 transition-all duration-300 space-y-6" onclick="event.stopPropagation()">
+        
+        <!-- Header do Modal -->
+        <div class="flex items-start justify-between border-b border-slate-100 pb-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-2xl bg-amber-500/20 text-amber-700 flex items-center justify-center">
+                    <i data-lucide="trophy" class="w-5 h-5"></i>
+                </div>
+                <div>
+                    <span class="text-[10px] font-black uppercase tracking-wider text-amber-600 block">Comissão Organizadora</span>
+                    <h3 id="modal-podio-titulo" class="text-lg font-black text-slate-900 leading-tight">Lançar Pódio Manual</h3>
+                    <p id="modal-podio-subtitulo" class="text-xs text-slate-500 mt-0.5">Defina as delegações medalhistas desta modalidade.</p>
+                </div>
+            </div>
+            <button type="button" onclick="fecharModalPodioManual()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition cursor-pointer">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+        </div>
+
+        <!-- Formulário -->
+        <form id="form-podio-manual" method="POST" action="" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="acao" id="podio-form-acao" value="salvar">
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+            <!-- 1º Lugar (Ouro) -->
+            <div class="space-y-1.5">
+                <label for="select-podio-primeiro" class="flex items-center gap-1.5 text-xs font-black text-amber-900">
+                    <span class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 flex items-center justify-center text-[10px] font-black">1º</span>
+                    <span>1º Lugar (Medalha de Ouro 🥇)</span>
+                </label>
+                <select name="primeiro_lugar" id="select-podio-primeiro" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500">
+                    <option value="">-- Não definido --</option>
+                    {% for del in delegacoes_deferidas %}
+                        <option value="{{ del.id }}">{{ del.nome_delegacao }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 2º Lugar (Prata) -->
+            <div class="space-y-1.5">
+                <label for="select-podio-segundo" class="flex items-center gap-1.5 text-xs font-black text-slate-700">
+                    <span class="w-5 h-5 rounded-full bg-slate-300 text-slate-900 flex items-center justify-center text-[10px] font-black">2º</span>
+                    <span>2º Lugar (Medalha de Prata 🥈)</span>
+                </label>
+                <select name="segundo_lugar" id="select-podio-segundo" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-slate-400/30 focus:border-slate-400">
+                    <option value="">-- Não definido --</option>
+                    {% for del in delegacoes_deferidas %}
+                        <option value="{{ del.id }}">{{ del.nome_delegacao }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 3º Lugar (Bronze) -->
+            <div class="space-y-1.5">
+                <label for="select-podio-terceiro" class="flex items-center gap-1.5 text-xs font-black text-amber-800">
+                    <span class="w-5 h-5 rounded-full bg-amber-700 text-white flex items-center justify-center text-[10px] font-black">3º</span>
+                    <span>3º Lugar (Medalha de Bronze 🥉)</span>
+                </label>
+                <select name="terceiro_lugar" id="select-podio-terceiro" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-amber-700/30 focus:border-amber-700">
+                    <option value="">-- Não definido --</option>
+                    {% for del in delegacoes_deferidas %}
+                        <option value="{{ del.id }}">{{ del.nome_delegacao }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Observações / Detalhes -->
+            <div class="space-y-1.5 pt-1">
+                <label for="input-podio-obs" class="text-xs font-bold text-slate-600 block">
+                    Observações / Informações Adicionais (opcional):
+                </label>
+                <input type="text" name="observacoes" id="input-podio-obs" placeholder="Ex: Resultado homologado pela Comissão Técnica" class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            </div>
+
+            <p class="text-[11px] text-slate-400 italic">
+                * As medalhas atribuídas aqui serão contabilizadas automaticamente no quadro geral de medalhas e na disputa do Campeão Geral para as delegações deferidas.
+            </p>
+
+            <!-- Botões de Ação -->
+            <div class="flex items-center justify-between pt-4 border-t border-slate-100 gap-3">
+                <button type="button" id="btn-podio-remover" onclick="removerPodioManual()" class="px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:text-red-700 hover:bg-red-50 transition cursor-pointer hidden">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5 inline mr-1"></i> Limpar Pódio
+                </button>
+                <div class="flex items-center gap-2 ml-auto">
+                    <button type="button" onclick="fecharModalPodioManual()" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-800 bg-slate-100 hover:bg-slate-200 transition cursor-pointer">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="px-5 py-2 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition shadow-sm cursor-pointer flex items-center gap-1.5">
+                        <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                        <span>Salvar Pódio</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
 {% endblock %}

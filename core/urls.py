@@ -110,6 +110,7 @@ urlpatterns = [
     path('chaveamentos/jogos/', views.ChaveamentoJogosListaView.as_view(), name='chaveamento_jogos_lista'),
     path('chaveamentos/podium/', views.chaveamento_podium_view, name='chaveamento_podium'),
     path('chaveamentos/compartilhar/podium/', views.chaveamento_podium_view, {'is_public_route': True}, name='chaveamento_share_podium'),
+    path('comissao/modalidade/<int:pk>/podio/salvar/', views.salvar_podio_manual_view, name='salvar_podio_manual'),
     path('api/podium/', views.api_podium_view, name='api_podium'),
 ]
 
