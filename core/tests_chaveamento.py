@@ -1918,6 +1918,8 @@ class ChaveamentoModuleTestCase(TestCase):
     def test_jogo_ajustar_horario_com_link_pre_sumula(self):
         """Testa ajuste de horário com atualização do link da pré-súmula."""
         from core.chaveamento_services import _sincronizar_jogo_partida
+        import datetime
+        from django.utils import timezone
         mod = Modalidade.objects.create(nome="Futsal Feminino", genero="F")
         chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
         team_a = self._create_delegation("ffa@ufvjm.edu.br", "Futsal A", self.campus_dia)
@@ -1932,15 +1934,16 @@ class ChaveamentoModuleTestCase(TestCase):
         self.client.force_login(self.admin_user)
         url = reverse('jogo_ajustar_horario', kwargs={'pk': jogo.pk})
 
+        nova_data_str = (timezone.localdate() + datetime.timedelta(days=5)).strftime('%Y-%m-%d')
         resp = self.client.post(url, {
-            'data_jogo': '2026-10-15',
+            'data_jogo': nova_data_str,
             'horario_jogo': '14:30',
             'link_pre_sumula': 'https://storage.ufvjm.edu.br/sumulas/futsal.pdf'
         })
         self.assertEqual(resp.status_code, 302)
 
         jogo.refresh_from_db()
-        self.assertEqual(str(jogo.data_jogo), '2026-10-15')
+        self.assertEqual(str(jogo.data_jogo), nova_data_str)
         self.assertEqual(jogo.horario_jogo.strftime('%H:%M'), '14:30')
         self.assertEqual(jogo.link_pre_sumula, 'https://storage.ufvjm.edu.br/sumulas/futsal.pdf')
 
@@ -1950,6 +1953,8 @@ class ChaveamentoModuleTestCase(TestCase):
     def test_jogo_update_view_com_link_pre_sumula(self):
         """Testa edição completa de jogo com link_pre_sumula e sincronização com chaveamento."""
         from core.chaveamento_services import _sincronizar_jogo_partida
+        import datetime
+        from django.utils import timezone
         mod = Modalidade.objects.create(nome="Xadrez Aberto", genero="M")
         chaveamento = ChaveamentoModalidade.objects.create(modalidade=mod)
         team_a = self._create_delegation("xaa@ufvjm.edu.br", "Xadrez A", self.campus_dia)
@@ -1964,9 +1969,10 @@ class ChaveamentoModuleTestCase(TestCase):
         self.client.force_login(self.admin_user)
         url = reverse('jogo_update', kwargs={'pk': jogo.pk})
 
+        data_futura = (timezone.localdate() + datetime.timedelta(days=5)).strftime('%Y-%m-%d')
         resp = self.client.post(url, {
             'modalidade': mod.pk,
-            'data_jogo': '2026-10-20',
+            'data_jogo': data_futura,
             'horario_jogo': '16:00',
             'time_a': team_a.pk,
             'time_b': team_b.pk,

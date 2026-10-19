@@ -1,7 +1,9 @@
 import os
+import re
 import json
 from pathlib import Path
 
+from django.conf import settings
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import user_passes_test
 from django.http import JsonResponse, HttpResponse, FileResponse, Http404
@@ -17,6 +19,7 @@ from .services import (
     gerar_pdf_declaracao_bytes,
     iniciar_geracao_assincrona,
     get_task_progress,
+    executar_geracao_lote,
     formatar_data_atual_ptbr
 )
 
@@ -234,16 +237,48 @@ def progresso_geracao_view(request, task_id):
 def download_zip_view(request, task_id):
     """
     Permite ao usuário baixar o arquivo ZIP contendo todas as declarações individuais.
+    Trata workers múltiplos do uWSGI, arquivos em disco e geração sob demanda.
     """
     info = get_task_progress(task_id)
-    if not info or info.get('status') != 'concluido':
+
+    zip_path = None
+    zip_filename = 'Declaracoes.zip'
+
+    if info:
+        zip_path = info.get('zip_path')
+        zip_filename = info.get('zip_filename') or 'Declaracoes.zip'
+
+    clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '', str(task_id))
+
+    # 1. Se não tem zip_path válido no info, busca diretamente no disco por f"{clean_id}*.zip"
+    if not zip_path or not os.path.exists(zip_path):
+        diretorio_saida = Path(settings.MEDIA_ROOT) / 'declaracoes'
+        if diretorio_saida.exists() and clean_id:
+            matching = sorted(
+                diretorio_saida.glob(f"{clean_id}*.zip"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True
+            )
+            for f in matching:
+                if f.is_file() and f.stat().st_size > 0:
+                    zip_path = str(f)
+                    nome = f.name
+                    if nome.startswith(f"{clean_id}_"):
+                        nome = nome[len(f"{clean_id}_"):]
+                    zip_filename = nome
+                    break
+
+    # 2. Se ainda não encontrou no disco, mas o task tem parâmetros salvos, gera sob demanda
+    if not zip_path or not os.path.exists(zip_path):
+        if info and info.get('params'):
+            try:
+                zip_path, zip_filename = executar_geracao_lote(task_id=task_id, **info['params'])
+            except Exception as e:
+                raise Http404(f"Erro ao processar arquivo de declarações: {str(e)}")
+
+    if not zip_path or not os.path.exists(zip_path):
         raise Http404("Arquivo de declarações não encontrado ou geração ainda não concluída.")
 
-    zip_path = info.get('zip_path')
-    if not zip_path or not os.path.exists(zip_path):
-        raise Http404("O arquivo compactado não foi encontrado no servidor.")
-
-    zip_filename = info.get('zip_filename', 'Declaracoes.zip')
     return FileResponse(
         open(zip_path, 'rb'),
         as_attachment=True,

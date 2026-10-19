@@ -743,9 +743,14 @@
 
         document.getElementById('acoes-concluido').classList.remove('hidden');
 
-        // Disparo automático do download para conveniência do usuário
+        // Disparo automático do download para conveniência do usuário (sem recarregar ou navegar para fora da página)
         setTimeout(() => {
-            window.location.href = urlDownload;
+            const a = document.createElement('a');
+            a.href = urlDownload;
+            a.setAttribute('download', '');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
         }, 600);
 
         if (window.lucide) { lucide.createIcons(); }

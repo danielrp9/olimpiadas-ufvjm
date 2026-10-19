@@ -128,3 +128,43 @@ class DeclaracoesTestCase(TestCase):
         progress = get_task_progress(task_id)
         # Apenas atleta1 está deferido no campus1 (atleta_indeferido não deve entrar)
         self.assertEqual(progress['total'], 1)
+
+    def test_download_zip_view_sucesso(self):
+        """Testa download com sucesso do arquivo ZIP gerado"""
+        task_id = iniciar_geracao_assincrona(
+            tipo='atleta',
+            selecionados_ids=[self.atleta1.id],
+            horas=60,
+            periodo='27 de setembro a 25 de outubro de 2025',
+            cidade_data='Diamantina, 23 de abril de 2026',
+            solicitado_por=self.user_comissao
+        )
+        url = reverse('declaracoes_download', args=[task_id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')
+
+    def test_download_zip_outro_worker_uwsgi(self):
+        """Simula acesso ao download a partir de um worker uWSGI diferente (memória limpa)"""
+        task_id = iniciar_geracao_assincrona(
+            tipo='atleta',
+            selecionados_ids=[self.atleta1.id],
+            horas=60,
+            periodo='27 de setembro a 25 de outubro de 2025',
+            cidade_data='Diamantina, 23 de abril de 2026',
+            solicitado_por=self.user_comissao
+        )
+        # Limpa o cache de memória para simular outro processo uWSGI
+        from declaracoes.services import _TASK_PROGRESS
+        _TASK_PROGRESS.clear()
+
+        # Deve conseguir consultar o progresso via arquivo de disco
+        progress = get_task_progress(task_id)
+        self.assertIsNotNone(progress)
+        self.assertEqual(progress.get('status'), 'concluido')
+
+        # O download deve ser servido sem erro 404
+        url = reverse('declaracoes_download', args=[task_id])
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/zip')

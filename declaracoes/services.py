@@ -1,6 +1,7 @@
 import io
 import os
 import re
+import json
 import uuid
 import time
 import zipfile
@@ -25,14 +26,75 @@ from core.models import Atleta, Campus
 from .models import MembroComissao, HistoricoEmissao
 
 
-# Armazenamento em memória para o progresso em tempo real das tarefas
+# Armazenamento em memória e disco para o progresso das tarefas (compatível com múltiplos workers uWSGI)
 _TASK_PROGRESS = {}
 _TASK_LOCK = threading.Lock()
 
 
+def _get_task_dir():
+    dir_path = Path(settings.MEDIA_ROOT) / 'declaracoes'
+    dir_path.mkdir(parents=True, exist_ok=True)
+    return dir_path
+
+
+def _get_task_file_path(task_id):
+    clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '', str(task_id))
+    return _get_task_dir() / f"task_{clean_id}.json"
+
+
 def get_task_progress(task_id):
+    data = None
+    # 1. Carrega do arquivo em disco (compartilhado entre múltiplos workers uWSGI / processos)
+    try:
+        task_file = _get_task_file_path(task_id)
+        if task_file.exists():
+            with open(task_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+    except Exception:
+        data = None
+
+    # 2. Sincroniza com o cache em memória do processo atual
     with _TASK_LOCK:
-        return _TASK_PROGRESS.get(task_id)
+        mem_data = _TASK_PROGRESS.get(task_id)
+        if mem_data:
+            if not data:
+                data = dict(mem_data)
+            else:
+                if mem_data.get('status') == 'concluido' and data.get('status') != 'concluido':
+                    data.update(mem_data)
+        elif data:
+            _TASK_PROGRESS[task_id] = dict(data)
+
+    # 3. Se ainda não achou ou não está concluído, verifica se o ZIP já existe no disco
+    clean_id = re.sub(r'[^a-zA-Z0-9_\-]', '', str(task_id))
+    if clean_id:
+        dir_declaracoes = _get_task_dir()
+        if dir_declaracoes.exists():
+            matching_zips = sorted(
+                dir_declaracoes.glob(f"{clean_id}*.zip"),
+                key=lambda p: p.stat().st_mtime,
+                reverse=True
+            )
+            for zf in matching_zips:
+                if zf.is_file() and zf.stat().st_size > 0:
+                    nome = zf.name
+                    if nome.startswith(f"{clean_id}_"):
+                        nome = nome[len(f"{clean_id}_"):]
+
+                    if not data:
+                        data = {}
+                    data.update({
+                        'status': 'concluido',
+                        'porcentagem': 100,
+                        'zip_path': str(zf),
+                        'zip_filename': nome,
+                        'mensagem': data.get('mensagem') or 'Declarações geradas com sucesso.'
+                    })
+                    with _TASK_LOCK:
+                        _TASK_PROGRESS[task_id] = dict(data)
+                    break
+
+    return data
 
 
 def update_task_progress(task_id, **kwargs):
@@ -40,6 +102,26 @@ def update_task_progress(task_id, **kwargs):
         if task_id not in _TASK_PROGRESS:
             _TASK_PROGRESS[task_id] = {}
         _TASK_PROGRESS[task_id].update(kwargs)
+        in_mem_copy = dict(_TASK_PROGRESS[task_id])
+
+    # Persiste no disco em arquivo JSON para que qualquer worker uWSGI tenha acesso imediato
+    try:
+        task_file = _get_task_file_path(task_id)
+        file_data = {}
+        if task_file.exists():
+            try:
+                with open(task_file, 'r', encoding='utf-8') as f:
+                    file_data = json.load(f)
+            except Exception:
+                file_data = {}
+        file_data.update(in_mem_copy)
+
+        temp_file = task_file.with_suffix('.tmp')
+        with open(temp_file, 'w', encoding='utf-8') as f:
+            json.dump(file_data, f, ensure_ascii=False)
+        temp_file.replace(task_file)
+    except Exception:
+        pass
 
 
 def get_template_pdf_path():
@@ -195,7 +277,7 @@ def gerar_pdf_declaracao_bytes(
     return output_stream.getvalue()
 
 
-def executar_geracao_lote_thread(
+def executar_geracao_lote(
     task_id,
     itens,
     papel,
@@ -207,8 +289,9 @@ def executar_geracao_lote_thread(
     solicitado_por_id=None
 ):
     """
-    Processo em segundo plano que gera cada declaração em PDF, atualiza a porcentagem
-    de progresso e empacota tudo num arquivo .ZIP para download.
+    Gera cada declaração em PDF, atualiza a porcentagem de progresso
+    e empacota tudo num arquivo .ZIP para download.
+    Retorna uma tupla (caminho_completo_zip, nome_arquivo_zip).
     """
     total = len(itens)
     update_task_progress(
@@ -263,16 +346,12 @@ def executar_geracao_lote_thread(
                 # Grava no ZIP
                 zip_file.writestr(nome_arquivo, pdf_bytes)
 
-                # Pequena pausa para permitir renderização suave da barra de progresso no frontend
-                time.sleep(0.03)
-
         # Salva o arquivo ZIP gerado
         timestamp = timezone.now().strftime('%Y%m%d_%H%M%S')
         sufixo_tipo = "Atletas" if tipo == 'atleta' else "Comissao"
         zip_filename = f"Declaracoes_{sufixo_tipo}_{timestamp}.zip"
         
-        diretorio_saida = Path(settings.MEDIA_ROOT) / 'declaracoes'
-        diretorio_saida.mkdir(parents=True, exist_ok=True)
+        diretorio_saida = _get_task_dir()
         zip_filepath = diretorio_saida / f"{task_id}_{zip_filename}"
 
         with open(zip_filepath, 'wb') as f:
@@ -302,12 +381,23 @@ def executar_geracao_lote_thread(
             total=total
         )
 
+        return str(zip_filepath), zip_filename
+
     except Exception as e:
         update_task_progress(
             task_id,
             status='erro',
             mensagem=f"Ocorreu um erro durante a geração: {str(e)}"
         )
+        raise
+
+
+def executar_geracao_lote_thread(*args, **kwargs):
+    from django.db import connection
+    try:
+        executar_geracao_lote(*args, **kwargs)
+    finally:
+        connection.close()
 
 
 def iniciar_geracao_assincrona(
@@ -321,7 +411,9 @@ def iniciar_geracao_assincrona(
     solicitado_por=None
 ):
     """
-    Prepara a lista de indivíduos e inicia o processamento assíncrono.
+    Prepara a lista de indivíduos e inicia o processamento das declarações.
+    Para lotes usuais (<= 150 indivíduos), processa imediatamente para confiabilidade absoluta
+    em servidores de produção multi-worker como PythonAnywhere.
     Retorna o task_id único para acompanhamento.
     """
     task_id = str(uuid.uuid4())
@@ -370,30 +462,40 @@ def iniciar_geracao_assincrona(
     if not itens:
         raise ValueError("Nenhum indivíduo elegível encontrado para emissão.")
 
+    task_params = {
+        'itens': itens,
+        'papel': papel,
+        'tipo': tipo,
+        'horas': horas,
+        'periodo': periodo,
+        'cidade_data': cidade_data,
+        'projeto_texto': projeto_texto,
+        'solicitado_por_id': solicitado_por.id if solicitado_por else None
+    }
+
     update_task_progress(
         task_id,
         status='iniciando',
         porcentagem=0,
         atual=0,
         total=len(itens),
-        mensagem="Iniciando processamento..."
+        mensagem="Iniciando processamento...",
+        params=task_params
     )
 
-    thread = threading.Thread(
-        target=executar_geracao_lote_thread,
-        args=(
-            task_id,
-            itens,
-            papel,
-            tipo,
-            horas,
-            periodo,
-            cidade_data,
-            projeto_texto,
-            solicitado_por.id if solicitado_por else None
-        ),
-        daemon=True
-    )
-    thread.start()
+    # Para lotes usuais (<= 150), processa de forma síncrona: é ultrarrápido (< 0.5s) e elimina 100% dos
+    # problemas de thread congelada/múltiplos workers no PythonAnywhere uWSGI.
+    if len(itens) <= 150:
+        executar_geracao_lote(
+            task_id=task_id,
+            **task_params
+        )
+    else:
+        thread = threading.Thread(
+            target=executar_geracao_lote_thread,
+            kwargs=dict(task_id=task_id, **task_params),
+            daemon=True
+        )
+        thread.start()
 
     return task_id
